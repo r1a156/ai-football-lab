@@ -1,10 +1,15 @@
 {
-  "status": "GREEN_NO_PREDICTIONS",
-  "message": "Нет матчей с достаточным объёмом статистических данных.",
-  "timestamp": "2026-07-17T18:26:55.662258+00:00",
+  "status": "GREEN",
+  "message": "Данные успешно обновлены.",
+  "timestamp": "2026-07-17T18:56:58.180134+00:00",
   "details": {
-    "scheduledMatches": 3,
-    "candidates": 0,
-    "settledPredictions": 0
+    "lookbackDays": 60,
+    "historyRequestChunks": 7,
+    "recentMatches": 146,
+    "scheduledMatches": 12,
+    "candidateMatches": 10,
+    "selectedPredictions": 3,
+    "settledPredictions": 0,
+    "analysisModel": "qwen/qwen-2.5-72b-instruct"
   }
 }
