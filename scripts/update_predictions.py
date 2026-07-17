@@ -24,6 +24,7 @@ import urllib.request
 from typing import Any
 
 
+from zoneinfo import ZoneInfo
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "analysis.json"
 STATE_PATH = ROOT / "data" / "state.json"
@@ -203,6 +204,20 @@ def iso_date(value: dt.date) -> str:
 
 def utc_now() -> dt.datetime:
     return dt.datetime.now(dt.timezone.utc)
+
+
+def configured_timezone(
+    config: dict[str, Any],
+) -> ZoneInfo:
+    timezone_name = str(
+        config.get("timezone")
+        or "Europe/Moscow"
+    )
+
+    try:
+        return ZoneInfo(timezone_name)
+    except Exception:
+        return ZoneInfo("UTC")
 
 
 def parse_utc_datetime(value: str) -> dt.datetime:
@@ -620,7 +635,27 @@ def build_candidates(
         int(config.get("minimumTeamMatches") or 1),
     )
 
+
+    minimum_lead_hours = max(
+        0.0,
+        float(config.get("minimumLeadHours") or 4),
+    )
+
+    earliest_allowed_kickoff = (
+        utc_now()
+        + dt.timedelta(hours=minimum_lead_hours)
+    )
     for match in scheduled_matches:
+        try:
+            kickoff_utc = parse_utc_datetime(
+                str(match.get("utcDate") or "")
+            )
+        except Exception:
+            continue
+
+        if kickoff_utc <= earliest_allowed_kickoff:
+            continue
+
         if not competition_is_allowed(match, config):
             continue
 
@@ -723,6 +758,16 @@ def build_analysis_prompt(
         config.get("minimumConfidence") or 68
     )
 
+
+    win_market_minimum_confidence = int(
+        config.get("winMarketMinimumConfidence")
+        or max(minimum_confidence, 74)
+    )
+
+    win_markets = {
+        "HOME_WIN",
+        "AWAY_WIN",
+    }
     maximum_predictions = int(
         config.get("maximumPredictions") or 5
     )
@@ -980,7 +1025,13 @@ def normalize_model_predictions(
         if market not in allowed_markets:
             continue
 
-        if confidence < minimum_confidence:
+        required_confidence = (
+            win_market_minimum_confidence
+            if market in win_markets
+            else minimum_confidence
+        )
+
+        if confidence < required_confidence:
             continue
 
         confidence = max(
@@ -993,6 +1044,30 @@ def normalize_model_predictions(
             min(probability, 0.90),
         )
 
+
+        confidence_probability = confidence / 100
+        probability = min(
+            probability,
+            confidence_probability,
+        )
+
+        probability = max(
+            0.50,
+            min(probability, 0.90),
+        )
+
+        if market in win_markets:
+            risk = (
+                "LOW"
+                if confidence >= 80
+                else "MEDIUM"
+            )
+        else:
+            risk = (
+                "LOW"
+                if confidence >= 76
+                else "MEDIUM"
+            )
         if risk not in {"LOW", "MEDIUM"}:
             risk = (
                 "LOW"
@@ -1111,6 +1186,14 @@ def ensure_real_state(
             "analyzedMatches": 0,
             "source": "football-data.org",
             "analysisProvider": "OpenRouter",
+            "timezone": str(
+                config.get("timezone")
+                or "Europe/Moscow"
+            ),
+            "minimumLeadHours": float(
+                config.get("minimumLeadHours")
+                or 4
+            ),
             "notice": (
                 "Расчётные коэффициенты не являются "
                 "коэффициентами букмекерских контор."
@@ -1268,9 +1351,17 @@ def prediction_to_public_records(
     candidate: dict[str, Any],
     *,
     stake: float,
+    config: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    kickoff = parse_utc_datetime(
+    kickoff_utc = parse_utc_datetime(
         candidate["utcDate"]
+    )
+
+    timezone = configured_timezone(config)
+    kickoff = kickoff_utc.astimezone(timezone)
+    timezone_name = str(
+        config.get("timezone")
+        or "Europe/Moscow"
     )
 
     competition = candidate["competition"]
@@ -1307,6 +1398,7 @@ def prediction_to_public_records(
         "date": kickoff.date().isoformat(),
         "time": kickoff.strftime("%H:%M"),
         "utcDate": candidate["utcDate"],
+        "timezone": timezone_name,
         "home": home_team,
         "away": away_team,
         "market": market,
@@ -1325,6 +1417,7 @@ def prediction_to_public_records(
         "sourceMatchId": candidate["matchId"],
         "date": kickoff.date().isoformat(),
         "utcDate": candidate["utcDate"],
+        "timezone": timezone_name,
         "league": competition["name"],
         "home": home_team,
         "away": away_team,
@@ -1528,15 +1621,25 @@ def update_statistics(
 def remove_duplicate_pending_predictions(
     history: list[dict[str, Any]],
 ) -> set[int]:
-    return {
-        int(item["sourceMatchId"])
-        for item in history
-        if (
-            isinstance(item, dict)
-            and item.get("status") == "pending"
-            and item.get("sourceMatchId") is not None
-        )
-    }
+    published_match_ids: set[int] = set()
+
+    for item in history:
+        if not isinstance(item, dict):
+            continue
+
+        source_match_id = item.get("sourceMatchId")
+
+        if source_match_id is None:
+            continue
+
+        try:
+            published_match_ids.add(
+                int(source_match_id)
+            )
+        except (TypeError, ValueError):
+            continue
+
+    return published_match_ids
 
 
 def create_report(
@@ -1713,6 +1816,22 @@ def main() -> int:
                 "selectedPredictions": 0,
                 "source": "football-data.org",
                 "analysisProvider": "OpenRouter",
+            "timezone": str(
+                config.get("timezone")
+                or "Europe/Moscow"
+            ),
+            "minimumLeadHours": float(
+                config.get("minimumLeadHours")
+                or 4
+            ),
+                "timezone": str(
+                    config.get("timezone")
+                    or "Europe/Moscow"
+                ),
+                "minimumLeadHours": float(
+                    config.get("minimumLeadHours")
+                    or 4
+                ),
                 "analysisStatus": "NO_SUITABLE_DATA",
                 "notice": (
                     "Система не публикует прогнозы "
@@ -1837,6 +1956,7 @@ def main() -> int:
                 prediction,
                 candidate,
                 stake=stake_per_prediction,
+                config=config,
             )
         )
 
@@ -1874,6 +1994,14 @@ def main() -> int:
             ),
             "source": "football-data.org",
             "analysisProvider": "OpenRouter",
+            "timezone": str(
+                config.get("timezone")
+                or "Europe/Moscow"
+            ),
+            "minimumLeadHours": float(
+                config.get("minimumLeadHours")
+                or 4
+            ),
             "analysisModel": model_name,
             "analysisStatus": (
                 "PREDICTIONS_SELECTED"
