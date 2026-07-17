@@ -1,0 +1,144 @@
+name: Обновление футбольной аналитики
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "17 5 * * *"
+      timezone: "Europe/Moscow"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: football-analysis-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Получение и анализ матчей
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Получение проекта
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Установка Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Проверка секретов
+        shell: bash
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${FOOTBALL_DATA_API_KEY}" ]; then
+            echo "::error::Не задан секрет FOOTBALL_DATA_API_KEY"
+            exit 1
+          fi
+
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "::error::Не задан секрет OPENROUTER_API_KEY"
+            exit 1
+          fi
+
+          echo "Обязательные секреты присутствуют."
+
+      - name: Проверка синтаксиса
+        run: |
+          python -m py_compile scripts/update_predictions.py
+          python -m json.tool config/analysis.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+
+      - name: Обновление данных
+        env:
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          python scripts/update_predictions.py
+
+      - name: Проверка результата
+        run: |
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/last-update-report.json > /dev/null
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          state = json.loads(
+              Path("data/state.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          report = json.loads(
+              Path(
+                  "data/last-update-report.json"
+              ).read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          if state.get("meta", {}).get("mode") != "real":
+              raise SystemExit(
+                  "state.json не переведён в реальный режим"
+              )
+
+          if report.get("status") == "FAILED":
+              raise SystemExit(
+                  "Pipeline сформировал FAILED-отчёт"
+              )
+
+          print(
+              "Режим:",
+              state.get("meta", {}).get("mode")
+          )
+
+          print(
+              "Статус анализа:",
+              state.get("meta", {}).get(
+                  "analysisStatus"
+              )
+          )
+
+          print(
+              "Прогнозов:",
+              len(state.get("predictions", []))
+          )
+
+          print(
+              "История:",
+              len(state.get("history", []))
+          )
+          PY
+
+      - name: Сохранение обновлённых данных
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- data/state.json data/last-update-report.json; then
+            echo "Данные не изменились. Коммит не требуется."
+            exit 0
+          fi
+
+          git config user.name "AI Football Lab Bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          git add \
+            data/state.json \
+            data/last-update-report.json
+
+          git commit \
+            -m "Автоматическое обновление футбольной аналитики"
+
+          git push origin main

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "timezone": "Europe/Moscow",
+  "lookbackDays": 10,
+  "lookaheadDays": 3,
+  "maximumCandidates": 12,
+  "minimumPredictions": 0,
+  "maximumPredictions": 5,
+  "minimumConfidence": 68,
+  "maximumTotalStakePercent": 20,
+  "startingVirtualBank": 10000,
+  "competitions": [
+    "PL",
+    "PD",
+    "BL1",
+    "SA",
+    "FL1",
+    "DED",
+    "PPL",
+    "BSA"
+  ],
+  "allowedMarkets": [
+    "HOME_WIN",
+    "AWAY_WIN",
+    "HOME_OR_DRAW",
+    "AWAY_OR_DRAW",
+    "OVER_1_5",
+    "UNDER_3_5",
+    "HOME_OVER_0_5",
+    "AWAY_OVER_0_5",
+    "BOTH_SCORE"
+  ],
+  "excludedCompetitionWords": [
+    "friendly",
+    "youth",
+    "women",
+    "reserve",
+    "cup",
+    "super cup",
+    "qualification",
+    "play-off"
+  ]
+}
