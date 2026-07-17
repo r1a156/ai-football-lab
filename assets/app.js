@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 const stateUrl = `data/state.json?v=${Date.now()}`;
 
@@ -83,7 +83,7 @@ function renderPredictions(predictions) {
                     </div>
 
                     <span class="risk-badge ${riskClass}">
-                        Риск: ${escapeHtml(prediction.risk)}
+                        ${escapeHtml(prediction.risk)}
                     </span>
                 </div>
 
@@ -93,13 +93,13 @@ function renderPredictions(predictions) {
 
                 <div class="teams">
                     <strong>${escapeHtml(prediction.home)}</strong>
-                    <span>против</span>
+                    <span>—</span>
                     <strong>${escapeHtml(prediction.away)}</strong>
                 </div>
 
                 <div class="pick-box">
                     <div class="pick-copy">
-                        <span>Прогноз системы</span>
+                        <span>Прогноз</span>
                         <strong>${escapeHtml(prediction.pick)}</strong>
                     </div>
 
@@ -111,7 +111,7 @@ function renderPredictions(predictions) {
 
                 <div class="confidence-row">
                     <div class="confidence-label">
-                        <span>Уверенность модели</span>
+                        <span>Уверенность</span>
                         <strong>${prediction.confidence}%</strong>
                     </div>
 
