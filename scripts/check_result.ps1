@@ -1,85 +1,129 @@
 $ErrorActionPreference = "Stop"
-Set-StrictMode -Version Latest
 
 $ProjectPath = "D:\ai-football-lab"
 Set-Location $ProjectPath
 
+Write-Host ""
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host " AI FOOTBALL LAB - PIPELINE RESULT" -ForegroundColor Cyan
+Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host ""
+
+Write-Host "[1/4] Pulling latest data from GitHub..." -ForegroundColor Yellow
+
 git pull origin main
 
 if ($LASTEXITCODE -ne 0) {
-    throw "Ошибка git pull."
+    throw "git pull failed."
 }
 
+$ReportPath = Join-Path $ProjectPath "data\last-update-report.json"
+$StatePath = Join-Path $ProjectPath "data\state.json"
+
+if (-not (Test-Path $ReportPath)) {
+    throw "Missing file: data\last-update-report.json"
+}
+
+if (-not (Test-Path $StatePath)) {
+    throw "Missing file: data\state.json"
+}
+
+Write-Host "[2/4] Reading JSON files..." -ForegroundColor Yellow
+
 $Report = Get-Content `
-    -Path "data\last-update-report.json" `
+    -Path $ReportPath `
     -Raw `
     -Encoding UTF8 |
     ConvertFrom-Json
 
 $State = Get-Content `
-    -Path "data\state.json" `
+    -Path $StatePath `
     -Raw `
     -Encoding UTF8 |
     ConvertFrom-Json
 
-function Get-OptionalProperty {
-    param(
-        [Parameter(Mandatory = $true)]
-        [object]$Object,
+Write-Host "[3/4] JSON files loaded" -ForegroundColor Green
 
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
+$Predictions = @()
 
-        [object]$DefaultValue = "—"
-    )
-
-    if (
-        $null -ne $Object -and
-        $Object.PSObject.Properties.Name -contains $Name
-    ) {
-        return $Object.$Name
-    }
-
-    return $DefaultValue
+if ($null -ne $State.predictions) {
+    $Predictions = @($State.predictions)
 }
 
-$PredictionCount = @($State.predictions).Count
-$HistoryCount = @($State.history).Count
+$History = @()
 
-$AnalysisModel = Get-OptionalProperty `
-    -Object $State.meta `
-    -Name "analysisModel" `
-    -DefaultValue "Не вызывалась"
+if ($null -ne $State.history) {
+    $History = @($State.history)
+}
 
-$Details = $Report.details
+$PredictionCount = $Predictions.Count
+$HistoryCount = $History.Count
+
+$AnalysisModel = "NOT_CALLED"
+
+if (
+    $null -ne $State.meta -and
+    $null -ne $State.meta.PSObject.Properties["analysisModel"]
+) {
+    $AnalysisModel = [string]$State.meta.analysisModel
+}
+
+$AnalysisStatus = "UNKNOWN"
+
+if (
+    $null -ne $State.meta -and
+    $null -ne $State.meta.PSObject.Properties["analysisStatus"]
+) {
+    $AnalysisStatus = [string]$State.meta.analysisStatus
+}
+
+$Mode = "UNKNOWN"
+
+if (
+    $null -ne $State.meta -and
+    $null -ne $State.meta.PSObject.Properties["mode"]
+) {
+    $Mode = [string]$State.meta.mode
+}
+
+$CurrentBank = "UNKNOWN"
+
+if (
+    $null -ne $State.bank -and
+    $null -ne $State.bank.PSObject.Properties["current"]
+) {
+    $CurrentBank = [string]$State.bank.current
+}
 
 Write-Host ""
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host " AI FOOTBALL LAB — РЕЗУЛЬТАТ PIPELINE" -ForegroundColor Cyan
-Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "---------------- PIPELINE REPORT ----------------" -ForegroundColor White
+Write-Host ("Pipeline status:       {0}" -f $Report.status) -ForegroundColor Cyan
+Write-Host ("Message:               {0}" -f $Report.message) -ForegroundColor White
+Write-Host ("Timestamp:             {0}" -f $Report.timestamp) -ForegroundColor White
+
 Write-Host ""
+Write-Host "---------------- SITE STATE ---------------------" -ForegroundColor White
+Write-Host ("Mode:                  {0}" -f $Mode) -ForegroundColor Cyan
+Write-Host ("Analysis status:       {0}" -f $AnalysisStatus) -ForegroundColor Cyan
+Write-Host ("Analysis model:        {0}" -f $AnalysisModel) -ForegroundColor White
+Write-Host ("Published predictions: {0}" -f $PredictionCount) -ForegroundColor White
+Write-Host ("History records:       {0}" -f $HistoryCount) -ForegroundColor White
+Write-Host ("Virtual bank:          {0}" -f $CurrentBank) -ForegroundColor White
 
-Write-Host "Статус pipeline:          $($Report.status)" -ForegroundColor Cyan
-Write-Host "Сообщение:                $($Report.message)" -ForegroundColor White
-Write-Host "Режим сайта:              $($State.meta.mode)" -ForegroundColor White
-Write-Host "Статус анализа:           $($State.meta.analysisStatus)" -ForegroundColor Cyan
-Write-Host "Модель:                   $AnalysisModel" -ForegroundColor White
-Write-Host "Опубликовано прогнозов:   $PredictionCount" -ForegroundColor White
-Write-Host "Записей истории:          $HistoryCount" -ForegroundColor White
-Write-Host ""
-
-if ($null -ne $Details) {
-    Write-Host "Детали получения данных:" -ForegroundColor White
-
-    foreach ($Property in $Details.PSObject.Properties) {
-        Write-Host ("  {0}: {1}" -f $Property.Name, $Property.Value)
-    }
-
+if ($null -ne $Report.details) {
     Write-Host ""
+    Write-Host "---------------- DATA DETAILS -------------------" -ForegroundColor White
+
+    foreach ($Property in $Report.details.PSObject.Properties) {
+        Write-Host ("{0}: {1}" -f $Property.Name, $Property.Value)
+    }
 }
 
 if ($PredictionCount -gt 0) {
-    $State.predictions |
+    Write-Host ""
+    Write-Host "---------------- PREDICTIONS --------------------" -ForegroundColor Green
+
+    $Predictions |
         Select-Object `
             date,
             time,
@@ -93,8 +137,11 @@ if ($PredictionCount -gt 0) {
         Format-Table -AutoSize
 }
 else {
-    Write-Host "Прогнозы пока не опубликованы." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "No predictions were published." -ForegroundColor Yellow
 }
 
+Write-Host ""
+Write-Host "[4/4] Check completed" -ForegroundColor Green
 Write-Host ""
 Write-Host "AI_FOOTBALL_LAB_PIPELINE_CHECK=GREEN" -ForegroundColor Green
