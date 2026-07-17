@@ -259,6 +259,95 @@ def fetch_matches(
     ]
 
 
+
+def fetch_matches_chunked(
+    api_key: str,
+    *,
+    date_from: dt.date,
+    date_to: dt.date,
+    competitions: list[str],
+    maximum_days_per_request: int = 10,
+    pause_seconds: float = 7.0,
+) -> list[dict[str, Any]]:
+    """
+    Football-Data ограничивает общий endpoint матчей
+    диапазоном не более 10 дней.
+
+    Функция разбивает большой период на последовательные
+    непересекающиеся интервалы и объединяет результаты
+    с дедупликацией по match.id.
+    """
+
+    if date_to < date_from:
+        raise ValueError(
+            "date_to не может быть раньше date_from"
+        )
+
+    maximum_days_per_request = max(
+        1,
+        min(int(maximum_days_per_request), 10),
+    )
+
+    collected_by_id: dict[int, dict[str, Any]] = {}
+    cursor = date_from
+    request_number = 0
+
+    while cursor <= date_to:
+        chunk_end = min(
+            cursor + dt.timedelta(
+                days=maximum_days_per_request - 1
+            ),
+            date_to,
+        )
+
+        request_number += 1
+
+        log(
+            f"Запрос исторического чанка "
+            f"#{request_number}: "
+            f"{cursor.isoformat()} — "
+            f"{chunk_end.isoformat()}"
+        )
+
+        chunk_matches = fetch_matches(
+            api_key,
+            date_from=cursor,
+            date_to=chunk_end,
+            competitions=competitions,
+        )
+
+        for match in chunk_matches:
+            try:
+                match_id = int(match["id"])
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+            ):
+                continue
+
+            collected_by_id[match_id] = match
+
+        cursor = chunk_end + dt.timedelta(days=1)
+
+        if cursor <= date_to and pause_seconds > 0:
+            time.sleep(pause_seconds)
+
+    result = list(collected_by_id.values())
+
+    result.sort(
+        key=lambda item: str(
+            item.get("utcDate") or ""
+        )
+    )
+
+    log(
+        f"Чанков получено: {request_number}; "
+        f"уникальных матчей: {len(result)}"
+    )
+
+    return result
+
 def competition_is_allowed(
     match: dict[str, Any],
     config: dict[str, Any],
@@ -1502,23 +1591,26 @@ def main() -> int:
             "В конфигурации отсутствуют соревнования"
         )
 
-    recent_matches = fetch_matches(
+    recent_matches = fetch_matches_chunked(
         football_api_key,
         date_from=today - dt.timedelta(
             days=lookback_days
         ),
         date_to=today,
         competitions=competitions,
+        maximum_days_per_request=10,
+        pause_seconds=7,
     )
 
-    # Небольшая пауза сохраняет запас по лимитам API.
+    # Пауза перед запросом будущих матчей сохраняет
+    # безопасный запас относительно лимита API.
     time.sleep(7)
 
     upcoming_matches = fetch_matches(
         football_api_key,
         date_from=today,
         date_to=today + dt.timedelta(
-            days=lookahead_days
+            days=lookahead_days + 1
         ),
         competitions=competitions,
     )
@@ -1639,6 +1731,10 @@ def main() -> int:
                 "статистических данных."
             ),
             details={
+                "lookbackDays": lookback_days,
+                "historyRequestChunks": math.ceil(
+                    (lookback_days + 1) / 10
+                ),
                 "recentMatches": len(
                     recent_matches
                 ),
@@ -1803,6 +1899,10 @@ def main() -> int:
         status="GREEN",
         message="Данные успешно обновлены.",
         details={
+            "lookbackDays": lookback_days,
+            "historyRequestChunks": math.ceil(
+                (lookback_days + 1) / 10
+            ),
             "recentMatches": len(
                 recent_matches
             ),
