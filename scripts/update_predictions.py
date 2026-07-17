@@ -901,46 +901,158 @@ def call_openrouter(
         "max_tokens": 3000,
     }
 
-    # Если модель не задана, OpenRouter использует
-    # модель по умолчанию, настроенную в аккаунте.
+    # Модель берётся из GitHub Secret или переменной среды.
+    # Если она не указана, используется настройка OpenRouter.
     if model:
         payload["model"] = model
 
-    response = request_json(
-        OPENROUTER_API_URL,
-        method="POST",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "HTTP-Referer": PUBLIC_SITE_URL,
-            "X-OpenRouter-Title": "AI Football Lab",
-        },
-        payload=payload,
-    )
+    response: dict[str, Any] = {}
+    choices: list[Any] = []
+    last_error = "неизвестный ответ OpenRouter"
 
-    choices = response.get("choices") or []
+    # request_json уже повторяет HTTP-запросы при сетевых сбоях.
+    # Этот цикл дополнительно обрабатывает ошибки, которые
+    # OpenRouter иногда возвращает внутри успешного HTTP-ответа.
+    for attempt in range(1, 4):
+        log(
+            "Запрос OpenRouter: попытка "
+            f"{attempt}/3"
+        )
+
+        response = request_json(
+            OPENROUTER_API_URL,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": PUBLIC_SITE_URL,
+                "X-OpenRouter-Title": "AI Football Lab",
+            },
+            payload=payload,
+        )
+
+        response_error = response.get("error")
+
+        if isinstance(response_error, dict):
+            error_code = response_error.get("code")
+            error_message = str(
+                response_error.get("message")
+                or "OpenRouter вернул ошибку без описания"
+            )
+            error_metadata = response_error.get("metadata")
+
+            last_error = (
+                f"code={error_code}; "
+                f"message={error_message}; "
+                f"metadata={error_metadata}"
+            )
+
+            log(
+                "Ошибка OpenRouter в теле ответа: "
+                f"{last_error}"
+            )
+        else:
+            raw_choices = response.get("choices")
+
+            if isinstance(raw_choices, list) and raw_choices:
+                choices = raw_choices
+                break
+
+            response_keys = sorted(
+                str(key)
+                for key in response.keys()
+            )
+
+            last_error = (
+                "ответ не содержит choices или error; "
+                f"ключи ответа={response_keys}"
+            )
+
+            log(
+                "OpenRouter вернул неполный ответ: "
+                f"{last_error}"
+            )
+
+        if attempt < 3:
+            delay_seconds = attempt * 10
+
+            log(
+                "Повтор OpenRouter через "
+                f"{delay_seconds} секунд"
+            )
+
+            time.sleep(delay_seconds)
 
     if not choices:
         raise RuntimeError(
-            "OpenRouter не вернул choices"
+            "OpenRouter не вернул результат после "
+            f"трёх попыток: {last_error}"
         )
 
-    first_choice = choices[0] or {}
-    message = first_choice.get("message") or {}
+    first_choice = choices[0]
+
+    if not isinstance(first_choice, dict):
+        raise RuntimeError(
+            "Первый элемент choices OpenRouter "
+            "не является объектом"
+        )
+
+    choice_error = first_choice.get("error")
+
+    if isinstance(choice_error, dict):
+        raise RuntimeError(
+            "Ошибка внутри choices OpenRouter: "
+            f"code={choice_error.get('code')}; "
+            f"message={choice_error.get('message')}; "
+            f"metadata={choice_error.get('metadata')}"
+        )
+
+    finish_reason = str(
+        first_choice.get("finish_reason")
+        or ""
+    ).strip().lower()
+
+    if finish_reason == "error":
+        raise RuntimeError(
+            "OpenRouter завершил генерацию "
+            "с finish_reason=error"
+        )
+
+    message = first_choice.get("message")
+
+    if not isinstance(message, dict):
+        raise RuntimeError(
+            "OpenRouter не вернул корректный "
+            "объект message"
+        )
+
     content = message.get("content")
 
     if isinstance(content, list):
         text_parts: list[str] = []
 
         for item in content:
-            if isinstance(item, dict):
-                value = item.get("text")
+            if not isinstance(item, dict):
+                continue
 
-                if value:
-                    text_parts.append(str(value))
+            value = (
+                item.get("text")
+                or item.get("content")
+            )
+
+            if value:
+                text_parts.append(str(value))
 
         content = "\n".join(text_parts)
 
-    if not isinstance(content, str) or not content.strip():
+    if not isinstance(content, str):
+        raise RuntimeError(
+            "Содержимое ответа OpenRouter "
+            "не является строкой"
+        )
+
+    content = content.strip()
+
+    if not content:
         raise RuntimeError(
             "OpenRouter вернул пустой ответ"
         )
@@ -951,8 +1063,16 @@ def call_openrouter(
         or "default"
     )
 
-    return extract_json_object(content), returned_model
+    log(
+        "Ответ OpenRouter получен. "
+        f"Модель: {returned_model}; "
+        f"finish_reason: {finish_reason or 'не указан'}"
+    )
 
+    return (
+        extract_json_object(content),
+        returned_model,
+    )
 
 def normalize_model_predictions(
     model_result: dict[str, Any],
