@@ -1,12 +1,10 @@
 {
-  "status": "WAITING_FOR_FIRST_RUN",
-  "message": "Контур создан и ожидает добавления секретов и первого запуска.",
-  "timestamp": null,
+  "status": "GREEN_NO_PREDICTIONS",
+  "message": "Нет матчей с достаточным объёмом статистических данных.",
+  "timestamp": "2026-07-17T18:26:55.662258+00:00",
   "details": {
-    "requiredSecrets": [
-      "FOOTBALL_DATA_API_KEY",
-      "OPENROUTER_API_KEY"
-    ],
-    "optionalRepositoryVariable": "OPENROUTER_MODEL"
+    "scheduledMatches": 3,
+    "candidates": 0,
+    "settledPredictions": 0
   }
 }
