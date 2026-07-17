@@ -1106,6 +1106,16 @@ def normalize_model_predictions(
         config.get("minimumConfidence") or 68
     )
 
+    win_market_minimum_confidence = int(
+        config.get("winMarketMinimumConfidence")
+        or max(minimum_confidence, 74)
+    )
+
+    win_markets = {
+        "HOME_WIN",
+        "AWAY_WIN",
+    }
+
     maximum_predictions = int(
         config.get("maximumPredictions") or 5
     )
