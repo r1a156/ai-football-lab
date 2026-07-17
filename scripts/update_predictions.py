@@ -526,6 +526,11 @@ def build_candidates(
 ) -> list[dict[str, Any]]:
     candidates: list[dict[str, Any]] = []
 
+    minimum_team_matches = max(
+        1,
+        int(config.get("minimumTeamMatches") or 1),
+    )
+
     for match in scheduled_matches:
         if not competition_is_allowed(match, config):
             continue
@@ -554,8 +559,8 @@ def build_candidates(
         # Для честного анализа нужны хотя бы некоторые
         # недавние данные по обеим командам.
         if (
-            int(home_form.get("games") or 0) < 2
-            or int(away_form.get("games") or 0) < 2
+            int(home_form.get("games") or 0) < minimum_team_matches
+            or int(away_form.get("games") or 0) < minimum_team_matches
         ):
             continue
 
@@ -1569,6 +1574,31 @@ def main() -> int:
     )
 
     log(
+        f"Недавних матчей получено: "
+        f"{len(recent_matches)}"
+    )
+
+    log(
+        f"Завершённых матчей для формы: "
+        f"{len(finished_matches)}"
+    )
+
+    log(
+        f"Предстоящих матчей получено: "
+        f"{len(upcoming_matches)}"
+    )
+
+    log(
+        f"Предстоящих матчей после статуса: "
+        f"{len(scheduled_matches)}"
+    )
+
+    log(
+        f"Команд с рассчитанной формой: "
+        f"{len(team_form)}"
+    )
+
+    log(
         f"Подготовлено кандидатов для анализа: "
         f"{len(candidates)}"
     )
@@ -1609,10 +1639,25 @@ def main() -> int:
                 "статистических данных."
             ),
             details={
+                "recentMatches": len(
+                    recent_matches
+                ),
+                "finishedMatches": len(
+                    finished_matches
+                ),
+                "upcomingMatches": len(
+                    upcoming_matches
+                ),
                 "scheduledMatches": len(
                     scheduled_matches
                 ),
+                "teamsWithForm": len(
+                    team_form
+                ),
                 "candidates": 0,
+                "minimumTeamMatches": int(
+                    config.get("minimumTeamMatches") or 1
+                ),
                 "settledPredictions": settled_count,
             },
         )
