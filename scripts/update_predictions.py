@@ -1645,6 +1645,557 @@ def calculate_best_segment(
     )
 
 
+
+# =============================================================================
+# V4_4_PUBLIC_SELECTION_PIPELINE
+# =============================================================================
+
+COMPETITION_NAMES_RU: dict[str, str] = {
+    "Premier League": "Английская Премьер-лига",
+    "Primera Division": "Испанская Ла Лига",
+    "La Liga": "Испанская Ла Лига",
+    "Bundesliga": "Немецкая Бундеслига",
+    "Serie A": "Итальянская Серия А",
+    "Ligue 1": "Французская Лига 1",
+    "Eredivisie": "Нидерландская Эредивизи",
+    "Primeira Liga": "Португальская Примейра-лига",
+    "Campeonato Brasileiro Série A": "Бразильская Серия А",
+    "FIFA World Cup": "Чемпионат мира",
+    "World Cup": "Чемпионат мира",
+}
+
+TEAM_NAMES_RU: dict[str, str] = {
+    # Бразилия
+    "Athletico Paranaense": "Атлетико Паранаэнсе",
+    "Atletico Paranaense": "Атлетико Паранаэнсе",
+    "Paranaense": "Атлетико Паранаэнсе",
+    "Atlético Mineiro": "Атлетико Минейро",
+    "Atletico Mineiro": "Атлетико Минейро",
+    "Bahia": "Баия",
+    "Botafogo": "Ботафого",
+    "Bragantino": "Брагантино",
+    "Red Bull Bragantino": "Ред Булл Брагантино",
+    "Ceará": "Сеара",
+    "Ceara": "Сеара",
+    "Corinthians": "Коринтианс",
+    "Coritiba": "Коритиба",
+    "Cruzeiro": "Крузейро",
+    "Flamengo": "Фламенго",
+    "Fluminense": "Флуминенсе",
+    "Fortaleza": "Форталеза",
+    "Grêmio": "Гремио",
+    "Gremio": "Гремио",
+    "Internacional": "Интернасьонал",
+    "Juventude": "Жувентуде",
+    "Palmeiras": "Палмейрас",
+    "Santos": "Сантос",
+    "São Paulo": "Сан-Паулу",
+    "Sao Paulo": "Сан-Паулу",
+    "Sport Recife": "Спорт Ресифи",
+    "Vasco da Gama": "Васко да Гама",
+    "Vitória": "Витория",
+    "Vitoria": "Витория",
+    "Clube do Remo": "Ремо",
+
+    # Англия
+    "Arsenal": "Арсенал",
+    "Aston Villa": "Астон Вилла",
+    "Bournemouth": "Борнмут",
+    "Brentford": "Брентфорд",
+    "Brighton & Hove Albion": "Брайтон",
+    "Burnley": "Бёрнли",
+    "Chelsea": "Челси",
+    "Crystal Palace": "Кристал Пэлас",
+    "Everton": "Эвертон",
+    "Fulham": "Фулхэм",
+    "Leeds United": "Лидс Юнайтед",
+    "Liverpool": "Ливерпуль",
+    "Manchester City": "Манчестер Сити",
+    "Manchester United": "Манчестер Юнайтед",
+    "Newcastle United": "Ньюкасл Юнайтед",
+    "Nottingham Forest": "Ноттингем Форест",
+    "Sunderland": "Сандерленд",
+    "Tottenham Hotspur": "Тоттенхэм",
+    "West Ham United": "Вест Хэм Юнайтед",
+    "Wolverhampton Wanderers": "Вулверхэмптон",
+
+    # Испания
+    "FC Barcelona": "Барселона",
+    "Barcelona": "Барселона",
+    "Real Madrid": "Реал Мадрид",
+    "Atletico Madrid": "Атлетико Мадрид",
+    "Atlético de Madrid": "Атлетико Мадрид",
+    "Athletic Club": "Атлетик Бильбао",
+    "Sevilla FC": "Севилья",
+    "Valencia CF": "Валенсия",
+    "Villarreal CF": "Вильярреал",
+    "Real Sociedad": "Реал Сосьедад",
+    "Real Betis": "Реал Бетис",
+
+    # Германия
+    "Bayern Munich": "Бавария",
+    "FC Bayern München": "Бавария",
+    "Borussia Dortmund": "Боруссия Дортмунд",
+    "Bayer Leverkusen": "Байер",
+    "RB Leipzig": "РБ Лейпциг",
+
+    # Италия
+    "Inter Milan": "Интер",
+    "Internazionale": "Интер",
+    "AC Milan": "Милан",
+    "Juventus": "Ювентус",
+    "Napoli": "Наполи",
+    "AS Roma": "Рома",
+    "Lazio": "Лацио",
+    "Atalanta": "Аталанта",
+
+    # Франция
+    "Paris Saint-Germain": "Пари Сен-Жермен",
+    "Paris Saint Germain": "Пари Сен-Жермен",
+    "Olympique Marseille": "Марсель",
+    "Olympique Lyonnais": "Лион",
+    "AS Monaco": "Монако",
+    "Lille OSC": "Лилль",
+}
+
+MATCH_STATUS_RU: dict[str, str] = {
+    "SCHEDULED": "Запланирован",
+    "TIMED": "Ожидается начало",
+    "IN_PLAY": "Матч идёт",
+    "PAUSED": "Перерыв",
+    "FINISHED": "Завершён",
+    "POSTPONED": "Перенесён",
+    "SUSPENDED": "Приостановлен",
+    "CANCELLED": "Отменён",
+    "AWARDED": "Результат присуждён",
+}
+
+
+def transliterate_latin_name(value: str) -> str:
+    """
+    Запасной детерминированный вариант для неизвестных латинских названий.
+
+    Сначала всегда используется точный словарь. Транслитерация нужна только
+    для нового названия, которого ещё нет в каталоге.
+    """
+
+    combinations = {
+        "shch": "щ",
+        "sch": "щ",
+        "ch": "ч",
+        "sh": "ш",
+        "zh": "ж",
+        "kh": "х",
+        "th": "т",
+        "ph": "ф",
+        "ck": "к",
+        "qu": "кв",
+        "wh": "у",
+        "ya": "я",
+        "yu": "ю",
+        "yo": "ё",
+        "ye": "е",
+        "ai": "ай",
+        "ay": "ай",
+        "oi": "ой",
+        "oy": "ой",
+        "ou": "у",
+    }
+
+    characters = {
+        "a": "а",
+        "b": "б",
+        "c": "к",
+        "d": "д",
+        "e": "е",
+        "f": "ф",
+        "g": "г",
+        "h": "х",
+        "i": "и",
+        "j": "дж",
+        "k": "к",
+        "l": "л",
+        "m": "м",
+        "n": "н",
+        "o": "о",
+        "p": "п",
+        "q": "к",
+        "r": "р",
+        "s": "с",
+        "t": "т",
+        "u": "у",
+        "v": "в",
+        "w": "у",
+        "x": "кс",
+        "y": "и",
+        "z": "з",
+    }
+
+    normalized = (
+        value
+        .replace("ã", "a")
+        .replace("á", "a")
+        .replace("à", "a")
+        .replace("â", "a")
+        .replace("ä", "a")
+        .replace("é", "e")
+        .replace("è", "e")
+        .replace("ê", "e")
+        .replace("í", "i")
+        .replace("ó", "o")
+        .replace("ô", "o")
+        .replace("õ", "o")
+        .replace("ú", "u")
+        .replace("ü", "u")
+        .replace("ç", "c")
+        .replace("ñ", "n")
+    )
+
+    lower = normalized.lower()
+    result: list[str] = []
+    index = 0
+
+    while index < len(lower):
+        matched = False
+
+        for size in (4, 3, 2):
+            part = lower[index:index + size]
+
+            if part in combinations:
+                result.append(combinations[part])
+                index += size
+                matched = True
+                break
+
+        if matched:
+            continue
+
+        character = lower[index]
+        result.append(characters.get(character, character))
+        index += 1
+
+    transliterated = "".join(result)
+
+    words = [
+        word[:1].upper() + word[1:]
+        if word
+        else word
+        for word in transliterated.split(" ")
+    ]
+
+    return " ".join(words)
+
+
+def localize_team_name(value: str) -> str:
+    source = str(value or "").strip()
+
+    if not source:
+        return "Неизвестная команда"
+
+    exact = TEAM_NAMES_RU.get(source)
+
+    if exact:
+        return exact
+
+    if re.search(r"[А-Яа-яЁё]", source):
+        return source
+
+    return transliterate_latin_name(source)
+
+
+def localize_competition_name(value: str) -> str:
+    source = str(value or "").strip()
+
+    if not source:
+        return "Неизвестный турнир"
+
+    exact = COMPETITION_NAMES_RU.get(source)
+
+    if exact:
+        return exact
+
+    if re.search(r"[А-Яа-яЁё]", source):
+        return source
+
+    return transliterate_latin_name(source)
+
+
+def localize_reason(
+    value: str,
+    replacements: dict[str, str],
+) -> str:
+    localized = str(value or "").strip()
+
+    for source, target in sorted(
+        replacements.items(),
+        key=lambda item: len(item[0]),
+        reverse=True,
+    ):
+        if not source or source == target:
+            continue
+
+        localized = localized.replace(source, target)
+
+    return localized
+
+
+def extract_public_match_status(
+    match: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if not isinstance(match, dict):
+        return {
+            "matchStatus": "UNKNOWN",
+            "matchStatusLabel": "Статус уточняется",
+            "homeScore": None,
+            "awayScore": None,
+            "liveScore": "",
+            "minute": None,
+        }
+
+    status = str(match.get("status") or "UNKNOWN").upper()
+    score = match.get("score") or {}
+
+    selected_score: dict[str, Any] = {}
+
+    for key in (
+        "fullTime",
+        "regularTime",
+        "halfTime",
+    ):
+        candidate = score.get(key)
+
+        if isinstance(candidate, dict):
+            home = candidate.get("home")
+            away = candidate.get("away")
+
+            if home is not None or away is not None:
+                selected_score = candidate
+                break
+
+    home_score = selected_score.get("home")
+    away_score = selected_score.get("away")
+
+    live_score = ""
+
+    if home_score is not None and away_score is not None:
+        live_score = f"{home_score}:{away_score}"
+
+    minute_value = (
+        match.get("minute")
+        or match.get("elapsed")
+        or match.get("matchMinute")
+    )
+
+    try:
+        minute = int(minute_value)
+    except (TypeError, ValueError):
+        minute = None
+
+    return {
+        "matchStatus": status,
+        "matchStatusLabel": MATCH_STATUS_RU.get(
+            status,
+            "Статус уточняется",
+        ),
+        "homeScore": home_score,
+        "awayScore": away_score,
+        "liveScore": live_score,
+        "minute": minute,
+    }
+
+
+def finalize_public_selection(
+    public_predictions: list[dict[str, Any]],
+    history_records: list[dict[str, Any]],
+    matches_by_id: dict[int, dict[str, Any]],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """
+    Финальный backend guard.
+
+    Даже если LLM выбрал неподходящий вариант, наружу не пройдут:
+    - матчи вне единого 24-часового окна;
+    - коэффициенты ниже установленного минимума;
+    - прогнозы ниже минимальной уверенности;
+    - более четырёх прогнозов.
+    """
+
+    minimum_confidence = int(
+        config.get("minimumConfidence") or 74
+    )
+
+    minimum_model_odds = float(
+        config.get("minimumModelOdds") or 1.55
+    )
+
+    window_hours = max(
+        1.0,
+        float(config.get("selectionWindowHours") or 24),
+    )
+
+    maximum_predictions = max(
+        0,
+        int(config.get("maximumPredictions") or 4),
+    )
+
+    minimum_lead_hours = max(
+        0.0,
+        float(config.get("minimumLeadHours") or 0),
+    )
+
+    window_start = now + dt.timedelta(
+        hours=minimum_lead_hours
+    )
+
+    window_end = now + dt.timedelta(
+        hours=window_hours
+    )
+
+    history_by_id = {
+        str(item.get("id") or ""): item
+        for item in history_records
+        if isinstance(item, dict)
+    }
+
+    accepted: list[dict[str, Any]] = []
+    accepted_history: list[dict[str, Any]] = []
+
+    for prediction in public_predictions:
+        if not isinstance(prediction, dict):
+            continue
+
+        try:
+            kickoff = parse_utc_datetime(
+                str(prediction.get("utcDate") or "")
+            )
+
+            confidence = int(
+                prediction.get("confidence") or 0
+            )
+
+            model_odds = float(
+                prediction.get("fairOdds")
+                or prediction.get("odds")
+                or 0
+            )
+
+            match_id = int(
+                prediction.get("sourceMatchId")
+            )
+        except (TypeError, ValueError):
+            continue
+
+        if kickoff < window_start or kickoff > window_end:
+            log(
+                "V4.4 отклонён прогноз вне 24 часов: "
+                f"matchId={match_id}; kickoff={kickoff.isoformat()}"
+            )
+            continue
+
+        if confidence < minimum_confidence:
+            log(
+                "V4.4 отклонён прогноз по уверенности: "
+                f"matchId={match_id}; confidence={confidence}"
+            )
+            continue
+
+        if model_odds < minimum_model_odds:
+            log(
+                "V4.4 отклонён слишком маленький "
+                "расчётный коэффициент: "
+                f"matchId={match_id}; odds={model_odds}"
+            )
+            continue
+
+        source_home = str(prediction.get("home") or "")
+        source_away = str(prediction.get("away") or "")
+        source_league = str(prediction.get("league") or "")
+
+        localized_home = localize_team_name(source_home)
+        localized_away = localize_team_name(source_away)
+        localized_league = localize_competition_name(
+            source_league
+        )
+
+        prediction["homeOriginal"] = source_home
+        prediction["awayOriginal"] = source_away
+        prediction["leagueOriginal"] = source_league
+
+        prediction["home"] = localized_home
+        prediction["away"] = localized_away
+        prediction["league"] = localized_league
+
+        prediction["reason"] = localize_reason(
+            str(prediction.get("reason") or ""),
+            {
+                source_home: localized_home,
+                source_away: localized_away,
+                source_league: localized_league,
+            },
+        )
+
+        prediction["selectionWindowHours"] = window_hours
+        prediction["minimumModelOdds"] = minimum_model_odds
+        prediction["marketOddsAvailable"] = False
+        prediction["expectedValueAvailable"] = False
+        prediction["coefficientType"] = "MODEL_FAIR"
+
+        prediction.update(
+            extract_public_match_status(
+                matches_by_id.get(match_id)
+            )
+        )
+
+        history_record = history_by_id.get(
+            str(prediction.get("id") or "")
+        )
+
+        if history_record:
+            history_record["homeOriginal"] = source_home
+            history_record["awayOriginal"] = source_away
+            history_record["leagueOriginal"] = source_league
+            history_record["home"] = localized_home
+            history_record["away"] = localized_away
+            history_record["league"] = localized_league
+            history_record["marketOddsAvailable"] = False
+            history_record["expectedValueAvailable"] = False
+
+            history_record.update(
+                extract_public_match_status(
+                    matches_by_id.get(match_id)
+                )
+            )
+
+            accepted_history.append(history_record)
+
+        accepted.append(prediction)
+
+    accepted.sort(
+        key=lambda item: (
+            str(item.get("utcDate") or ""),
+            -int(item.get("confidence") or 0),
+            -float(item.get("fairOdds") or 0),
+        )
+    )
+
+    accepted = accepted[:maximum_predictions]
+
+    accepted_ids = {
+        str(item.get("id") or "")
+        for item in accepted
+    }
+
+    accepted_history = [
+        item
+        for item in accepted_history
+        if str(item.get("id") or "") in accepted_ids
+    ]
+
+    return accepted, accepted_history
+
+
+
 def update_statistics(
     state: dict[str, Any],
 ) -> None:
@@ -2098,6 +2649,17 @@ def main() -> int:
             history_record
         )
 
+    (
+        public_predictions,
+        new_history_records,
+    ) = finalize_public_selection(
+        public_predictions,
+        new_history_records,
+        all_matches_by_id,
+        config,
+        now,
+    )
+
     history.extend(new_history_records)
 
     # Публичная выдача содержит только актуальные
@@ -2138,10 +2700,30 @@ def main() -> int:
                 if public_predictions
                 else "NO_CONFIDENT_PREDICTIONS"
             ),
+            "selectionWindowHours": float(
+                config.get("selectionWindowHours")
+                or 24
+            ),
+            "maximumPredictions": int(
+                config.get("maximumPredictions")
+                or 4
+            ),
+            "minimumConfidence": int(
+                config.get("minimumConfidence")
+                or 74
+            ),
+            "minimumModelOdds": float(
+                config.get("minimumModelOdds")
+                or 1.55
+            ),
+            "marketOddsAvailable": False,
+            "expectedValueAvailable": False,
             "notice": (
-                "Расчётные коэффициенты основаны "
-                "на вероятности модели и не являются "
-                "коэффициентами букмекерских контор."
+                "Коэффициенты являются расчётными "
+                "справедливыми коэффициентами модели, "
+                "а не линией букмекерской конторы. "
+                "Рыночный EV не рассчитывается до "
+                "подключения источника реальных коэффициентов."
             ),
         }
     )

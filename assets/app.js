@@ -249,9 +249,13 @@ function renderPredictions(predictions) {
                         ${formatMatchDate(prediction.date, prediction.time)}
                     </span>
 
-                    <strong class="match-countdown">
-                        ${formatMatchCountdown(prediction.utcDate)}
-                    </strong>
+                    <div class="match-runtime">
+                        <strong class="match-countdown">
+                            ${formatMatchCountdown(prediction.utcDate)}
+                        </strong>
+
+                        ${renderMatchRuntimeStatus(prediction)}
+                    </div>
                 </div>
 
                 <div class="teams">
@@ -702,6 +706,86 @@ function formatMatchDate(dateValue, timeValue) {
         minute: "2-digit"
     }).format(date);
 }
+
+
+// V4_4_MATCH_STATUS_PRESENTATION
+
+function renderMatchRuntimeStatus(prediction) {
+    const rawStatus = String(
+        prediction.matchStatus || ""
+    ).toUpperCase();
+
+    const label = prediction.matchStatusLabel
+        || getMatchStatusLabel(rawStatus);
+
+    const score = prediction.liveScore || "";
+    const minute = Number(prediction.minute);
+
+    const minuteText = Number.isFinite(minute) && minute > 0
+        ? `${minute}-я минута`
+        : "";
+
+    const detail = [score, minuteText]
+        .filter(Boolean)
+        .join(" · ");
+
+    const statusClass = getMatchStatusClass(rawStatus);
+
+    return `
+        <span class="match-runtime-status ${statusClass}">
+            <span>${escapeHtml(label)}</span>
+            ${detail
+                ? `<strong>${escapeHtml(detail)}</strong>`
+                : ""
+            }
+        </span>
+    `;
+}
+
+
+function getMatchStatusLabel(status) {
+    const labels = {
+        SCHEDULED: "Запланирован",
+        TIMED: "Ожидается начало",
+        IN_PLAY: "Матч идёт",
+        PAUSED: "Перерыв",
+        FINISHED: "Завершён",
+        POSTPONED: "Перенесён",
+        SUSPENDED: "Приостановлен",
+        CANCELLED: "Отменён",
+        AWARDED: "Результат присуждён",
+        UNKNOWN: "Статус уточняется"
+    };
+
+    return labels[status] || labels.UNKNOWN;
+}
+
+
+function getMatchStatusClass(status) {
+    if (status === "IN_PLAY") {
+        return "is-live";
+    }
+
+    if (status === "PAUSED") {
+        return "is-paused";
+    }
+
+    if (status === "FINISHED") {
+        return "is-finished";
+    }
+
+    if (
+        status === "POSTPONED"
+        || status === "SUSPENDED"
+        || status === "CANCELLED"
+    ) {
+        return "is-warning";
+    }
+
+    return "is-upcoming";
+}
+
+
 
 function updateDataFreshness() {
     const updatedAt = applicationState?.meta?.updatedAt;
