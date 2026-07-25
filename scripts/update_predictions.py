@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 AI Football Lab
 Автоматическое получение матчей, подготовка статистики,

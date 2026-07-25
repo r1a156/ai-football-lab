@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 const stateUrl = `data/state.json?v=${Date.now()}`;
 
