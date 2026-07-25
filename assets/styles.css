@@ -1933,3 +1933,80 @@ footer p {
         justify-content: flex-start;
     }
 }
+
+
+/* ==========================================================================
+   V4.5 RANKED PREDICTIONS
+   ========================================================================== */
+
+.prediction-card.is-best-prediction {
+    border-color: rgba(90, 242, 162, 0.42);
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.32),
+        0 0 32px rgba(90, 242, 162, 0.08);
+}
+
+.prediction-rank-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.prediction-rank,
+.analysis-source {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.prediction-rank {
+    color: var(--accent-bright);
+    background: var(--accent-soft);
+}
+
+.prediction-rank.is-best {
+    color: var(--success);
+    border-color: rgba(90, 242, 162, 0.35);
+    background: rgba(90, 242, 162, 0.1);
+}
+
+.analysis-source {
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.empty-prediction-state {
+    display: flex;
+    min-height: 180px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.empty-prediction-state strong {
+    color: var(--text);
+    font-size: 18px;
+}
+
+.empty-prediction-state p {
+    max-width: 620px;
+    margin: 0;
+}
+
+@media (max-width: 760px) {
+    .prediction-rank-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

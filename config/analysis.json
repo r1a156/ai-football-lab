@@ -4,7 +4,7 @@
   "lookbackDays": 60,
   "lookaheadDays": 1,
   "maximumCandidates": 20,
-  "minimumPredictions": 0,
+  "minimumPredictions": 1,
   "maximumPredictions": 4,
   "minimumConfidence": 74,
   "maximumTotalStakePercent": 20,
@@ -59,5 +59,11 @@
   "preservePredictionsOnAiFailure": true,
   "requirePredictionWhenCandidatesExist": true,
   "minimumMarketOdds": 1.55,
-  "marketOddsAvailable": false
+  "marketOddsAvailable": false,
+  "deterministicFallbackEnabled": true,
+  "fallbackMinimumConfidence": 74,
+  "fallbackMaximumConfidence": 82,
+  "preserveHistory": true,
+  "preserveBank": true,
+  "rankPredictions": true
 }

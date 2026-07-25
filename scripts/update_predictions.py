@@ -950,7 +950,7 @@ def call_openrouter(
                 method="POST",
                 headers=headers,
                 payload=payload,
-                timeout_seconds=180,
+                timeout=180,
             )
 
             choices = response.get("choices") or []
@@ -1257,7 +1257,11 @@ def ensure_real_state(
             "updatedAt": None,
             "analyzedMatches": 0,
             "source": "football-data.org",
-            "analysisProvider": "OpenRouter",
+            "analysisProvider": (
+                "Встроенный статистический модуль"
+                if analysis_mode == "DETERMINISTIC_FALLBACK"
+                else "OpenRouter"
+            ),
             "timezone": str(
                 config.get("timezone")
                 or "Europe/Moscow"
@@ -1418,6 +1422,280 @@ def resolve_existing_history(
     return settled_count
 
 
+
+# =============================================================================
+# V4_5_DETERMINISTIC_FALLBACK
+# =============================================================================
+
+def clamp_number(
+    value: float,
+    minimum: float,
+    maximum: float,
+) -> float:
+    return min(maximum, max(minimum, value))
+
+
+def build_deterministic_predictions(
+    candidates: list[dict[str, Any]],
+    config: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """
+    Резервный статистический выбор.
+
+    Используются только уже рассчитанные показатели формы.
+    Внешние знания, составы, слухи и букмекерские коэффициенты
+    не используются.
+    """
+
+    if not candidates:
+        return []
+
+    allowed_markets = {
+        str(value)
+        for value in config.get("allowedMarkets", [])
+    }
+
+    maximum_predictions = max(
+        1,
+        int(config.get("maximumPredictions") or 4),
+    )
+
+    minimum_confidence = max(
+        50,
+        int(
+            config.get("fallbackMinimumConfidence")
+            or config.get("minimumConfidence")
+            or 74
+        ),
+    )
+
+    maximum_confidence = max(
+        minimum_confidence,
+        int(config.get("fallbackMaximumConfidence") or 82),
+    )
+
+    ranked: list[dict[str, Any]] = []
+
+    for candidate in candidates:
+        home_form = candidate.get("homeTeam", {}).get(
+            "form",
+            {},
+        )
+
+        away_form = candidate.get("awayTeam", {}).get(
+            "form",
+            {},
+        )
+
+        home_ppg = float(
+            home_form.get("pointsPerGame") or 0
+        )
+
+        away_ppg = float(
+            away_form.get("pointsPerGame") or 0
+        )
+
+        home_over = float(
+            home_form.get("over15Rate") or 0
+        )
+
+        away_over = float(
+            away_form.get("over15Rate") or 0
+        )
+
+        average_over = (
+            home_over + away_over
+        ) / 2
+
+        form_difference = home_ppg - away_ppg
+
+        data_quality = float(
+            candidate.get("dataQuality") or 0
+        )
+
+        market = ""
+        signal = 0.0
+        reason = ""
+
+        # Наиболее устойчивый рынок — тотал больше 1,5,
+        # когда обе команды регулярно участвуют в матчах
+        # минимум с двумя голами.
+        if (
+            "OVER_1_5" in allowed_markets
+            and average_over >= 0.62
+        ):
+            market = "OVER_1_5"
+            signal = average_over
+
+            reason = (
+                "Резервный статистический расчёт: "
+                f"доля матчей с двумя и более голами "
+                f"у команд составляет в среднем "
+                f"{average_over * 100:.0f}%."
+            )
+
+        elif (
+            form_difference >= 0.45
+            and "HOME_OR_DRAW" in allowed_markets
+        ):
+            market = "HOME_OR_DRAW"
+            signal = clamp_number(
+                0.60 + form_difference / 10,
+                0.60,
+                0.80,
+            )
+
+            reason = (
+                "Резервный статистический расчёт: "
+                "хозяева имеют преимущество по текущей форме; "
+                f"очки за матч {home_ppg:.2f} против "
+                f"{away_ppg:.2f}."
+            )
+
+        elif (
+            form_difference <= -0.45
+            and "AWAY_OR_DRAW" in allowed_markets
+        ):
+            market = "AWAY_OR_DRAW"
+            signal = clamp_number(
+                0.60 + abs(form_difference) / 10,
+                0.60,
+                0.80,
+            )
+
+            reason = (
+                "Резервный статистический расчёт: "
+                "гости имеют преимущество по текущей форме; "
+                f"очки за матч {away_ppg:.2f} против "
+                f"{home_ppg:.2f}."
+            )
+
+        elif "OVER_1_5" in allowed_markets:
+            # Последний честный резерв при наличии кандидатов.
+            # Он помечается средним риском и не выдаётся за
+            # высокоуверенный прогноз.
+            market = "OVER_1_5"
+            signal = clamp_number(
+                average_over,
+                0.55,
+                0.70,
+            )
+
+            reason = (
+                "Резервный статистический расчёт: "
+                "выбран наиболее устойчивый из доступных "
+                "рынков по совокупности формы и результативности. "
+                "Уровень риска повышен."
+            )
+
+        else:
+            continue
+
+        confidence_from_signal = (
+            minimum_confidence
+            + max(0.0, signal - 0.55) * 30
+            + max(0.0, data_quality - 50) * 0.05
+        )
+
+        confidence = int(
+            round(
+                clamp_number(
+                    confidence_from_signal,
+                    minimum_confidence,
+                    maximum_confidence,
+                )
+            )
+        )
+
+        probability = round(
+            clamp_number(
+                confidence / 100,
+                0.50,
+                0.86,
+            ),
+            4,
+        )
+
+        ranked.append(
+            {
+                "matchId": int(candidate["matchId"]),
+                "market": market,
+                "confidence": confidence,
+                "probability": probability,
+                "fairOdds": round(1 / probability, 2),
+                "risk": (
+                    "LOW"
+                    if confidence >= 78
+                    else "MEDIUM"
+                ),
+                "reason": reason,
+                "analysisMode": "DETERMINISTIC_FALLBACK",
+                "rankingScore": round(
+                    confidence * 0.75
+                    + data_quality * 0.25,
+                    4,
+                ),
+            }
+        )
+
+    ranked.sort(
+        key=lambda item: (
+            -float(item.get("rankingScore") or 0),
+            -int(item.get("confidence") or 0),
+        )
+    )
+
+    result: list[dict[str, Any]] = []
+    used_matches: set[int] = set()
+
+    for item in ranked:
+        match_id = int(item["matchId"])
+
+        if match_id in used_matches:
+            continue
+
+        result.append(item)
+        used_matches.add(match_id)
+
+        if len(result) >= maximum_predictions:
+            break
+
+    return result
+
+
+def localize_existing_history(
+    state: dict[str, Any],
+) -> None:
+    """
+    Русифицирует старые записи, не удаляя и не пересчитывая
+    финансовые результаты.
+    """
+
+    history = state.get("history", [])
+
+    if not isinstance(history, list):
+        return
+
+    for item in history:
+        if not isinstance(item, dict):
+            continue
+
+        source_home = str(item.get("home") or "")
+        source_away = str(item.get("away") or "")
+        source_league = str(item.get("league") or "")
+
+        item.setdefault("homeOriginal", source_home)
+        item.setdefault("awayOriginal", source_away)
+        item.setdefault("leagueOriginal", source_league)
+
+        item["home"] = localize_team_name(source_home)
+        item["away"] = localize_team_name(source_away)
+        item["league"] = localize_competition_name(
+            source_league
+        )
+
+
+
 def prediction_to_public_records(
     prediction: dict[str, Any],
     candidate: dict[str, Any],
@@ -1481,6 +1759,9 @@ def prediction_to_public_records(
         "confidence": prediction["confidence"],
         "risk": risk_label,
         "reason": prediction["reason"],
+        "analysisMode": str(
+            prediction.get("analysisMode") or "AI"
+        ),
         "coefficientType": "MODEL_FAIR",
     }
 
@@ -1503,6 +1784,9 @@ def prediction_to_public_records(
         "score": "",
         "status": "pending",
         "publishedAt": utc_now().isoformat(),
+        "analysisMode": str(
+            prediction.get("analysisMode") or "AI"
+        ),
         "coefficientType": "MODEL_FAIR",
     }
 
@@ -2375,6 +2659,8 @@ def main() -> int:
         config,
     )
 
+    localize_existing_history(state)
+
     settled_count = resolve_existing_history(
         state,
         all_matches_by_id,
@@ -2517,145 +2803,62 @@ def main() -> int:
         config,
     )
 
+    model_name = "openrouter/auto"
+    analysis_mode = "AI"
+    openrouter_error_text = ""
+
     try:
         model_result, model_name = call_openrouter(
             openrouter_api_key,
             prompt,
         )
-    except Exception as openrouter_error:
-        log(
-            "OpenRouter временно недоступен. "
-            "Сохраняется последняя действующая подборка: "
-            f"{openrouter_error}"
-        )
 
-        previous_predictions = [
-            item
-            for item in state.get("predictions", [])
-            if isinstance(item, dict)
-        ]
-
-        now_utc = utc_now()
-        preserved_predictions: list[dict[str, Any]] = []
-
-        for item in previous_predictions:
-            try:
-                kickoff = parse_utc_datetime(
-                    str(item.get("utcDate") or "")
-                )
-            except Exception:
-                continue
-
-            # Сохраняем только ещё актуальные либо недавно начавшиеся
-            # карточки. Старые прогнозы бесконечно не держим.
-            if kickoff >= now_utc - dt.timedelta(hours=3):
-                preserved_predictions.append(item)
-
-        state["predictions"] = preserved_predictions
-
-        state.setdefault("meta", {}).update(
-            {
-                "version": "2.0.0",
-                "mode": "real",
-                "updatedAt": now.isoformat(),
-                "analyzedMatches": len(scheduled_matches),
-                "candidateMatches": len(candidates),
-                "selectedPredictions": len(
-                    preserved_predictions
-                ),
-                "source": "football-data.org",
-                "analysisProvider": "OpenRouter",
-                "analysisStatus": (
-                    "AI_TEMPORARILY_UNAVAILABLE"
-                ),
-                "analysisModel": "openrouter/auto",
-                "notice": (
-                    "Источник матчей обновлён. "
-                    "ИИ-анализ временно недоступен, "
-                    "поэтому сохранена последняя "
-                    "актуальная подборка."
-                ),
-            }
-        )
-
-        update_statistics(state)
-
-        write_json_atomic(
-            STATE_PATH,
-            state,
-        )
-
-        write_json_atomic(
-            REPORT_PATH,
-            create_report(
-                status="GREEN_DEGRADED_AI_UNAVAILABLE",
-                message=(
-                    "Источник матчей обновлён. "
-                    "OpenRouter временно недоступен; "
-                    "последняя актуальная подборка сохранена."
-                ),
-                details={
-                    "recentMatches": len(recent_matches),
-                    "scheduledMatches": len(
-                        scheduled_matches
-                    ),
-                    "candidateMatches": len(candidates),
-                    "preservedPredictions": len(
-                        preserved_predictions
-                    ),
-                    "error": str(openrouter_error),
-                },
-            ),
-        )
-
-        log(
-            "Pipeline завершён в безопасном режиме "
-            "без очистки существующих прогнозов"
-        )
-
-        return 0
-
-    selected = normalize_model_predictions(
-        model_result,
-        candidates,
-        config,
-    )
-
-    if not selected and candidates:
-        log(
-            "Первичный анализ не выбрал прогнозов. "
-            "Запускается обязательный резервный анализ."
-        )
-
-        reserve_prompt = (
-            prompt
-            + "\n\nОБЯЗАТЕЛЬНЫЙ РЕЗЕРВНЫЙ ПРОХОД:\n"
-            + "Кандидаты существуют. Верни от 1 до "
-            + str(
-                int(
-                    config.get("maximumPredictions")
-                    or 4
-                )
-            )
-            + " лучших вариантов. Не возвращай пустой массив. "
-            + "Не завышай уверенность и честно используй "
-            + "risk=MEDIUM, если данных немного."
-        )
-
-        reserve_result, reserve_model = call_openrouter(
-            openrouter_api_key,
-            reserve_prompt,
-        )
-
-        reserve_selected = normalize_model_predictions(
-            reserve_result,
+        selected = normalize_model_predictions(
+            model_result,
             candidates,
             config,
         )
 
-        if reserve_selected:
-            selected = reserve_selected
-            model_name = reserve_model
+        for item in selected:
+            item["analysisMode"] = "AI"
+
+    except Exception as openrouter_error:
+        openrouter_error_text = str(openrouter_error)
+
+        log(
+            "OpenRouter временно недоступен. "
+            "Запускается резервный статистический расчёт: "
+            f"{openrouter_error}"
+        )
+
+        selected = build_deterministic_predictions(
+            candidates,
+            config,
+        )
+
+        model_name = "deterministic-statistical-fallback"
+        analysis_mode = "DETERMINISTIC_FALLBACK"
+
+    if not selected and candidates:
+        log(
+            "ИИ не сформировал допустимую подборку. "
+            "Запускается резервный статистический расчёт."
+        )
+
+        selected = build_deterministic_predictions(
+            candidates,
+            config,
+        )
+
+        if selected:
+            model_name = "deterministic-statistical-fallback"
+            analysis_mode = "DETERMINISTIC_FALLBACK"
+
+    if not selected and candidates:
+        raise RuntimeError(
+            "Кандидаты существуют, но ни ИИ, ни резервный "
+            "статистический расчёт не сформировали прогноз"
+        )
 
     candidates_by_id = {
         int(candidate["matchId"]): candidate
@@ -2735,6 +2938,42 @@ def main() -> int:
         now,
     )
 
+    for index, prediction in enumerate(
+        public_predictions,
+        start=1,
+    ):
+        prediction["rank"] = index
+        prediction["rankLabel"] = (
+            "Лучший прогноз дня"
+            if index == 1
+            else f"Прогноз №{index}"
+        )
+
+        prediction["analysisSourceLabel"] = (
+            "Резервный статистический расчёт"
+            if prediction.get("analysisMode")
+            == "DETERMINISTIC_FALLBACK"
+            else "ИИ-анализ"
+        )
+
+    history_by_new_id = {
+        str(item.get("id") or ""): item
+        for item in new_history_records
+        if isinstance(item, dict)
+    }
+
+    for prediction in public_predictions:
+        history_item = history_by_new_id.get(
+            str(prediction.get("id") or "")
+        )
+
+        if history_item:
+            history_item["rank"] = prediction["rank"]
+            history_item["rankLabel"] = prediction["rankLabel"]
+            history_item["analysisSourceLabel"] = (
+                prediction["analysisSourceLabel"]
+            )
+
     history.extend(new_history_records)
 
     # Публичная выдача содержит только актуальные
@@ -2770,10 +3009,20 @@ def main() -> int:
                 or 4
             ),
             "analysisModel": model_name,
+            "analysisMode": analysis_mode,
+            "analysisError": openrouter_error_text,
             "analysisStatus": (
-                "PREDICTIONS_SELECTED"
-                if public_predictions
-                else "NO_CONFIDENT_PREDICTIONS"
+                "FALLBACK_PREDICTIONS_SELECTED"
+                if (
+                    public_predictions
+                    and analysis_mode
+                    == "DETERMINISTIC_FALLBACK"
+                )
+                else (
+                    "PREDICTIONS_SELECTED"
+                    if public_predictions
+                    else "NO_CONFIDENT_PREDICTIONS"
+                )
             ),
             "selectionWindowHours": float(
                 config.get("selectionWindowHours")

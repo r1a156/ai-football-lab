@@ -188,7 +188,10 @@ function setRefreshState(state) {
 
 function renderApplication(state) {
     renderMeta(state);
-    renderPredictions(state.predictions || []);
+    renderPredictions(
+        state.predictions || [],
+        state.meta || {}
+    );
     renderBank(state.bank || {});
     renderStatistics(state.statistics || {}, state.history || []);
     renderHistory(state.history || [], currentHistoryFilter);
@@ -206,33 +209,81 @@ function renderMeta(state) {
     updateDataFreshness();
 }
 
-function renderPredictions(predictions) {
+// V4_5_RANKED_PREDICTIONS
+
+function renderPredictions(predictions, meta = {}) {
     const container = document.getElementById("predictionsGrid");
 
     if (!predictions.length) {
+        const candidateCount = Number(
+            meta.candidateMatches || 0
+        );
+
+        const message = candidateCount > 0
+            ? (
+                "Подборка временно обновляется. " +
+                "Система повторит анализ автоматически."
+            )
+            : (
+                "В ближайшие сутки нет матчей, соответствующих " +
+                "текущим требованиям источника данных."
+            );
+
         container.innerHTML = `
-            <div class="loading-card">
-                <p>
-                    Сегодня система не нашла событий с достаточным уровнем
-                    уверенности.
-                </p>
+            <div class="loading-card empty-prediction-state">
+                <strong>Новая подборка готовится</strong>
+                <p>${escapeHtml(message)}</p>
             </div>
         `;
 
         return;
     }
 
-    container.innerHTML = predictions.map((prediction) => {
+    container.innerHTML = predictions.map(
+        (prediction, index) => {
         const riskClass = prediction.risk === "Средний"
             ? "risk-medium"
             : "risk-low";
 
+        const rank = Number(
+            prediction.rank || index + 1
+        );
+
+        const rankLabel = prediction.rankLabel
+            || (
+                rank === 1
+                    ? "Лучший прогноз дня"
+                    : `Прогноз №${rank}`
+            );
+
+        const sourceLabel = prediction.analysisSourceLabel
+            || (
+                prediction.analysisMode ===
+                    "DETERMINISTIC_FALLBACK"
+                    ? "Резервный статистический расчёт"
+                    : "ИИ-анализ"
+            );
+
         return `
             <article
-                class="prediction-card"
+                class="prediction-card ${
+                    rank === 1 ? "is-best-prediction" : ""
+                }"
                 data-match-id="${escapeHtml(prediction.id)}"
                 data-kickoff="${escapeHtml(prediction.utcDate || "")}"
             >
+                <div class="prediction-rank-row">
+                    <span class="prediction-rank ${
+                        rank === 1 ? "is-best" : ""
+                    }">
+                        ${escapeHtml(rankLabel)}
+                    </span>
+
+                    <span class="analysis-source">
+                        ${escapeHtml(sourceLabel)}
+                    </span>
+                </div>
+
                 <div class="prediction-top">
                     <div class="league-info">
                         <strong>${escapeHtml(prediction.league)}</strong>
