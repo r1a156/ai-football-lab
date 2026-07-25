@@ -950,7 +950,6 @@ def call_openrouter(
                 method="POST",
                 headers=headers,
                 payload=payload,
-                timeout=180,
             )
 
             choices = response.get("choices") or []
