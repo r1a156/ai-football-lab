@@ -2573,13 +2573,41 @@ def main() -> int:
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
 
-    football_api_key = require_environment_variable(
-        "FOOTBALL_DATA_API_KEY"
+    football_api_key = os.environ.get(
+        "FOOTBALL_DATA_API_KEY",
+        ""
     )
 
-    openrouter_api_key = require_environment_variable(
-        "OPENROUTER_API_KEY"
+    if not football_api_key:
+        try:
+            football_api_key = input(
+                "Введите FOOTBALL_DATA_API_KEY: "
+            ).strip()
+        except EOFError:
+            football_api_key = ""
+
+    if not football_api_key:
+        raise RuntimeError(
+            "Не задан FOOTBALL_DATA_API_KEY"
+        )
+
+    openrouter_api_key = os.environ.get(
+        "OPENROUTER_API_KEY",
+        ""
     )
+
+    if not openrouter_api_key:
+        try:
+            openrouter_api_key = input(
+                "Введите OPENROUTER_API_KEY: "
+            ).strip()
+        except EOFError:
+            openrouter_api_key = ""
+
+    if not openrouter_api_key:
+        raise RuntimeError(
+            "Не задан OPENROUTER_API_KEY"
+        )
 
     now = utc_now()
     today = now.date()
