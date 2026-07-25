@@ -1,12 +1,15 @@
 {
-  "status": "GREEN_DEGRADED_AI_UNAVAILABLE",
-  "message": "Источник матчей обновлён. OpenRouter временно недоступен; последняя актуальная подборка сохранена.",
-  "timestamp": "2026-07-25T17:17:01.607828+00:00",
+  "status": "GREEN",
+  "message": "Данные успешно обновлены.",
+  "timestamp": "2026-07-25T17:56:27.196948+00:00",
   "details": {
+    "lookbackDays": 60,
+    "historyRequestChunks": 7,
     "recentMatches": 112,
     "scheduledMatches": 10,
     "candidateMatches": 10,
-    "preservedPredictions": 0,
-    "error": "OpenRouter временно недоступен после 4 попыток: request_json() got an unexpected keyword argument 'timeout_seconds'"
+    "selectedPredictions": 1,
+    "settledPredictions": 0,
+    "analysisModel": "deterministic-statistical-fallback"
   }
 }
