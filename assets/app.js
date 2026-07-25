@@ -1,38 +1,189 @@
 "use strict";
 
-const stateUrl = `data/state.json?v=${Date.now()}`;
+const STATE_PATH = "data/state.json";
+const AUTO_REFRESH_INTERVAL_MS = 60_000;
+const MATCH_CLOCK_INTERVAL_MS = 30_000;
 
 let applicationState = null;
 let currentHistoryFilter = "all";
+let lastStateSignature = "";
+let dataRefreshTimer = null;
+let matchClockTimer = null;
+let dataRequestController = null;
+let interfaceInitialized = false;
 
 document.addEventListener("DOMContentLoaded", initializeApplication);
 
 async function initializeApplication() {
+    if (!interfaceInitialized) {
+        initializeFilters();
+        initializeRuntimeEvents();
+        interfaceInitialized = true;
+    }
+
+    await loadApplicationState({
+        showLoadingError: true
+    });
+
+    initializeScrollEffects();
+    startRuntimeTimers();
+}
+
+async function loadApplicationState(options = {}) {
+    const {
+        showLoadingError = false
+    } = options;
+
+    setRefreshState("loading");
+
+    if (dataRequestController) {
+        dataRequestController.abort();
+    }
+
+    dataRequestController = new AbortController();
+
     try {
+        const stateUrl = `${STATE_PATH}?v=${Date.now()}`;
+
         const response = await fetch(stateUrl, {
-            cache: "no-store"
+            cache: "no-store",
+            signal: dataRequestController.signal,
+            headers: {
+                "Cache-Control": "no-cache"
+            }
         });
 
         if (!response.ok) {
             throw new Error(`Ошибка загрузки данных: ${response.status}`);
         }
 
-        applicationState = await response.json();
+        const nextState = await response.json();
+        const nextSignature = createStateSignature(nextState);
+        const stateChanged = nextSignature !== lastStateSignature;
 
-        renderApplication(applicationState);
-        initializeFilters();
-        initializeScrollEffects();
+        applicationState = nextState;
+        lastStateSignature = nextSignature;
+
+        if (stateChanged || showLoadingError) {
+            renderApplication(applicationState);
+        } else {
+            renderMeta(applicationState);
+            refreshDynamicMatchTimes();
+        }
+
+        setRefreshState("ready");
     } catch (error) {
-        console.error(error);
+        if (error.name === "AbortError") {
+            return;
+        }
 
-        document.getElementById("predictionsGrid").innerHTML = `
-            <div class="loading-card">
-                <p>
-                    Не удалось загрузить данные. Повторите попытку позднее.
-                </p>
-            </div>
-        `;
+        console.error(error);
+        setRefreshState("error");
+
+        if (showLoadingError && !applicationState) {
+            document.getElementById("predictionsGrid").innerHTML = `
+                <div class="loading-card">
+                    <p>
+                        Не удалось загрузить данные. Система повторит попытку
+                        автоматически.
+                    </p>
+                </div>
+            `;
+        }
     }
+}
+
+function initializeRuntimeEvents() {
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            loadApplicationState();
+            refreshDynamicMatchTimes();
+        }
+    });
+
+    window.addEventListener("focus", () => {
+        loadApplicationState();
+    });
+
+    window.addEventListener("online", () => {
+        loadApplicationState();
+    });
+
+    window.addEventListener("offline", () => {
+        setRefreshState("offline");
+    });
+}
+
+function startRuntimeTimers() {
+    if (dataRefreshTimer) {
+        window.clearInterval(dataRefreshTimer);
+    }
+
+    if (matchClockTimer) {
+        window.clearInterval(matchClockTimer);
+    }
+
+    dataRefreshTimer = window.setInterval(() => {
+        if (!document.hidden && navigator.onLine) {
+            loadApplicationState();
+        }
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    matchClockTimer = window.setInterval(() => {
+        refreshDynamicMatchTimes();
+        updateDataFreshness();
+    }, MATCH_CLOCK_INTERVAL_MS);
+}
+
+function createStateSignature(state) {
+    return JSON.stringify({
+        updatedAt: state?.meta?.updatedAt || "",
+        selectedPredictions: state?.meta?.selectedPredictions || 0,
+        bankCurrent: state?.bank?.current || 0,
+        historyLength: state?.history?.length || 0,
+        predictions: (state?.predictions || []).map((item) => ({
+            id: item.id,
+            utcDate: item.utcDate,
+            confidence: item.confidence
+        }))
+    });
+}
+
+function setRefreshState(state) {
+    const indicator = document.getElementById("refreshIndicator");
+
+    if (!indicator) {
+        return;
+    }
+
+    indicator.classList.remove(
+        "is-loading",
+        "is-ready",
+        "is-error",
+        "is-offline"
+    );
+
+    indicator.classList.add(`is-${state}`);
+
+    if (state === "offline") {
+        setText("dataFreshness", "Нет подключения к интернету");
+        return;
+    }
+
+    if (state === "error") {
+        setText(
+            "dataFreshness",
+            "Не удалось проверить обновление — повторим автоматически"
+        );
+        return;
+    }
+
+    if (state === "loading") {
+        setText("dataFreshness", "Проверяем новые данные");
+        return;
+    }
+
+    updateDataFreshness();
 }
 
 function renderApplication(state) {
@@ -51,6 +202,8 @@ function renderMeta(state) {
     setText("lastUpdated", updated);
     setText("appVersion", state.meta?.version || "1.0.0");
     setText("radarCount", state.meta?.analyzedMatches || 0);
+
+    updateDataFreshness();
 }
 
 function renderPredictions(predictions) {
@@ -75,7 +228,11 @@ function renderPredictions(predictions) {
             : "risk-low";
 
         return `
-            <article class="prediction-card">
+            <article
+                class="prediction-card"
+                data-match-id="${escapeHtml(prediction.id)}"
+                data-kickoff="${escapeHtml(prediction.utcDate || "")}"
+            >
                 <div class="prediction-top">
                     <div class="league-info">
                         <strong>${escapeHtml(prediction.league)}</strong>
@@ -88,7 +245,13 @@ function renderPredictions(predictions) {
                 </div>
 
                 <div class="match-time">
-                    ${formatMatchDate(prediction.date, prediction.time)}
+                    <span>
+                        ${formatMatchDate(prediction.date, prediction.time)}
+                    </span>
+
+                    <strong class="match-countdown">
+                        ${formatMatchCountdown(prediction.utcDate)}
+                    </strong>
                 </div>
 
                 <div class="teams">
@@ -126,6 +289,8 @@ function renderPredictions(predictions) {
             </article>
         `;
     }).join("");
+
+    refreshDynamicMatchTimes();
 }
 
 function renderBank(bank) {
@@ -536,6 +701,123 @@ function formatMatchDate(dateValue, timeValue) {
         hour: "2-digit",
         minute: "2-digit"
     }).format(date);
+}
+
+function updateDataFreshness() {
+    const updatedAt = applicationState?.meta?.updatedAt;
+
+    if (!updatedAt) {
+        setText("dataFreshness", "Время обновления неизвестно");
+        return;
+    }
+
+    const updatedDate = new Date(updatedAt);
+
+    if (Number.isNaN(updatedDate.getTime())) {
+        setText("dataFreshness", "Данные загружены");
+        return;
+    }
+
+    const ageMinutes = Math.max(
+        0,
+        Math.floor((Date.now() - updatedDate.getTime()) / 60_000)
+    );
+
+    if (ageMinutes < 1) {
+        setText("dataFreshness", "Получены только что");
+        return;
+    }
+
+    if (ageMinutes < 60) {
+        setText(
+            "dataFreshness",
+            `Актуальность: ${formatMinutesPhrase(ageMinutes)} назад`
+        );
+        return;
+    }
+
+    const hours = Math.floor(ageMinutes / 60);
+    const minutes = ageMinutes % 60;
+
+    setText(
+        "dataFreshness",
+        `Актуальность: ${hours} ч. ${minutes} мин. назад`
+    );
+}
+
+function refreshDynamicMatchTimes() {
+    document.querySelectorAll("[data-kickoff]").forEach((card) => {
+        const countdown = card.querySelector(".match-countdown");
+
+        if (!countdown) {
+            return;
+        }
+
+        countdown.textContent = formatMatchCountdown(
+            card.dataset.kickoff
+        );
+    });
+}
+
+function formatMatchCountdown(value) {
+    if (!value) {
+        return "Время уточняется";
+    }
+
+    const kickoff = new Date(value);
+
+    if (Number.isNaN(kickoff.getTime())) {
+        return "Время уточняется";
+    }
+
+    const differenceMs = kickoff.getTime() - Date.now();
+    const differenceMinutes = Math.ceil(differenceMs / 60_000);
+
+    if (differenceMinutes > 2_880) {
+        const days = Math.floor(differenceMinutes / 1_440);
+        const hours = Math.floor(
+            (differenceMinutes % 1_440) / 60
+        );
+
+        return `До начала: ${days} д. ${hours} ч.`;
+    }
+
+    if (differenceMinutes > 60) {
+        const hours = Math.floor(differenceMinutes / 60);
+        const minutes = differenceMinutes % 60;
+
+        return `До начала: ${hours} ч. ${minutes} мин.`;
+    }
+
+    if (differenceMinutes > 0) {
+        return `До начала: ${formatMinutesPhrase(differenceMinutes)}`;
+    }
+
+    if (differenceMinutes > -180) {
+        return "Матч начался";
+    }
+
+    return "Ожидается результат";
+}
+
+function formatMinutesPhrase(value) {
+    const number = Math.abs(Number(value || 0));
+    const lastTwo = number % 100;
+    const last = number % 10;
+
+    if (lastTwo >= 11 && lastTwo <= 14) {
+        return `${number} минут`;
+    }
+
+    if (last === 1) {
+        return `${number} минуту`;
+    }
+
+    if (last >= 2 && last <= 4) {
+        return `${number} минуты`;
+    }
+
+    return `${number} минут`;
 }
 
 function clamp(value, minimum, maximum) {

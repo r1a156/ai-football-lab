@@ -164,9 +164,23 @@
                     <h2>Прогнозы системы</h2>
                 </div>
 
-                <div class="update-info">
-                    <span>Обновлено</span>
-                    <strong id="lastUpdated">Загрузка...</strong>
+                <div class="update-info" aria-live="polite">
+                    <div class="update-info-main">
+                        <span>Обновлено</span>
+                        <strong id="lastUpdated">Загрузка...</strong>
+                    </div>
+
+                    <div class="data-connection">
+                        <span
+                            id="refreshIndicator"
+                            class="refresh-indicator is-loading"
+                            aria-hidden="true"
+                        ></span>
+
+                        <span id="dataFreshness">
+                            Проверяем актуальность данных
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -449,7 +463,7 @@
         </p>
     </footer>
 
-    <script src="assets/app.js"></script>
+    <script src="assets/app.js?v=4.3.0"></script>
 </body>
 </html>
 

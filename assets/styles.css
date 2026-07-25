@@ -1753,3 +1753,109 @@ footer p {
         animation-iteration-count: 1 !important;
     }
 }
+/* ==========================================================================
+   V4.3B LIVE FRONTEND
+   ========================================================================== */
+
+.update-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.update-info-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+}
+
+.data-connection {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+.refresh-indicator {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--muted);
+}
+
+.refresh-indicator.is-loading {
+    background: var(--warning);
+    animation: refreshPulse 1s ease-in-out infinite;
+}
+
+.refresh-indicator.is-ready {
+    background: var(--success);
+    box-shadow: 0 0 12px rgba(90, 242, 162, 0.55);
+}
+
+.refresh-indicator.is-error {
+    background: var(--danger);
+}
+
+.refresh-indicator.is-offline {
+    background: var(--muted);
+}
+
+.match-time {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.match-countdown {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--accent-bright);
+    background: var(--accent-soft);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@keyframes refreshPulse {
+    0%,
+    100% {
+        opacity: 0.45;
+        transform: scale(0.82);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.12);
+    }
+}
+
+@media (max-width: 760px) {
+    .update-info,
+    .update-info-main {
+        align-items: flex-start;
+    }
+
+    .data-connection {
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .match-time {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+}
