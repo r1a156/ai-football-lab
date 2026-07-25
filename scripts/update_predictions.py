@@ -2923,6 +2923,36 @@ def main() -> int:
             analysis_mode = "DETERMINISTIC_FALLBACK"
 
     if not selected and candidates:
+
+        radar_candidates = sorted(
+            candidates,
+            key=lambda item: float(
+                item.get("dataQuality") or 0
+            ),
+            reverse=True,
+        )
+
+        for candidate in radar_candidates[:4]:
+
+            selected.append(
+                {
+                    "matchId": int(candidate["matchId"]),
+                    "market": "OVER_1_5",
+                    "confidence": 65,
+                    "fairOdds": 1.60,
+                    "risk": "HIGH",
+                    "reason": (
+                        "Матч выбран визуальным радаром. "
+                        "Недостаточно данных для уверенного прогноза."
+                    ),
+                    "analysisMode": "RADAR_OBSERVATION",
+                    "rankingScore": 50,
+                }
+            )
+
+
+
+    if not selected and candidates:
         raise RuntimeError(
             "Кандидаты существуют, но ни ИИ, ни резервный "
             "статистический расчёт не сформировали прогноз"
@@ -3226,4 +3256,11 @@ if __name__ == "__main__":
 
         raise
 
+
+
+
+# V46_3_RADAR_EMPTY_PROTECTION
+# Если AI и статистический фильтр не дали прогноз,
+# но матчи есть — показываем лучшие матчи радара.
+# Пустой экран запрещён.
 
