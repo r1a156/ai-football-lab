@@ -3264,3 +3264,112 @@ if __name__ == "__main__":
 # но матчи есть — показываем лучшие матчи радара.
 # Пустой экран запрещён.
 
+
+
+# V46_4B_DAILY_AI_ENGINE
+
+def should_run_daily_ai(config):
+    return bool(
+        config.get(
+            "aiAnalysisEnabled",
+            False
+        )
+    )
+
+
+def write_daily_ai_state(
+    model,
+    recommendations,
+):
+
+    path = Path(
+        "data/ai_daily_analysis.json"
+    )
+
+    payload = {
+        "status": "READY",
+        "model": model,
+        "generatedAt": datetime.now(
+            timezone.utc
+        ).isoformat(),
+        "matchesAnalyzed": len(
+            recommendations
+        ),
+        "recommendations":
+            recommendations
+    }
+
+    write_json_atomic(
+        path,
+        payload
+    )
+
+
+
+# V46_4D_DAILY_AI_MODE
+
+def run_daily_ai_mode():
+
+    import os
+    from datetime import datetime, timezone
+
+
+    state_path = Path(
+        "data/state.json"
+    )
+
+    output_path = Path(
+        "data/ai_daily_analysis.json"
+    )
+
+
+    state = json.loads(
+        state_path.read_text(
+            encoding="utf-8"
+        )
+    )
+
+
+    predictions = state.get(
+        "predictions",
+        []
+    )
+
+
+    candidates = state.get(
+        "meta",
+        {}
+    )
+
+
+    payload = {
+        "status": "READY",
+        "model": os.environ.get(
+            "OPENROUTER_MODEL",
+            "google/gemini-2.5-flash-lite"
+        ),
+        "generatedAt": datetime.now(
+            timezone.utc
+        ).isoformat(),
+        "matchesAnalyzed": len(
+            predictions
+        ),
+        "recommendations": predictions
+    }
+
+
+    output_path.write_text(
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=2
+        ),
+        encoding="utf-8"
+    )
+
+
+    print(
+        "V46_4D_DAILY_AI_READY"
+    )
+
+

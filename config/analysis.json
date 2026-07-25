@@ -65,5 +65,17 @@
   "fallbackMaximumConfidence": 82,
   "preserveHistory": true,
   "preserveBank": true,
-  "rankPredictions": true
+  "rankPredictions": true,
+  "aiAnalysisEnabled": true,
+  "aiAnalysisSchedule": "daily",
+  "aiAnalysisHour": 3,
+  "aiMaximumDailyCalls": 1,
+  "aiCacheHours": 24,
+  "openRouterModels": [
+    "google/gemini-2.5-flash-lite",
+    "deepseek/deepseek-chat-v3",
+    "qwen/qwen3-32b",
+    "openrouter/auto"
+  ],
+  "openRouterDailyMode": true
 }
