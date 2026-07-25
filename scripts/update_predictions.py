@@ -786,10 +786,9 @@ def build_analysis_prompt(
 Не выдумывай отсутствующие факты.
 
 ЗАДАЧА:
-Отбери от 0 до {maximum_predictions} наиболее обоснованных прогнозов.
+Если массив кандидатов не пуст, отбери от 1 до {maximum_predictions} наиболее обоснованных прогнозов.
 
-Если ни один матч не имеет достаточного статистического основания,
-верни пустой массив predictions.
+Если кандидаты переданы, нельзя возвращать пустой массив. Выбери хотя бы один наиболее обоснованный вариант, но обязательно укажи честный уровень confidence и risk.
 
 Минимальная допустимая уверенность:
 {minimum_confidence} из 100.
@@ -799,7 +798,7 @@ def build_analysis_prompt(
 
 ОГРАНИЧЕНИЯ:
 1. Один прогноз на один matchId.
-2. Не выбирай матч только ради заполнения количества.
+2. Не выбирай слабые матчи только ради достижения четырёх, но при наличии кандидатов выбери минимум один лучший вариант.
 3. Учитывай малый объём выборки как фактор риска.
 4. confidence — целое число от 0 до 100.
 5. probability — число от 0.50 до 0.90.
@@ -874,22 +873,43 @@ def extract_json_object(text: str) -> dict[str, Any]:
     return parsed
 
 
+# V4_4R1_OPENROUTER_RESILIENCE
+
+
 def call_openrouter(
     api_key: str,
     prompt: str,
 ) -> tuple[dict[str, Any], str]:
-    model = os.getenv(
-        "OPENROUTER_MODEL",
-        "",
+    """
+    Устойчивый вызов OpenRouter.
+
+    Не привязываемся к одному поставщику или устаревшему model slug.
+    openrouter/auto выбирает доступную модель для текущей задачи.
+    """
+
+    configured_model = str(
+        os.getenv("OPENROUTER_MODEL")
+        or "openrouter/auto"
     ).strip()
 
-    payload: dict[str, Any] = {
+    if (
+        not configured_model
+        or configured_model
+        == "qwen/qwen-2.5-72b-instruct"
+    ):
+        configured_model = "openrouter/auto"
+
+    maximum_attempts = 4
+    retry_seconds = 15
+
+    payload = {
+        "model": configured_model,
         "messages": [
             {
                 "role": "system",
                 "content": (
-                    "Ты строгий статистический аналитический "
-                    "модуль. Возвращай только корректный JSON."
+                    "Ты строгий аналитический модуль. "
+                    "Отвечай только корректным JSON без markdown."
                 ),
             },
             {
@@ -897,182 +917,104 @@ def call_openrouter(
                 "content": prompt,
             },
         ],
-        "temperature": 0.15,
+        "temperature": 0.1,
         "max_tokens": 3000,
+        "stream": False,
+        "provider": {
+            "allow_fallbacks": True,
+            "require_parameters": True,
+        },
     }
 
-    # Модель берётся из GitHub Secret или переменной среды.
-    # Если она не указана, используется настройка OpenRouter.
-    if model:
-        payload["model"] = model
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": (
+            "https://r1a156.github.io/ai-football-lab/"
+        ),
+        "X-Title": "AI Football Lab",
+    }
 
-    response: dict[str, Any] = {}
-    choices: list[Any] = []
-    last_error = "неизвестный ответ OpenRouter"
+    last_error: Exception | None = None
 
-    # request_json уже повторяет HTTP-запросы при сетевых сбоях.
-    # Этот цикл дополнительно обрабатывает ошибки, которые
-    # OpenRouter иногда возвращает внутри успешного HTTP-ответа.
-    for attempt in range(1, 4):
+    for attempt in range(1, maximum_attempts + 1):
         log(
-            "Запрос OpenRouter: попытка "
-            f"{attempt}/3"
+            "Запрос OpenRouter Auto Router: "
+            f"попытка {attempt}/{maximum_attempts}; "
+            f"модель={configured_model}"
         )
 
-        response = request_json(
-            OPENROUTER_API_URL,
-            method="POST",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "HTTP-Referer": PUBLIC_SITE_URL,
-                "X-OpenRouter-Title": "AI Football Lab",
-            },
-            payload=payload,
-        )
-
-        response_error = response.get("error")
-
-        if isinstance(response_error, dict):
-            error_code = response_error.get("code")
-            error_message = str(
-                response_error.get("message")
-                or "OpenRouter вернул ошибку без описания"
+        try:
+            response = request_json(
+                "https://openrouter.ai/api/v1/chat/completions",
+                method="POST",
+                headers=headers,
+                payload=payload,
+                timeout_seconds=180,
             )
-            error_metadata = response_error.get("metadata")
 
-            last_error = (
-                f"code={error_code}; "
-                f"message={error_message}; "
-                f"metadata={error_metadata}"
+            choices = response.get("choices") or []
+
+            if not choices:
+                raise RuntimeError(
+                    "OpenRouter не вернул choices"
+                )
+
+            message = choices[0].get("message") or {}
+            content = message.get("content")
+
+            if isinstance(content, list):
+                content = "".join(
+                    str(item.get("text") or "")
+                    if isinstance(item, dict)
+                    else str(item)
+                    for item in content
+                )
+
+            content = str(content or "").strip()
+
+            if not content:
+                raise RuntimeError(
+                    "OpenRouter вернул пустой content"
+                )
+
+            returned_model = str(
+                response.get("model")
+                or configured_model
             )
+
+            parsed = extract_json_object(content)
 
             log(
-                "Ошибка OpenRouter в теле ответа: "
-                f"{last_error}"
-            )
-        else:
-            raw_choices = response.get("choices")
-
-            if isinstance(raw_choices, list) and raw_choices:
-                choices = raw_choices
-                break
-
-            response_keys = sorted(
-                str(key)
-                for key in response.keys()
+                "OpenRouter успешно ответил; "
+                f"использована модель: {returned_model}"
             )
 
-            last_error = (
-                "ответ не содержит choices или error; "
-                f"ключи ответа={response_keys}"
-            )
+            return parsed, returned_model
+
+        except Exception as error:
+            last_error = error
 
             log(
-                "OpenRouter вернул неполный ответ: "
-                f"{last_error}"
+                "Предупреждение OpenRouter: "
+                f"{type(error).__name__}: {error}"
             )
 
-        if attempt < 3:
-            delay_seconds = attempt * 10
+            if attempt < maximum_attempts:
+                delay = retry_seconds * attempt
 
-            log(
-                "Повтор OpenRouter через "
-                f"{delay_seconds} секунд"
-            )
+                log(
+                    "Повтор OpenRouter через "
+                    f"{delay} секунд"
+                )
 
-            time.sleep(delay_seconds)
+                time.sleep(delay)
 
-    if not choices:
-        raise RuntimeError(
-            "OpenRouter не вернул результат после "
-            f"трёх попыток: {last_error}"
-        )
-
-    first_choice = choices[0]
-
-    if not isinstance(first_choice, dict):
-        raise RuntimeError(
-            "Первый элемент choices OpenRouter "
-            "не является объектом"
-        )
-
-    choice_error = first_choice.get("error")
-
-    if isinstance(choice_error, dict):
-        raise RuntimeError(
-            "Ошибка внутри choices OpenRouter: "
-            f"code={choice_error.get('code')}; "
-            f"message={choice_error.get('message')}; "
-            f"metadata={choice_error.get('metadata')}"
-        )
-
-    finish_reason = str(
-        first_choice.get("finish_reason")
-        or ""
-    ).strip().lower()
-
-    if finish_reason == "error":
-        raise RuntimeError(
-            "OpenRouter завершил генерацию "
-            "с finish_reason=error"
-        )
-
-    message = first_choice.get("message")
-
-    if not isinstance(message, dict):
-        raise RuntimeError(
-            "OpenRouter не вернул корректный "
-            "объект message"
-        )
-
-    content = message.get("content")
-
-    if isinstance(content, list):
-        text_parts: list[str] = []
-
-        for item in content:
-            if not isinstance(item, dict):
-                continue
-
-            value = (
-                item.get("text")
-                or item.get("content")
-            )
-
-            if value:
-                text_parts.append(str(value))
-
-        content = "\n".join(text_parts)
-
-    if not isinstance(content, str):
-        raise RuntimeError(
-            "Содержимое ответа OpenRouter "
-            "не является строкой"
-        )
-
-    content = content.strip()
-
-    if not content:
-        raise RuntimeError(
-            "OpenRouter вернул пустой ответ"
-        )
-
-    returned_model = str(
-        response.get("model")
-        or model
-        or "default"
+    raise RuntimeError(
+        "OpenRouter временно недоступен после "
+        f"{maximum_attempts} попыток: {last_error}"
     )
 
-    log(
-        "Ответ OpenRouter получен. "
-        f"Модель: {returned_model}; "
-        f"finish_reason: {finish_reason or 'не указан'}"
-    )
-
-    return (
-        extract_json_object(content),
-        returned_model,
-    )
 
 def normalize_model_predictions(
     model_result: dict[str, Any],
@@ -2026,7 +1968,7 @@ def finalize_public_selection(
     )
 
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.55
+        config.get("minimumModelOdds") or 1.0
     )
 
     window_hours = max(
@@ -2100,9 +2042,13 @@ def finalize_public_selection(
             )
             continue
 
-        if model_odds < minimum_model_odds:
+        # MODEL_FAIR является математическим коэффициентом
+        # вероятности модели, а не букмекерской линией.
+        # До подключения market odds не отклоняем прогноз
+        # только из-за небольшого MODEL_FAIR.
+        if model_odds <= 1.0:
             log(
-                "V4.4 отклонён слишком маленький "
+                "V4.4R1 отклонён некорректный "
                 "расчётный коэффициент: "
                 f"matchId={match_id}; odds={model_odds}"
             )
@@ -2571,16 +2517,145 @@ def main() -> int:
         config,
     )
 
-    model_result, model_name = call_openrouter(
-        openrouter_api_key,
-        prompt,
-    )
+    try:
+        model_result, model_name = call_openrouter(
+            openrouter_api_key,
+            prompt,
+        )
+    except Exception as openrouter_error:
+        log(
+            "OpenRouter временно недоступен. "
+            "Сохраняется последняя действующая подборка: "
+            f"{openrouter_error}"
+        )
+
+        previous_predictions = [
+            item
+            for item in state.get("predictions", [])
+            if isinstance(item, dict)
+        ]
+
+        now_utc = utc_now()
+        preserved_predictions: list[dict[str, Any]] = []
+
+        for item in previous_predictions:
+            try:
+                kickoff = parse_utc_datetime(
+                    str(item.get("utcDate") or "")
+                )
+            except Exception:
+                continue
+
+            # Сохраняем только ещё актуальные либо недавно начавшиеся
+            # карточки. Старые прогнозы бесконечно не держим.
+            if kickoff >= now_utc - dt.timedelta(hours=3):
+                preserved_predictions.append(item)
+
+        state["predictions"] = preserved_predictions
+
+        state.setdefault("meta", {}).update(
+            {
+                "version": "2.0.0",
+                "mode": "real",
+                "updatedAt": now.isoformat(),
+                "analyzedMatches": len(scheduled_matches),
+                "candidateMatches": len(candidates),
+                "selectedPredictions": len(
+                    preserved_predictions
+                ),
+                "source": "football-data.org",
+                "analysisProvider": "OpenRouter",
+                "analysisStatus": (
+                    "AI_TEMPORARILY_UNAVAILABLE"
+                ),
+                "analysisModel": "openrouter/auto",
+                "notice": (
+                    "Источник матчей обновлён. "
+                    "ИИ-анализ временно недоступен, "
+                    "поэтому сохранена последняя "
+                    "актуальная подборка."
+                ),
+            }
+        )
+
+        update_statistics(state)
+
+        write_json_atomic(
+            STATE_PATH,
+            state,
+        )
+
+        write_json_atomic(
+            REPORT_PATH,
+            create_report(
+                status="GREEN_DEGRADED_AI_UNAVAILABLE",
+                message=(
+                    "Источник матчей обновлён. "
+                    "OpenRouter временно недоступен; "
+                    "последняя актуальная подборка сохранена."
+                ),
+                details={
+                    "recentMatches": len(recent_matches),
+                    "scheduledMatches": len(
+                        scheduled_matches
+                    ),
+                    "candidateMatches": len(candidates),
+                    "preservedPredictions": len(
+                        preserved_predictions
+                    ),
+                    "error": str(openrouter_error),
+                },
+            ),
+        )
+
+        log(
+            "Pipeline завершён в безопасном режиме "
+            "без очистки существующих прогнозов"
+        )
+
+        return 0
 
     selected = normalize_model_predictions(
         model_result,
         candidates,
         config,
     )
+
+    if not selected and candidates:
+        log(
+            "Первичный анализ не выбрал прогнозов. "
+            "Запускается обязательный резервный анализ."
+        )
+
+        reserve_prompt = (
+            prompt
+            + "\n\nОБЯЗАТЕЛЬНЫЙ РЕЗЕРВНЫЙ ПРОХОД:\n"
+            + "Кандидаты существуют. Верни от 1 до "
+            + str(
+                int(
+                    config.get("maximumPredictions")
+                    or 4
+                )
+            )
+            + " лучших вариантов. Не возвращай пустой массив. "
+            + "Не завышай уверенность и честно используй "
+            + "risk=MEDIUM, если данных немного."
+        )
+
+        reserve_result, reserve_model = call_openrouter(
+            openrouter_api_key,
+            reserve_prompt,
+        )
+
+        reserve_selected = normalize_model_predictions(
+            reserve_result,
+            candidates,
+            config,
+        )
+
+        if reserve_selected:
+            selected = reserve_selected
+            model_name = reserve_model
 
     candidates_by_id = {
         int(candidate["matchId"]): candidate
@@ -2714,6 +2789,10 @@ def main() -> int:
             ),
             "minimumModelOdds": float(
                 config.get("minimumModelOdds")
+                or 1.0
+            ),
+            "minimumMarketOdds": float(
+                config.get("minimumMarketOdds")
                 or 1.55
             ),
             "marketOddsAvailable": False,

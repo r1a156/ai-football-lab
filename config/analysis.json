@@ -45,10 +45,19 @@
   "winMarketMinimumConfidence": 76,
   "minimumLeadHours": 3,
   "selectionWindowHours": 24,
-  "minimumModelOdds": 1.55,
+  "minimumModelOdds": 1.0,
   "preferredModelOddsMinimum": 1.65,
   "preferredModelOddsMaximum": 2.2,
   "marketExpectedValueEnabled": false,
   "localizePublicNames": true,
-  "publishLiveStatus": true
+  "publishLiveStatus": true,
+  "openRouterModel": "openrouter/auto",
+  "openRouterAutomaticRouting": true,
+  "openRouterProviderFallbacks": true,
+  "openRouterMaximumAttempts": 4,
+  "openRouterRetrySeconds": 15,
+  "preservePredictionsOnAiFailure": true,
+  "requirePredictionWhenCandidatesExist": true,
+  "minimumMarketOdds": 1.55,
+  "marketOddsAvailable": false
 }
