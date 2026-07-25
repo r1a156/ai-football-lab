@@ -4,7 +4,16 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: "17 5 * * *"
+    - cron: "17 */2 * * *"
+
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-data.yml"
+      - "scripts/update_predictions.py"
+      - "config/analysis.json"
+
 permissions:
   contents: write
 
@@ -16,7 +25,7 @@ jobs:
   update:
     name: Получение и анализ матчей
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Получение проекта
@@ -49,11 +58,38 @@ jobs:
 
           echo "Обязательные секреты присутствуют."
 
-      - name: Проверка синтаксиса
+      - name: Проверка исходных файлов
+        shell: bash
         run: |
+          set -euo pipefail
+
           python -m py_compile scripts/update_predictions.py
-          python -m json.tool config/analysis.json > /dev/null
-          python -m json.tool data/state.json > /dev/null
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          files = [
+              Path("config/analysis.json"),
+              Path("data/state.json"),
+          ]
+
+          for path in files:
+              raw = path.read_bytes()
+
+              if raw.startswith(b"\xef\xbb\xbf"):
+                  raise SystemExit(
+                      f"{path}: обнаружен запрещённый UTF-8 BOM"
+                  )
+
+              with path.open(
+                  "r",
+                  encoding="utf-8",
+              ) as source:
+                  json.load(source)
+
+              print(f"{path}: корректный UTF-8 без BOM")
+          PY
 
       - name: Обновление данных
         env:
@@ -64,59 +100,74 @@ jobs:
           python scripts/update_predictions.py
 
       - name: Проверка результата
+        shell: bash
         run: |
-          python -m json.tool data/state.json > /dev/null
-          python -m json.tool data/last-update-report.json > /dev/null
+          set -euo pipefail
 
           python - <<'PY'
           import json
           from pathlib import Path
 
-          state = json.loads(
-              Path("data/state.json").read_text(
-                  encoding="utf-8"
-              )
+          def read_json(path_value):
+              path = Path(path_value)
+
+              with path.open(
+                  "r",
+                  encoding="utf-8-sig",
+              ) as source:
+                  return json.load(source)
+
+          state = read_json("data/state.json")
+          report = read_json(
+              "data/last-update-report.json"
           )
 
-          report = json.loads(
-              Path(
-                  "data/last-update-report.json"
-              ).read_text(
-                  encoding="utf-8"
-              )
-          )
+          mode = state.get("meta", {}).get("mode")
+          status = report.get("status")
+          predictions = state.get("predictions", [])
+          history = state.get("history", [])
 
-          if state.get("meta", {}).get("mode") != "real":
+          if mode != "real":
               raise SystemExit(
                   "state.json не переведён в реальный режим"
               )
 
-          if report.get("status") == "FAILED":
+          if status == "FAILED":
               raise SystemExit(
-                  "Pipeline сформировал FAILED-отчёт"
+                  "Pipeline сформировал FAILED-отчёт: "
+                  + str(report.get("message", "без сообщения"))
               )
 
-          print(
-              "Режим:",
-              state.get("meta", {}).get("mode")
-          )
-
+          print("Режим:", mode)
           print(
               "Статус анализа:",
-              state.get("meta", {}).get(
-                  "analysisStatus"
+              state.get("meta", {}).get("analysisStatus")
+          )
+          print("Прогнозов:", len(predictions))
+          print("История:", len(history))
+          print("Отчёт:", status)
+          PY
+
+      - name: Нормализация выходных JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python - <<'PY'
+          from pathlib import Path
+
+          for value in (
+              "data/state.json",
+              "data/last-update-report.json",
+          ):
+              path = Path(value)
+              text = path.read_text(encoding="utf-8-sig")
+              path.write_text(
+                  text,
+                  encoding="utf-8",
+                  newline="\n",
               )
-          )
-
-          print(
-              "Прогнозов:",
-              len(state.get("predictions", []))
-          )
-
-          print(
-              "История:",
-              len(state.get("history", []))
-          )
+              print(f"Нормализован: {path}")
           PY
 
       - name: Сохранение обновлённых данных
@@ -124,13 +175,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          if git diff --quiet -- data/state.json data/last-update-report.json; then
+          if git diff --quiet -- \
+            data/state.json \
+            data/last-update-report.json; then
             echo "Данные не изменились. Коммит не требуется."
             exit 0
           fi
 
           git config user.name "AI Football Lab Bot"
-          git config user.email "actions@users.noreply.github.com"
+          git config user.email \
+            "actions@users.noreply.github.com"
 
           git add \
             data/state.json \
