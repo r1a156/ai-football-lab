@@ -2846,8 +2846,45 @@ def main() -> int:
             config,
         )
 
+        # V46_4_2_AI_RECOVERY
+        # Если Gemini ответил, но строгий фильтр оставил пусто,
+        # берём лучшие безопасные AI варианты
+
+        if not selected and isinstance(model_result, dict):
+
+            raw_ai_predictions = (
+                model_result.get("predictions")
+                or model_result.get("recommendations")
+                or []
+            )
+
+            if isinstance(raw_ai_predictions, list):
+
+                recovered = []
+
+                for item in raw_ai_predictions:
+
+                    if not isinstance(item, dict):
+                        continue
+
+                    if item.get("matchId"):
+
+                        item["analysisMode"] = "AI_RECOVERED"
+
+                        recovered.append(item)
+
+                if recovered:
+
+                    selected = recovered[:int(
+                        config.get("maximumPredictions") or 4
+                    )]
+
+
         for item in selected:
-            item["analysisMode"] = "AI"
+            item["analysisMode"] = item.get(
+                "analysisMode",
+                "AI"
+            )
 
 
         # V46B AI + STAT FUSION
