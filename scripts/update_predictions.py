@@ -2822,6 +2822,46 @@ def main() -> int:
         for item in selected:
             item["analysisMode"] = "AI"
 
+
+        # V46B AI + STAT FUSION
+        # Если AI дал меньше 4 прогнозов,
+        # добираем лучшими статистическими вариантами
+
+        target_count = int(
+            config.get("maximumPredictions") or 4
+        )
+
+        if len(selected) < target_count:
+
+            reserve_selected = build_deterministic_predictions(
+                candidates,
+                config,
+            )
+
+            selected_ids = {
+                int(item["matchId"])
+                for item in selected
+                if item.get("matchId")
+            }
+
+
+            for item in reserve_selected:
+
+                if len(selected) >= target_count:
+                    break
+
+
+                match_id = int(item["matchId"])
+
+                if match_id not in selected_ids:
+
+                    item["analysisMode"] = "AI_STAT_FUSION"
+
+                    selected.append(item)
+
+                    selected_ids.add(match_id)
+
+
     except Exception as openrouter_error:
         openrouter_error_text = str(openrouter_error)
 
@@ -2880,6 +2920,42 @@ def main() -> int:
         for item in selected
         if int(item["matchId"]) not in already_pending
     ]
+
+
+    # V46 FINAL EMPTY PROTECTION
+    # Если после удаления старых pending прогнозов ничего не осталось,
+    # повторно добираем свежими матчами ближайших суток.
+
+    if not selected and candidates:
+
+        log(
+            "V46 EMPTY_SELECTION_RECOVERY: rebuilding from fresh candidates"
+        )
+
+
+        recovery = build_deterministic_predictions(
+            candidates,
+            config,
+        )
+
+
+        for item in recovery:
+
+            if len(selected) >= int(
+                config.get("maximumPredictions") or 4
+            ):
+                break
+
+
+            if int(item["matchId"]) not in already_pending:
+
+                item["analysisMode"] = (
+                    "STATISTICAL_RECOVERY"
+                )
+
+                selected.append(item)
+
+
 
     current_bank = float(
         state.get("bank", {}).get("current")
@@ -3121,3 +3197,5 @@ if __name__ == "__main__":
             pass
 
         raise
+
+
