@@ -2884,9 +2884,18 @@ def finalize_public_selection(
             )
             continue
 
+        value_tier = str(
+            prediction.get("valueTier") or ""
+        ).upper()
         is_best_available = (
-            str(prediction.get("selectionTier") or "").upper()
+            str(
+                prediction.get("selectionTier") or ""
+            ).upper()
             == "BEST_AVAILABLE"
+            or value_tier in {
+                "PROBABILITY_FIRST",
+                "HIGH_PROBABILITY_FALLBACK",
+            }
         )
 
         if confidence < required_confidence:
@@ -2936,11 +2945,41 @@ def finalize_public_selection(
         prediction["selectionWindowHours"] = window_hours
         prediction["minimumModelOdds"] = minimum_model_odds
         prediction["maximumModelOdds"] = maximum_model_odds
-        prediction["marketOddsAvailable"] = False
-        prediction["expectedValueAvailable"] = False
-        prediction["coefficientType"] = "MODEL_FAIR"
-        prediction["oddsLabel"] = "Модельный коэффициент (не букмекерский)"
-        prediction["probabilityPercent"] = round(probability * 100, 1)
+
+        is_bookmaker_prediction = (
+            str(
+                prediction.get("coefficientType") or ""
+            )
+            == "BOOKMAKER_MARKET"
+            and float(
+                prediction.get("bookmakerOdds")
+                or prediction.get("odds")
+                or 0
+            )
+            > 1
+        )
+
+        if is_bookmaker_prediction:
+            prediction["marketOddsAvailable"] = True
+            prediction["expectedValueAvailable"] = True
+            prediction["coefficientType"] = "BOOKMAKER_MARKET"
+            prediction["oddsLabel"] = "Коэффициент букмекера"
+            prediction["odds"] = float(
+                prediction.get("bookmakerOdds")
+                or prediction.get("odds")
+            )
+        else:
+            prediction["marketOddsAvailable"] = False
+            prediction["expectedValueAvailable"] = False
+            prediction["coefficientType"] = "MODEL_FAIR"
+            prediction["oddsLabel"] = (
+                "Модельный коэффициент (не букмекерский)"
+            )
+
+        prediction["probabilityPercent"] = round(
+            probability * 100,
+            1,
+        )
         prediction.update(
             extract_public_match_status(matches_by_id.get(match_id))
         )
@@ -2985,8 +3024,18 @@ def finalize_public_selection(
         history_record["league"] = prediction.get("league")
         history_record["reason"] = prediction.get("reason")
         history_record["rank"] = prediction.get("rank")
-        history_record["marketOddsAvailable"] = False
-        history_record["expectedValueAvailable"] = False
+        history_record["marketOddsAvailable"] = bool(
+            prediction.get("marketOddsAvailable")
+        )
+        history_record["expectedValueAvailable"] = bool(
+            prediction.get("expectedValueAvailable")
+        )
+        history_record["coefficientType"] = str(
+            prediction.get("coefficientType") or ""
+        )
+        history_record["oddsLabel"] = str(
+            prediction.get("oddsLabel") or ""
+        )
         history_record.update(
             extract_public_match_status(
                 matches_by_id.get(
@@ -5170,6 +5219,11 @@ def run_self_test() -> int:
         "maximumBookmakerOdds": 5.0,
         "minimumExpectedValue": 0.02,
         "fallbackMinimumExpectedValue": 0.0,
+        "strictMinimumExpectedValue": 0.0,
+        "probabilityFirstMinimumProbability": 0.52,
+        "probabilityFirstMinimumExpectedValue": -0.12,
+        "safetyMinimumProbability": 0.56,
+        "safetyMinimumExpectedValue": -0.16,
         "oddsMatchKickoffToleranceMinutes": 60,
         "minimumOddsMatchScore": 0.78,
         "maximumOddsAgeMinutes": 30,
@@ -5950,8 +6004,20 @@ def v9_build_global_market_consensus_pool(
     maximum_odds = float(
         config.get("maximumBookmakerOdds") or 3.20
     )
-    minimum_ev = float(
-        config.get("fallbackMinimumExpectedValue") or 0.0
+    strict_minimum_ev = float(
+        config.get("strictMinimumExpectedValue") or 0.0
+    )
+    probability_first_minimum_probability = float(
+        config.get("probabilityFirstMinimumProbability") or 0.52
+    )
+    probability_first_minimum_ev = float(
+        config.get("probabilityFirstMinimumExpectedValue") or -0.12
+    )
+    safety_minimum_probability = float(
+        config.get("safetyMinimumProbability") or 0.56
+    )
+    safety_minimum_ev = float(
+        config.get("safetyMinimumExpectedValue") or -0.16
     )
     preferred_odds = float(
         config.get("preferredBookmakerOdds") or 1.60
@@ -5990,6 +6056,11 @@ def v9_build_global_market_consensus_pool(
         "probability": 0,
         "odds": 0,
         "expectedValue": 0,
+    }
+    tier_counts = {
+        "STRICT_VALUE": 0,
+        "PROBABILITY_FIRST": 0,
+        "HIGH_PROBABILITY_FALLBACK": 0,
     }
     rows_by_market = {
         "h2h": 0,
@@ -6075,9 +6146,30 @@ def v9_build_global_market_consensus_pool(
                     probability * bookmaker_odds - 1
                 )
 
-                if expected_value < minimum_ev:
+                if expected_value >= strict_minimum_ev:
+                    value_tier = "STRICT_VALUE"
+                    accepted_minimum_ev = strict_minimum_ev
+                elif (
+                    probability
+                    >= probability_first_minimum_probability
+                    and expected_value
+                    >= probability_first_minimum_ev
+                ):
+                    value_tier = "PROBABILITY_FIRST"
+                    accepted_minimum_ev = (
+                        probability_first_minimum_ev
+                    )
+                elif (
+                    probability >= safety_minimum_probability
+                    and expected_value >= safety_minimum_ev
+                ):
+                    value_tier = "HIGH_PROBABILITY_FALLBACK"
+                    accepted_minimum_ev = safety_minimum_ev
+                else:
                     rejected["expectedValue"] += 1
                     continue
+
+                tier_counts[value_tier] += 1
 
                 quote_prices = [
                     float(row["prices"][market])
@@ -6135,19 +6227,25 @@ def v9_build_global_market_consensus_pool(
                     35,
                     94,
                 )
+                tier_bonus = {
+                    "STRICT_VALUE": 5.0,
+                    "PROBABILITY_FIRST": 2.0,
+                    "HIGH_PROBABILITY_FALLBACK": 0.0,
+                }[value_tier]
                 ranking_score = (
-                    probability * 48
-                    + confidence * 0.30
-                    + data_quality * 0.18
+                    probability * 58
+                    + confidence * 0.26
+                    + data_quality * 0.16
                     + max(
-                        0.0,
+                        -0.16,
                         expected_value,
                     )
                     * 100
-                    * 0.22
+                    * 0.08
                     + probability_bonus
                     + preferred_book_bonus
                     + odds_bonus
+                    + tier_bonus
                     - dispersion * 100
                 )
                 risk = (
@@ -6186,7 +6284,8 @@ def v9_build_global_market_consensus_pool(
                             f"вероятность "
                             f"{probability * 100:.1f}%, "
                             f"разброс "
-                            f"{dispersion * 100:.1f} п.п."
+                            f"{dispersion * 100:.1f} п.п.; "
+                            f"режим отбора {value_tier}."
                         ),
                         "analysisMode": (
                             "GLOBAL_MARKET_CONSENSUS"
@@ -6196,6 +6295,14 @@ def v9_build_global_market_consensus_pool(
                         ),
                         "selectionTier": (
                             "GLOBAL_DISCOVERY"
+                        ),
+                        "valueTier": value_tier,
+                        "selectionPolicy": (
+                            "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
+                        ),
+                        "minimumAcceptedExpectedValue": round(
+                            accepted_minimum_ev,
+                            6,
                         ),
                         "rankingScore": round(
                             ranking_score,
@@ -6305,6 +6412,18 @@ def v9_build_global_market_consensus_pool(
         "eventsEvaluated": len(odds_events),
         "consensusOptions": len(pool),
         "rowsByMarket": rows_by_market,
+        "tierCounts": tier_counts,
+        "thresholds": {
+            "strictMinimumExpectedValue": strict_minimum_ev,
+            "probabilityFirstMinimumProbability": (
+                probability_first_minimum_probability
+            ),
+            "probabilityFirstMinimumExpectedValue": (
+                probability_first_minimum_ev
+            ),
+            "safetyMinimumProbability": safety_minimum_probability,
+            "safetyMinimumExpectedValue": safety_minimum_ev,
+        },
         "rejected": rejected,
     }
     return pool, diagnostics
@@ -6332,6 +6451,51 @@ def v9_merge_prediction_pools(
     return list(by_key.values())
 
 
+def v9_classify_value_tier(
+    probability: float,
+    expected_value: float,
+    config: dict[str, Any],
+) -> tuple[str, float] | None:
+    strict_minimum_ev = float(
+        config.get("strictMinimumExpectedValue") or 0.0
+    )
+    probability_first_minimum_probability = float(
+        config.get("probabilityFirstMinimumProbability") or 0.52
+    )
+    probability_first_minimum_ev = float(
+        config.get("probabilityFirstMinimumExpectedValue") or -0.12
+    )
+    safety_minimum_probability = float(
+        config.get("safetyMinimumProbability") or 0.56
+    )
+    safety_minimum_ev = float(
+        config.get("safetyMinimumExpectedValue") or -0.16
+    )
+
+    if expected_value >= strict_minimum_ev:
+        return "STRICT_VALUE", strict_minimum_ev
+
+    if (
+        probability >= probability_first_minimum_probability
+        and expected_value >= probability_first_minimum_ev
+    ):
+        return (
+            "PROBABILITY_FIRST",
+            probability_first_minimum_ev,
+        )
+
+    if (
+        probability >= safety_minimum_probability
+        and expected_value >= safety_minimum_ev
+    ):
+        return (
+            "HIGH_PROBABILITY_FALLBACK",
+            safety_minimum_ev,
+        )
+
+    return None
+
+
 def v9_select_predictions(
     pool: list[dict[str, Any]],
     target_count: int,
@@ -6341,35 +6505,78 @@ def v9_select_predictions(
     excluded = {int(value) for value in (excluded_match_ids or set())}
     min_odds = float(config.get("minimumBookmakerOdds") or 1.45)
     max_odds = float(config.get("maximumBookmakerOdds") or 3.20)
-    min_probability = float(config.get("minimumPublishedProbability") or 0.50)
-    min_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
-    min_confidence = int(config.get("bestAvailableMinimumConfidence") or 40)
+    min_probability = float(
+        config.get("minimumPublishedProbability") or 0.47
+    )
+    min_confidence = int(
+        config.get("bestAvailableMinimumConfidence") or 38
+    )
     eligible: list[dict[str, Any]] = []
+
     for source in pool:
         try:
             match_id = int(source["matchId"])
             odds = float(source["bookmakerOdds"])
             probability = float(source["probability"])
-            ev = float(source["expectedValue"])
+            expected_value = float(source["expectedValue"])
             confidence = int(source.get("confidence") or 0)
         except (KeyError, TypeError, ValueError):
             continue
+
         if match_id in excluded:
             continue
+
         if not min_odds <= odds <= max_odds:
             continue
-        if probability < min_probability or ev < min_ev:
+
+        if probability < min_probability:
             continue
+
         if confidence < min_confidence:
             continue
-        eligible.append(dict(source))
+
+        classification = v9_classify_value_tier(
+            probability,
+            expected_value,
+            config,
+        )
+
+        if classification is None:
+            continue
+
+        value_tier, accepted_minimum_ev = classification
+        item = dict(source)
+        item["valueTier"] = str(
+            item.get("valueTier") or value_tier
+        )
+        item["selectionPolicy"] = str(
+            item.get("selectionPolicy")
+            or "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
+        )
+        item["minimumAcceptedExpectedValue"] = float(
+            item.get("minimumAcceptedExpectedValue")
+            if item.get("minimumAcceptedExpectedValue") is not None
+            else accepted_minimum_ev
+        )
+        eligible.append(item)
+
+    tier_priority = {
+        "STRICT_VALUE": 0,
+        "PROBABILITY_FIRST": 1,
+        "HIGH_PROBABILITY_FALLBACK": 2,
+    }
+
     eligible.sort(
         key=lambda item: (
             -float(item.get("probability") or 0),
+            tier_priority.get(
+                str(item.get("valueTier") or ""),
+                9,
+            ),
             -int(item.get("confidence") or 0),
             -float(item.get("rankingScore") or 0),
             -int(item.get("oddsQuoteCount") or 0),
-            -float(item.get("expectedValue") or 0),
+            -float(item.get("expectedValue") or -1),
         )
     )
 
@@ -6387,30 +6594,59 @@ def v9_select_predictions(
         for source in eligible:
             if len(selected) >= target_count:
                 return
+
             match_id = int(source["matchId"])
+
             if match_id in used_matches:
                 continue
-            country = str(source.get("country") or "Международный турнир")
-            league = str(source.get("league") or "Неизвестная лига")
+
+            country = str(
+                source.get("country")
+                or "Международный турнир"
+            )
+            league = str(
+                source.get("league")
+                or "Неизвестная лига"
+            )
             market = str(source.get("market") or "")
+
             if country_counts.get(country, 0) >= max_country:
                 continue
+
             if league_counts.get(league, 0) >= max_league:
                 continue
+
             if market_counts.get(market, 0) >= max_market:
                 continue
+
             item = dict(source)
-            item["selectionTier"] = "GLOBAL_DIVERSE_VALUE"
+            value_tier = str(
+                item.get("valueTier")
+                or "STRICT_VALUE"
+            )
+            item["selectionTier"] = (
+                f"GLOBAL_DIVERSE_{value_tier}"
+            )
             selected.append(item)
             used_matches.add(match_id)
-            country_counts[country] = country_counts.get(country, 0) + 1
-            league_counts[league] = league_counts.get(league, 0) + 1
-            market_counts[market] = market_counts.get(market, 0) + 1
+            country_counts[country] = (
+                country_counts.get(country, 0) + 1
+            )
+            league_counts[league] = (
+                league_counts.get(league, 0) + 1
+            )
+            market_counts[market] = (
+                market_counts.get(market, 0) + 1
+            )
 
     add_pass(max_country=1, max_league=1, max_market=2)
     add_pass(max_country=2, max_league=1, max_market=2)
     add_pass(max_country=2, max_league=2, max_market=3)
-    add_pass(max_country=target_count, max_league=2, max_market=target_count)
+    add_pass(
+        max_country=target_count,
+        max_league=2,
+        max_market=target_count,
+    )
     return selected[:target_count]
 
 
@@ -6442,6 +6678,23 @@ def v9_prediction_to_records(
         ),
         "consensusDispersion": float(
             prediction.get("consensusDispersion") or 0
+        ),
+        "valueTier": str(
+            prediction.get("valueTier") or "STRICT_VALUE"
+        ),
+        "selectionPolicy": str(
+            prediction.get("selectionPolicy")
+            or "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
+        ),
+        "minimumAcceptedExpectedValue": float(
+            prediction.get("minimumAcceptedExpectedValue")
+            if prediction.get("minimumAcceptedExpectedValue") is not None
+            else 0.0
+        ),
+        "oddsMaximumAgeMinutes": int(
+            prediction.get("oddsMaximumAgeMinutes")
+            or config.get("maximumOddsAgeMinutes")
+            or 180
         ),
     }
     public.update(additions)
@@ -6627,7 +6880,7 @@ def v9_resolve_global_history(
 
 
 def v9_main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v9 R4 Adaptive Global Markets")
+    log("Запуск AI Football Lab Data Pipeline v9 R6 Probability First")
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
     _load_optional_dotenv(ROOT / ".env")
@@ -6939,11 +7192,25 @@ def v9_main() -> int:
             "Лучший прогноз дня" if index == 1 else f"Прогноз №{index}"
         )
         mode = str(prediction.get("analysisMode") or "")
-        prediction["analysisSourceLabel"] = (
-            "Глобальная модель и статистика"
-            if mode in {"AI", "AI_STAT_CONSENSUS", "DETERMINISTIC"}
-            else "Глобальный консенсус букмекеров"
+        value_tier = str(
+            prediction.get("valueTier") or "STRICT_VALUE"
         )
+        if mode in {"AI", "AI_STAT_CONSENSUS", "DETERMINISTIC"}:
+            source_label = "Глобальная модель и статистика"
+        elif value_tier == "STRICT_VALUE":
+            source_label = (
+                "Глобальный консенсус: положительное преимущество"
+            )
+        elif value_tier == "PROBABILITY_FIRST":
+            source_label = (
+                "Глобальный прогноз: приоритет вероятности"
+            )
+        else:
+            source_label = (
+                "Глобальный прогноз: высокая вероятность, "
+                "контролируемая цена"
+            )
+        prediction["analysisSourceLabel"] = source_label
         history_item = history_by_id.get(str(prediction.get("id") or ""))
         if history_item:
             history_item["rank"] = index
@@ -6964,7 +7231,7 @@ def v9_main() -> int:
     })
     state.setdefault("meta", {}).update(
         {
-            "version": "9.0.0",
+            "version": "9.6.0",
             "mode": "real",
             "updatedAt": now.isoformat(),
             "source": "The Odds API global discovery + football-data.org",
@@ -7025,8 +7292,10 @@ def v9_main() -> int:
             "notice": (
                 "Четыре прогноза выбираются после глобального обнаружения "
                 "активных футбольных лиг. Для лиг без статистики football-data "
-                "вероятность является консервативным безмаржинальным "
-                "консенсусом нескольких букмекеров. Гарантия выигрыша отсутствует."
+                "вероятность является безмаржинальным консенсусом "
+                "нескольких букмекеров. Сначала выбираются варианты с "
+                "неотрицательным EV, затем — наиболее вероятные исходы с "
+                "контролируемым отклонением цены. Гарантия выигрыша отсутствует."
             ),
         }
     )
@@ -7087,9 +7356,9 @@ def validate_repository_files() -> int:
         raise RuntimeError(
             "V9 R4 должен использовать рынки h2h и totals"
         )
-    if int(config.get("maximumOddsSportRequests") or 0) > 8:
+    if int(config.get("maximumOddsSportRequests") or 0) > 12:
         raise RuntimeError(
-            "maximumOddsSportRequests должен быть не больше 8"
+            "maximumOddsSportRequests должен быть не больше 12"
         )
     if int(config.get("maximumSettlementSportRequests") or 0) > 4:
         raise RuntimeError("maximumSettlementSportRequests должен быть не больше 4")
@@ -7106,6 +7375,30 @@ def validate_repository_files() -> int:
     if int(config.get("minimumPublishedLeagues") or 0) < 3:
         raise RuntimeError(
             "minimumPublishedLeagues должен быть не меньше 3"
+        )
+    if float(
+        config.get("probabilityFirstMinimumProbability") or 0
+    ) < 0.52:
+        raise RuntimeError(
+            "probabilityFirstMinimumProbability должен быть не ниже 0.52"
+        )
+    if float(
+        config.get("probabilityFirstMinimumExpectedValue") or 0
+    ) < -0.12:
+        raise RuntimeError(
+            "probabilityFirstMinimumExpectedValue не должен быть ниже -0.12"
+        )
+    if float(
+        config.get("safetyMinimumProbability") or 0
+    ) < 0.56:
+        raise RuntimeError(
+            "safetyMinimumProbability должен быть не ниже 0.56"
+        )
+    if float(
+        config.get("safetyMinimumExpectedValue") or 0
+    ) < -0.16:
+        raise RuntimeError(
+            "safetyMinimumExpectedValue не должен быть ниже -0.16"
         )
     if float(config.get("stakePerPredictionPercent") or 0) != 20:
         raise RuntimeError("stakePerPredictionPercent должен быть равен 20")
@@ -7149,7 +7442,7 @@ def run_self_test() -> int:
     config = {
         "minimumLeadHours": 1,
         "selectionWindowHours": 24,
-        "maximumOddsSportRequests": 8,
+        "maximumOddsSportRequests": 12,
         "minimumConsensusBookmakers": 2,
         "preferredConsensusBookmakers": 3,
         "maximumConsensusDispersion": 0.12,
@@ -7276,6 +7569,56 @@ def run_self_test() -> int:
     if len({int(item["matchId"]) for item in selected}) != 4:
         raise RuntimeError("SELF_TEST: дубли матчей")
 
+    probability_first_pool = []
+    for index in range(4):
+        probability = 0.58 + index * 0.005
+        bookmaker_odds = 1.50
+        expected_value = probability * bookmaker_odds - 1
+        probability_first_pool.append(
+            {
+                "matchId": 9000 + index,
+                "market": (
+                    "HOME_WIN"
+                    if index % 2 == 0
+                    else "UNDER_2_5"
+                ),
+                "bookmakerOdds": bookmaker_odds,
+                "probability": probability,
+                "expectedValue": expected_value,
+                "confidence": 66,
+                "rankingScore": 70 - index,
+                "oddsQuoteCount": 4,
+                "country": f"Test Country {index}",
+                "league": f"Test League {index}",
+            }
+        )
+
+    probability_first_selected = v9_select_predictions(
+        probability_first_pool,
+        4,
+        config,
+    )
+
+    if len(probability_first_selected) != 4:
+        raise RuntimeError(
+            "SELF_TEST: probability-first не сформировал четвёрку"
+        )
+
+    fallback_tiers = {
+        str(item.get("valueTier") or "")
+        for item in probability_first_selected
+    }
+    if (
+        "STRICT_VALUE" in fallback_tiers
+        or not fallback_tiers.issubset({
+            "PROBABILITY_FIRST",
+            "HIGH_PROBABILITY_FALLBACK",
+        })
+    ):
+        raise RuntimeError(
+            "SELF_TEST: неверная классификация controlled price gap"
+        )
+
     candidate_by_id = {int(item["matchId"]): item for item in candidates}
     public = []
     history = []
@@ -7287,6 +7630,37 @@ def run_self_test() -> int:
         )
         public.append(pub)
         history.append(hist)
+    final_public, final_history = finalize_public_selection(
+        public,
+        history,
+        candidate_by_id,
+        {
+            **config,
+            "minimumConfidence": 38,
+            "winMarketMinimumConfidence": 38,
+            "minimumModelOdds": 1.01,
+            "maximumModelOdds": 20.0,
+            "minimumLeadHours": 1,
+        },
+        now,
+    )
+    if len(final_public) != 4 or len(final_history) != 4:
+        raise RuntimeError(
+            "SELF_TEST: финальный guard потерял прогнозы"
+        )
+    if any(
+        item.get("coefficientType") != "BOOKMAKER_MARKET"
+        or not bool(item.get("marketOddsAvailable"))
+        or not bool(item.get("expectedValueAvailable"))
+        for item in final_public
+    ):
+        raise RuntimeError(
+            "SELF_TEST: финальный guard испортил букмекерские поля"
+        )
+
+    public = final_public
+    history = final_history
+
     repaired = apply_stake_policy_to_selected_predictions(
         public,
         history,
@@ -7336,7 +7710,7 @@ def run_self_test() -> int:
     print(
         "SELF_TEST_GREEN_V9 "
         f"SPORTS={len(selected_sports)} EVENTS={len(events)} "
-        f"MARKETS=h2h,totals "
+        f"MARKETS=h2h,totals TIERS=STRICT,PROBABILITY_FIRST,SAFETY "
         f"OPTIONS={len(pool)} PRED={len(selected)} COUNTRIES=4 "
         f"BANK={bank_state['bank']['current']:.2f}"
     )

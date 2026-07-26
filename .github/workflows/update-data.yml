@@ -1,4 +1,4 @@
-name: Ежедневное глобальное обновление футбольной аналитики V9 R4
+name: Ежедневное глобальное обновление футбольной аналитики V9 R6
 
 on:
   workflow_dispatch:
@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V9 R4 Adaptive Global Markets
+      - name: Проверка результата V9 R6 Probability First
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -140,12 +140,76 @@ jobs:
                   )
               if odds < float(config.get("minimumBookmakerOdds") or 1.45):
                   raise SystemExit(f"Слишком низкий коэффициент: {odds}")
-              if probability < float(config.get("minimumPublishedProbability") or 0.50):
-                  raise SystemExit(f"Слишком низкая вероятность: {probability}")
-              if ev < float(config.get("fallbackMinimumExpectedValue") or 0.0):
-                  raise SystemExit(f"Отрицательный EV: {ev}")
+              if probability < float(
+                  config.get("minimumPublishedProbability") or 0.47
+              ):
+                  raise SystemExit(
+                      f"Слишком низкая вероятность: {probability}"
+                  )
+
+              value_tier = str(
+                  item.get("valueTier") or ""
+              )
+              if value_tier == "STRICT_VALUE":
+                  minimum_tier_ev = float(
+                      config.get("strictMinimumExpectedValue")
+                      or 0.0
+                  )
+                  minimum_tier_probability = float(
+                      config.get("minimumPublishedProbability")
+                      or 0.47
+                  )
+              elif value_tier == "PROBABILITY_FIRST":
+                  minimum_tier_ev = float(
+                      config.get(
+                          "probabilityFirstMinimumExpectedValue"
+                      )
+                      or -0.12
+                  )
+                  minimum_tier_probability = float(
+                      config.get(
+                          "probabilityFirstMinimumProbability"
+                      )
+                      or 0.52
+                  )
+              elif value_tier == "HIGH_PROBABILITY_FALLBACK":
+                  minimum_tier_ev = float(
+                      config.get("safetyMinimumExpectedValue")
+                      or -0.16
+                  )
+                  minimum_tier_probability = float(
+                      config.get("safetyMinimumProbability")
+                      or 0.56
+                  )
+              else:
+                  raise SystemExit(
+                      f"Неизвестный уровень отбора: {value_tier}"
+                  )
+
+              if probability < minimum_tier_probability:
+                  raise SystemExit(
+                      "Вероятность ниже порога уровня: "
+                      f"tier={value_tier}; probability={probability}; "
+                      f"minimum={minimum_tier_probability}"
+                  )
+
+              if ev < minimum_tier_ev:
+                  raise SystemExit(
+                      "EV ниже контролируемого порога: "
+                      f"tier={value_tier}; ev={ev}; "
+                      f"minimum={minimum_tier_ev}"
+                  )
+
               if item.get("coefficientType") != "BOOKMAKER_MARKET":
                   raise SystemExit("Используется не букмекерский коэффициент")
+              if not bool(item.get("marketOddsAvailable")):
+                  raise SystemExit(
+                      "Букмекерский коэффициент потерян финальным guard"
+                  )
+              if not bool(item.get("expectedValueAvailable")):
+                  raise SystemExit(
+                      "Ожидаемое значение потеряно финальным guard"
+                  )
               if not str(item.get("bookmaker") or "").strip():
                   raise SystemExit("Не указан букмекер")
               if float(item.get("stakePercent") or 0) != 20:
@@ -199,6 +263,6 @@ jobs:
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/state.json data/last-update-report.json
-          git commit -m "V9 R4 update adaptive global football predictions"
+          git commit -m "V9 R6 update probability-first global predictions"
           git pull --rebase origin main
           git push origin main
