@@ -322,7 +322,7 @@ function renderPredictions(predictions, meta = {}) {
                     </div>
 
                     <div class="odds-box">
-                        <span>Расчётный коэффициент</span>
+                        <span>Модельный коэффициент (не букмекерский)</span>
                         <strong>${formatNumber(prediction.odds, 2)}</strong>
                     </div>
                 </div>

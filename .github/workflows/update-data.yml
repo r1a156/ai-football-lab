@@ -1,4 +1,4 @@
-name: Обновление футбольной аналитики
+name: Ежедневное обновление футбольной аналитики
 
 on:
   workflow_dispatch:
@@ -9,6 +9,7 @@ on:
     paths:
       - "scripts/update_predictions.py"
       - "config/analysis.json"
+      - "assets/app.js"
       - ".github/workflows/update-data.yml"
 
   schedule:
@@ -23,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    name: Получение и анализ матчей
+    name: Четыре лучших матча на ближайшие 24 часа
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -52,7 +53,7 @@ jobs:
           fi
 
           if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY отсутствует. Будет использован встроенный статистический модуль."
+            echo "::warning::OPENROUTER_API_KEY отсутствует. Будет использован статистический модуль."
           else
             echo "OpenRouter secret присутствует."
           fi
@@ -75,13 +76,14 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата
+      - name: Проверка результата V5
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
 
           python - <<'PY'
+          import datetime as dt
           import json
           from pathlib import Path
 
@@ -99,6 +101,8 @@ jobs:
 
           meta = state.get("meta", {})
           predictions = state.get("predictions", [])
+          target = int(config.get("dailyPredictionCount") or 4)
+          candidate_count = int(meta.get("candidateMatches") or 0)
 
           if meta.get("mode") != "real":
               raise SystemExit("state.json не находится в real-режиме")
@@ -111,6 +115,17 @@ jobs:
                   "selectedPredictions не совпадает с predictions"
               )
 
+          if len(predictions) > target:
+              raise SystemExit(
+                  f"Опубликовано больше дневной цели: {len(predictions)} > {target}"
+              )
+
+          if candidate_count >= target and len(predictions) != target:
+              raise SystemExit(
+                  f"При {candidate_count} кандидатах ожидалось {target} прогноза, "
+                  f"получено {len(predictions)}"
+              )
+
           match_ids = [
               int(item.get("sourceMatchId"))
               for item in predictions
@@ -119,24 +134,50 @@ jobs:
           if len(match_ids) != len(set(match_ids)):
               raise SystemExit("В публичной выдаче есть дубли matchId")
 
-          minimum_odds = float(config.get("minimumModelOdds") or 1.45)
-          maximum_odds = float(config.get("maximumModelOdds") or 2.10)
+          updated_at = dt.datetime.fromisoformat(
+              str(meta.get("updatedAt")).replace("Z", "+00:00")
+          )
+          if updated_at.tzinfo is None:
+              updated_at = updated_at.replace(tzinfo=dt.timezone.utc)
+
+          lead_hours = float(config.get("minimumLeadHours") or 1)
+          window_hours = float(config.get("selectionWindowHours") or 24)
+          window_start = updated_at + dt.timedelta(hours=lead_hours)
+          window_end = window_start + dt.timedelta(hours=window_hours)
 
           for item in predictions:
-              fair_odds = float(
-                  item.get("fairOdds") or item.get("odds") or 0
+              kickoff = dt.datetime.fromisoformat(
+                  str(item.get("utcDate")).replace("Z", "+00:00")
               )
+              if kickoff.tzinfo is None:
+                  kickoff = kickoff.replace(tzinfo=dt.timezone.utc)
 
-              if not minimum_odds <= fair_odds <= maximum_odds:
+              if not window_start <= kickoff <= window_end:
                   raise SystemExit(
-                      f"fairOdds вне диапазона: {fair_odds}"
+                      f"Прогноз вне 24-часового окна: matchId={item.get('sourceMatchId')}"
+                  )
+
+              fair_odds = float(item.get("fairOdds") or 0)
+              probability = float(item.get("probability") or 0)
+
+              if fair_odds <= 1:
+                  raise SystemExit(
+                      f"Некорректный модельный коэффициент: {fair_odds}"
+                  )
+
+              if not 0 < probability < 1:
+                  raise SystemExit(
+                      f"Некорректная вероятность: {probability}"
                   )
 
           print("Режим:", meta.get("mode"))
           print("Статус:", meta.get("analysisStatus"))
-          print("RADAR:", meta.get("candidateMatches"))
+          print("RADAR:", candidate_count)
           print("PRED:", len(predictions))
+          print("TARGET:", target)
+          print("WINDOW_HOURS:", window_hours)
           print("MODEL:", meta.get("analysisModel"))
+          print("ODDS_SOURCE: MODEL_FAIR_NOT_BOOKMAKER")
           PY
 
       - name: Сохранение обновлённых данных
@@ -153,5 +194,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
 
           git add data/state.json data/last-update-report.json
-          git commit -m "Автоматическое обновление футбольной аналитики"
+          git commit -m "Ежедневные 4 прогноза на ближайшие 24 часа"
           git push origin main

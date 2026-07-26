@@ -742,10 +742,20 @@ def build_candidates(
         float(config.get("minimumLeadHours") or 4),
     )
 
+    reference_now = utc_now()
+    selection_window_hours = max(
+        1.0,
+        float(config.get("selectionWindowHours") or 24),
+    )
     earliest_allowed_kickoff = (
-        utc_now()
+        reference_now
         + dt.timedelta(hours=minimum_lead_hours)
     )
+    latest_allowed_kickoff = (
+        earliest_allowed_kickoff
+        + dt.timedelta(hours=selection_window_hours)
+    )
+
     for match in scheduled_matches:
         try:
             kickoff_utc = parse_utc_datetime(
@@ -755,6 +765,9 @@ def build_candidates(
             continue
 
         if kickoff_utc <= earliest_allowed_kickoff:
+            continue
+
+        if kickoff_utc > latest_allowed_kickoff:
             continue
 
         if not competition_is_allowed(match, config):
@@ -853,12 +866,12 @@ def build_analysis_prompt(
     ]
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 70
+        config.get("minimumConfidence") or 55
     )
 
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
 
     minimum_probability = float(
@@ -866,11 +879,11 @@ def build_analysis_prompt(
     )
 
     maximum_probability = float(
-        config.get("maximumProbability") or 0.69
+        config.get("maximumProbability") or 0.95
     )
 
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.45
+        config.get("minimumModelOdds") or 1.01
     )
 
     if minimum_model_odds > 1:
@@ -1121,30 +1134,30 @@ def normalize_model_predictions(
     }
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 70
+        config.get("minimumConfidence") or 55
     )
     win_market_minimum_confidence = int(
         config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 74)
+        or max(minimum_confidence + 3, 60)
     )
     minimum_probability = float(
         config.get("minimumProbability") or 0.52
     )
     maximum_probability = float(
-        config.get("maximumProbability") or 0.69
+        config.get("maximumProbability") or 0.95
     )
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.45
+        config.get("minimumModelOdds") or 1.01
     )
     maximum_model_odds = float(
-        config.get("maximumModelOdds") or 2.10
+        config.get("maximumModelOdds") or 10.0
     )
     minimum_data_quality = float(
-        config.get("minimumDataQuality") or 42
+        config.get("minimumDataQuality") or 25
     )
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
 
     if minimum_model_odds > 1:
@@ -1355,7 +1368,7 @@ def ensure_real_state(
 
     return {
         "meta": {
-            "version": "3.0.0",
+            "version": "5.0.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
@@ -1367,7 +1380,7 @@ def ensure_real_state(
                 config.get("timezone") or "Europe/Moscow"
             ),
             "minimumLeadHours": float(
-                config.get("minimumLeadHours") or 3
+                config.get("minimumLeadHours") or 1
             ),
             "notice": (
                 "Расчётные коэффициенты модели не являются "
@@ -1583,29 +1596,29 @@ def build_deterministic_predictions(
 
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
     minimum_confidence = int(
-        config.get("minimumConfidence") or 70
+        config.get("minimumConfidence") or 55
     )
     win_market_minimum_confidence = int(
         config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 74)
+        or max(minimum_confidence + 3, 60)
     )
     minimum_probability = float(
         config.get("minimumProbability") or 0.52
     )
     maximum_probability = float(
-        config.get("maximumProbability") or 0.69
+        config.get("maximumProbability") or 0.95
     )
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.45
+        config.get("minimumModelOdds") or 1.01
     )
     maximum_model_odds = float(
-        config.get("maximumModelOdds") or 2.10
+        config.get("maximumModelOdds") or 10.0
     )
     minimum_data_quality = float(
-        config.get("minimumDataQuality") or 42
+        config.get("minimumDataQuality") or 25
     )
 
     if minimum_model_odds > 1:
@@ -1915,7 +1928,7 @@ def prediction_to_public_records(
         "pick": market_label,
         "odds": fair_odds,
         "fairOdds": fair_odds,
-        "oddsLabel": "Расчётный коэффициент модели",
+        "oddsLabel": "Модельный коэффициент (не букмекерский)",
         "probability": probability,
         "probabilityPercent": round(probability * 100, 1),
         "confidence": confidence,
@@ -2004,7 +2017,7 @@ def pending_history_to_public_record(
         "pick": str(entry.get("pick") or ""),
         "odds": round(fair_odds, 2),
         "fairOdds": round(fair_odds, 2),
-        "oddsLabel": "Расчётный коэффициент модели",
+        "oddsLabel": "Модельный коэффициент (не букмекерский)",
         "probability": round(probability, 4),
         "probabilityPercent": round(probability * 100, 1),
         "confidence": confidence,
@@ -2542,29 +2555,33 @@ def finalize_public_selection(
     """Единый финальный guard для новых и активных прогнозов."""
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 70
+        config.get("minimumConfidence") or 55
     )
     win_market_minimum_confidence = int(
         config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 74)
+        or max(minimum_confidence + 3, 60)
     )
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.45
+        config.get("minimumModelOdds") or 1.01
     )
     maximum_model_odds = float(
-        config.get("maximumModelOdds") or 2.10
+        config.get("maximumModelOdds") or 10.0
     )
     window_hours = max(
         1.0,
-        float(config.get("selectionWindowHours") or 72),
+        float(config.get("selectionWindowHours") or 24),
     )
     maximum_predictions = max(
         0,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
     minimum_lead_hours = max(
         0.0,
-        float(config.get("minimumLeadHours") or 3),
+        float(config.get("minimumLeadHours") or 1),
+    )
+    best_available_minimum_confidence = max(
+        0,
+        int(config.get("bestAvailableMinimumConfidence") or 35),
     )
 
     window_start = now + dt.timedelta(hours=minimum_lead_hours)
@@ -2612,12 +2629,21 @@ def finalize_public_selection(
             )
             continue
 
+        is_best_available = (
+            str(prediction.get("selectionTier") or "").upper()
+            == "BEST_AVAILABLE"
+        )
+
         if confidence < required_confidence:
-            log(
-                "Финальный guard: низкая уверенность; "
-                f"matchId={match_id}; confidence={confidence}"
-            )
-            continue
+            if (
+                not is_best_available
+                or confidence < best_available_minimum_confidence
+            ):
+                log(
+                    "Финальный guard: низкая уверенность; "
+                    f"matchId={match_id}; confidence={confidence}"
+                )
+                continue
 
         if not minimum_model_odds <= model_odds <= maximum_model_odds:
             log(
@@ -2658,7 +2684,7 @@ def finalize_public_selection(
         prediction["marketOddsAvailable"] = False
         prediction["expectedValueAvailable"] = False
         prediction["coefficientType"] = "MODEL_FAIR"
-        prediction["oddsLabel"] = "Расчётный коэффициент модели"
+        prediction["oddsLabel"] = "Модельный коэффициент (не букмекерский)"
         prediction["probabilityPercent"] = round(probability * 100, 1)
         prediction.update(
             extract_public_match_status(matches_by_id.get(match_id))
@@ -2862,11 +2888,11 @@ def build_active_pending_records(
 
     minimum_lead_hours = max(
         0.0,
-        float(config.get("minimumLeadHours") or 3),
+        float(config.get("minimumLeadHours") or 1),
     )
     window_hours = max(
         1.0,
-        float(config.get("selectionWindowHours") or 72),
+        float(config.get("selectionWindowHours") or 24),
     )
     window_start = now + dt.timedelta(hours=minimum_lead_hours)
     window_end = window_start + dt.timedelta(hours=window_hours)
@@ -2937,7 +2963,7 @@ def merge_prediction_sources(
 
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
 
     by_key: dict[tuple[int, str], dict[str, Any]] = {}
@@ -3032,6 +3058,101 @@ def merge_prediction_sources(
     return selected
 
 
+def complete_daily_selection(
+    selected: list[dict[str, Any]],
+    candidates: list[dict[str, Any]],
+    config: dict[str, Any],
+    excluded_match_ids: set[int] | None = None,
+) -> list[dict[str, Any]]:
+    """Доводит дневную подборку до целевого числа реальными расчётами.
+
+    Сначала сохраняются строгие AI/статистические прогнозы. Если их меньше
+    дневной цели, используются следующие по рейтингу варианты того же
+    статистического движка с честно сохранёнными probability/confidence.
+    Фиксированный рынок или искусственная вероятность не подставляются.
+    """
+
+    target_count = max(
+        1,
+        int(
+            config.get("dailyPredictionCount")
+            or config.get("maximumPredictions")
+            or 4
+        ),
+    )
+    excluded = {
+        int(value)
+        for value in (excluded_match_ids or set())
+    }
+    result: list[dict[str, Any]] = []
+    used_match_ids: set[int] = set(excluded)
+
+    for item in selected:
+        try:
+            match_id = int(item["matchId"])
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if match_id in used_match_ids:
+            continue
+
+        result.append(dict(item))
+        used_match_ids.add(match_id)
+
+        if len(result) >= target_count:
+            return result
+
+    relaxed_config = copy.deepcopy(config)
+    relaxed_config.update(
+        {
+            "maximumPredictions": max(
+                target_count * 4,
+                len(candidates),
+                target_count,
+            ),
+            "minimumConfidence": 0,
+            "winMarketMinimumConfidence": 0,
+            "minimumProbability": 0.40,
+            "maximumProbability": 0.99,
+            "minimumModelOdds": 1.001,
+            "maximumModelOdds": 100.0,
+            "minimumDataQuality": 0,
+        }
+    )
+
+    supplemental = build_deterministic_predictions(
+        candidates,
+        relaxed_config,
+    )
+
+    for source_item in supplemental:
+        try:
+            match_id = int(source_item["matchId"])
+        except (KeyError, TypeError, ValueError):
+            continue
+
+        if match_id in used_match_ids:
+            continue
+
+        item = dict(source_item)
+        item["analysisMode"] = "BEST_AVAILABLE_STATISTICAL"
+        item["selectionTier"] = "BEST_AVAILABLE"
+        item["risk"] = "MEDIUM"
+        item["reason"] = (
+            str(item.get("reason") or "")
+            + " Включён в ежедневную четвёрку как следующий лучший "
+              "статистически рассчитанный вариант."
+        )[:500]
+
+        result.append(item)
+        used_match_ids.add(match_id)
+
+        if len(result) >= target_count:
+            break
+
+    return result[:target_count]
+
+
 def _load_optional_dotenv(path: pathlib.Path) -> None:
     """Поддерживает локальный .env, не задавая вопросов в консоли."""
 
@@ -3056,7 +3177,7 @@ def _load_optional_dotenv(path: pathlib.Path) -> None:
 
 
 def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v3")
+    log("Запуск AI Football Lab Data Pipeline v5")
 
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
@@ -3087,7 +3208,7 @@ def main() -> int:
     )
     lookahead_days = max(
         1,
-        int(config.get("lookaheadDays") or 3),
+        int(config.get("lookaheadDays") or 1),
     )
     competitions = [
         str(item).strip()
@@ -3272,10 +3393,16 @@ def main() -> int:
         for item in selected
         if int(item["matchId"]) not in active_match_ids
     ]
+    selected = complete_daily_selection(
+        selected,
+        candidates,
+        config,
+        active_match_ids,
+    )
 
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 5),
+        int(config.get("maximumPredictions") or 4),
     )
     available_slots = max(
         0,
@@ -3438,7 +3565,7 @@ def main() -> int:
 
     state.setdefault("meta", {}).update(
         {
-            "version": "3.0.0",
+            "version": "5.0.0",
             "mode": "real",
             "updatedAt": now.isoformat(),
             "analyzedMatches": len(scheduled_matches),
@@ -3467,27 +3594,31 @@ def main() -> int:
                 config.get("timezone") or "Europe/Moscow"
             ),
             "minimumLeadHours": float(
-                config.get("minimumLeadHours") or 3
+                config.get("minimumLeadHours") or 1
             ),
             "selectionWindowHours": float(
-                config.get("selectionWindowHours") or 72
+                config.get("selectionWindowHours") or 24
             ),
             "maximumPredictions": maximum_predictions,
+            "dailyPredictionTarget": int(
+                config.get("dailyPredictionCount")
+                or maximum_predictions
+            ),
             "minimumConfidence": int(
-                config.get("minimumConfidence") or 70
+                config.get("minimumConfidence") or 55
             ),
             "minimumModelOdds": float(
-                config.get("minimumModelOdds") or 1.45
+                config.get("minimumModelOdds") or 1.01
             ),
             "maximumModelOdds": float(
-                config.get("maximumModelOdds") or 2.10
+                config.get("maximumModelOdds") or 10.0
             ),
             "marketOddsAvailable": False,
             "expectedValueAvailable": False,
             "notice": (
-                "Показывается расчётный коэффициент модели (1 / вероятность), "
-                "а не коэффициент букмекерской конторы. Рыночный EV нельзя "
-                "рассчитать без отдельного источника реальных котировок."
+                "Коэффициент рассчитан как 1 / вероятность модели и не является "
+                "котировкой букмекерской конторы. Для реального коэффициента "
+                "нужен отдельный API рыночных котировок."
             ),
         }
     )
@@ -3594,6 +3725,15 @@ def validate_repository_files() -> int:
     if not isinstance(config.get("allowedMarkets"), list):
         raise RuntimeError("config.allowedMarkets должен быть массивом")
 
+    if int(config.get("dailyPredictionCount") or 0) != 4:
+        raise RuntimeError("config.dailyPredictionCount должен быть равен 4")
+
+    if int(config.get("maximumPredictions") or 0) != 4:
+        raise RuntimeError("config.maximumPredictions должен быть равен 4")
+
+    if float(config.get("selectionWindowHours") or 0) > 24:
+        raise RuntimeError("selectionWindowHours не должен превышать 24")
+
     if not isinstance(state.get("predictions", []), list):
         raise RuntimeError("state.predictions должен быть массивом")
 
@@ -3607,14 +3747,16 @@ def validate_repository_files() -> int:
 def run_self_test() -> int:
     config = {
         "allowedMarkets": list(MARKET_LABELS),
-        "maximumPredictions": 5,
-        "minimumConfidence": 68,
-        "winMarketMinimumConfidence": 72,
-        "minimumProbability": 0.52,
-        "maximumProbability": 0.69,
-        "minimumModelOdds": 1.45,
-        "maximumModelOdds": 2.10,
-        "minimumDataQuality": 40,
+        "maximumPredictions": 4,
+        "dailyPredictionCount": 4,
+        "minimumConfidence": 55,
+        "winMarketMinimumConfidence": 60,
+        "minimumProbability": 0.50,
+        "maximumProbability": 0.95,
+        "minimumModelOdds": 1.01,
+        "maximumModelOdds": 10.0,
+        "minimumDataQuality": 25,
+        "bestAvailableMinimumConfidence": 35,
     }
 
     strong_form = {
@@ -3689,8 +3831,16 @@ def run_self_test() -> int:
         config,
     )
 
-    if not predictions:
-        raise RuntimeError("SELF_TEST: статистический модуль вернул пусто")
+    predictions = complete_daily_selection(
+        predictions,
+        candidates,
+        config,
+    )
+
+    if len(predictions) != 4:
+        raise RuntimeError(
+            f"SELF_TEST: ожидалось 4 прогноза, получено {len(predictions)}"
+        )
 
     if len({item["matchId"] for item in predictions}) != len(predictions):
         raise RuntimeError("SELF_TEST: обнаружены дубли matchId")
@@ -3698,7 +3848,7 @@ def run_self_test() -> int:
     for item in predictions:
         fair_odds = float(item["fairOdds"])
 
-        if not 1.45 <= fair_odds <= 2.10:
+        if not 1.01 <= fair_odds <= 10.0:
             raise RuntimeError(
                 f"SELF_TEST: fairOdds вне диапазона: {fair_odds}"
             )
