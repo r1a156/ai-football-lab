@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    name: Четыре прогноза с реальными коэффициентами букмекеров
+    name: Четыре прогноза со свежими проверенными коэффициентами
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V7
+      - name: Проверка результата V8
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -110,6 +110,20 @@ jobs:
                   raise SystemExit("Не указан букмекер")
               if not str(item.get("oddsCapturedAt") or "").strip():
                   raise SystemExit("Не зафиксировано время коэффициента")
+          if float(config.get("selectionWindowHours") or 0) != 24:
+              raise SystemExit("Окно отбора не равно 24 часам")
+          if int(config.get("maximumOddsAgeMinutes") or 0) > 30:
+              raise SystemExit("Разрешены слишком старые коэффициенты")
+          if int(config.get("maximumTotalStakePercent") or 0) != 20:
+              raise SystemExit("Лимит виртуального банка должен быть 20%")
+          for item in predictions:
+              age = item.get("oddsAgeMinutes")
+              if age is None or float(age) > 30:
+                  raise SystemExit(f"Коэффициент устарел или не имеет времени: {age}")
+              if float(item.get("oddsMatchScore") or 0) < 0.78:
+                  raise SystemExit("Недостаточная надёжность сопоставления матча")
+              if float(item.get("oddsKickoffDifferenceMinutes") or 999) > 60:
+                  raise SystemExit("Слишком большое расхождение времени матча")
           if meta.get("virtualBankOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
               raise SystemExit("Виртуальный банк настроен не на bookmakerOdds")
           print("MODE:", meta.get("mode"))
@@ -130,5 +144,5 @@ jobs:
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/state.json data/last-update-report.json
-          git commit -m "Update bookmaker odds and virtual bank"
+          git commit -m "V8 update fresh bookmaker odds and virtual bank"
           git push origin main

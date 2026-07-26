@@ -1484,7 +1484,7 @@ def ensure_real_state(
 
     return {
         "meta": {
-            "version": "7.0.0",
+            "version": "8.0.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
@@ -3518,7 +3518,7 @@ def fetch_bookmaker_events(
         if str(value).strip()
     ]
     lead_hours = max(0.0, float(config.get("minimumLeadHours") or 1))
-    window_hours = max(1.0, float(config.get("selectionWindowHours") or 48))
+    window_hours = max(1.0, float(config.get("selectionWindowHours") or 24))
     time_from = now + dt.timedelta(hours=lead_hours)
     time_to = time_from + dt.timedelta(hours=window_hours)
 
@@ -3594,12 +3594,17 @@ def match_candidate_to_odds_event(
 
     tolerance_minutes = max(
         15,
-        int(config.get("oddsMatchKickoffToleranceMinutes") or 180),
+        int(config.get("oddsMatchKickoffToleranceMinutes") or 60),
     )
     home_name = str((candidate.get("homeTeam") or {}).get("name") or "")
     away_name = str((candidate.get("awayTeam") or {}).get("name") or "")
     best_event: dict[str, Any] | None = None
     best_score = 0.0
+    second_best_score = 0.0
+    minimum_team_name_score = max(
+        0.0,
+        min(1.0, float(config.get("minimumTeamNameMatchScore") or 0.60)),
+    )
 
     for event in events:
         try:
@@ -3622,19 +3627,44 @@ def match_candidate_to_odds_event(
             (direct_home, direct_away)
             if orientation == "DIRECT"
             else (reverse_home, reverse_away)
-        ) < 0.48:
+        ) < minimum_team_name_score:
             continue
         time_score = max(0.0, 1.0 - difference_minutes / tolerance_minutes)
         score = name_score * 0.85 + time_score * 0.15
         if score > best_score:
+            second_best_score = best_score
             best_event = dict(event)
             best_event["_orientation"] = orientation
             best_event["_matchScore"] = round(score, 4)
             best_event["_kickoffDifferenceMinutes"] = round(difference_minutes, 1)
             best_score = score
+        elif score > second_best_score:
+            second_best_score = score
 
-    if best_score < float(config.get("minimumOddsMatchScore") or 0.64):
+    minimum_score = float(config.get("minimumOddsMatchScore") or 0.78)
+    if best_score < minimum_score:
         return None, best_score
+
+    minimum_gap = max(
+        0.0,
+        float(config.get("minimumOddsMatchScoreGap") or 0.08),
+    )
+    if (
+        second_best_score >= minimum_score
+        and (best_score - second_best_score) < minimum_gap
+    ):
+        log(
+            "The Odds API: неоднозначное сопоставление матча отклонено; "
+            f"best={best_score:.3f}; second={second_best_score:.3f}"
+        )
+        return None, best_score
+
+    if best_event is not None:
+        best_event["_secondBestMatchScore"] = round(second_best_score, 4)
+        best_event["_matchScoreGap"] = round(
+            best_score - second_best_score,
+            4,
+        )
     return best_event, best_score
 
 
@@ -3670,7 +3700,7 @@ def extract_bookmaker_quote(
     }
     maximum_age = max(
         1,
-        int(config.get("maximumOddsAgeMinutes") or 720),
+        int(config.get("maximumOddsAgeMinutes") or 30),
     )
     quotes: list[dict[str, Any]] = []
 
@@ -3691,7 +3721,11 @@ def extract_bookmaker_quote(
             update_value = market_data.get("last_update") or bookmaker.get("last_update")
             update_time = _parse_optional_utc(update_value)
             age_minutes = None
-            if update_time is not None:
+            require_timestamp = bool(config.get("requireOddsTimestamp", True))
+            if update_time is None:
+                if require_timestamp:
+                    continue
+            else:
                 age_minutes = max(
                     0.0,
                     (captured_at - update_time).total_seconds() / 60,
@@ -3762,6 +3796,10 @@ def extract_bookmaker_quote(
             "oddsMedian": round(prices[len(prices) // 2], 4),
             "oddsSelectionMode": selection_mode,
             "oddsMatchScore": float(event.get("_matchScore") or 0),
+            "oddsSecondBestMatchScore": float(
+                event.get("_secondBestMatchScore") or 0
+            ),
+            "oddsMatchScoreGap": float(event.get("_matchScoreGap") or 0),
             "oddsKickoffDifferenceMinutes": float(
                 event.get("_kickoffDifferenceMinutes") or 0
             ),
@@ -4132,6 +4170,23 @@ def prediction_to_public_records(
         "oddsEventId": str(prediction.get("oddsEventId") or ""),
         "oddsSportKey": str(prediction.get("oddsSportKey") or ""),
         "oddsQuoteCount": int(prediction.get("oddsQuoteCount") or 0),
+        "oddsAgeMinutes": prediction.get("oddsAgeMinutes"),
+        "oddsMatchScore": round(
+            float(prediction.get("oddsMatchScore") or 0),
+            4,
+        ),
+        "oddsSecondBestMatchScore": round(
+            float(prediction.get("oddsSecondBestMatchScore") or 0),
+            4,
+        ),
+        "oddsMatchScoreGap": round(
+            float(prediction.get("oddsMatchScoreGap") or 0),
+            4,
+        ),
+        "oddsKickoffDifferenceMinutes": round(
+            float(prediction.get("oddsKickoffDifferenceMinutes") or 0),
+            1,
+        ),
         "oddsMinimum": float(prediction.get("oddsMinimum") or 0),
         "oddsMedian": float(prediction.get("oddsMedian") or 0),
         "oddsMaximum": float(prediction.get("oddsMaximum") or 0),
@@ -4226,7 +4281,7 @@ def finalize_public_selection(
     minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
     maximum_odds = float(config.get("maximumBookmakerOdds") or 5.0)
     minimum_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
-    window_hours = max(1.0, float(config.get("selectionWindowHours") or 48))
+    window_hours = max(1.0, float(config.get("selectionWindowHours") or 24))
     maximum_predictions = max(0, int(config.get("maximumPredictions") or 4))
     lead_hours = max(0.0, float(config.get("minimumLeadHours") or 1))
     window_start = now + dt.timedelta(hours=lead_hours)
@@ -4622,7 +4677,7 @@ def main() -> int:
     )
     state.setdefault("meta", {}).update(
         {
-            "version": "7.0.0",
+            "version": "8.0.0",
             "mode": "real",
             "updatedAt": now.isoformat(),
             "analyzedMatches": len(scheduled_matches),
@@ -4655,7 +4710,7 @@ def main() -> int:
             "oddsSportsHeaderRemaining": sports_headers.get("x-requests-remaining"),
             "timezone": str(config.get("timezone") or "Europe/Moscow"),
             "minimumLeadHours": float(config.get("minimumLeadHours") or 1),
-            "selectionWindowHours": float(config.get("selectionWindowHours") or 48),
+            "selectionWindowHours": float(config.get("selectionWindowHours") or 24),
             "maximumPredictions": maximum_predictions,
             "dailyPredictionTarget": daily_target,
             "minimumBookmakerOdds": float(
@@ -4680,7 +4735,7 @@ def main() -> int:
     write_json_atomic(STATE_PATH, state)
     report = create_report(
         status="GREEN",
-        message="Опубликованы четыре прогноза с реальными коэффициентами букмекеров.",
+        message="Опубликованы четыре прогноза с проверенными свежими коэффициентами букмекеров.",
         details={
             "lookbackDays": lookback_days,
             "recentMatches": len(recent_matches),
@@ -4750,14 +4805,30 @@ def validate_repository_files() -> int:
         raise RuntimeError("preferredBookmakerOdds должен быть не ниже 1.60")
     if float(config.get("minimumExpectedValue") or -1) < 0:
         raise RuntimeError("minimumExpectedValue не может быть отрицательным")
+    if float(config.get("selectionWindowHours") or 0) != 24:
+        raise RuntimeError("selectionWindowHours должен быть равен 24")
+    if int(config.get("maximumOddsAgeMinutes") or 0) > 30:
+        raise RuntimeError("maximumOddsAgeMinutes должен быть не больше 30")
+    if int(config.get("oddsMatchKickoffToleranceMinutes") or 0) > 60:
+        raise RuntimeError(
+            "oddsMatchKickoffToleranceMinutes должен быть не больше 60"
+        )
+    if float(config.get("minimumOddsMatchScore") or 0) < 0.78:
+        raise RuntimeError("minimumOddsMatchScore должен быть не ниже 0.78")
+    if float(config.get("minimumOddsMatchScoreGap") or 0) < 0.08:
+        raise RuntimeError("minimumOddsMatchScoreGap должен быть не ниже 0.08")
+    if int(config.get("maximumTotalStakePercent") or 0) != 20:
+        raise RuntimeError("maximumTotalStakePercent должен быть равен 20")
+    if not bool(config.get("requireOddsTimestamp", False)):
+        raise RuntimeError("requireOddsTimestamp должен быть true")
     allowed = set(config.get("allowedMarkets") or [])
     if not allowed or not allowed.issubset({"HOME_WIN", "DRAW", "AWAY_WIN"}):
-        raise RuntimeError("Для V7 allowedMarkets должен содержать только 1X2")
+        raise RuntimeError("Для V8 allowedMarkets должен содержать только 1X2")
     if not isinstance(state.get("predictions", []), list):
         raise RuntimeError("state.predictions должен быть массивом")
     if not isinstance(state.get("history", []), list):
         raise RuntimeError("state.history должен быть массивом")
-    print("VALIDATION_GREEN_V7_BOOKMAKER_ODDS")
+    print("VALIDATION_GREEN_V8_PRODUCTION_HARDENING")
     return 0
 
 
@@ -4779,9 +4850,14 @@ def run_self_test() -> int:
         "maximumBookmakerOdds": 5.0,
         "minimumExpectedValue": 0.02,
         "fallbackMinimumExpectedValue": 0.0,
-        "oddsMatchKickoffToleranceMinutes": 180,
-        "minimumOddsMatchScore": 0.60,
-        "maximumOddsAgeMinutes": 720,
+        "oddsMatchKickoffToleranceMinutes": 60,
+        "minimumOddsMatchScore": 0.78,
+        "maximumOddsAgeMinutes": 30,
+        "minimumTeamNameMatchScore": 0.60,
+        "minimumOddsMatchScoreGap": 0.08,
+        "requireOddsTimestamp": True,
+        "selectionWindowHours": 24,
+        "maximumTotalStakePercent": 20,
         "oddsSelectionMode": "BEST_AVAILABLE",
         "preferredBookmakers": [],
     }
@@ -4904,6 +4980,9 @@ def run_self_test() -> int:
         if not item.get("bookmaker"):
             raise RuntimeError("SELF_TEST: отсутствует bookmaker")
 
+    if int(config.get("maximumTotalStakePercent") or 0) != 20:
+        raise RuntimeError("SELF_TEST: лимит банка должен быть 20%")
+
     bank_state = {
         "bank": {"starting": 10000.0, "current": 10000.0, "history": []},
         "history": [
@@ -4929,7 +5008,7 @@ def run_self_test() -> int:
             f"SELF_TEST: неверный расчёт банка: {bank_state['bank']}"
         )
     print(
-        "SELF_TEST_GREEN_V7 "
+        "SELF_TEST_GREEN_V8 "
         f"PRED={len(selected)} OPTIONS={len(bookmaker_pool)} "
         "BANK=10080.00"
     )
