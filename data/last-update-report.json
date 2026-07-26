@@ -1,15 +1,20 @@
 {
-  "status": "GREEN",
-  "message": "Данные успешно обновлены.",
-  "timestamp": "2026-07-25T20:30:11.125182+00:00",
+  "status": "GREEN_NO_PREDICTIONS",
+  "message": "Данные обновлены, но допустимых прогнозов нет.",
+  "timestamp": "2026-07-26T18:49:13.692120+00:00",
   "details": {
     "lookbackDays": 60,
-    "historyRequestChunks": 7,
-    "recentMatches": 112,
-    "scheduledMatches": 10,
-    "candidateMatches": 7,
-    "selectedPredictions": 1,
+    "recentMatches": 114,
+    "finishedMatches": 114,
+    "scheduledMatches": 13,
+    "candidateMatches": 8,
+    "aiPredictions": 1,
+    "statisticalPredictions": 0,
+    "activePendingPredictions": 0,
+    "selectedPredictions": 0,
+    "newPredictions": 0,
     "settledPredictions": 0,
-    "analysisModel": "google/gemini-2.5-flash-lite"
+    "analysisModel": "google/gemini-2.5-flash-lite",
+    "analysisStatus": "NO_CONFIDENT_PREDICTIONS"
   }
 }
