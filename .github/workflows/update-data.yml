@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V8
+      - name: Проверка результата V8 R4
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -106,6 +106,14 @@ jobs:
                   raise SystemExit(f"Отрицательный EV: {ev}")
               if item.get("coefficientType") != "BOOKMAKER_MARKET":
                   raise SystemExit("Используется не букмекерский коэффициент")
+              if str(item.get("market") or "") not in {
+                  "HOME_WIN",
+                  "DRAW",
+                  "AWAY_WIN",
+                  "OVER_2_5",
+                  "UNDER_2_5",
+              }:
+                  raise SystemExit("Неподдерживаемый рынок прогноза")
               if not str(item.get("bookmaker") or "").strip():
                   raise SystemExit("Не указан букмекер")
               if not str(item.get("oddsCapturedAt") or "").strip():
@@ -114,8 +122,23 @@ jobs:
               raise SystemExit("Окно отбора не равно 24 часам")
           if int(config.get("maximumOddsAgeMinutes") or 0) > 30:
               raise SystemExit("Разрешены слишком старые коэффициенты")
-          if int(config.get("maximumTotalStakePercent") or 0) != 20:
-              raise SystemExit("Лимит виртуального банка должен быть 20%")
+          if float(config.get("stakePerPredictionPercent") or 0) != 20:
+              raise SystemExit(
+                  "Ставка на каждый прогноз должна быть 20% банка"
+              )
+          if float(meta.get("stakePerPredictionPercent") or 0) != 20:
+              raise SystemExit(
+                  "meta.stakePerPredictionPercent должен быть равен 20"
+              )
+          for item in predictions:
+              if float(item.get("stakePercent") or 0) != 20:
+                  raise SystemExit(
+                      "Прогноз не получил ставку 20% банка"
+                  )
+              if float(item.get("stake") or 0) <= 0:
+                  raise SystemExit(
+                      "У прогноза отсутствует виртуальная ставка"
+                  )
           for item in predictions:
               age = item.get("oddsAgeMinutes")
               if age is None or float(age) > 30:
@@ -162,5 +185,5 @@ jobs:
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/state.json data/last-update-report.json
-          git commit -m "V8 update fresh bookmaker odds and virtual bank"
+          git commit -m "V8 R4 update bookmaker predictions and 20 percent stakes"
           git push origin main

@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "timezone": "Europe/Moscow",
   "lookbackDays": 60,
   "lookaheadDays": 1,
@@ -25,7 +25,7 @@
   "oddsBookmakers": [],
   "preferredBookmakers": [],
   "oddsSelectionMode": "BEST_AVAILABLE",
-  "maximumOddsSportRequests": 12,
+  "maximumOddsSportRequests": 8,
   "maximumOddsAgeMinutes": 30,
   "oddsMatchKickoffToleranceMinutes": 60,
   "minimumOddsMatchScore": 0.78,
@@ -33,13 +33,14 @@
   "primarySelectionWindowHours": 24,
   "minimumLeadHours": 1,
   "minimumTeamMatches": 1,
-  "maximumTotalStakePercent": 20,
   "startingVirtualBank": 10000,
   "competitions": [],
   "allowedMarkets": [
     "HOME_WIN",
     "DRAW",
-    "AWAY_WIN"
+    "AWAY_WIN",
+    "OVER_2_5",
+    "UNDER_2_5"
   ],
   "excludedCompetitionWords": [
     "friendly",
@@ -49,11 +50,17 @@
   "competitionScope": "ALL_ACCESSIBLE",
   "candidateDiversityMode": "ROUND_ROBIN_BY_COMPETITION",
   "predictionDiversityMode": "ROUND_ROBIN_BY_COUNTRY_AND_COMPETITION",
-  "publicationPolicy": "EXACTLY_FOUR_POSITIVE_EV_FRESH_VERIFIED_BOOKMAKER_ODDS_24H",
-  "oddsPolicy": "BOOKMAKER_MIN_1_45_PREFER_1_60_POSITIVE_EV",
-  "virtualBankPolicy": "FIXED_BOOKMAKER_ODDS_MAX_TOTAL_EXPOSURE_20_PERCENT",
+  "publicationPolicy": "EXACTLY_FOUR_BEST_VERIFIED_BOOKMAKER_PREDICTIONS_24H",
+  "oddsPolicy": "BOOKMAKER_H2H_AND_TOTALS_MIN_1_45_PREFER_1_60_NON_NEGATIVE_EV",
+  "virtualBankPolicy": "EACH_PREDICTION_20_PERCENT_OF_CURRENT_BANK_FIXED_BOOKMAKER_ODDS",
   "minimumTeamNameMatchScore": 0.6,
   "minimumOddsMatchScoreGap": 0.08,
   "requireOddsTimestamp": true,
-  "matchingPolicy": "STRICT_TEAM_TIME_SCORE_AND_AMBIGUITY_GUARD"
+  "matchingPolicy": "STRICT_TEAM_TIME_SCORE_AND_AMBIGUITY_GUARD",
+  "stakePerPredictionPercent": 20,
+  "maximumDailyExposurePercent": 80,
+  "oddsMarkets": [
+    "h2h",
+    "totals"
+  ]
 }

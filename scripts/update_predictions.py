@@ -49,6 +49,8 @@ MARKET_LABELS = {
     "HOME_OR_DRAW": "Хозяева не проиграют",
     "AWAY_OR_DRAW": "Гости не проиграют",
     "OVER_1_5": "Тотал больше 1,5",
+    "OVER_2_5": "Тотал больше 2,5",
+    "UNDER_2_5": "Тотал меньше 2,5",
     "UNDER_3_5": "Тотал меньше 3,5",
     "HOME_OVER_0_5": "Хозяева забьют",
     "AWAY_OVER_0_5": "Гости забьют",
@@ -1484,7 +1486,7 @@ def ensure_real_state(
 
     return {
         "meta": {
-            "version": "8.0.0",
+            "version": "8.4.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
@@ -1506,9 +1508,10 @@ def ensure_real_state(
         "bank": {
             "starting": starting_bank,
             "current": starting_bank,
-            "stakePercent": int(
-                config.get("maximumTotalStakePercent") or 20
+            "stakePercent": float(
+                config.get("stakePerPredictionPercent") or 20
             ),
+            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
             "roi": 0.0,
             "maxDrawdown": 0.0,
             "history": [
@@ -1685,6 +1688,28 @@ def _poisson_over_15(expected_total: float) -> float:
     return 1 - math.exp(-expected_total) * (1 + expected_total)
 
 
+def _poisson_over_25(expected_total: float) -> float:
+    expected_total = clamp_number(expected_total, 0.1, 5.0)
+    under_or_equal_two = sum(
+        math.exp(-expected_total)
+        * expected_total ** goals
+        / math.factorial(goals)
+        for goals in range(3)
+    )
+    return clamp_number(1 - under_or_equal_two, 0, 1)
+
+
+def _poisson_under_25(expected_total: float) -> float:
+    expected_total = clamp_number(expected_total, 0.1, 5.0)
+    cumulative = sum(
+        math.exp(-expected_total)
+        * expected_total ** goals
+        / math.factorial(goals)
+        for goals in range(3)
+    )
+    return clamp_number(cumulative, 0, 1)
+
+
 def _poisson_under_35(expected_total: float) -> float:
     expected_total = clamp_number(expected_total, 0.1, 5.0)
     cumulative = sum(
@@ -1803,6 +1828,32 @@ def build_deterministic_predictions(
                 float(home_form.get("over15Rate") or 0),
                 float(away_form.get("over15Rate") or 0),
             ],
+            "OVER_2_5": [
+                _poisson_over_25(expected_total),
+                clamp_number(
+                    float(home_form.get("over15Rate") or 0) * 0.72,
+                    0,
+                    1,
+                ),
+                clamp_number(
+                    float(away_form.get("over15Rate") or 0) * 0.72,
+                    0,
+                    1,
+                ),
+            ],
+            "UNDER_2_5": [
+                _poisson_under_25(expected_total),
+                clamp_number(
+                    float(home_form.get("under35Rate") or 0) * 0.78,
+                    0,
+                    1,
+                ),
+                clamp_number(
+                    float(away_form.get("under35Rate") or 0) * 0.78,
+                    0,
+                    1,
+                ),
+            ],
             "UNDER_3_5": [
                 _poisson_under_35(expected_total),
                 float(home_form.get("under35Rate") or 0),
@@ -1905,6 +1956,16 @@ def build_deterministic_predictions(
                     "Модель формы оценивает вероятность минимум двух голов "
                     f"в {probability * 100:.0f}%; средний ожидаемый тотал "
                     f"{expected_total:.2f}."
+                ),
+                "OVER_2_5": (
+                    "Пуассоновская модель и текущая результативность дают "
+                    f"вероятность минимум трёх голов {probability * 100:.0f}%; "
+                    f"ожидаемый тотал {expected_total:.2f}."
+                ),
+                "UNDER_2_5": (
+                    "Пуассоновская модель и текущая результативность дают "
+                    f"вероятность не более двух голов {probability * 100:.0f}%; "
+                    f"ожидаемый тотал {expected_total:.2f}."
                 ),
                 "UNDER_3_5": (
                     "Модель формы оценивает вероятность не более трёх голов "
@@ -3548,7 +3609,13 @@ def fetch_bookmaker_events(
     for sport_key in sport_keys:
         parameters: dict[str, str] = {
             "apiKey": odds_api_key,
-            "markets": "h2h",
+            "markets": ",".join(
+                str(value)
+                for value in (
+                    config.get("oddsMarkets")
+                    or ["h2h", "totals"]
+                )
+            ),
             "oddsFormat": "decimal",
             "dateFormat": "iso",
             "commenceTimeFrom": format_odds_api_timestamp(time_from),
@@ -3698,12 +3765,23 @@ def extract_bookmaker_quote(
     orientation = str(event.get("_orientation") or "DIRECT")
     event_home = str(event.get("home_team") or "")
     event_away = str(event.get("away_team") or "")
+    target_market_key = "h2h"
+    target_point: float | None = None
+
     if market == "HOME_WIN":
         target = event_home if orientation == "DIRECT" else event_away
     elif market == "AWAY_WIN":
         target = event_away if orientation == "DIRECT" else event_home
     elif market == "DRAW":
         target = "DRAW"
+    elif market == "OVER_2_5":
+        target_market_key = "totals"
+        target = "OVER"
+        target_point = 2.5
+    elif market == "UNDER_2_5":
+        target_market_key = "totals"
+        target = "UNDER"
+        target_point = 2.5
     else:
         return None
 
@@ -3730,7 +3808,10 @@ def extract_bookmaker_quote(
             continue
 
         for market_data in bookmaker.get("markets") or []:
-            if not isinstance(market_data, dict) or market_data.get("key") != "h2h":
+            if (
+                not isinstance(market_data, dict)
+                or market_data.get("key") != target_market_key
+            ):
                 continue
             update_value = market_data.get("last_update") or bookmaker.get("last_update")
             update_time = _parse_optional_utc(update_value)
@@ -3752,11 +3833,30 @@ def extract_bookmaker_quote(
                     continue
                 outcome_name = str(outcome.get("name") or "")
                 normalized_outcome = _normalize_match_name(outcome_name)
-                is_target = (
-                    normalized_outcome in {"draw", "tie", "x"}
-                    if target == "DRAW"
-                    else _token_similarity(outcome_name, target) >= 0.72
-                )
+
+                if target_market_key == "totals":
+                    try:
+                        outcome_point = float(outcome.get("point"))
+                    except (TypeError, ValueError):
+                        continue
+
+                    if (
+                        target_point is None
+                        or abs(outcome_point - target_point) > 0.001
+                    ):
+                        continue
+
+                    if target == "OVER":
+                        is_target = normalized_outcome.startswith("over")
+                    else:
+                        is_target = normalized_outcome.startswith("under")
+                else:
+                    is_target = (
+                        normalized_outcome in {"draw", "tie", "x"}
+                        if target == "DRAW"
+                        else _token_similarity(outcome_name, target) >= 0.72
+                    )
+
                 if not is_target:
                     continue
                 try:
@@ -3777,6 +3877,8 @@ def extract_bookmaker_quote(
                             else None
                         ),
                         "outcomeName": outcome_name,
+                        "bookmakerMarket": target_market_key,
+                        "bookmakerPoint": target_point,
                     }
                 )
 
@@ -4183,6 +4285,10 @@ def prediction_to_public_records(
         "oddsLastUpdate": str(prediction.get("oddsLastUpdate") or ""),
         "oddsEventId": str(prediction.get("oddsEventId") or ""),
         "oddsSportKey": str(prediction.get("oddsSportKey") or ""),
+        "bookmakerMarket": str(
+            prediction.get("bookmakerMarket") or "h2h"
+        ),
+        "bookmakerPoint": prediction.get("bookmakerPoint"),
         "oddsQuoteCount": int(prediction.get("oddsQuoteCount") or 0),
         "oddsAgeMinutes": prediction.get("oddsAgeMinutes"),
         "oddsMatchScore": round(
@@ -4403,7 +4509,7 @@ def update_statistics(state: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v8 R2")
+    log("Запуск AI Football Lab Data Pipeline v8 R4")
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
     _load_optional_dotenv(ROOT / ".env")
@@ -4638,22 +4744,20 @@ def main() -> int:
         or config.get("startingVirtualBank")
         or 10000
     )
-    maximum_exposure = current_bank * (
-        float(config.get("maximumTotalStakePercent") or 20) / 100
+    stake_per_prediction_percent = float(
+        config.get("stakePerPredictionPercent") or 20
     )
-    existing_pending_exposure = sum(
-        float(item.get("stake") or 0)
-        for item in history
-        if str(item.get("status") or "").lower() == "pending"
-        and float(item.get("bookmakerOdds") or 0) > 1
+    stake_per_new = current_bank * (
+        stake_per_prediction_percent / 100
     )
-    available_exposure = max(0.0, maximum_exposure - existing_pending_exposure)
-    stake_per_new = (
-        available_exposure / len(accepted_new_history)
-        if accepted_new_history else 0.0
-    )
+
     for item in accepted_new_history:
         item["stake"] = round(stake_per_new, 2)
+        item["stakePercent"] = round(
+            stake_per_prediction_percent,
+            2,
+        )
+        item["stakePolicy"] = "PER_PREDICTION_PERCENT_OF_BANK"
 
     history_ids = {str(item.get("id") or "") for item in history}
     for item in accepted_new_history:
@@ -4680,6 +4784,19 @@ def main() -> int:
             history_item["rank"] = index
             history_item["rankLabel"] = prediction["rankLabel"]
             history_item["analysisSourceLabel"] = prediction["analysisSourceLabel"]
+            prediction["stake"] = round(
+                float(history_item.get("stake") or 0),
+                2,
+            )
+            prediction["stakePercent"] = float(
+                history_item.get("stakePercent")
+                or config.get("stakePerPredictionPercent")
+                or 20
+            )
+            prediction["stakePolicy"] = str(
+                history_item.get("stakePolicy")
+                or "PER_PREDICTION_PERCENT_OF_BANK"
+            )
 
     state["predictions"] = public_predictions
     state["history"] = history
@@ -4739,9 +4856,17 @@ def main() -> int:
             "marketOddsAvailable": True,
             "expectedValueAvailable": True,
             "virtualBankOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
+            "stakePerPredictionPercent": stake_per_prediction_percent,
+            "maximumDailyExposurePercent": round(
+                daily_target * stake_per_prediction_percent,
+                2,
+            ),
+            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
             "notice": (
-                "Виртуальный банк рассчитывается только по реальному "
-                "коэффициенту букмекера, зафиксированному при публикации."
+                "Каждый опубликованный прогноз получает виртуальную ставку "
+                f"{stake_per_prediction_percent:.0f}% от текущего банка. "
+                "Расчёт выигрыша выполняется по реальному коэффициенту "
+                "букмекера, зафиксированному при публикации."
             ),
         }
     )
@@ -4831,13 +4956,24 @@ def validate_repository_files() -> int:
         raise RuntimeError("minimumOddsMatchScore должен быть не ниже 0.78")
     if float(config.get("minimumOddsMatchScoreGap") or 0) < 0.08:
         raise RuntimeError("minimumOddsMatchScoreGap должен быть не ниже 0.08")
-    if int(config.get("maximumTotalStakePercent") or 0) != 20:
-        raise RuntimeError("maximumTotalStakePercent должен быть равен 20")
+    if float(config.get("stakePerPredictionPercent") or 0) != 20:
+        raise RuntimeError(
+            "stakePerPredictionPercent должен быть равен 20"
+        )
     if not bool(config.get("requireOddsTimestamp", False)):
         raise RuntimeError("requireOddsTimestamp должен быть true")
     allowed = set(config.get("allowedMarkets") or [])
-    if not allowed or not allowed.issubset({"HOME_WIN", "DRAW", "AWAY_WIN"}):
-        raise RuntimeError("Для V8 allowedMarkets должен содержать только 1X2")
+    supported_markets = {
+        "HOME_WIN",
+        "DRAW",
+        "AWAY_WIN",
+        "OVER_2_5",
+        "UNDER_2_5",
+    }
+    if not allowed or not allowed.issubset(supported_markets):
+        raise RuntimeError(
+            "V8 R4 поддерживает только 1X2 и тотал 2,5"
+        )
     if not isinstance(state.get("predictions", []), list):
         raise RuntimeError("state.predictions должен быть массивом")
     if not isinstance(state.get("history", []), list):
@@ -4871,7 +5007,13 @@ def run_self_test() -> int:
         )
 
     config = {
-        "allowedMarkets": ["HOME_WIN", "DRAW", "AWAY_WIN"],
+        "allowedMarkets": [
+            "HOME_WIN",
+            "DRAW",
+            "AWAY_WIN",
+            "OVER_2_5",
+            "UNDER_2_5",
+        ],
         "maximumPredictions": 4,
         "dailyPredictionCount": 4,
         "minimumConfidence": 30,
@@ -4894,7 +5036,7 @@ def run_self_test() -> int:
         "minimumOddsMatchScoreGap": 0.08,
         "requireOddsTimestamp": True,
         "selectionWindowHours": 24,
-        "maximumTotalStakePercent": 20,
+        "stakePerPredictionPercent": 20,
         "oddsSelectionMode": "BEST_AVAILABLE",
         "preferredBookmakers": [],
     }
@@ -5017,8 +5159,10 @@ def run_self_test() -> int:
         if not item.get("bookmaker"):
             raise RuntimeError("SELF_TEST: отсутствует bookmaker")
 
-    if int(config.get("maximumTotalStakePercent") or 0) != 20:
-        raise RuntimeError("SELF_TEST: лимит банка должен быть 20%")
+    if float(config.get("stakePerPredictionPercent") or 0) != 20:
+        raise RuntimeError(
+            "SELF_TEST: ставка на каждый прогноз должна быть 20%"
+        )
 
     bank_state = {
         "bank": {"starting": 10000.0, "current": 10000.0, "history": []},
