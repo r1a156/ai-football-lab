@@ -2,32 +2,48 @@
   "meta": {
     "version": "3.0.0",
     "mode": "real",
-    "updatedAt": "2026-07-26T18:51:49.636787+00:00",
-    "analyzedMatches": 13,
+    "updatedAt": "2026-07-26T19:00:34.270223+00:00",
+    "analyzedMatches": 7,
     "source": "football-data.org",
-    "analysisProvider": "OpenRouter + встроенный статистический модуль",
+    "analysisProvider": "Нет допустимых прогнозов",
     "notice": "Показывается расчётный коэффициент модели (1 / вероятность), а не коэффициент букмекерской конторы. Рыночный EV нельзя рассчитать без отдельного источника реальных котировок.",
-    "candidateMatches": 8,
-    "selectedPredictions": 1,
-    "analysisStatus": "PREDICTIONS_SELECTED",
+    "candidateMatches": 2,
+    "selectedPredictions": 0,
+    "analysisStatus": "NO_CONFIDENT_PREDICTIONS",
     "analysisModel": "google/gemini-2.5-flash-lite",
     "timezone": "Europe/Moscow",
     "minimumLeadHours": 3.0,
-    "selectionWindowHours": 72.0,
+    "selectionWindowHours": 36.0,
     "maximumPredictions": 5,
     "minimumConfidence": 70,
     "minimumModelOdds": 1.45,
     "marketOddsAvailable": false,
     "expectedValueAvailable": false,
-    "analysisMode": "AI_STAT_FUSION",
+    "analysisMode": "NO_SELECTION",
     "analysisError": "",
     "minimumMarketOdds": 1.55,
     "activePendingPredictions": 0,
-    "newPredictions": 1,
+    "newPredictions": 0,
     "aiAttempted": true,
-    "aiNormalizedPredictions": 2,
+    "aiNormalizedPredictions": 0,
     "statisticalPredictions": 0,
-    "maximumModelOdds": 2.1
+    "maximumModelOdds": 2.1,
+    "competitionScope": "ALL_ACCESSIBLE",
+    "configuredCompetitions": [],
+    "availableCountries": [
+      "Brazil"
+    ],
+    "availableCompetitions": [
+      "Campeonato Brasileiro Série A"
+    ],
+    "candidateCountries": [
+      "Brazil"
+    ],
+    "candidateCompetitions": [
+      "Campeonato Brasileiro Série A"
+    ],
+    "candidateDiversityMode": "ROUND_ROBIN_BY_COMPETITION",
+    "predictionDiversityMode": "ROUND_ROBIN_BY_COUNTRY_AND_COMPETITION"
   },
   "bank": {
     "starting": 10000.0,
@@ -72,52 +88,7 @@
     "currentStreak": "3 успешных подряд",
     "bestSegment": "Победа гостей"
   },
-  "predictions": [
-    {
-      "id": "real-554941-home_over_0_5",
-      "sourceMatchId": 554941,
-      "league": "Бразильская Серия А",
-      "country": "Бразилия",
-      "date": "2026-07-29",
-      "time": "23:00",
-      "utcDate": "2026-07-29T20:00:00Z",
-      "timezone": "Europe/Moscow",
-      "home": "Ботафого",
-      "away": "Гремио",
-      "market": "HOME_OVER_0_5",
-      "pick": "Хозяева забьют",
-      "odds": 1.64,
-      "fairOdds": 1.64,
-      "oddsLabel": "Расчётный коэффициент модели",
-      "probability": 0.61,
-      "probabilityPercent": 61.0,
-      "confidence": 72,
-      "risk": "Средний",
-      "riskCode": "MEDIUM",
-      "reason": "Хозяева в последних матчах забивают в среднем 1 гол за игру, а также имеют высокий процент забитых мячей в домашних играх.",
-      "analysisMode": "AI",
-      "rankingScore": 63.8375,
-      "dataQuality": 42.35,
-      "coefficientType": "MODEL_FAIR",
-      "marketOddsAvailable": false,
-      "expectedValueAvailable": false,
-      "homeOriginal": "Botafogo",
-      "awayOriginal": "Grêmio",
-      "leagueOriginal": "Campeonato Brasileiro Série A",
-      "selectionWindowHours": 72.0,
-      "minimumModelOdds": 1.45,
-      "maximumModelOdds": 2.1,
-      "matchStatus": "TIMED",
-      "matchStatusLabel": "Ожидается начало",
-      "homeScore": null,
-      "awayScore": null,
-      "liveScore": "",
-      "minute": null,
-      "rank": 1,
-      "rankLabel": "Лучший прогноз дня",
-      "analysisSourceLabel": "ИИ-анализ"
-    }
-  ],
+  "predictions": [],
   "history": [
     {
       "id": "real-554925-away_win",
@@ -519,7 +490,10 @@
       "liveScore": "",
       "minute": null,
       "rankLabel": "Лучший прогноз дня",
-      "analysisSourceLabel": "ИИ-анализ"
+      "analysisSourceLabel": "ИИ-анализ",
+      "homeOriginal": "Ботафого",
+      "awayOriginal": "Гремио",
+      "leagueOriginal": "Бразильская Серия А"
     }
   ]
 }

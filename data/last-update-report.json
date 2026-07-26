@@ -1,20 +1,33 @@
 {
-  "status": "GREEN",
-  "message": "Данные обновлены, прогнозы опубликованы.",
-  "timestamp": "2026-07-26T18:52:55.723317+00:00",
+  "status": "GREEN_NO_PREDICTIONS",
+  "message": "Данные обновлены, но допустимых прогнозов нет.",
+  "timestamp": "2026-07-26T19:01:39.033102+00:00",
   "details": {
     "lookbackDays": 60,
-    "recentMatches": 114,
-    "finishedMatches": 114,
-    "scheduledMatches": 13,
-    "candidateMatches": 8,
-    "aiPredictions": 2,
+    "recentMatches": 129,
+    "finishedMatches": 129,
+    "scheduledMatches": 7,
+    "candidateMatches": 2,
+    "aiPredictions": 0,
     "statisticalPredictions": 0,
     "activePendingPredictions": 0,
-    "selectedPredictions": 1,
-    "newPredictions": 1,
+    "selectedPredictions": 0,
+    "newPredictions": 0,
     "settledPredictions": 0,
     "analysisModel": "google/gemini-2.5-flash-lite",
-    "analysisStatus": "PREDICTIONS_SELECTED"
+    "analysisStatus": "NO_CONFIDENT_PREDICTIONS",
+    "competitionScope": "ALL_ACCESSIBLE",
+    "availableCountries": [
+      "Brazil"
+    ],
+    "availableCompetitions": [
+      "Campeonato Brasileiro Série A"
+    ],
+    "candidateCountries": [
+      "Brazil"
+    ],
+    "candidateCompetitions": [
+      "Campeonato Brasileiro Série A"
+    ]
   }
 }
