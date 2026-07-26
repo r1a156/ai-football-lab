@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    name: Четыре лучших матча на ближайшие 24 часа
+    name: Ровно четыре лучших прогноза с коэффициентом от 1,45
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
@@ -76,7 +76,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V5
+      - name: Проверка результата V6
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -115,15 +115,9 @@ jobs:
                   "selectedPredictions не совпадает с predictions"
               )
 
-          if len(predictions) > target:
+          if len(predictions) != target:
               raise SystemExit(
-                  f"Опубликовано больше дневной цели: {len(predictions)} > {target}"
-              )
-
-          if candidate_count >= target and len(predictions) != target:
-              raise SystemExit(
-                  f"При {candidate_count} кандидатах ожидалось {target} прогноза, "
-                  f"получено {len(predictions)}"
+                  f"Обязательная четвёрка не сформирована: {len(predictions)} != {target}"
               )
 
           match_ids = [
@@ -154,15 +148,18 @@ jobs:
 
               if not window_start <= kickoff <= window_end:
                   raise SystemExit(
-                      f"Прогноз вне 24-часового окна: matchId={item.get('sourceMatchId')}"
+                      f"Прогноз вне разрешённого окна: matchId={item.get('sourceMatchId')}"
                   )
 
               fair_odds = float(item.get("fairOdds") or 0)
               probability = float(item.get("probability") or 0)
 
-              if fair_odds <= 1:
+              minimum_odds = float(config.get("minimumModelOdds") or 1.45)
+              maximum_odds = float(config.get("maximumModelOdds") or 2.80)
+
+              if not minimum_odds <= fair_odds <= maximum_odds:
                   raise SystemExit(
-                      f"Некорректный модельный коэффициент: {fair_odds}"
+                      f"Коэффициент вне диапазона {minimum_odds}-{maximum_odds}: {fair_odds}"
                   )
 
               if not 0 < probability < 1:
@@ -177,7 +174,7 @@ jobs:
           print("TARGET:", target)
           print("WINDOW_HOURS:", window_hours)
           print("MODEL:", meta.get("analysisModel"))
-          print("ODDS_SOURCE: MODEL_FAIR_NOT_BOOKMAKER")
+          print("ODDS_POLICY: MIN_1.45_PREFER_1.60_MODEL_FAIR")
           PY
 
       - name: Сохранение обновлённых данных
@@ -194,5 +191,5 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
 
           git add data/state.json data/last-update-report.json
-          git commit -m "Ежедневные 4 прогноза на ближайшие 24 часа"
+          git commit -m "Ежедневные 4 прогноза с коэффициентом от 1.45"
           git push origin main

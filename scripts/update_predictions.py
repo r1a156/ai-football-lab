@@ -1113,6 +1113,42 @@ def call_openrouter(
 
 
 
+def model_odds_preference_bonus(
+    fair_odds: float,
+    config: dict[str, Any],
+) -> float:
+    """Ranks the requested coefficient band without treating higher as safer."""
+
+    minimum_odds = float(
+        config.get("minimumModelOdds") or 1.45
+    )
+    preferred_minimum = float(
+        config.get("preferredModelOdds") or 1.60
+    )
+    preferred_maximum = float(
+        config.get("preferredModelOddsMaximum") or 2.20
+    )
+    maximum_odds = float(
+        config.get("maximumModelOdds") or 2.80
+    )
+
+    if fair_odds < minimum_odds or fair_odds > maximum_odds:
+        return -1000.0
+
+    if preferred_minimum <= fair_odds <= preferred_maximum:
+        return 12.0
+
+    if fair_odds < preferred_minimum:
+        span = max(0.01, preferred_minimum - minimum_odds)
+        progress = (fair_odds - minimum_odds) / span
+        return round(4.0 + 4.0 * max(0.0, min(progress, 1.0)), 4)
+
+    span = max(0.01, maximum_odds - preferred_maximum)
+    progress = (fair_odds - preferred_maximum) / span
+    return round(8.0 - 6.0 * max(0.0, min(progress, 1.0)), 4)
+
+
+
 def normalize_model_predictions(
     model_result: dict[str, Any],
     candidates: list[dict[str, Any]],
@@ -1271,7 +1307,8 @@ def normalize_model_predictions(
         ranking_score = round(
             confidence * 0.50
             + probability * 100 * 0.25
-            + data_quality * 0.25,
+            + data_quality * 0.25
+            + model_odds_preference_bonus(fair_odds, config),
             4,
         )
 
@@ -1368,7 +1405,7 @@ def ensure_real_state(
 
     return {
         "meta": {
-            "version": "5.0.0",
+            "version": "6.0.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
@@ -1802,7 +1839,8 @@ def build_deterministic_predictions(
             ranking_score = round(
                 confidence * 0.55
                 + probability * 100 * 0.25
-                + data_quality * 0.20,
+                + data_quality * 0.20
+                + model_odds_preference_bonus(fair_odds, config),
                 4,
             )
 
@@ -3102,20 +3140,33 @@ def complete_daily_selection(
         if len(result) >= target_count:
             return result
 
+    minimum_model_odds = float(
+        config.get("minimumModelOdds") or 1.45
+    )
+    maximum_model_odds = float(
+        config.get("maximumModelOdds") or 2.80
+    )
+
     relaxed_config = copy.deepcopy(config)
     relaxed_config.update(
         {
             "maximumPredictions": max(
-                target_count * 4,
+                target_count * 8,
                 len(candidates),
                 target_count,
             ),
             "minimumConfidence": 0,
             "winMarketMinimumConfidence": 0,
-            "minimumProbability": 0.40,
-            "maximumProbability": 0.99,
-            "minimumModelOdds": 1.001,
-            "maximumModelOdds": 100.0,
+            "minimumProbability": max(
+                0.01,
+                1 / maximum_model_odds,
+            ),
+            "maximumProbability": min(
+                0.99,
+                1 / minimum_model_odds,
+            ),
+            "minimumModelOdds": minimum_model_odds,
+            "maximumModelOdds": maximum_model_odds,
             "minimumDataQuality": 0,
         }
     )
@@ -3177,7 +3228,7 @@ def _load_optional_dotenv(path: pathlib.Path) -> None:
 
 
 def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v5")
+    log("Запуск AI Football Lab Data Pipeline v6")
 
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
@@ -3449,6 +3500,23 @@ def main() -> int:
         now,
     )
 
+    daily_target = max(
+        1,
+        int(
+            config.get("dailyPredictionCount")
+            or config.get("maximumPredictions")
+            or 4
+        ),
+    )
+
+    if len(public_predictions) != daily_target:
+        raise RuntimeError(
+            "STRICT_DAILY_FOUR_NOT_MET: "
+            f"expected={daily_target}; actual={len(public_predictions)}; "
+            f"minimumModelOdds={float(config.get('minimumModelOdds') or 1.45):.2f}. "
+            "Pipeline will not publish fewer picks or lower the coefficient floor."
+        )
+
     accepted_ids = {
         str(item.get("id") or "")
         for item in public_predictions
@@ -3565,7 +3633,7 @@ def main() -> int:
 
     state.setdefault("meta", {}).update(
         {
-            "version": "5.0.0",
+            "version": "6.0.0",
             "mode": "real",
             "updatedAt": now.isoformat(),
             "analyzedMatches": len(scheduled_matches),
@@ -3731,8 +3799,21 @@ def validate_repository_files() -> int:
     if int(config.get("maximumPredictions") or 0) != 4:
         raise RuntimeError("config.maximumPredictions должен быть равен 4")
 
-    if float(config.get("selectionWindowHours") or 0) > 24:
-        raise RuntimeError("selectionWindowHours не должен превышать 24")
+    if float(config.get("selectionWindowHours") or 0) > 48:
+        raise RuntimeError("selectionWindowHours не должен превышать 48")
+
+    if float(config.get("minimumModelOdds") or 0) < 1.45:
+        raise RuntimeError("minimumModelOdds должен быть не ниже 1.45")
+
+    if float(config.get("preferredModelOdds") or 0) < 1.60:
+        raise RuntimeError("preferredModelOdds должен быть не ниже 1.60")
+
+    if float(config.get("maximumModelOdds") or 0) <= float(
+        config.get("preferredModelOdds") or 1.60
+    ):
+        raise RuntimeError(
+            "maximumModelOdds должен быть выше preferredModelOdds"
+        )
 
     if not isinstance(state.get("predictions", []), list):
         raise RuntimeError("state.predictions должен быть массивом")
@@ -3751,12 +3832,14 @@ def run_self_test() -> int:
         "dailyPredictionCount": 4,
         "minimumConfidence": 55,
         "winMarketMinimumConfidence": 60,
-        "minimumProbability": 0.50,
-        "maximumProbability": 0.95,
-        "minimumModelOdds": 1.01,
-        "maximumModelOdds": 10.0,
-        "minimumDataQuality": 25,
-        "bestAvailableMinimumConfidence": 35,
+        "minimumProbability": 0.36,
+        "maximumProbability": 0.69,
+        "minimumModelOdds": 1.45,
+        "preferredModelOdds": 1.60,
+        "preferredModelOddsMaximum": 2.20,
+        "maximumModelOdds": 2.80,
+        "minimumDataQuality": 20,
+        "bestAvailableMinimumConfidence": 38,
     }
 
     strong_form = {
@@ -3848,10 +3931,13 @@ def run_self_test() -> int:
     for item in predictions:
         fair_odds = float(item["fairOdds"])
 
-        if not 1.01 <= fair_odds <= 10.0:
+        if not 1.45 <= fair_odds <= 2.80:
             raise RuntimeError(
                 f"SELF_TEST: fairOdds вне диапазона: {fair_odds}"
             )
+
+    if any(float(item["fairOdds"]) < 1.45 for item in predictions):
+        raise RuntimeError("SELF_TEST: опубликован коэффициент ниже 1.45")
 
     diversity_input = [
         {
