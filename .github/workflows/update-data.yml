@@ -3,16 +3,16 @@ name: Обновление футбольной аналитики
 on:
   workflow_dispatch:
 
-  schedule:
-    - cron: "17 */2 * * *"
-
   push:
     branches:
       - main
     paths:
-      - ".github/workflows/update-data.yml"
       - "scripts/update_predictions.py"
       - "config/analysis.json"
+      - ".github/workflows/update-data.yml"
+
+  schedule:
+    - cron: "17 5 * * *"
 
 permissions:
   contents: write
@@ -25,7 +25,7 @@ jobs:
   update:
     name: Получение и анализ матчей
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - name: Получение проекта
@@ -52,44 +52,19 @@ jobs:
           fi
 
           if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::error::Не задан секрет OPENROUTER_API_KEY"
-            exit 1
+            echo "::warning::OPENROUTER_API_KEY отсутствует. Будет использован встроенный статистический модуль."
+          else
+            echo "OpenRouter secret присутствует."
           fi
 
-          echo "Обязательные секреты присутствуют."
-
-      - name: Проверка исходных файлов
-        shell: bash
+      - name: Статическая и офлайн-проверка
         run: |
           set -euo pipefail
-
           python -m py_compile scripts/update_predictions.py
-
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          files = [
-              Path("config/analysis.json"),
-              Path("data/state.json"),
-          ]
-
-          for path in files:
-              raw = path.read_bytes()
-
-              if raw.startswith(b"\xef\xbb\xbf"):
-                  raise SystemExit(
-                      f"{path}: обнаружен запрещённый UTF-8 BOM"
-                  )
-
-              with path.open(
-                  "r",
-                  encoding="utf-8",
-              ) as source:
-                  json.load(source)
-
-              print(f"{path}: корректный UTF-8 без BOM")
-          PY
+          python -m json.tool config/analysis.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+          python scripts/update_predictions.py --validate
+          python scripts/update_predictions.py --self-test
 
       - name: Обновление данных
         env:
@@ -97,77 +72,71 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
         run: |
-          python scripts/update_predictions.py
+          set -euo pipefail
+          python scripts/update_predictions.py --update
 
       - name: Проверка результата
-        shell: bash
         run: |
           set -euo pipefail
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/last-update-report.json > /dev/null
 
           python - <<'PY'
           import json
           from pathlib import Path
 
-          def read_json(path_value):
-              path = Path(path_value)
-
-              with path.open(
-                  "r",
-                  encoding="utf-8-sig",
-              ) as source:
-                  return json.load(source)
-
-          state = read_json("data/state.json")
-          report = read_json(
-              "data/last-update-report.json"
+          state = json.loads(
+              Path("data/state.json").read_text(encoding="utf-8")
+          )
+          config = json.loads(
+              Path("config/analysis.json").read_text(encoding="utf-8")
+          )
+          report = json.loads(
+              Path("data/last-update-report.json").read_text(
+                  encoding="utf-8"
+              )
           )
 
-          mode = state.get("meta", {}).get("mode")
-          status = report.get("status")
+          meta = state.get("meta", {})
           predictions = state.get("predictions", [])
-          history = state.get("history", [])
 
-          if mode != "real":
+          if meta.get("mode") != "real":
+              raise SystemExit("state.json не находится в real-режиме")
+
+          if report.get("status") == "FAILED":
+              raise SystemExit("Pipeline сформировал FAILED-отчёт")
+
+          if int(meta.get("selectedPredictions") or 0) != len(predictions):
               raise SystemExit(
-                  "state.json не переведён в реальный режим"
+                  "selectedPredictions не совпадает с predictions"
               )
 
-          if status == "FAILED":
-              raise SystemExit(
-                  "Pipeline сформировал FAILED-отчёт: "
-                  + str(report.get("message", "без сообщения"))
+          match_ids = [
+              int(item.get("sourceMatchId"))
+              for item in predictions
+          ]
+
+          if len(match_ids) != len(set(match_ids)):
+              raise SystemExit("В публичной выдаче есть дубли matchId")
+
+          minimum_odds = float(config.get("minimumModelOdds") or 1.45)
+          maximum_odds = float(config.get("maximumModelOdds") or 2.10)
+
+          for item in predictions:
+              fair_odds = float(
+                  item.get("fairOdds") or item.get("odds") or 0
               )
 
-          print("Режим:", mode)
-          print(
-              "Статус анализа:",
-              state.get("meta", {}).get("analysisStatus")
-          )
-          print("Прогнозов:", len(predictions))
-          print("История:", len(history))
-          print("Отчёт:", status)
-          PY
+              if not minimum_odds <= fair_odds <= maximum_odds:
+                  raise SystemExit(
+                      f"fairOdds вне диапазона: {fair_odds}"
+                  )
 
-      - name: Нормализация выходных JSON
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          python - <<'PY'
-          from pathlib import Path
-
-          for value in (
-              "data/state.json",
-              "data/last-update-report.json",
-          ):
-              path = Path(value)
-              text = path.read_text(encoding="utf-8-sig")
-              path.write_text(
-                  text,
-                  encoding="utf-8",
-                  newline="\n",
-              )
-              print(f"Нормализован: {path}")
+          print("Режим:", meta.get("mode"))
+          print("Статус:", meta.get("analysisStatus"))
+          print("RADAR:", meta.get("candidateMatches"))
+          print("PRED:", len(predictions))
+          print("MODEL:", meta.get("analysisModel"))
           PY
 
       - name: Сохранение обновлённых данных
@@ -175,22 +144,14 @@ jobs:
         run: |
           set -euo pipefail
 
-          if git diff --quiet -- \
-            data/state.json \
-            data/last-update-report.json; then
+          if git diff --quiet -- data/state.json data/last-update-report.json; then
             echo "Данные не изменились. Коммит не требуется."
             exit 0
           fi
 
           git config user.name "AI Football Lab Bot"
-          git config user.email \
-            "actions@users.noreply.github.com"
+          git config user.email "actions@users.noreply.github.com"
 
-          git add \
-            data/state.json \
-            data/last-update-report.json
-
-          git commit \
-            -m "Автоматическое обновление футбольной аналитики"
-
+          git add data/state.json data/last-update-report.json
+          git commit -m "Автоматическое обновление футбольной аналитики"
           git push origin main

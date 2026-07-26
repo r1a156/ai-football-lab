@@ -9,6 +9,7 @@ AI Football Lab
 
 from __future__ import annotations
 
+import argparse
 import copy
 import datetime as dt
 import json
@@ -118,10 +119,14 @@ def request_json(
     method: str = "GET",
     headers: dict[str, str] | None = None,
     payload: dict[str, Any] | None = None,
+    timeout_seconds: int | float | None = None,
+    retries: int | None = None,
 ) -> dict[str, Any]:
+    """Выполняет JSON-запрос с ограниченными повторными попытками."""
+
     request_headers = {
         "Accept": "application/json",
-        "User-Agent": "AI-Football-Lab/2.0",
+        "User-Agent": "AI-Football-Lab/3.0",
     }
 
     if headers:
@@ -133,9 +138,19 @@ def request_json(
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         request_headers["Content-Type"] = "application/json"
 
+    request_timeout = max(
+        1,
+        int(timeout_seconds or HTTP_TIMEOUT_SECONDS),
+    )
+
+    maximum_attempts = max(
+        1,
+        int(retries or REQUEST_RETRIES),
+    )
+
     last_error: Exception | None = None
 
-    for attempt in range(1, REQUEST_RETRIES + 1):
+    for attempt in range(1, maximum_attempts + 1):
         request = urllib.request.Request(
             url=url,
             data=body,
@@ -146,7 +161,7 @@ def request_json(
         try:
             with urllib.request.urlopen(
                 request,
-                timeout=HTTP_TIMEOUT_SECONDS,
+                timeout=request_timeout,
             ) as response:
                 raw = response.read().decode("utf-8")
                 parsed = json.loads(raw)
@@ -174,7 +189,7 @@ def request_json(
                 f"{response_body[:700]}"
             )
 
-            if error.code not in {429, 500, 502, 503, 504}:
+            if error.code not in {408, 429, 500, 502, 503, 504}:
                 raise last_error
 
         except (
@@ -184,18 +199,19 @@ def request_json(
         ) as error:
             last_error = error
 
-        if attempt < REQUEST_RETRIES:
-            delay = attempt * 5
+        if attempt < maximum_attempts:
+            delay = min(15, attempt * 5)
             log(
                 f"Повтор запроса через {delay} секунд. "
-                f"Попытка {attempt}/{REQUEST_RETRIES}"
+                f"Попытка {attempt}/{maximum_attempts}"
             )
             time.sleep(delay)
 
     raise RuntimeError(
-        f"Запрос завершился ошибкой после "
-        f"{REQUEST_RETRIES} попыток: {last_error}"
+        "Запрос завершился ошибкой после "
+        f"{maximum_attempts} попыток: {last_error}"
     )
+
 
 
 def iso_date(value: dt.date) -> str:
@@ -435,7 +451,9 @@ def final_score(match: dict[str, Any]) -> tuple[int, int] | None:
 def build_team_form(
     finished_matches: list[dict[str, Any]],
 ) -> dict[int, dict[str, Any]]:
-    form: dict[int, dict[str, Any]] = {}
+    """Строит общую и домашнюю/выездную форму команд."""
+
+    rows_by_team: dict[int, list[dict[str, Any]]] = {}
 
     sorted_matches = sorted(
         finished_matches,
@@ -467,21 +485,7 @@ def build_team_form(
             else 0
         )
 
-        home_entry = form.setdefault(
-            home_id,
-            {
-                "matches": [],
-            },
-        )
-
-        away_entry = form.setdefault(
-            away_id,
-            {
-                "matches": [],
-            },
-        )
-
-        home_entry["matches"].append(
+        rows_by_team.setdefault(home_id, []).append(
             {
                 "points": home_points,
                 "goalsFor": home_goals,
@@ -491,7 +495,7 @@ def build_team_form(
             }
         )
 
-        away_entry["matches"].append(
+        rows_by_team.setdefault(away_id, []).append(
             {
                 "points": away_points,
                 "goalsFor": away_goals,
@@ -501,81 +505,94 @@ def build_team_form(
             }
         )
 
-    summarized: dict[int, dict[str, Any]] = {}
-
-    for team_id, entry in form.items():
-        recent = entry["matches"][-6:]
-
+    def summarize(
+        rows: list[dict[str, Any]],
+        limit: int,
+    ) -> dict[str, Any]:
+        recent = rows[-limit:]
         games = len(recent)
-        points = sum(item["points"] for item in recent)
-        goals_for = sum(item["goalsFor"] for item in recent)
-        goals_against = sum(
-            item["goalsAgainst"]
-            for item in recent
-        )
 
-        scored_games = sum(
-            1 for item in recent
-            if item["goalsFor"] > 0
-        )
+        if not games:
+            return {
+                "games": 0,
+                "points": 0,
+                "pointsPerGame": 0.0,
+                "goalsFor": 0,
+                "goalsAgainst": 0,
+                "goalsForPerGame": 0.0,
+                "goalsAgainstPerGame": 0.0,
+                "winRate": 0.0,
+                "drawRate": 0.0,
+                "lossRate": 0.0,
+                "nonLossRate": 0.0,
+                "scoredRate": 0.0,
+                "concededRate": 0.0,
+                "cleanSheetRate": 0.0,
+                "over15Rate": 0.0,
+                "under35Rate": 0.0,
+                "bothScoreRate": 0.0,
+            }
 
-        conceded_games = sum(
-            1 for item in recent
-            if item["goalsAgainst"] > 0
-        )
+        points = sum(int(item["points"]) for item in recent)
+        goals_for = sum(int(item["goalsFor"]) for item in recent)
+        goals_against = sum(int(item["goalsAgainst"]) for item in recent)
 
+        wins = sum(1 for item in recent if int(item["points"]) == 3)
+        draws = sum(1 for item in recent if int(item["points"]) == 1)
+        losses = games - wins - draws
+        scored_games = sum(1 for item in recent if int(item["goalsFor"]) > 0)
+        conceded_games = sum(1 for item in recent if int(item["goalsAgainst"]) > 0)
+        clean_sheets = sum(1 for item in recent if int(item["goalsAgainst"]) == 0)
         over_15_games = sum(
-            1 for item in recent
-            if (
-                item["goalsFor"]
-                + item["goalsAgainst"]
-            ) >= 2
+            1
+            for item in recent
+            if int(item["goalsFor"]) + int(item["goalsAgainst"]) >= 2
         )
-
+        under_35_games = sum(
+            1
+            for item in recent
+            if int(item["goalsFor"]) + int(item["goalsAgainst"]) <= 3
+        )
         both_score_games = sum(
-            1 for item in recent
-            if (
-                item["goalsFor"] > 0
-                and item["goalsAgainst"] > 0
-            )
+            1
+            for item in recent
+            if int(item["goalsFor"]) > 0
+            and int(item["goalsAgainst"]) > 0
         )
 
-        summarized[team_id] = {
+        return {
             "games": games,
             "points": points,
-            "pointsPerGame": round(
-                points / games,
-                2,
-            ) if games else 0,
+            "pointsPerGame": round(points / games, 3),
             "goalsFor": goals_for,
             "goalsAgainst": goals_against,
-            "goalsForPerGame": round(
-                goals_for / games,
-                2,
-            ) if games else 0,
-            "goalsAgainstPerGame": round(
-                goals_against / games,
-                2,
-            ) if games else 0,
-            "scoredRate": round(
-                scored_games / games,
-                2,
-            ) if games else 0,
-            "concededRate": round(
-                conceded_games / games,
-                2,
-            ) if games else 0,
-            "over15Rate": round(
-                over_15_games / games,
-                2,
-            ) if games else 0,
-            "bothScoreRate": round(
-                both_score_games / games,
-                2,
-            ) if games else 0,
+            "goalsForPerGame": round(goals_for / games, 3),
+            "goalsAgainstPerGame": round(goals_against / games, 3),
+            "winRate": round(wins / games, 4),
+            "drawRate": round(draws / games, 4),
+            "lossRate": round(losses / games, 4),
+            "nonLossRate": round((wins + draws) / games, 4),
+            "scoredRate": round(scored_games / games, 4),
+            "concededRate": round(conceded_games / games, 4),
+            "cleanSheetRate": round(clean_sheets / games, 4),
+            "over15Rate": round(over_15_games / games, 4),
+            "under35Rate": round(under_35_games / games, 4),
+            "bothScoreRate": round(both_score_games / games, 4),
         }
 
-    return summarized
+    result: dict[int, dict[str, Any]] = {}
+
+    for team_id, rows in rows_by_team.items():
+        overall = summarize(rows, 8)
+        home_rows = [item for item in rows if item.get("venue") == "HOME"]
+        away_rows = [item for item in rows if item.get("venue") == "AWAY"]
+
+        overall["homeVenue"] = summarize(home_rows, 5)
+        overall["awayVenue"] = summarize(away_rows, 5)
+        result[team_id] = overall
+
+    return result
+
 
 
 def candidate_quality_score(
@@ -585,42 +602,37 @@ def candidate_quality_score(
     home_games = int(home_form.get("games") or 0)
     away_games = int(away_form.get("games") or 0)
 
-    data_coverage = min(
-        home_games + away_games,
-        12,
-    ) / 12
-
-    home_ppg = float(
-        home_form.get("pointsPerGame") or 0
+    home_venue_games = int(
+        (home_form.get("homeVenue") or {}).get("games") or 0
+    )
+    away_venue_games = int(
+        (away_form.get("awayVenue") or {}).get("games") or 0
     )
 
-    away_ppg = float(
-        away_form.get("pointsPerGame") or 0
+    overall_coverage = (
+        min(home_games, 8) + min(away_games, 8)
+    ) / 16
+
+    venue_coverage = (
+        min(home_venue_games, 5) + min(away_venue_games, 5)
+    ) / 10
+
+    maximum_games = max(home_games, away_games, 1)
+    sample_balance = 1 - abs(home_games - away_games) / maximum_games
+
+    home_over = float(home_form.get("over15Rate") or 0)
+    away_over = float(away_form.get("over15Rate") or 0)
+    observable_signal = (home_over + away_over) / 2
+
+    score = (
+        overall_coverage * 55
+        + venue_coverage * 20
+        + sample_balance * 10
+        + observable_signal * 15
     )
 
-    form_difference = min(
-        abs(home_ppg - away_ppg) / 3,
-        1,
-    )
+    return round(clamp_number(score, 0, 100), 2)
 
-    home_over = float(
-        home_form.get("over15Rate") or 0
-    )
-
-    away_over = float(
-        away_form.get("over15Rate") or 0
-    )
-
-    goal_signal = (
-        home_over + away_over
-    ) / 2
-
-    return round(
-        data_coverage * 55
-        + form_difference * 20
-        + goal_signal * 25,
-        2,
-    )
 
 
 def build_candidates(
@@ -749,28 +761,37 @@ def build_analysis_prompt(
     candidates: list[dict[str, Any]],
     config: dict[str, Any],
 ) -> str:
-    allowed_markets = config.get(
-        "allowedMarkets",
-        [],
-    )
+    allowed_markets = [
+        str(value)
+        for value in config.get("allowedMarkets", [])
+    ]
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 68
+        config.get("minimumConfidence") or 70
     )
 
-
-    win_market_minimum_confidence = int(
-        config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence, 74)
+    maximum_predictions = max(
+        1,
+        int(config.get("maximumPredictions") or 5),
     )
 
-    win_markets = {
-        "HOME_WIN",
-        "AWAY_WIN",
-    }
-    maximum_predictions = int(
-        config.get("maximumPredictions") or 5
+    minimum_probability = float(
+        config.get("minimumProbability") or 0.52
     )
+
+    maximum_probability = float(
+        config.get("maximumProbability") or 0.69
+    )
+
+    minimum_model_odds = float(
+        config.get("minimumModelOdds") or 1.45
+    )
+
+    if minimum_model_odds > 1:
+        maximum_probability = min(
+            maximum_probability,
+            1 / minimum_model_odds,
+        )
 
     candidate_json = json.dumps(
         candidates,
@@ -779,54 +800,51 @@ def build_analysis_prompt(
     )
 
     return f"""
-Ты являешься строгим аналитическим модулем футбольных матчей.
+Ты — строгий аналитический модуль футбольных матчей.
 
-Работай только с переданными числовыми данными.
-Не используй внешние знания, слухи, составы или коэффициенты.
-Не выдумывай отсутствующие факты.
+Используй только переданные числовые показатели. Не используй внешние
+знания, составы, новости, слухи и букмекерские коэффициенты. Не выдумывай
+отсутствующие данные.
 
-ЗАДАЧА:
-Если массив кандидатов не пуст, отбери от 1 до {maximum_predictions} наиболее обоснованных прогнозов.
+Отбери не более {maximum_predictions} прогнозов. Пустой массив допустим,
+если статистическое основание недостаточно. Не создавай прогноз ради
+заполнения карточек.
 
-Если кандидаты переданы, нельзя возвращать пустой массив. Выбери хотя бы один наиболее обоснованный вариант, но обязательно укажи честный уровень confidence и risk.
+Важно различать два показателя:
+- confidence — надёжность самого анализа и полнота данных;
+- probability — оценка вероятности наступления выбранного события.
 
-Минимальная допустимая уверенность:
-{minimum_confidence} из 100.
+Требования:
+1. confidence должен быть не ниже {minimum_confidence}.
+2. probability должен быть от {minimum_probability:.2f} до
+   {maximum_probability:.4f}.
+3. Один прогноз на один matchId.
+4. market — только одно из значений:
+   {json.dumps(allowed_markets, ensure_ascii=False)}
+5. risk — только LOW или MEDIUM.
+6. reason — краткое статистическое объяснение на русском языке.
+7. Не возвращай fairOdds или букмекерские коэффициенты: backend рассчитает
+   математический коэффициент как 1 / probability.
+8. Верни только корректный JSON без markdown и текста вокруг него.
 
-Разрешённые значения market:
-{json.dumps(allowed_markets, ensure_ascii=False)}
-
-ОГРАНИЧЕНИЯ:
-1. Один прогноз на один matchId.
-2. Не выбирай слабые матчи только ради достижения четырёх, но при наличии кандидатов выбери минимум один лучший вариант.
-3. Учитывай малый объём выборки как фактор риска.
-4. confidence — целое число от 0 до 100.
-5. probability — число от 0.50 до 0.90.
-6. risk должен быть только LOW или MEDIUM.
-7. reason — краткое объяснение на русском языке,
-   основанное только на переданных показателях.
-8. Не возвращай markdown.
-9. Не возвращай комментарии вне JSON.
-10. Не придумывай рыночные букмекерские коэффициенты.
-
-Верни строго JSON следующей структуры:
-
+Формат ответа:
 {{
   "predictions": [
     {{
       "matchId": 123,
       "market": "OVER_1_5",
       "confidence": 74,
-      "probability": 0.72,
-      "risk": "LOW",
+      "probability": 0.64,
+      "risk": "MEDIUM",
       "reason": "Краткое статистическое основание."
     }}
   ]
 }}
 
-МАТЧИ И СТАТИСТИКА:
+КАНДИДАТЫ И СТАТИСТИКА:
 {candidate_json}
 """.strip()
+
 
 
 def extract_json_object(text: str) -> dict[str, Any]:
@@ -880,139 +898,120 @@ def call_openrouter(
     api_key: str,
     prompt: str,
 ) -> tuple[dict[str, Any], str]:
-    """
-    Устойчивый вызов OpenRouter.
-
-    Не привязываемся к одному поставщику или устаревшему model slug.
-    openrouter/auto выбирает доступную модель для текущей задачи.
-    """
+    """Вызывает OpenRouter без вложенного каскада повторов."""
 
     configured_model = str(
         os.getenv("OPENROUTER_MODEL")
-        or "openrouter/auto"
+        or "google/gemini-2.5-flash-lite"
     ).strip()
 
-    if (
-        not configured_model
-        or configured_model
-        == "qwen/qwen-2.5-72b-instruct"
-    ):
+    if not configured_model:
         configured_model = "openrouter/auto"
 
-    maximum_attempts = 4
-    retry_seconds = 15
+    candidate_models = [configured_model]
 
-    payload = {
-        "model": configured_model,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Ты строгий аналитический модуль. "
-                    "Отвечай только корректным JSON без markdown."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        "temperature": 0.1,
-        "max_tokens": 3000,
-        "stream": False,
-        "provider": {
-            "allow_fallbacks": True,
-            "require_parameters": True,
-        },
-    }
+    if configured_model != "openrouter/auto":
+        candidate_models.append("openrouter/auto")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": (
-            "https://r1a156.github.io/ai-football-lab/"
-        ),
+        "HTTP-Referer": PUBLIC_SITE_URL,
         "X-Title": "AI Football Lab",
     }
 
     last_error: Exception | None = None
 
-    for attempt in range(1, maximum_attempts + 1):
-        log(
-            "Запрос OpenRouter Auto Router: "
-            f"попытка {attempt}/{maximum_attempts}; "
-            f"модель={configured_model}"
-        )
+    for model_index, model_name in enumerate(candidate_models):
+        attempts = 2 if model_index == 0 else 1
 
-        try:
-            response = request_json(
-                "https://openrouter.ai/api/v1/chat/completions",
-                method="POST",
-                headers=headers,
-                payload=payload,
-            )
-
-            choices = response.get("choices") or []
-
-            if not choices:
-                raise RuntimeError(
-                    "OpenRouter не вернул choices"
-                )
-
-            message = choices[0].get("message") or {}
-            content = message.get("content")
-
-            if isinstance(content, list):
-                content = "".join(
-                    str(item.get("text") or "")
-                    if isinstance(item, dict)
-                    else str(item)
-                    for item in content
-                )
-
-            content = str(content or "").strip()
-
-            if not content:
-                raise RuntimeError(
-                    "OpenRouter вернул пустой content"
-                )
-
-            returned_model = str(
-                response.get("model")
-                or configured_model
-            )
-
-            parsed = extract_json_object(content)
+        for attempt in range(1, attempts + 1):
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Ты строгий аналитический модуль. "
+                            "Отвечай только корректным JSON без markdown."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                "temperature": 0.1,
+                "max_tokens": 3000,
+                "stream": False,
+                "provider": {
+                    "allow_fallbacks": True,
+                },
+            }
 
             log(
-                "OpenRouter успешно ответил; "
-                f"использована модель: {returned_model}"
+                "Запрос OpenRouter: "
+                f"модель={model_name}; попытка={attempt}/{attempts}"
             )
 
-            return parsed, returned_model
+            try:
+                response = request_json(
+                    OPENROUTER_API_URL,
+                    method="POST",
+                    headers=headers,
+                    payload=payload,
+                    timeout_seconds=180,
+                    retries=1,
+                )
 
-        except Exception as error:
-            last_error = error
+                choices = response.get("choices") or []
 
-            log(
-                "Предупреждение OpenRouter: "
-                f"{type(error).__name__}: {error}"
-            )
+                if not choices:
+                    raise RuntimeError("OpenRouter не вернул choices")
 
-            if attempt < maximum_attempts:
-                delay = retry_seconds * attempt
+                message = choices[0].get("message") or {}
+                content = message.get("content")
+
+                if isinstance(content, list):
+                    content = "".join(
+                        str(item.get("text") or "")
+                        if isinstance(item, dict)
+                        else str(item)
+                        for item in content
+                    )
+
+                content = str(content or "").strip()
+
+                if not content:
+                    raise RuntimeError("OpenRouter вернул пустой content")
+
+                parsed = extract_json_object(content)
+                returned_model = str(
+                    response.get("model") or model_name
+                )
 
                 log(
-                    "Повтор OpenRouter через "
-                    f"{delay} секунд"
+                    "OpenRouter успешно ответил; "
+                    f"модель={returned_model}"
                 )
 
-                time.sleep(delay)
+                return parsed, returned_model
+
+            except Exception as error:
+                last_error = error
+                log(
+                    "Предупреждение OpenRouter: "
+                    f"{type(error).__name__}: {error}"
+                )
+
+                if attempt < attempts:
+                    time.sleep(10 * attempt)
 
     raise RuntimeError(
-        "OpenRouter временно недоступен после "
-        f"{maximum_attempts} попыток: {last_error}"
+        "OpenRouter недоступен после ограниченного числа попыток: "
+        f"{last_error}"
     )
+
 
 
 def normalize_model_predictions(
@@ -1020,15 +1019,10 @@ def normalize_model_predictions(
     candidates: list[dict[str, Any]],
     config: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    raw_predictions = model_result.get(
-        "predictions",
-        [],
-    )
+    raw_predictions = model_result.get("predictions", [])
 
     if not isinstance(raw_predictions, list):
-        raise RuntimeError(
-            "Поле predictions должно быть массивом"
-        )
+        raise RuntimeError("Поле predictions должно быть массивом")
 
     candidates_by_id = {
         int(candidate["matchId"]): candidate
@@ -1037,63 +1031,96 @@ def normalize_model_predictions(
 
     allowed_markets = {
         str(value)
-        for value in config.get(
-            "allowedMarkets",
-            [],
-        )
+        for value in config.get("allowedMarkets", [])
     }
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 68
+        config.get("minimumConfidence") or 70
     )
-
     win_market_minimum_confidence = int(
         config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence, 74)
+        or max(minimum_confidence + 3, 74)
+    )
+    minimum_probability = float(
+        config.get("minimumProbability") or 0.52
+    )
+    maximum_probability = float(
+        config.get("maximumProbability") or 0.69
+    )
+    minimum_model_odds = float(
+        config.get("minimumModelOdds") or 1.45
+    )
+    maximum_model_odds = float(
+        config.get("maximumModelOdds") or 2.10
+    )
+    minimum_data_quality = float(
+        config.get("minimumDataQuality") or 42
+    )
+    maximum_predictions = max(
+        1,
+        int(config.get("maximumPredictions") or 5),
     )
 
-    win_markets = {
-        "HOME_WIN",
-        "AWAY_WIN",
-    }
+    if minimum_model_odds > 1:
+        maximum_probability = min(
+            maximum_probability,
+            1 / minimum_model_odds,
+        )
 
-    maximum_predictions = int(
-        config.get("maximumPredictions") or 5
-    )
+    if maximum_model_odds > 1:
+        minimum_probability = max(
+            minimum_probability,
+            1 / maximum_model_odds,
+        )
 
+    win_markets = {"HOME_WIN", "AWAY_WIN"}
     normalized: list[dict[str, Any]] = []
     used_match_ids: set[int] = set()
 
-    for raw in raw_predictions:
+    for index, raw in enumerate(raw_predictions):
         if not isinstance(raw, dict):
+            log(f"AI prediction #{index + 1} отклонён: не объект")
             continue
 
         try:
             match_id = int(raw.get("matchId"))
-            confidence = int(raw.get("confidence"))
+            confidence = int(round(float(raw.get("confidence"))))
             probability = float(raw.get("probability"))
         except (TypeError, ValueError):
+            log(f"AI prediction #{index + 1} отклонён: неверные числа")
             continue
 
-        market = str(
-            raw.get("market") or ""
-        ).upper()
+        if 1 < probability <= 100:
+            probability /= 100
 
-        risk = str(
-            raw.get("risk") or ""
-        ).upper()
+        market = str(raw.get("market") or "").upper().strip()
+        risk = str(raw.get("risk") or "").upper().strip()
+        reason = str(raw.get("reason") or "").strip()
 
-        reason = str(
-            raw.get("reason") or ""
-        ).strip()
+        candidate = candidates_by_id.get(match_id)
 
-        if match_id not in candidates_by_id:
+        if candidate is None:
+            log(f"AI prediction отклонён: неизвестный matchId={match_id}")
             continue
 
         if match_id in used_match_ids:
+            log(f"AI prediction отклонён: дубль matchId={match_id}")
             continue
 
         if market not in allowed_markets:
+            log(
+                "AI prediction отклонён: "
+                f"market={market}; matchId={match_id}"
+            )
+            continue
+
+        data_quality = float(candidate.get("dataQuality") or 0)
+
+        if data_quality < minimum_data_quality:
+            log(
+                "AI prediction отклонён по качеству данных: "
+                f"matchId={match_id}; quality={data_quality:.1f}"
+            )
             continue
 
         required_confidence = (
@@ -1102,58 +1129,51 @@ def normalize_model_predictions(
             else minimum_confidence
         )
 
+        maximum_supported_confidence = int(
+            round(clamp_number(62 + data_quality * 0.28, 68, 88))
+        )
+        confidence = min(
+            max(0, min(confidence, 100)),
+            maximum_supported_confidence,
+        )
+
         if confidence < required_confidence:
+            log(
+                "AI prediction отклонён по уверенности: "
+                f"matchId={match_id}; confidence={confidence}; "
+                f"required={required_confidence}"
+            )
             continue
 
-        confidence = max(
-            0,
-            min(confidence, 100),
-        )
-
-        probability = max(
-            0.50,
-            min(probability, 0.90),
-        )
-
-
-        confidence_probability = confidence / 100
-        probability = min(
-            probability,
-            confidence_probability,
-        )
-
-        probability = max(
-            0.50,
-            min(probability, 0.90),
-        )
-
-        if market in win_markets:
-            risk = (
-                "LOW"
-                if confidence >= 80
-                else "MEDIUM"
+        if not minimum_probability <= probability <= maximum_probability:
+            log(
+                "AI prediction отклонён по вероятности: "
+                f"matchId={match_id}; probability={probability:.4f}; "
+                f"range={minimum_probability:.4f}-{maximum_probability:.4f}"
             )
-        else:
-            risk = (
-                "LOW"
-                if confidence >= 76
-                else "MEDIUM"
-            )
-        if risk not in {"LOW", "MEDIUM"}:
-            risk = (
-                "LOW"
-                if confidence >= 76
-                else "MEDIUM"
-            )
+            continue
 
         if not reason:
+            log(f"AI prediction отклонён без reason: matchId={match_id}")
             continue
 
-        # Расчётный справедливый коэффициент.
-        # Это не коэффициент букмекерской конторы.
-        fair_odds = round(
-            1 / probability,
-            2,
+        fair_odds = round(1 / probability, 2)
+
+        if not minimum_model_odds <= fair_odds <= maximum_model_odds:
+            log(
+                "AI prediction отклонён по расчётному коэффициенту: "
+                f"matchId={match_id}; fairOdds={fair_odds:.2f}"
+            )
+            continue
+
+        if risk not in {"LOW", "MEDIUM"}:
+            risk = "LOW" if confidence >= 78 else "MEDIUM"
+
+        ranking_score = round(
+            confidence * 0.50
+            + probability * 100 * 0.25
+            + data_quality * 0.25,
+            4,
         )
 
         normalized.append(
@@ -1161,26 +1181,27 @@ def normalize_model_predictions(
                 "matchId": match_id,
                 "market": market,
                 "confidence": confidence,
-                "probability": round(
-                    probability,
-                    4,
-                ),
+                "probability": round(probability, 4),
                 "fairOdds": fair_odds,
                 "risk": risk,
                 "reason": reason[:500],
+                "analysisMode": "AI",
+                "rankingScore": ranking_score,
+                "dataQuality": round(data_quality, 2),
             }
         )
-
         used_match_ids.add(match_id)
 
     normalized.sort(
         key=lambda item: (
-            -int(item["confidence"]),
-            -float(item["probability"]),
+            -float(item.get("rankingScore") or 0),
+            -int(item.get("confidence") or 0),
+            str(item.get("matchId") or ""),
         )
     )
 
     return normalized[:maximum_predictions]
+
 
 
 def evaluate_market(
@@ -1225,66 +1246,56 @@ def ensure_real_state(
     config: dict[str, Any],
 ) -> dict[str, Any]:
     current_mode = str(
-        (old_state.get("meta") or {}).get("mode")
-        or ""
+        (old_state.get("meta") or {}).get("mode") or ""
     )
 
     if current_mode == "real":
         state = copy.deepcopy(old_state)
-
+        state.setdefault("meta", {})
         state.setdefault("predictions", [])
         state.setdefault("history", [])
         state.setdefault("statistics", {})
         state.setdefault("bank", {})
-
         return state
 
     starting_bank = float(
-        config.get("startingVirtualBank")
-        or 10000
+        config.get("startingVirtualBank") or 10000
     )
 
     log(
-        "Обнаружен демонстрационный режим. "
-        "Создаётся чистая реальная статистика."
+        "Обнаружен демонстрационный или пустой режим. "
+        "Создаётся чистое реальное состояние."
     )
 
     return {
         "meta": {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
+            "candidateMatches": 0,
+            "selectedPredictions": 0,
             "source": "football-data.org",
-            "analysisProvider": (
-                "Встроенный статистический модуль"
-                if analysis_mode == "DETERMINISTIC_FALLBACK"
-                else "OpenRouter"
-            ),
+            "analysisProvider": "Не запускался",
             "timezone": str(
-                config.get("timezone")
-                or "Europe/Moscow"
+                config.get("timezone") or "Europe/Moscow"
             ),
             "minimumLeadHours": float(
-                config.get("minimumLeadHours")
-                or 4
+                config.get("minimumLeadHours") or 3
             ),
             "notice": (
-                "Расчётные коэффициенты не являются "
-                "коэффициентами букмекерских контор."
+                "Расчётные коэффициенты модели не являются "
+                "букмекерской линией."
             ),
         },
         "bank": {
             "starting": starting_bank,
             "current": starting_bank,
             "stakePercent": int(
-                config.get(
-                    "maximumTotalStakePercent",
-                )
-                or 20
+                config.get("maximumTotalStakePercent") or 20
             ),
-            "roi": 0,
-            "maxDrawdown": 0,
+            "roi": 0.0,
+            "maxDrawdown": 0.0,
             "history": [
                 {
                     "date": utc_now().date().isoformat(),
@@ -1294,13 +1305,14 @@ def ensure_real_state(
             ],
         },
         "statistics": {
-            "averageOdds": 0,
+            "averageOdds": 0.0,
             "currentStreak": "Нет завершённых прогнозов",
             "bestSegment": "Недостаточно данных",
         },
         "predictions": [],
         "history": [],
     }
+
 
 
 def resolve_existing_history(
@@ -1325,10 +1337,8 @@ def resolve_existing_history(
         if entry.get("status") != "pending":
             continue
 
-        match_id = entry.get("sourceMatchId")
-
         try:
-            match_id = int(match_id)
+            match_id = int(entry.get("sourceMatchId"))
         except (TypeError, ValueError):
             continue
 
@@ -1337,27 +1347,44 @@ def resolve_existing_history(
         if not match:
             continue
 
+        match_status = str(match.get("status") or "").upper()
+
+        if match.get("utcDate"):
+            entry["utcDate"] = str(match.get("utcDate"))
+
+        entry.update(extract_public_match_status(match))
+
+        if match_status == "CANCELLED":
+            entry["status"] = "void"
+            entry["profit"] = 0.0
+            entry["settledAt"] = utc_now().isoformat()
+            entry["settlementReason"] = "MATCH_CANCELLED"
+            settled_count += 1
+            continue
+
         result = final_score(match)
 
         if result is None:
             continue
 
         home_goals, away_goals = result
+        market = str(entry.get("market") or "")
 
-        market = str(
-            entry.get("market") or ""
-        )
+        try:
+            won = evaluate_market(
+                market,
+                home_goals,
+                away_goals,
+            )
+        except RuntimeError:
+            entry["status"] = "void"
+            entry["profit"] = 0.0
+            entry["settledAt"] = utc_now().isoformat()
+            entry["settlementReason"] = "UNKNOWN_MARKET"
+            settled_count += 1
+            continue
 
-        won = evaluate_market(
-            market,
-            home_goals,
-            away_goals,
-        )
-
-        stake = float(
-            entry.get("stake") or 0
-        )
-
+        stake = float(entry.get("stake") or 0)
         fair_odds = float(
             entry.get("fairOdds")
             or entry.get("odds")
@@ -1365,41 +1392,23 @@ def resolve_existing_history(
         )
 
         if won:
-            profit = stake * (
-                fair_odds - 1
-            )
+            profit = stake * max(0.0, fair_odds - 1)
             current_bank += profit
             entry["status"] = "won"
-            entry["profit"] = round(
-                profit,
-                2,
-            )
+            entry["profit"] = round(profit, 2)
         else:
             current_bank -= stake
             entry["status"] = "lost"
-            entry["profit"] = round(
-                -stake,
-                2,
-            )
+            entry["profit"] = round(-stake, 2)
 
-        entry["score"] = (
-            f"{home_goals}:{away_goals}"
-        )
+        entry["score"] = f"{home_goals}:{away_goals}"
+        entry["settledAt"] = utc_now().isoformat()
+        entry["settlementOddsType"] = "MODEL_FAIR_SIMULATION"
 
-        entry["settledAt"] = (
-            utc_now().isoformat()
-        )
-
-        bank.setdefault(
-            "history",
-            [],
-        ).append(
+        bank.setdefault("history", []).append(
             {
                 "date": utc_now().date().isoformat(),
-                "value": round(
-                    current_bank,
-                    2,
-                ),
+                "value": round(current_bank, 2),
                 "event": (
                     "PREDICTION_WON"
                     if won
@@ -1411,14 +1420,11 @@ def resolve_existing_history(
 
         settled_count += 1
 
-    bank["current"] = round(
-        current_bank,
-        2,
-    )
-
+    bank["current"] = round(current_bank, 2)
     state["bank"] = bank
 
     return settled_count
+
 
 
 
@@ -1434,17 +1440,52 @@ def clamp_number(
     return min(maximum, max(minimum, value))
 
 
+def _mean(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+
+def _standard_deviation(values: list[float]) -> float:
+    if len(values) < 2:
+        return 0.0
+
+    average = _mean(values)
+    variance = sum((value - average) ** 2 for value in values) / len(values)
+    return math.sqrt(variance)
+
+
+def _preferred_venue_form(
+    form: dict[str, Any],
+    venue_key: str,
+) -> dict[str, Any]:
+    venue = form.get(venue_key) or {}
+
+    if int(venue.get("games") or 0) >= 2:
+        return venue
+
+    return form
+
+
+def _poisson_over_15(expected_total: float) -> float:
+    expected_total = clamp_number(expected_total, 0.1, 5.0)
+    return 1 - math.exp(-expected_total) * (1 + expected_total)
+
+
+def _poisson_under_35(expected_total: float) -> float:
+    expected_total = clamp_number(expected_total, 0.1, 5.0)
+    cumulative = sum(
+        math.exp(-expected_total)
+        * expected_total ** goals
+        / math.factorial(goals)
+        for goals in range(4)
+    )
+    return clamp_number(cumulative, 0, 1)
+
+
 def build_deterministic_predictions(
     candidates: list[dict[str, Any]],
     config: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """
-    Резервный статистический выбор.
-
-    Используются только уже рассчитанные показатели формы.
-    Внешние знания, составы, слухи и букмекерские коэффициенты
-    не используются.
-    """
+    """Формирует честный статистический пул без искусственных заглушек."""
 
     if not candidates:
         return []
@@ -1456,191 +1497,236 @@ def build_deterministic_predictions(
 
     maximum_predictions = max(
         1,
-        int(config.get("maximumPredictions") or 4),
+        int(config.get("maximumPredictions") or 5),
+    )
+    minimum_confidence = int(
+        config.get("minimumConfidence") or 70
+    )
+    win_market_minimum_confidence = int(
+        config.get("winMarketMinimumConfidence")
+        or max(minimum_confidence + 3, 74)
+    )
+    minimum_probability = float(
+        config.get("minimumProbability") or 0.52
+    )
+    maximum_probability = float(
+        config.get("maximumProbability") or 0.69
+    )
+    minimum_model_odds = float(
+        config.get("minimumModelOdds") or 1.45
+    )
+    maximum_model_odds = float(
+        config.get("maximumModelOdds") or 2.10
+    )
+    minimum_data_quality = float(
+        config.get("minimumDataQuality") or 42
     )
 
-    minimum_confidence = max(
-        50,
-        int(
-            config.get("fallbackMinimumConfidence")
-            or config.get("minimumConfidence")
-            or 74
-        ),
-    )
+    if minimum_model_odds > 1:
+        maximum_probability = min(
+            maximum_probability,
+            1 / minimum_model_odds,
+        )
 
-    maximum_confidence = max(
-        minimum_confidence,
-        int(config.get("fallbackMaximumConfidence") or 82),
-    )
+    if maximum_model_odds > 1:
+        minimum_probability = max(
+            minimum_probability,
+            1 / maximum_model_odds,
+        )
 
+    win_markets = {"HOME_WIN", "AWAY_WIN"}
     ranked: list[dict[str, Any]] = []
 
     for candidate in candidates:
-        home_form = candidate.get("homeTeam", {}).get(
-            "form",
-            {},
-        )
+        home_form = candidate.get("homeTeam", {}).get("form", {})
+        away_form = candidate.get("awayTeam", {}).get("form", {})
+        home_venue = _preferred_venue_form(home_form, "homeVenue")
+        away_venue = _preferred_venue_form(away_form, "awayVenue")
 
-        away_form = candidate.get("awayTeam", {}).get(
-            "form",
-            {},
-        )
+        data_quality = float(candidate.get("dataQuality") or 0)
 
-        home_ppg = float(
-            home_form.get("pointsPerGame") or 0
-        )
-
-        away_ppg = float(
-            away_form.get("pointsPerGame") or 0
-        )
-
-        home_over = float(
-            home_form.get("over15Rate") or 0
-        )
-
-        away_over = float(
-            away_form.get("over15Rate") or 0
-        )
-
-        average_over = (
-            home_over + away_over
-        ) / 2
-
-        form_difference = home_ppg - away_ppg
-
-        data_quality = float(
-            candidate.get("dataQuality") or 0
-        )
-
-        market = ""
-        signal = 0.0
-        reason = ""
-
-        # Наиболее устойчивый рынок — тотал больше 1,5,
-        # когда обе команды регулярно участвуют в матчах
-        # минимум с двумя голами.
-        if (
-            "OVER_1_5" in allowed_markets
-            and average_over >= 0.62
-        ):
-            market = "OVER_1_5"
-            signal = average_over
-
-            reason = (
-                "Резервный статистический расчёт: "
-                f"доля матчей с двумя и более голами "
-                f"у команд составляет в среднем "
-                f"{average_over * 100:.0f}%."
-            )
-
-        elif (
-            form_difference >= 0.45
-            and "HOME_OR_DRAW" in allowed_markets
-        ):
-            market = "HOME_OR_DRAW"
-            signal = clamp_number(
-                0.60 + form_difference / 10,
-                0.60,
-                0.80,
-            )
-
-            reason = (
-                "Резервный статистический расчёт: "
-                "хозяева имеют преимущество по текущей форме; "
-                f"очки за матч {home_ppg:.2f} против "
-                f"{away_ppg:.2f}."
-            )
-
-        elif (
-            form_difference <= -0.45
-            and "AWAY_OR_DRAW" in allowed_markets
-        ):
-            market = "AWAY_OR_DRAW"
-            signal = clamp_number(
-                0.60 + abs(form_difference) / 10,
-                0.60,
-                0.80,
-            )
-
-            reason = (
-                "Резервный статистический расчёт: "
-                "гости имеют преимущество по текущей форме; "
-                f"очки за матч {away_ppg:.2f} против "
-                f"{home_ppg:.2f}."
-            )
-
-        elif "OVER_1_5" in allowed_markets:
-            # Последний честный резерв при наличии кандидатов.
-            # Он помечается средним риском и не выдаётся за
-            # высокоуверенный прогноз.
-            market = "OVER_1_5"
-            signal = clamp_number(
-                average_over,
-                0.55,
-                0.70,
-            )
-
-            reason = (
-                "Резервный статистический расчёт: "
-                "выбран наиболее устойчивый из доступных "
-                "рынков по совокупности формы и результативности. "
-                "Уровень риска повышен."
-            )
-
-        else:
+        if data_quality < minimum_data_quality:
             continue
 
-        confidence_from_signal = (
-            minimum_confidence
-            + max(0.0, signal - 0.55) * 30
-            + max(0.0, data_quality - 50) * 0.05
-        )
+        home_ppg = float(home_venue.get("pointsPerGame") or 0)
+        away_ppg = float(away_venue.get("pointsPerGame") or 0)
+        home_gf = float(home_venue.get("goalsForPerGame") or 0)
+        home_ga = float(home_venue.get("goalsAgainstPerGame") or 0)
+        away_gf = float(away_venue.get("goalsForPerGame") or 0)
+        away_ga = float(away_venue.get("goalsAgainstPerGame") or 0)
 
-        confidence = int(
-            round(
-                clamp_number(
-                    confidence_from_signal,
-                    minimum_confidence,
-                    maximum_confidence,
+        expected_home = clamp_number((home_gf + away_ga) / 2, 0.1, 3.0)
+        expected_away = clamp_number((away_gf + home_ga) / 2, 0.1, 3.0)
+        expected_total = expected_home + expected_away
+
+        form_edge = home_ppg - away_ppg
+        goal_edge = expected_home - expected_away
+
+        market_components: dict[str, list[float]] = {
+            "OVER_1_5": [
+                _poisson_over_15(expected_total),
+                float(home_form.get("over15Rate") or 0),
+                float(away_form.get("over15Rate") or 0),
+            ],
+            "UNDER_3_5": [
+                _poisson_under_35(expected_total),
+                float(home_form.get("under35Rate") or 0),
+                float(away_form.get("under35Rate") or 0),
+            ],
+            "HOME_OVER_0_5": [
+                float(home_venue.get("scoredRate") or 0),
+                float(away_venue.get("concededRate") or 0),
+                clamp_number(expected_home / 1.5, 0, 1),
+            ],
+            "AWAY_OVER_0_5": [
+                float(away_venue.get("scoredRate") or 0),
+                float(home_venue.get("concededRate") or 0),
+                clamp_number(expected_away / 1.5, 0, 1),
+            ],
+            "BOTH_SCORE": [
+                float(home_form.get("bothScoreRate") or 0),
+                float(away_form.get("bothScoreRate") or 0),
+                float(home_venue.get("scoredRate") or 0)
+                * float(away_venue.get("concededRate") or 0),
+                float(away_venue.get("scoredRate") or 0)
+                * float(home_venue.get("concededRate") or 0),
+            ],
+            "HOME_OR_DRAW": [
+                float(home_venue.get("nonLossRate") or 0),
+                1 - float(away_venue.get("winRate") or 0),
+                clamp_number(0.58 + form_edge * 0.08, 0.35, 0.80),
+            ],
+            "AWAY_OR_DRAW": [
+                float(away_venue.get("nonLossRate") or 0),
+                1 - float(home_venue.get("winRate") or 0),
+                clamp_number(0.58 - form_edge * 0.08, 0.35, 0.80),
+            ],
+            "HOME_WIN": [
+                float(home_venue.get("winRate") or 0),
+                float(away_venue.get("lossRate") or 0),
+                clamp_number(0.46 + form_edge * 0.09 + goal_edge * 0.07, 0.20, 0.75),
+            ],
+            "AWAY_WIN": [
+                float(away_venue.get("winRate") or 0),
+                float(home_venue.get("lossRate") or 0),
+                clamp_number(0.46 - form_edge * 0.09 - goal_edge * 0.07, 0.20, 0.75),
+            ],
+        }
+
+        for market, components in market_components.items():
+            if market not in allowed_markets:
+                continue
+
+            cleaned_components = [
+                clamp_number(float(value), 0, 1)
+                for value in components
+            ]
+            probability = _mean(cleaned_components)
+
+            if not minimum_probability <= probability <= maximum_probability:
+                continue
+
+            fair_odds = round(1 / probability, 2)
+
+            if not minimum_model_odds <= fair_odds <= maximum_model_odds:
+                continue
+
+            agreement = clamp_number(
+                100 - _standard_deviation(cleaned_components) * 220,
+                0,
+                100,
+            )
+            signal_strength = clamp_number(
+                (probability - 0.50) / 0.20 * 100,
+                0,
+                100,
+            )
+            confidence = int(
+                round(
+                    0.55 * data_quality
+                    + 0.25 * agreement
+                    + 0.20 * signal_strength
                 )
             )
-        )
+            confidence = int(clamp_number(confidence, 0, 88))
 
-        probability = round(
-            clamp_number(
-                confidence / 100,
-                0.50,
-                0.86,
-            ),
-            4,
-        )
+            required_confidence = (
+                win_market_minimum_confidence
+                if market in win_markets
+                else minimum_confidence
+            )
 
-        ranked.append(
-            {
-                "matchId": int(candidate["matchId"]),
-                "market": market,
-                "confidence": confidence,
-                "probability": probability,
-                "fairOdds": round(1 / probability, 2),
-                "risk": (
-                    "LOW"
-                    if confidence >= 78
-                    else "MEDIUM"
+            if confidence < required_confidence:
+                continue
+
+            reason_map = {
+                "OVER_1_5": (
+                    "Модель формы оценивает вероятность минимум двух голов "
+                    f"в {probability * 100:.0f}%; средний ожидаемый тотал "
+                    f"{expected_total:.2f}."
                 ),
-                "reason": reason,
-                "analysisMode": "DETERMINISTIC_FALLBACK",
-                "rankingScore": round(
-                    confidence * 0.75
-                    + data_quality * 0.25,
-                    4,
+                "UNDER_3_5": (
+                    "Модель формы оценивает вероятность не более трёх голов "
+                    f"в {probability * 100:.0f}%; средний ожидаемый тотал "
+                    f"{expected_total:.2f}."
+                ),
+                "HOME_OVER_0_5": (
+                    "Хозяева регулярно забивают, а гости допускают голы; "
+                    f"оценка события {probability * 100:.0f}%."
+                ),
+                "AWAY_OVER_0_5": (
+                    "Гости регулярно забивают, а хозяева допускают голы; "
+                    f"оценка события {probability * 100:.0f}%."
+                ),
+                "BOTH_SCORE": (
+                    "Показатели результативности и пропущенных голов обеих "
+                    f"команд дают оценку {probability * 100:.0f}%."
+                ),
+                "HOME_OR_DRAW": (
+                    "Домашняя форма хозяев и выездная форма гостей дают "
+                    f"оценку непоражения хозяев {probability * 100:.0f}%."
+                ),
+                "AWAY_OR_DRAW": (
+                    "Выездная форма гостей и домашняя форма хозяев дают "
+                    f"оценку непоражения гостей {probability * 100:.0f}%."
+                ),
+                "HOME_WIN": (
+                    "Преимущество хозяев по форме и ожидаемым голам даёт "
+                    f"оценку победы {probability * 100:.0f}%."
+                ),
+                "AWAY_WIN": (
+                    "Преимущество гостей по форме и ожидаемым голам даёт "
+                    f"оценку победы {probability * 100:.0f}%."
                 ),
             }
-        )
+
+            ranking_score = round(
+                confidence * 0.55
+                + probability * 100 * 0.25
+                + data_quality * 0.20,
+                4,
+            )
+
+            ranked.append(
+                {
+                    "matchId": int(candidate["matchId"]),
+                    "market": market,
+                    "confidence": confidence,
+                    "probability": round(probability, 4),
+                    "fairOdds": fair_odds,
+                    "risk": "LOW" if confidence >= 78 else "MEDIUM",
+                    "reason": reason_map[market],
+                    "analysisMode": "DETERMINISTIC_STATISTICAL",
+                    "rankingScore": ranking_score,
+                    "dataQuality": round(data_quality, 2),
+                }
+            )
 
     ranked.sort(
         key=lambda item: (
             -float(item.get("rankingScore") or 0),
             -int(item.get("confidence") or 0),
+            str(item.get("matchId") or ""),
         )
     )
 
@@ -1660,6 +1746,7 @@ def build_deterministic_predictions(
             break
 
     return result
+
 
 
 def localize_existing_history(
@@ -1702,46 +1789,34 @@ def prediction_to_public_records(
     stake: float,
     config: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    kickoff_utc = parse_utc_datetime(
-        candidate["utcDate"]
-    )
-
+    kickoff_utc = parse_utc_datetime(candidate["utcDate"])
     timezone = configured_timezone(config)
     kickoff = kickoff_utc.astimezone(timezone)
     timezone_name = str(
-        config.get("timezone")
-        or "Europe/Moscow"
+        config.get("timezone") or "Europe/Moscow"
     )
 
     competition = candidate["competition"]
     home_team = candidate["homeTeam"]["name"]
     away_team = candidate["awayTeam"]["name"]
-
-    market = prediction["market"]
+    market = str(prediction["market"])
     market_label = MARKET_LABELS[market]
 
-    country_value = candidate.get(
-        "country",
-        "",
-    )
-
+    country_value = candidate.get("country", "")
     country = COUNTRY_TRANSLATIONS.get(
         country_value,
         country_value or "Международный турнир",
     )
 
-    risk_label = (
-        "Низкий"
-        if prediction["risk"] == "LOW"
-        else "Средний"
-    )
+    risk_code = str(prediction.get("risk") or "MEDIUM").upper()
+    risk_label = "Низкий" if risk_code == "LOW" else "Средний"
+    fair_odds = round(float(prediction["fairOdds"]), 2)
+    probability = round(float(prediction["probability"]), 4)
+    confidence = int(prediction["confidence"])
 
-    public_prediction = {
-        "id": (
-            f"real-{candidate['matchId']}-"
-            f"{market.lower()}"
-        ),
-        "sourceMatchId": candidate["matchId"],
+    common = {
+        "id": f"real-{candidate['matchId']}-{market.lower()}",
+        "sourceMatchId": int(candidate["matchId"]),
         "league": competition["name"],
         "country": country,
         "date": kickoff.date().isoformat(),
@@ -1752,44 +1827,123 @@ def prediction_to_public_records(
         "away": away_team,
         "market": market,
         "pick": market_label,
-        "odds": prediction["fairOdds"],
-        "fairOdds": prediction["fairOdds"],
-        "probability": prediction["probability"],
-        "confidence": prediction["confidence"],
+        "odds": fair_odds,
+        "fairOdds": fair_odds,
+        "oddsLabel": "Расчётный коэффициент модели",
+        "probability": probability,
+        "probabilityPercent": round(probability * 100, 1),
+        "confidence": confidence,
         "risk": risk_label,
-        "reason": prediction["reason"],
+        "riskCode": risk_code,
+        "reason": str(prediction.get("reason") or "")[:500],
         "analysisMode": str(
             prediction.get("analysisMode") or "AI"
         ),
+        "rankingScore": round(
+            float(prediction.get("rankingScore") or 0),
+            4,
+        ),
+        "dataQuality": round(
+            float(
+                prediction.get("dataQuality")
+                or candidate.get("dataQuality")
+                or 0
+            ),
+            2,
+        ),
         "coefficientType": "MODEL_FAIR",
+        "marketOddsAvailable": False,
+        "expectedValueAvailable": False,
     }
 
-    history_record = {
-        "id": public_prediction["id"],
-        "sourceMatchId": candidate["matchId"],
-        "date": kickoff.date().isoformat(),
-        "utcDate": candidate["utcDate"],
-        "timezone": timezone_name,
-        "league": competition["name"],
-        "home": home_team,
-        "away": away_team,
-        "market": market,
-        "pick": market_label,
-        "odds": prediction["fairOdds"],
-        "fairOdds": prediction["fairOdds"],
-        "probability": prediction["probability"],
-        "confidence": prediction["confidence"],
-        "stake": round(stake, 2),
-        "score": "",
-        "status": "pending",
-        "publishedAt": utc_now().isoformat(),
-        "analysisMode": str(
-            prediction.get("analysisMode") or "AI"
-        ),
-        "coefficientType": "MODEL_FAIR",
-    }
+    public_prediction = dict(common)
+
+    history_record = dict(common)
+    history_record.update(
+        {
+            "stake": round(stake, 2),
+            "score": "",
+            "status": "pending",
+            "publishedAt": utc_now().isoformat(),
+            "settlementOddsType": "MODEL_FAIR_SIMULATION",
+        }
+    )
 
     return public_prediction, history_record
+
+
+def pending_history_to_public_record(
+    entry: dict[str, Any],
+    match: dict[str, Any] | None,
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    try:
+        match_id = int(entry.get("sourceMatchId"))
+        probability = float(entry.get("probability") or 0)
+        fair_odds = float(
+            entry.get("fairOdds") or entry.get("odds") or 0
+        )
+        confidence = int(entry.get("confidence") or 0)
+    except (TypeError, ValueError):
+        return None
+
+    if probability <= 0 and fair_odds > 1:
+        probability = 1 / fair_odds
+
+    risk_code = str(entry.get("riskCode") or "").upper()
+
+    if risk_code not in {"LOW", "MEDIUM"}:
+        risk_code = "LOW" if confidence >= 78 else "MEDIUM"
+
+    result = {
+        "id": str(entry.get("id") or f"real-{match_id}"),
+        "sourceMatchId": match_id,
+        "league": str(entry.get("league") or "Неизвестная лига"),
+        "country": str(entry.get("country") or ""),
+        "date": str(entry.get("date") or ""),
+        "time": str(entry.get("time") or ""),
+        "utcDate": str(
+            (match or {}).get("utcDate")
+            or entry.get("utcDate")
+            or ""
+        ),
+        "timezone": str(
+            entry.get("timezone")
+            or config.get("timezone")
+            or "Europe/Moscow"
+        ),
+        "home": str(entry.get("home") or ""),
+        "away": str(entry.get("away") or ""),
+        "market": str(entry.get("market") or ""),
+        "pick": str(entry.get("pick") or ""),
+        "odds": round(fair_odds, 2),
+        "fairOdds": round(fair_odds, 2),
+        "oddsLabel": "Расчётный коэффициент модели",
+        "probability": round(probability, 4),
+        "probabilityPercent": round(probability * 100, 1),
+        "confidence": confidence,
+        "risk": "Низкий" if risk_code == "LOW" else "Средний",
+        "riskCode": risk_code,
+        "reason": str(
+            entry.get("reason")
+            or "Ранее опубликованный прогноз остаётся активным до начала матча."
+        ),
+        "analysisMode": str(
+            entry.get("analysisMode") or "EXISTING_PENDING"
+        ),
+        "rankingScore": float(
+            entry.get("rankingScore") or confidence
+        ),
+        "dataQuality": float(entry.get("dataQuality") or 0),
+        "coefficientType": "MODEL_FAIR",
+        "marketOddsAvailable": False,
+        "expectedValueAvailable": False,
+        "isExistingPending": True,
+    }
+
+    result.update(extract_public_match_status(match))
+    return result
+
 
 
 def calculate_streak(
@@ -2236,46 +2390,37 @@ def finalize_public_selection(
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """
-    Финальный backend guard.
-
-    Даже если LLM выбрал неподходящий вариант, наружу не пройдут:
-    - матчи вне единого 24-часового окна;
-    - коэффициенты ниже установленного минимума;
-    - прогнозы ниже минимальной уверенности;
-    - более четырёх прогнозов.
-    """
+    """Единый финальный guard для новых и активных прогнозов."""
 
     minimum_confidence = int(
-        config.get("minimumConfidence") or 74
+        config.get("minimumConfidence") or 70
     )
-
+    win_market_minimum_confidence = int(
+        config.get("winMarketMinimumConfidence")
+        or max(minimum_confidence + 3, 74)
+    )
     minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.0
+        config.get("minimumModelOdds") or 1.45
     )
-
+    maximum_model_odds = float(
+        config.get("maximumModelOdds") or 2.10
+    )
     window_hours = max(
         1.0,
-        float(config.get("selectionWindowHours") or 24),
+        float(config.get("selectionWindowHours") or 72),
     )
-
     maximum_predictions = max(
         0,
-        int(config.get("maximumPredictions") or 4),
+        int(config.get("maximumPredictions") or 5),
     )
-
     minimum_lead_hours = max(
         0.0,
-        float(config.get("minimumLeadHours") or 0),
+        float(config.get("minimumLeadHours") or 3),
     )
 
-    window_start = now + dt.timedelta(
-        hours=minimum_lead_hours
-    )
-
-    window_end = now + dt.timedelta(
-        hours=window_hours
-    )
+    window_start = now + dt.timedelta(hours=minimum_lead_hours)
+    window_end = window_start + dt.timedelta(hours=window_hours)
+    win_markets = {"HOME_WIN", "AWAY_WIN"}
 
     history_by_id = {
         str(item.get("id") or ""): item
@@ -2283,8 +2428,7 @@ def finalize_public_selection(
         if isinstance(item, dict)
     }
 
-    accepted: list[dict[str, Any]] = []
-    accepted_history: list[dict[str, Any]] = []
+    accepted_by_match: dict[int, dict[str, Any]] = {}
 
     for prediction in public_predictions:
         if not isinstance(prediction, dict):
@@ -2294,48 +2438,48 @@ def finalize_public_selection(
             kickoff = parse_utc_datetime(
                 str(prediction.get("utcDate") or "")
             )
-
-            confidence = int(
-                prediction.get("confidence") or 0
-            )
-
+            confidence = int(prediction.get("confidence") or 0)
             model_odds = float(
                 prediction.get("fairOdds")
                 or prediction.get("odds")
                 or 0
             )
-
-            match_id = int(
-                prediction.get("sourceMatchId")
-            )
+            probability = float(prediction.get("probability") or 0)
+            match_id = int(prediction.get("sourceMatchId"))
         except (TypeError, ValueError):
             continue
 
+        market = str(prediction.get("market") or "").upper()
+        required_confidence = (
+            win_market_minimum_confidence
+            if market in win_markets
+            else minimum_confidence
+        )
+
         if kickoff < window_start or kickoff > window_end:
             log(
-                "V4.4 отклонён прогноз вне 24 часов: "
+                "Финальный guard: прогноз вне окна; "
                 f"matchId={match_id}; kickoff={kickoff.isoformat()}"
             )
             continue
 
-        if confidence < minimum_confidence:
+        if confidence < required_confidence:
             log(
-                "V4.4 отклонён прогноз по уверенности: "
+                "Финальный guard: низкая уверенность; "
                 f"matchId={match_id}; confidence={confidence}"
             )
             continue
 
-        # MODEL_FAIR является математическим коэффициентом
-        # вероятности модели, а не букмекерской линией.
-        # До подключения market odds не отклоняем прогноз
-        # только из-за небольшого MODEL_FAIR.
-        if model_odds <= 1.0:
+        if not minimum_model_odds <= model_odds <= maximum_model_odds:
             log(
-                "V4.4R1 отклонён некорректный "
-                "расчётный коэффициент: "
-                f"matchId={match_id}; odds={model_odds}"
+                "Финальный guard: коэффициент вне диапазона; "
+                f"matchId={match_id}; fairOdds={model_odds:.2f}"
             )
             continue
+
+        if probability <= 0:
+            probability = 1 / model_odds
+            prediction["probability"] = round(probability, 4)
 
         source_home = str(prediction.get("home") or "")
         source_away = str(prediction.get("away") or "")
@@ -2343,18 +2487,14 @@ def finalize_public_selection(
 
         localized_home = localize_team_name(source_home)
         localized_away = localize_team_name(source_away)
-        localized_league = localize_competition_name(
-            source_league
-        )
+        localized_league = localize_competition_name(source_league)
 
         prediction["homeOriginal"] = source_home
         prediction["awayOriginal"] = source_away
         prediction["leagueOriginal"] = source_league
-
         prediction["home"] = localized_home
         prediction["away"] = localized_away
         prediction["league"] = localized_league
-
         prediction["reason"] = localize_reason(
             str(prediction.get("reason") or ""),
             {
@@ -2363,57 +2503,65 @@ def finalize_public_selection(
                 source_league: localized_league,
             },
         )
-
         prediction["selectionWindowHours"] = window_hours
         prediction["minimumModelOdds"] = minimum_model_odds
+        prediction["maximumModelOdds"] = maximum_model_odds
         prediction["marketOddsAvailable"] = False
         prediction["expectedValueAvailable"] = False
         prediction["coefficientType"] = "MODEL_FAIR"
-
+        prediction["oddsLabel"] = "Расчётный коэффициент модели"
+        prediction["probabilityPercent"] = round(probability * 100, 1)
         prediction.update(
-            extract_public_match_status(
-                matches_by_id.get(match_id)
-            )
+            extract_public_match_status(matches_by_id.get(match_id))
         )
 
-        history_record = history_by_id.get(
-            str(prediction.get("id") or "")
-        )
+        current = accepted_by_match.get(match_id)
 
-        if history_record:
-            history_record["homeOriginal"] = source_home
-            history_record["awayOriginal"] = source_away
-            history_record["leagueOriginal"] = source_league
-            history_record["home"] = localized_home
-            history_record["away"] = localized_away
-            history_record["league"] = localized_league
-            history_record["marketOddsAvailable"] = False
-            history_record["expectedValueAvailable"] = False
+        if current is None or float(
+            prediction.get("rankingScore") or 0
+        ) > float(current.get("rankingScore") or 0):
+            accepted_by_match[match_id] = prediction
 
-            history_record.update(
-                extract_public_match_status(
-                    matches_by_id.get(match_id)
-                )
-            )
-
-            accepted_history.append(history_record)
-
-        accepted.append(prediction)
-
+    accepted = list(accepted_by_match.values())
     accepted.sort(
         key=lambda item: (
-            str(item.get("utcDate") or ""),
+            -float(item.get("rankingScore") or 0),
             -int(item.get("confidence") or 0),
-            -float(item.get("fairOdds") or 0),
+            str(item.get("utcDate") or ""),
         )
     )
-
     accepted = accepted[:maximum_predictions]
 
     accepted_ids = {
         str(item.get("id") or "")
         for item in accepted
     }
+
+    accepted_history: list[dict[str, Any]] = []
+
+    for prediction in accepted:
+        history_record = history_by_id.get(
+            str(prediction.get("id") or "")
+        )
+
+        if history_record is None:
+            continue
+
+        history_record["home"] = prediction.get("home")
+        history_record["away"] = prediction.get("away")
+        history_record["league"] = prediction.get("league")
+        history_record["reason"] = prediction.get("reason")
+        history_record["rank"] = prediction.get("rank")
+        history_record["marketOddsAvailable"] = False
+        history_record["expectedValueAvailable"] = False
+        history_record.update(
+            extract_public_match_status(
+                matches_by_id.get(
+                    int(prediction.get("sourceMatchId") or 0)
+                )
+            )
+        )
+        accepted_history.append(history_record)
 
     accepted_history = [
         item
@@ -2422,6 +2570,7 @@ def finalize_public_selection(
     ]
 
     return accepted, accepted_history
+
 
 
 
@@ -2531,25 +2680,86 @@ def update_statistics(
 def remove_duplicate_pending_predictions(
     history: list[dict[str, Any]],
 ) -> set[int]:
-    published_match_ids: set[int] = set()
+    """Возвращает только действительно активные pending matchId."""
+
+    pending_match_ids: set[int] = set()
 
     for item in history:
         if not isinstance(item, dict):
             continue
 
-        source_match_id = item.get("sourceMatchId")
-
-        if source_match_id is None:
+        if str(item.get("status") or "").lower() != "pending":
             continue
 
         try:
-            published_match_ids.add(
-                int(source_match_id)
-            )
+            pending_match_ids.add(int(item.get("sourceMatchId")))
         except (TypeError, ValueError):
             continue
 
-    return published_match_ids
+    return pending_match_ids
+
+
+def build_active_pending_records(
+    history: list[dict[str, Any]],
+    matches_by_id: dict[int, dict[str, Any]],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    records: list[dict[str, Any]] = []
+    source_history: list[dict[str, Any]] = []
+
+    minimum_lead_hours = max(
+        0.0,
+        float(config.get("minimumLeadHours") or 3),
+    )
+    window_hours = max(
+        1.0,
+        float(config.get("selectionWindowHours") or 72),
+    )
+    window_start = now + dt.timedelta(hours=minimum_lead_hours)
+    window_end = window_start + dt.timedelta(hours=window_hours)
+
+    for entry in history:
+        if not isinstance(entry, dict):
+            continue
+
+        if str(entry.get("status") or "").lower() != "pending":
+            continue
+
+        try:
+            match_id = int(entry.get("sourceMatchId"))
+        except (TypeError, ValueError):
+            continue
+
+        match = matches_by_id.get(match_id)
+        utc_value = str(
+            (match or {}).get("utcDate")
+            or entry.get("utcDate")
+            or ""
+        )
+
+        try:
+            kickoff = parse_utc_datetime(utc_value)
+        except Exception:
+            continue
+
+        if kickoff < window_start or kickoff > window_end:
+            continue
+
+        record = pending_history_to_public_record(
+            entry,
+            match,
+            config,
+        )
+
+        if record is None:
+            continue
+
+        records.append(record)
+        source_history.append(entry)
+
+    return records, source_history
+
 
 
 def create_report(
@@ -2566,93 +2776,191 @@ def create_report(
     }
 
 
+def merge_prediction_sources(
+    ai_predictions: list[dict[str, Any]],
+    statistical_predictions: list[dict[str, Any]],
+    config: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Объединяет AI и статистику, сохраняя один прогноз на матч."""
+
+    maximum_predictions = max(
+        1,
+        int(config.get("maximumPredictions") or 5),
+    )
+
+    by_key: dict[tuple[int, str], dict[str, Any]] = {}
+
+    for item in statistical_predictions:
+        key = (int(item["matchId"]), str(item["market"]))
+        by_key[key] = dict(item)
+
+    for ai_item in ai_predictions:
+        key = (int(ai_item["matchId"]), str(ai_item["market"]))
+        statistical_item = by_key.get(key)
+
+        if statistical_item is None:
+            enriched = dict(ai_item)
+            enriched["rankingScore"] = round(
+                float(enriched.get("rankingScore") or 0) + 2,
+                4,
+            )
+            by_key[key] = enriched
+            continue
+
+        probability = round(
+            float(ai_item["probability"]) * 0.60
+            + float(statistical_item["probability"]) * 0.40,
+            4,
+        )
+        confidence = int(
+            round(
+                float(ai_item["confidence"]) * 0.60
+                + float(statistical_item["confidence"]) * 0.40
+                + 2
+            )
+        )
+        confidence = int(clamp_number(confidence, 0, 88))
+        fair_odds = round(1 / probability, 2)
+
+        consensus = dict(ai_item)
+        consensus.update(
+            {
+                "probability": probability,
+                "fairOdds": fair_odds,
+                "confidence": confidence,
+                "risk": "LOW" if confidence >= 78 else "MEDIUM",
+                "analysisMode": "AI_STAT_CONSENSUS",
+                "rankingScore": round(
+                    max(
+                        float(ai_item.get("rankingScore") or 0),
+                        float(
+                            statistical_item.get("rankingScore") or 0
+                        ),
+                    ) + 5,
+                    4,
+                ),
+                "dataQuality": max(
+                    float(ai_item.get("dataQuality") or 0),
+                    float(
+                        statistical_item.get("dataQuality") or 0
+                    ),
+                ),
+                "reason": (
+                    str(ai_item.get("reason") or "")
+                    + " Статистический модуль подтверждает выбранный рынок."
+                )[:500],
+            }
+        )
+        by_key[key] = consensus
+
+    ranked = list(by_key.values())
+    ranked.sort(
+        key=lambda item: (
+            -float(item.get("rankingScore") or 0),
+            -int(item.get("confidence") or 0),
+            str(item.get("matchId") or ""),
+        )
+    )
+
+    selected: list[dict[str, Any]] = []
+    used_match_ids: set[int] = set()
+
+    for item in ranked:
+        match_id = int(item["matchId"])
+
+        if match_id in used_match_ids:
+            continue
+
+        selected.append(item)
+        used_match_ids.add(match_id)
+
+        if len(selected) >= maximum_predictions:
+            break
+
+    return selected
+
+
+def _load_optional_dotenv(path: pathlib.Path) -> None:
+    """Поддерживает локальный .env, не задавая вопросов в консоли."""
+
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(
+        encoding="utf-8-sig",
+        errors="replace",
+    ).splitlines():
+        line = raw_line.strip()
+
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        name, value = line.split("=", 1)
+        name = name.strip()
+        value = value.strip().strip('"').strip("'")
+
+        if name and name not in os.environ:
+            os.environ[name] = value
+
+
 def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline")
+    log("Запуск AI Football Lab Data Pipeline v3")
 
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
+    _load_optional_dotenv(ROOT / ".env")
 
-    football_api_key = os.environ.get(
+    football_api_key = os.getenv(
         "FOOTBALL_DATA_API_KEY",
-        ""
-    )
-
-    if not football_api_key:
-        try:
-            football_api_key = input(
-                "Введите FOOTBALL_DATA_API_KEY: "
-            ).strip()
-        except EOFError:
-            football_api_key = ""
+        "",
+    ).strip()
 
     if not football_api_key:
         raise RuntimeError(
-            "Не задан FOOTBALL_DATA_API_KEY"
+            "Не задан FOOTBALL_DATA_API_KEY. Скрипт больше не запрашивает "
+            "ключ интерактивно. Для production используйте GitHub Secret, "
+            "для локального запуска — переменную окружения или файл .env."
         )
 
-    openrouter_api_key = os.environ.get(
+    openrouter_api_key = os.getenv(
         "OPENROUTER_API_KEY",
-        ""
-    )
-
-    if not openrouter_api_key:
-        try:
-            openrouter_api_key = input(
-                "Введите OPENROUTER_API_KEY: "
-            ).strip()
-        except EOFError:
-            openrouter_api_key = ""
-
-    if not openrouter_api_key:
-        raise RuntimeError(
-            "Не задан OPENROUTER_API_KEY"
-        )
+        "",
+    ).strip()
 
     now = utc_now()
     today = now.date()
-
-    lookback_days = int(
-        config.get("lookbackDays") or 10
+    lookback_days = max(
+        10,
+        int(config.get("lookbackDays") or 60),
     )
-
-    lookahead_days = int(
-        config.get("lookaheadDays") or 3
+    lookahead_days = max(
+        1,
+        int(config.get("lookaheadDays") or 3),
     )
-
     competitions = [
         str(item)
-        for item in config.get(
-            "competitions",
-            [],
-        )
+        for item in config.get("competitions", [])
+        if str(item).strip()
     ]
 
     if not competitions:
-        raise RuntimeError(
-            "В конфигурации отсутствуют соревнования"
-        )
+        raise RuntimeError("В конфигурации отсутствуют соревнования")
 
     recent_matches = fetch_matches_chunked(
         football_api_key,
-        date_from=today - dt.timedelta(
-            days=lookback_days
-        ),
+        date_from=today - dt.timedelta(days=lookback_days),
         date_to=today,
         competitions=competitions,
         maximum_days_per_request=10,
         pause_seconds=7,
     )
 
-    # Пауза перед запросом будущих матчей сохраняет
-    # безопасный запас относительно лимита API.
     time.sleep(7)
 
     upcoming_matches = fetch_matches(
         football_api_key,
         date_from=today,
-        date_to=today + dt.timedelta(
-            days=lookahead_days + 1
-        ),
+        date_to=today + dt.timedelta(days=lookahead_days + 1),
         competitions=competitions,
     )
 
@@ -2669,335 +2977,33 @@ def main() -> int:
         for match in recent_matches
         if final_score(match) is not None
     ]
-
     scheduled_matches = [
         match
         for match in upcoming_matches
-        if str(
-            match.get("status") or ""
-        ).upper() in {
-            "SCHEDULED",
-            "TIMED",
-        }
+        if str(match.get("status") or "").upper()
+        in {"SCHEDULED", "TIMED"}
     ]
 
-    state = ensure_real_state(
-        old_state,
-        config,
-    )
-
+    state = ensure_real_state(old_state, config)
     localize_existing_history(state)
-
     settled_count = resolve_existing_history(
         state,
         all_matches_by_id,
     )
 
-    log(
-        f"Завершено ранее ожидавших прогнозов: "
-        f"{settled_count}"
-    )
-
-    team_form = build_team_form(
-        finished_matches
-    )
-
+    team_form = build_team_form(finished_matches)
     candidates = build_candidates(
         scheduled_matches,
         team_form,
         config,
     )
 
-    log(
-        f"Недавних матчей получено: "
-        f"{len(recent_matches)}"
-    )
-
-    log(
-        f"Завершённых матчей для формы: "
-        f"{len(finished_matches)}"
-    )
-
-    log(
-        f"Предстоящих матчей получено: "
-        f"{len(upcoming_matches)}"
-    )
-
-    log(
-        f"Предстоящих матчей после статуса: "
-        f"{len(scheduled_matches)}"
-    )
-
-    log(
-        f"Команд с рассчитанной формой: "
-        f"{len(team_form)}"
-    )
-
-    log(
-        f"Подготовлено кандидатов для анализа: "
-        f"{len(candidates)}"
-    )
-
-    if not candidates:
-        state["predictions"] = []
-
-        state.setdefault(
-            "meta",
-            {},
-        ).update(
-            {
-                "version": "2.0.0",
-                "mode": "real",
-                "updatedAt": now.isoformat(),
-                "analyzedMatches": len(
-                    scheduled_matches
-                ),
-                "candidateMatches": 0,
-                "selectedPredictions": 0,
-                "source": "football-data.org",
-                "analysisProvider": "OpenRouter",
-            "timezone": str(
-                config.get("timezone")
-                or "Europe/Moscow"
-            ),
-            "minimumLeadHours": float(
-                config.get("minimumLeadHours")
-                or 4
-            ),
-                "timezone": str(
-                    config.get("timezone")
-                    or "Europe/Moscow"
-                ),
-                "minimumLeadHours": float(
-                    config.get("minimumLeadHours")
-                    or 4
-                ),
-                "analysisStatus": "NO_SUITABLE_DATA",
-                "notice": (
-                    "Система не публикует прогнозы "
-                    "без достаточного объёма данных."
-                ),
-            }
-        )
-
-        update_statistics(state)
-        write_json_atomic(STATE_PATH, state)
-
-        report = create_report(
-            status="GREEN_NO_PREDICTIONS",
-            message=(
-                "Нет матчей с достаточным объёмом "
-                "статистических данных."
-            ),
-            details={
-                "lookbackDays": lookback_days,
-                "historyRequestChunks": math.ceil(
-                    (lookback_days + 1) / 10
-                ),
-                "recentMatches": len(
-                    recent_matches
-                ),
-                "finishedMatches": len(
-                    finished_matches
-                ),
-                "upcomingMatches": len(
-                    upcoming_matches
-                ),
-                "scheduledMatches": len(
-                    scheduled_matches
-                ),
-                "teamsWithForm": len(
-                    team_form
-                ),
-                "candidates": 0,
-                "minimumTeamMatches": int(
-                    config.get("minimumTeamMatches") or 1
-                ),
-                "settledPredictions": settled_count,
-            },
-        )
-
-        write_json_atomic(
-            REPORT_PATH,
-            report,
-        )
-
-        log("Обновление завершено без публикации прогнозов")
-        return 0
-
-    prompt = build_analysis_prompt(
-        candidates,
-        config,
-    )
-
-    model_name = "openrouter/auto"
-    analysis_mode = "AI"
-    openrouter_error_text = ""
-
-    try:
-        model_result, model_name = call_openrouter(
-            openrouter_api_key,
-            prompt,
-        )
-
-        selected = normalize_model_predictions(
-            model_result,
-            candidates,
-            config,
-        )
-
-        # V46_4_2_AI_RECOVERY
-        # Если Gemini ответил, но строгий фильтр оставил пусто,
-        # берём лучшие безопасные AI варианты
-
-        if not selected and isinstance(model_result, dict):
-
-            raw_ai_predictions = (
-                model_result.get("predictions")
-                or model_result.get("recommendations")
-                or []
-            )
-
-            if isinstance(raw_ai_predictions, list):
-
-                recovered = []
-
-                for item in raw_ai_predictions:
-
-                    if not isinstance(item, dict):
-                        continue
-
-                    if item.get("matchId"):
-
-                        item["analysisMode"] = "AI_RECOVERED"
-
-                        recovered.append(item)
-
-                if recovered:
-
-                    selected = recovered[:int(
-                        config.get("maximumPredictions") or 4
-                    )]
-
-
-        for item in selected:
-            item["analysisMode"] = item.get(
-                "analysisMode",
-                "AI"
-            )
-
-
-        # V46B AI + STAT FUSION
-        # Если AI дал меньше 4 прогнозов,
-        # добираем лучшими статистическими вариантами
-
-        target_count = int(
-            config.get("maximumPredictions") or 4
-        )
-
-        if len(selected) < target_count:
-
-            reserve_selected = build_deterministic_predictions(
-                candidates,
-                config,
-            )
-
-            selected_ids = {
-                int(item["matchId"])
-                for item in selected
-                if item.get("matchId")
-            }
-
-
-            for item in reserve_selected:
-
-                if len(selected) >= target_count:
-                    break
-
-
-                match_id = int(item["matchId"])
-
-                if match_id not in selected_ids:
-
-                    item["analysisMode"] = "AI_STAT_FUSION"
-
-                    selected.append(item)
-
-                    selected_ids.add(match_id)
-
-
-    except Exception as openrouter_error:
-        openrouter_error_text = str(openrouter_error)
-
-        log(
-            "OpenRouter временно недоступен. "
-            "Запускается резервный статистический расчёт: "
-            f"{openrouter_error}"
-        )
-
-        selected = build_deterministic_predictions(
-            candidates,
-            config,
-        )
-
-        model_name = "deterministic-statistical-fallback"
-        analysis_mode = "DETERMINISTIC_FALLBACK"
-
-    if not selected and candidates:
-        log(
-            "ИИ не сформировал допустимую подборку. "
-            "Запускается резервный статистический расчёт."
-        )
-
-        selected = build_deterministic_predictions(
-            candidates,
-            config,
-        )
-
-        if selected:
-            model_name = "deterministic-statistical-fallback"
-            analysis_mode = "DETERMINISTIC_FALLBACK"
-
-    if not selected and candidates:
-
-        radar_candidates = sorted(
-            candidates,
-            key=lambda item: float(
-                item.get("dataQuality") or 0
-            ),
-            reverse=True,
-        )
-
-        for candidate in radar_candidates[:4]:
-
-            selected.append(
-                {
-                    "matchId": int(candidate["matchId"]),
-                    "market": "OVER_1_5",
-                    "confidence": 65,
-                    "fairOdds": 1.60,
-                    "risk": "HIGH",
-                    "reason": (
-                        "Матч выбран визуальным радаром. "
-                        "Недостаточно данных для уверенного прогноза."
-                    ),
-                    "analysisMode": "RADAR_OBSERVATION",
-                    "rankingScore": 50,
-                }
-            )
-
-
-
-    if not selected and candidates:
-        raise RuntimeError(
-            "Кандидаты существуют, но ни ИИ, ни резервный "
-            "статистический расчёт не сформировали прогноз"
-        )
-
-    candidates_by_id = {
-        int(candidate["matchId"]): candidate
-        for candidate in candidates
-    }
+    log(f"Недавних матчей: {len(recent_matches)}")
+    log(f"Завершённых матчей для формы: {len(finished_matches)}")
+    log(f"Предстоящих матчей: {len(scheduled_matches)}")
+    log(f"Команд с формой: {len(team_form)}")
+    log(f"Кандидатов радара: {len(candidates)}")
+    log(f"Завершено pending-прогнозов: {settled_count}")
 
     history = [
         item
@@ -3005,176 +3011,179 @@ def main() -> int:
         if isinstance(item, dict)
     ]
 
-    already_pending = remove_duplicate_pending_predictions(
-        history
+    active_public, active_history = build_active_pending_records(
+        history,
+        all_matches_by_id,
+        config,
+        now,
     )
 
+    # Старые pending-прогнозы сначала проходят те же актуальные
+    # требования качества. Отклонённые записи не занимают новые слоты.
+    active_public, active_history = finalize_public_selection(
+        active_public,
+        active_history,
+        all_matches_by_id,
+        config,
+        now,
+    )
+
+    active_match_ids = {
+        int(item["sourceMatchId"])
+        for item in active_public
+    }
+
+    statistical_predictions = build_deterministic_predictions(
+        candidates,
+        config,
+    )
+    ai_predictions: list[dict[str, Any]] = []
+    model_name = "not-used"
+    openrouter_error_text = ""
+    ai_attempted = False
+
+    if candidates and openrouter_api_key:
+        ai_attempted = True
+        prompt = build_analysis_prompt(candidates, config)
+
+        try:
+            model_result, model_name = call_openrouter(
+                openrouter_api_key,
+                prompt,
+            )
+            ai_predictions = normalize_model_predictions(
+                model_result,
+                candidates,
+                config,
+            )
+        except Exception as openrouter_error:
+            openrouter_error_text = str(openrouter_error)
+            log(
+                "OpenRouter недоступен или ответ не прошёл проверку. "
+                "Используется статистический модуль: "
+                f"{openrouter_error_text}"
+            )
+    elif candidates:
+        openrouter_error_text = (
+            "OPENROUTER_API_KEY отсутствует; использован статистический модуль."
+        )
+        log(openrouter_error_text)
+
+    selected = merge_prediction_sources(
+        ai_predictions,
+        statistical_predictions,
+        config,
+    )
     selected = [
         item
         for item in selected
-        if int(item["matchId"]) not in already_pending
+        if int(item["matchId"]) not in active_match_ids
     ]
 
+    maximum_predictions = max(
+        1,
+        int(config.get("maximumPredictions") or 5),
+    )
+    available_slots = max(
+        0,
+        maximum_predictions - len(active_public),
+    )
+    selected = selected[:available_slots]
 
-    # ============================================================
-    # V46_4_3_PREDICTION_RECOVERY_FINAL
-    #
-    # После удаления старых pending прогнозов
-    # не оставляем сайт без блока прогнозов,
-    # если есть доступные кандидаты.
-    # ============================================================
+    candidates_by_id = {
+        int(candidate["matchId"]): candidate
+        for candidate in candidates
+    }
 
-    if not selected and candidates:
+    new_public: list[dict[str, Any]] = []
+    new_history: list[dict[str, Any]] = []
 
-        log(
-            "V46_4_3_RECOVERY: restoring predictions after filters"
+    for prediction in selected:
+        candidate = candidates_by_id.get(
+            int(prediction["matchId"])
         )
 
-        recovery_candidates = sorted(
-            candidates,
-            key=lambda item: float(
-                item.get("dataQuality") or 0
-            ),
-            reverse=True,
+        if candidate is None:
+            continue
+
+        public_record, history_record = prediction_to_public_records(
+            prediction,
+            candidate,
+            stake=0.0,
+            config=config,
         )
+        new_public.append(public_record)
+        new_history.append(history_record)
 
-        restored = []
+    combined_public = active_public + new_public
+    combined_history_for_guard = active_history + new_history
 
-        for candidate in recovery_candidates:
+    (
+        public_predictions,
+        accepted_history_for_guard,
+    ) = finalize_public_selection(
+        combined_public,
+        combined_history_for_guard,
+        all_matches_by_id,
+        config,
+        now,
+    )
 
-            if len(restored) >= int(
-                config.get("maximumPredictions") or 4
-            ):
-                break
-
-            restored.append(
-                {
-                    "matchId": int(
-                        candidate["matchId"]
-                    ),
-                    "market": "OVER_1_5",
-                    "confidence": 68,
-                    "fairOdds": 1.60,
-                    "risk": "MEDIUM",
-                    "reason": (
-                        "Восстановленный прогноз "
-                        "на основе статистического анализа "
-                        "и качества данных."
-                    ),
-                    "analysisMode": "AI_RECOVERY_FINAL",
-                    "rankingScore": float(
-                        candidate.get("dataQuality") or 0
-                    ),
-                }
-            )
-
-
-        if restored:
-
-            selected = restored
-
-            model_name = (
-                "ai-recovery-statistical-fusion"
-            )
-
-            analysis_mode = (
-                "AI_RECOVERY_FINAL"
-            )
-
-
-
-
-    # V46 FINAL EMPTY PROTECTION
-    # Если после удаления старых pending прогнозов ничего не осталось,
-    # повторно добираем свежими матчами ближайших суток.
-
-    if not selected and candidates:
-
-        log(
-            "V46 EMPTY_SELECTION_RECOVERY: rebuilding from fresh candidates"
-        )
-
-
-        recovery = build_deterministic_predictions(
-            candidates,
-            config,
-        )
-
-
-        for item in recovery:
-
-            if len(selected) >= int(
-                config.get("maximumPredictions") or 4
-            ):
-                break
-
-
-            if int(item["matchId"]) not in already_pending:
-
-                item["analysisMode"] = (
-                    "STATISTICAL_RECOVERY"
-                )
-
-                selected.append(item)
-
-
+    accepted_ids = {
+        str(item.get("id") or "")
+        for item in public_predictions
+    }
+    accepted_new_history = [
+        item
+        for item in new_history
+        if str(item.get("id") or "") in accepted_ids
+    ]
 
     current_bank = float(
         state.get("bank", {}).get("current")
         or config.get("startingVirtualBank")
         or 10000
     )
-
-    total_stake_percent = float(
-        config.get("maximumTotalStakePercent")
-        or 20
+    maximum_total_stake_percent = float(
+        config.get("maximumTotalStakePercent") or 20
+    )
+    maximum_exposure = current_bank * (
+        maximum_total_stake_percent / 100
+    )
+    existing_pending_exposure = sum(
+        float(item.get("stake") or 0)
+        for item in history
+        if str(item.get("status") or "").lower() == "pending"
+    )
+    available_exposure = max(
+        0.0,
+        maximum_exposure - existing_pending_exposure,
+    )
+    stake_per_new = (
+        available_exposure / len(accepted_new_history)
+        if accepted_new_history
+        else 0.0
     )
 
-    total_stake = current_bank * (
-        total_stake_percent / 100
-    )
+    for item in accepted_new_history:
+        item["stake"] = round(stake_per_new, 2)
 
-    stake_per_prediction = (
-        total_stake / len(selected)
-        if selected
-        else 0
-    )
+    history_ids = {
+        str(item.get("id") or "")
+        for item in history
+    }
 
-    public_predictions: list[dict[str, Any]] = []
-    new_history_records: list[dict[str, Any]] = []
+    for item in accepted_new_history:
+        item_id = str(item.get("id") or "")
 
-    for prediction in selected:
-        candidate = candidates_by_id[
-            int(prediction["matchId"])
-        ]
+        if item_id and item_id not in history_ids:
+            history.append(item)
+            history_ids.add(item_id)
 
-        public_record, history_record = (
-            prediction_to_public_records(
-                prediction,
-                candidate,
-                stake=stake_per_prediction,
-                config=config,
-            )
-        )
-
-        public_predictions.append(
-            public_record
-        )
-
-        new_history_records.append(
-            history_record
-        )
-
-    (
-        public_predictions,
-        new_history_records,
-    ) = finalize_public_selection(
-        public_predictions,
-        new_history_records,
-        all_matches_by_id,
-        config,
-        now,
-    )
+    history_by_id = {
+        str(item.get("id") or ""): item
+        for item in history
+    }
 
     for index, prediction in enumerate(
         public_predictions,
@@ -3186,164 +3195,343 @@ def main() -> int:
             if index == 1
             else f"Прогноз №{index}"
         )
-
+        mode = str(prediction.get("analysisMode") or "")
         prediction["analysisSourceLabel"] = (
-            "Резервный статистический расчёт"
-            if prediction.get("analysisMode")
-            == "DETERMINISTIC_FALLBACK"
+            "ИИ и статистический консенсус"
+            if mode == "AI_STAT_CONSENSUS"
             else "ИИ-анализ"
+            if mode == "AI"
+            else "Статистический расчёт"
         )
 
-    history_by_new_id = {
-        str(item.get("id") or ""): item
-        for item in new_history_records
-        if isinstance(item, dict)
-    }
-
-    for prediction in public_predictions:
-        history_item = history_by_new_id.get(
+        history_item = history_by_id.get(
             str(prediction.get("id") or "")
         )
 
         if history_item:
-            history_item["rank"] = prediction["rank"]
+            history_item["rank"] = index
             history_item["rankLabel"] = prediction["rankLabel"]
-            history_item["analysisSourceLabel"] = (
-                prediction["analysisSourceLabel"]
-            )
+            history_item["analysisSourceLabel"] = prediction[
+                "analysisSourceLabel"
+            ]
 
-    history.extend(new_history_records)
-
-    # Публичная выдача содержит только актуальные
-    # прогнозы текущего запуска.
     state["predictions"] = public_predictions
     state["history"] = history
 
-    state.setdefault(
-        "meta",
-        {},
-    ).update(
+    modes = {
+        str(item.get("analysisMode") or "")
+        for item in public_predictions
+    }
+
+    if public_predictions:
+        if modes & {"AI", "AI_STAT_CONSENSUS"}:
+            analysis_status = "PREDICTIONS_SELECTED"
+        else:
+            analysis_status = "STATISTICAL_PREDICTIONS_SELECTED"
+    elif candidates:
+        analysis_status = "NO_CONFIDENT_PREDICTIONS"
+    else:
+        analysis_status = "NO_SUITABLE_DATA"
+
+    if ai_predictions:
+        analysis_provider = "OpenRouter + встроенный статистический модуль"
+        analysis_mode = "AI_STAT_FUSION"
+    elif statistical_predictions:
+        analysis_provider = "Встроенный статистический модуль"
+        analysis_mode = "DETERMINISTIC_STATISTICAL"
+    else:
+        analysis_provider = "Нет допустимых прогнозов"
+        analysis_mode = "NO_SELECTION"
+
+    state.setdefault("meta", {}).update(
         {
-            "version": "2.0.0",
+            "version": "3.0.0",
             "mode": "real",
             "updatedAt": now.isoformat(),
-            "analyzedMatches": len(
-                scheduled_matches
-            ),
-            "candidateMatches": len(
-                candidates
-            ),
-            "selectedPredictions": len(
-                public_predictions
-            ),
+            "analyzedMatches": len(scheduled_matches),
+            "candidateMatches": len(candidates),
+            "selectedPredictions": len(public_predictions),
+            "activePendingPredictions": len(active_public),
+            "newPredictions": len(accepted_new_history),
             "source": "football-data.org",
-            "analysisProvider": "OpenRouter",
-            "timezone": str(
-                config.get("timezone")
-                or "Europe/Moscow"
-            ),
-            "minimumLeadHours": float(
-                config.get("minimumLeadHours")
-                or 4
-            ),
+            "analysisProvider": analysis_provider,
             "analysisModel": model_name,
             "analysisMode": analysis_mode,
+            "analysisStatus": analysis_status,
             "analysisError": openrouter_error_text,
-            "analysisStatus": (
-                "FALLBACK_PREDICTIONS_SELECTED"
-                if (
-                    public_predictions
-                    and analysis_mode
-                    == "DETERMINISTIC_FALLBACK"
-                )
-                else (
-                    "PREDICTIONS_SELECTED"
-                    if public_predictions
-                    else "NO_CONFIDENT_PREDICTIONS"
-                )
+            "aiAttempted": ai_attempted,
+            "aiNormalizedPredictions": len(ai_predictions),
+            "statisticalPredictions": len(statistical_predictions),
+            "timezone": str(
+                config.get("timezone") or "Europe/Moscow"
+            ),
+            "minimumLeadHours": float(
+                config.get("minimumLeadHours") or 3
             ),
             "selectionWindowHours": float(
-                config.get("selectionWindowHours")
-                or 24
+                config.get("selectionWindowHours") or 72
             ),
-            "maximumPredictions": int(
-                config.get("maximumPredictions")
-                or 4
-            ),
+            "maximumPredictions": maximum_predictions,
             "minimumConfidence": int(
-                config.get("minimumConfidence")
-                or 74
+                config.get("minimumConfidence") or 70
             ),
             "minimumModelOdds": float(
-                config.get("minimumModelOdds")
-                or 1.0
+                config.get("minimumModelOdds") or 1.45
             ),
-            "minimumMarketOdds": float(
-                config.get("minimumMarketOdds")
-                or 1.55
+            "maximumModelOdds": float(
+                config.get("maximumModelOdds") or 2.10
             ),
             "marketOddsAvailable": False,
             "expectedValueAvailable": False,
             "notice": (
-                "Коэффициенты являются расчётными "
-                "справедливыми коэффициентами модели, "
-                "а не линией букмекерской конторы. "
-                "Рыночный EV не рассчитывается до "
-                "подключения источника реальных коэффициентов."
+                "Показывается расчётный коэффициент модели (1 / вероятность), "
+                "а не коэффициент букмекерской конторы. Рыночный EV нельзя "
+                "рассчитать без отдельного источника реальных котировок."
             ),
         }
     )
 
     update_statistics(state)
+    write_json_atomic(STATE_PATH, state)
 
-    write_json_atomic(
-        STATE_PATH,
-        state,
+    report_status = (
+        "GREEN"
+        if public_predictions
+        else "GREEN_NO_PREDICTIONS"
+    )
+    report_message = (
+        "Данные обновлены, прогнозы опубликованы."
+        if public_predictions
+        else "Данные обновлены, но допустимых прогнозов нет."
     )
 
     report = create_report(
-        status="GREEN",
-        message="Данные успешно обновлены.",
+        status=report_status,
+        message=report_message,
         details={
             "lookbackDays": lookback_days,
-            "historyRequestChunks": math.ceil(
-                (lookback_days + 1) / 10
-            ),
-            "recentMatches": len(
-                recent_matches
-            ),
-            "scheduledMatches": len(
-                scheduled_matches
-            ),
-            "candidateMatches": len(
-                candidates
-            ),
-            "selectedPredictions": len(
-                public_predictions
-            ),
+            "recentMatches": len(recent_matches),
+            "finishedMatches": len(finished_matches),
+            "scheduledMatches": len(scheduled_matches),
+            "candidateMatches": len(candidates),
+            "aiPredictions": len(ai_predictions),
+            "statisticalPredictions": len(statistical_predictions),
+            "activePendingPredictions": len(active_public),
+            "selectedPredictions": len(public_predictions),
+            "newPredictions": len(accepted_new_history),
             "settledPredictions": settled_count,
             "analysisModel": model_name,
+            "analysisStatus": analysis_status,
         },
     )
-
-    write_json_atomic(
-        REPORT_PATH,
-        report,
-    )
+    write_json_atomic(REPORT_PATH, report)
 
     log(
         "Обновление завершено. "
-        f"Опубликовано прогнозов: "
-        f"{len(public_predictions)}"
+        f"RADAR={len(candidates)}; "
+        f"AI={len(ai_predictions)}; "
+        f"STAT={len(statistical_predictions)}; "
+        f"PRED={len(public_predictions)}"
     )
 
     return 0
 
 
+def run_daily_ai_mode() -> int:
+    """Создаёт дневной JSON из уже опубликованного state без API-ключей."""
+
+    state = load_json(STATE_PATH)
+    predictions = [
+        item
+        for item in state.get("predictions", [])
+        if isinstance(item, dict)
+    ]
+    output_path = ROOT / "data" / "ai_daily_analysis.json"
+    payload = {
+        "status": "READY",
+        "model": str(
+            (state.get("meta") or {}).get("analysisModel")
+            or "not-used"
+        ),
+        "generatedAt": utc_now().isoformat(),
+        "matchesAnalyzed": int(
+            (state.get("meta") or {}).get("candidateMatches") or 0
+        ),
+        "recommendations": predictions,
+    }
+    write_json_atomic(output_path, payload)
+    print("DAILY_AI_EXPORT_READY")
+    return 0
+
+
+def validate_repository_files() -> int:
+    config = load_json(CONFIG_PATH)
+    state = load_json(STATE_PATH)
+
+    if not isinstance(config.get("competitions"), list):
+        raise RuntimeError("config.competitions должен быть массивом")
+
+    if not isinstance(config.get("allowedMarkets"), list):
+        raise RuntimeError("config.allowedMarkets должен быть массивом")
+
+    if not isinstance(state.get("predictions", []), list):
+        raise RuntimeError("state.predictions должен быть массивом")
+
+    if not isinstance(state.get("history", []), list):
+        raise RuntimeError("state.history должен быть массивом")
+
+    print("VALIDATION_GREEN")
+    return 0
+
+
+def run_self_test() -> int:
+    config = {
+        "allowedMarkets": list(MARKET_LABELS),
+        "maximumPredictions": 5,
+        "minimumConfidence": 68,
+        "winMarketMinimumConfidence": 72,
+        "minimumProbability": 0.52,
+        "maximumProbability": 0.69,
+        "minimumModelOdds": 1.45,
+        "maximumModelOdds": 2.10,
+        "minimumDataQuality": 40,
+    }
+
+    strong_form = {
+        "games": 8,
+        "pointsPerGame": 1.75,
+        "goalsForPerGame": 1.5,
+        "goalsAgainstPerGame": 1.1,
+        "winRate": 0.5,
+        "drawRate": 0.25,
+        "lossRate": 0.25,
+        "nonLossRate": 0.75,
+        "scoredRate": 0.75,
+        "concededRate": 0.625,
+        "cleanSheetRate": 0.375,
+        "over15Rate": 0.75,
+        "under35Rate": 0.75,
+        "bothScoreRate": 0.5,
+        "homeVenue": {
+            "games": 5,
+            "pointsPerGame": 1.8,
+            "goalsForPerGame": 1.6,
+            "goalsAgainstPerGame": 1.0,
+            "winRate": 0.6,
+            "lossRate": 0.2,
+            "nonLossRate": 0.8,
+            "scoredRate": 0.8,
+            "concededRate": 0.6,
+        },
+        "awayVenue": {
+            "games": 5,
+            "pointsPerGame": 1.4,
+            "goalsForPerGame": 1.3,
+            "goalsAgainstPerGame": 1.2,
+            "winRate": 0.4,
+            "lossRate": 0.4,
+            "nonLossRate": 0.6,
+            "scoredRate": 0.8,
+            "concededRate": 0.6,
+        },
+    }
+
+    candidates = []
+
+    for index in range(1, 7):
+        candidates.append(
+            {
+                "matchId": index,
+                "utcDate": (
+                    utc_now() + dt.timedelta(hours=8 + index)
+                ).isoformat(),
+                "competition": {
+                    "code": "TEST",
+                    "name": "Test League",
+                },
+                "country": "England",
+                "homeTeam": {
+                    "id": index * 2,
+                    "name": f"Home {index}",
+                    "form": copy.deepcopy(strong_form),
+                },
+                "awayTeam": {
+                    "id": index * 2 + 1,
+                    "name": f"Away {index}",
+                    "form": copy.deepcopy(strong_form),
+                },
+                "dataQuality": 80.0,
+            }
+        )
+
+    predictions = build_deterministic_predictions(
+        candidates,
+        config,
+    )
+
+    if not predictions:
+        raise RuntimeError("SELF_TEST: статистический модуль вернул пусто")
+
+    if len({item["matchId"] for item in predictions}) != len(predictions):
+        raise RuntimeError("SELF_TEST: обнаружены дубли matchId")
+
+    for item in predictions:
+        fair_odds = float(item["fairOdds"])
+
+        if not 1.45 <= fair_odds <= 2.10:
+            raise RuntimeError(
+                f"SELF_TEST: fairOdds вне диапазона: {fair_odds}"
+            )
+
+    print(
+        "SELF_TEST_GREEN "
+        f"PRED={len(predictions)}"
+    )
+    return 0
+
+
+def cli_main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="AI Football Lab data pipeline"
+    )
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--daily-ai",
+        action="store_true",
+        help="Сформировать дневной JSON из текущего state без API",
+    )
+    mode.add_argument(
+        "--validate",
+        action="store_true",
+        help="Проверить конфигурацию и state без API",
+    )
+    mode.add_argument(
+        "--self-test",
+        action="store_true",
+        help="Запустить встроенный офлайн-тест",
+    )
+    mode.add_argument(
+        "--update",
+        action="store_true",
+        help="Запустить полное обновление (режим по умолчанию)",
+    )
+    arguments = parser.parse_args(argv)
+
+    if arguments.daily_ai:
+        return run_daily_ai_mode()
+
+    if arguments.validate:
+        return validate_repository_files()
+
+    if arguments.self_test:
+        return run_self_test()
+
+    return main()
+
+
 if __name__ == "__main__":
     try:
-        sys.exit(main())
-
+        sys.exit(cli_main())
     except Exception as error:
         log(f"КРИТИЧЕСКАЯ ОШИБКА: {error}")
 
@@ -3359,121 +3547,3 @@ if __name__ == "__main__":
             pass
 
         raise
-
-
-
-
-# V46_3_RADAR_EMPTY_PROTECTION
-# Если AI и статистический фильтр не дали прогноз,
-# но матчи есть — показываем лучшие матчи радара.
-# Пустой экран запрещён.
-
-
-
-# V46_4B_DAILY_AI_ENGINE
-
-def should_run_daily_ai(config):
-    return bool(
-        config.get(
-            "aiAnalysisEnabled",
-            False
-        )
-    )
-
-
-def write_daily_ai_state(
-    model,
-    recommendations,
-):
-
-    path = Path(
-        "data/ai_daily_analysis.json"
-    )
-
-    payload = {
-        "status": "READY",
-        "model": model,
-        "generatedAt": datetime.now(
-            timezone.utc
-        ).isoformat(),
-        "matchesAnalyzed": len(
-            recommendations
-        ),
-        "recommendations":
-            recommendations
-    }
-
-    write_json_atomic(
-        path,
-        payload
-    )
-
-
-
-# V46_4D_DAILY_AI_MODE
-
-def run_daily_ai_mode():
-
-    import os
-    from datetime import datetime, timezone
-
-
-    state_path = Path(
-        "data/state.json"
-    )
-
-    output_path = Path(
-        "data/ai_daily_analysis.json"
-    )
-
-
-    state = json.loads(
-        state_path.read_text(
-            encoding="utf-8"
-        )
-    )
-
-
-    predictions = state.get(
-        "predictions",
-        []
-    )
-
-
-    candidates = state.get(
-        "meta",
-        {}
-    )
-
-
-    payload = {
-        "status": "READY",
-        "model": os.environ.get(
-            "OPENROUTER_MODEL",
-            "google/gemini-2.5-flash-lite"
-        ),
-        "generatedAt": datetime.now(
-            timezone.utc
-        ).isoformat(),
-        "matchesAnalyzed": len(
-            predictions
-        ),
-        "recommendations": predictions
-    }
-
-
-    output_path.write_text(
-        json.dumps(
-            payload,
-            ensure_ascii=False,
-            indent=2
-        ),
-        encoding="utf-8"
-    )
-
-
-    print(
-        "V46_4D_DAILY_AI_READY"
-    )
-
-
