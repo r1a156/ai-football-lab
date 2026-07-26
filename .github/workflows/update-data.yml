@@ -24,9 +24,9 @@ concurrency:
 
 jobs:
   update:
-    name: Ровно четыре лучших прогноза с коэффициентом от 1,45
+    name: Четыре прогноза с реальными коэффициентами букмекеров
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
       - name: Получение проекта
@@ -44,18 +44,13 @@ jobs:
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           set -euo pipefail
-
-          if [ -z "${FOOTBALL_DATA_API_KEY}" ]; then
-            echo "::error::Не задан секрет FOOTBALL_DATA_API_KEY"
-            exit 1
-          fi
-
+          test -n "${FOOTBALL_DATA_API_KEY}" || { echo "::error::Не задан FOOTBALL_DATA_API_KEY"; exit 1; }
+          test -n "${ODDS_API_KEY}" || { echo "::error::Не задан ODDS_API_KEY"; exit 1; }
           if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY отсутствует. Будет использован статистический модуль."
-          else
-            echo "OpenRouter secret присутствует."
+            echo "::warning::OPENROUTER_API_KEY отсутствует; будет использован статистический модуль."
           fi
 
       - name: Статическая и офлайн-проверка
@@ -67,129 +62,73 @@ jobs:
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
 
-      - name: Обновление данных
+      - name: Обновление данных и коэффициентов
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V6
+      - name: Проверка результата V7
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
-
           python - <<'PY'
-          import datetime as dt
           import json
           from pathlib import Path
-
-          state = json.loads(
-              Path("data/state.json").read_text(encoding="utf-8")
-          )
-          config = json.loads(
-              Path("config/analysis.json").read_text(encoding="utf-8")
-          )
-          report = json.loads(
-              Path("data/last-update-report.json").read_text(
-                  encoding="utf-8"
-              )
-          )
-
+          state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
+          report = json.loads(Path("data/last-update-report.json").read_text(encoding="utf-8"))
           meta = state.get("meta", {})
           predictions = state.get("predictions", [])
           target = int(config.get("dailyPredictionCount") or 4)
-          candidate_count = int(meta.get("candidateMatches") or 0)
-
-          if meta.get("mode") != "real":
-              raise SystemExit("state.json не находится в real-режиме")
-
           if report.get("status") == "FAILED":
               raise SystemExit("Pipeline сформировал FAILED-отчёт")
-
-          if int(meta.get("selectedPredictions") or 0) != len(predictions):
-              raise SystemExit(
-                  "selectedPredictions не совпадает с predictions"
-              )
-
           if len(predictions) != target:
-              raise SystemExit(
-                  f"Обязательная четвёрка не сформирована: {len(predictions)} != {target}"
-              )
-
-          match_ids = [
-              int(item.get("sourceMatchId"))
-              for item in predictions
-          ]
-
-          if len(match_ids) != len(set(match_ids)):
-              raise SystemExit("В публичной выдаче есть дубли matchId")
-
-          updated_at = dt.datetime.fromisoformat(
-              str(meta.get("updatedAt")).replace("Z", "+00:00")
-          )
-          if updated_at.tzinfo is None:
-              updated_at = updated_at.replace(tzinfo=dt.timezone.utc)
-
-          lead_hours = float(config.get("minimumLeadHours") or 1)
-          window_hours = float(config.get("selectionWindowHours") or 24)
-          window_start = updated_at + dt.timedelta(hours=lead_hours)
-          window_end = window_start + dt.timedelta(hours=window_hours)
-
+              raise SystemExit(f"Прогнозов {len(predictions)}, ожидалось {target}")
+          if int(meta.get("selectedPredictions") or 0) != len(predictions):
+              raise SystemExit("selectedPredictions не совпадает с predictions")
+          ids = [int(item["sourceMatchId"]) for item in predictions]
+          if len(ids) != len(set(ids)):
+              raise SystemExit("Обнаружены дубли matchId")
+          minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
+          minimum_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
           for item in predictions:
-              kickoff = dt.datetime.fromisoformat(
-                  str(item.get("utcDate")).replace("Z", "+00:00")
-              )
-              if kickoff.tzinfo is None:
-                  kickoff = kickoff.replace(tzinfo=dt.timezone.utc)
-
-              if not window_start <= kickoff <= window_end:
-                  raise SystemExit(
-                      f"Прогноз вне разрешённого окна: matchId={item.get('sourceMatchId')}"
-                  )
-
-              fair_odds = float(item.get("fairOdds") or 0)
-              probability = float(item.get("probability") or 0)
-
-              minimum_odds = float(config.get("minimumModelOdds") or 1.45)
-              maximum_odds = float(config.get("maximumModelOdds") or 2.80)
-
-              if not minimum_odds <= fair_odds <= maximum_odds:
-                  raise SystemExit(
-                      f"Коэффициент вне диапазона {minimum_odds}-{maximum_odds}: {fair_odds}"
-                  )
-
-              if not 0 < probability < 1:
-                  raise SystemExit(
-                      f"Некорректная вероятность: {probability}"
-                  )
-
-          print("Режим:", meta.get("mode"))
-          print("Статус:", meta.get("analysisStatus"))
-          print("RADAR:", candidate_count)
+              odds = float(item.get("bookmakerOdds") or 0)
+              ev = float(item.get("expectedValue") or -1)
+              if odds < minimum_odds:
+                  raise SystemExit(f"bookmakerOdds ниже {minimum_odds}: {odds}")
+              if ev < minimum_ev:
+                  raise SystemExit(f"Отрицательный EV: {ev}")
+              if item.get("coefficientType") != "BOOKMAKER_MARKET":
+                  raise SystemExit("Используется не букмекерский коэффициент")
+              if not str(item.get("bookmaker") or "").strip():
+                  raise SystemExit("Не указан букмекер")
+              if not str(item.get("oddsCapturedAt") or "").strip():
+                  raise SystemExit("Не зафиксировано время коэффициента")
+          if meta.get("virtualBankOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
+              raise SystemExit("Виртуальный банк настроен не на bookmakerOdds")
+          print("MODE:", meta.get("mode"))
           print("PRED:", len(predictions))
-          print("TARGET:", target)
-          print("WINDOW_HOURS:", window_hours)
-          print("MODEL:", meta.get("analysisModel"))
-          print("ODDS_POLICY: MIN_1.45_PREFER_1.60_MODEL_FAIR")
+          print("ODDS_EVENTS:", meta.get("oddsEvents"))
+          print("ODDS_QUOTA:", meta.get("oddsQuota"))
+          print("BANK_ODDS_TYPE:", meta.get("virtualBankOddsType"))
           PY
 
       - name: Сохранение обновлённых данных
         shell: bash
         run: |
           set -euo pipefail
-
           if git diff --quiet -- data/state.json data/last-update-report.json; then
             echo "Данные не изменились. Коммит не требуется."
             exit 0
           fi
-
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
-
           git add data/state.json data/last-update-report.json
-          git commit -m "Ежедневные 4 прогноза с коэффициентом от 1.45"
+          git commit -m "Update bookmaker odds and virtual bank"
           git push origin main
