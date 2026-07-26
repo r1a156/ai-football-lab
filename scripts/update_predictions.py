@@ -1486,7 +1486,7 @@ def ensure_real_state(
 
     return {
         "meta": {
-            "version": "8.4.0",
+            "version": "8.5.0",
             "mode": "real",
             "updatedAt": None,
             "analyzedMatches": 0,
@@ -4508,8 +4508,119 @@ def update_statistics(state: dict[str, Any]) -> None:
     bank["maxDrawdown"] = round(maximum_drawdown, 2)
 
 
+
+
+def apply_stake_policy_to_selected_predictions(
+    public_predictions: list[dict[str, Any]],
+    history: list[dict[str, Any]],
+    current_bank: float,
+    stake_percent: float,
+    assigned_at: dt.datetime,
+) -> int:
+    """Assign or repair the virtual stake for every selected prediction.
+
+    New records and legacy active pending records must both carry the same
+    per-prediction stake policy. Existing records that already use the current
+    policy are left unchanged so their publication-time stake remains fixed.
+    """
+
+    stake_percent = float(stake_percent)
+    stake_amount = round(
+        float(current_bank) * stake_percent / 100,
+        2,
+    )
+    policy = "PER_PREDICTION_PERCENT_OF_BANK"
+
+    history_by_id = {
+        str(item.get("id") or ""): item
+        for item in history
+        if isinstance(item, dict)
+        and str(item.get("id") or "")
+    }
+
+    repaired = 0
+
+    for prediction in public_predictions:
+        prediction_id = str(prediction.get("id") or "")
+        if not prediction_id:
+            raise RuntimeError(
+                "STAKE_POLICY: у прогноза отсутствует id"
+            )
+
+        history_item = history_by_id.get(prediction_id)
+        if history_item is None:
+            raise RuntimeError(
+                "STAKE_POLICY: не найдена запись истории для прогноза "
+                f"{prediction_id}"
+            )
+
+        try:
+            existing_stake = float(history_item.get("stake") or 0)
+        except (TypeError, ValueError):
+            existing_stake = 0.0
+
+        try:
+            existing_percent = float(
+                history_item.get("stakePercent") or 0
+            )
+        except (TypeError, ValueError):
+            existing_percent = 0.0
+
+        existing_policy = str(
+            history_item.get("stakePolicy") or ""
+        ).strip()
+
+        needs_repair = (
+            existing_stake <= 0
+            or abs(existing_percent - stake_percent) > 0.0001
+            or existing_policy != policy
+        )
+
+        if needs_repair:
+            history_item["stake"] = stake_amount
+            history_item["stakePercent"] = round(
+                stake_percent,
+                2,
+            )
+            history_item["stakePolicy"] = policy
+            history_item["stakeAssignedAt"] = (
+                assigned_at
+                .astimezone(dt.timezone.utc)
+                .replace(microsecond=0)
+                .isoformat()
+                .replace("+00:00", "Z")
+            )
+            history_item["stakeBackfilled"] = True
+            repaired += 1
+
+        prediction["stake"] = round(
+            float(history_item.get("stake") or 0),
+            2,
+        )
+        prediction["stakePercent"] = float(
+            history_item.get("stakePercent") or stake_percent
+        )
+        prediction["stakePolicy"] = str(
+            history_item.get("stakePolicy") or policy
+        )
+        prediction["stakeAssignedAt"] = str(
+            history_item.get("stakeAssignedAt") or ""
+        )
+        prediction["stakeBackfilled"] = bool(
+            history_item.get("stakeBackfilled")
+        )
+
+        if float(prediction.get("stake") or 0) <= 0:
+            raise RuntimeError(
+                "STAKE_POLICY: после назначения ставка осталась нулевой "
+                f"для прогноза {prediction_id}"
+            )
+
+    return repaired
+
+
 def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v8 R4")
+    log("Запуск AI Football Lab Data Pipeline v8 R5")
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
     _load_optional_dotenv(ROOT / ".env")
@@ -4739,6 +4850,14 @@ def main() -> int:
         item for item in new_history
         if str(item.get("id") or "") in accepted_ids
     ]
+
+    history_ids = {str(item.get("id") or "") for item in history}
+    for item in accepted_new_history:
+        item_id = str(item.get("id") or "")
+        if item_id and item_id not in history_ids:
+            history.append(item)
+            history_ids.add(item_id)
+
     current_bank = float(
         state.get("bank", {}).get("current")
         or config.get("startingVirtualBank")
@@ -4747,24 +4866,14 @@ def main() -> int:
     stake_per_prediction_percent = float(
         config.get("stakePerPredictionPercent") or 20
     )
-    stake_per_new = current_bank * (
-        stake_per_prediction_percent / 100
+    stake_records_repaired = apply_stake_policy_to_selected_predictions(
+        public_predictions,
+        history,
+        current_bank,
+        stake_per_prediction_percent,
+        now,
     )
 
-    for item in accepted_new_history:
-        item["stake"] = round(stake_per_new, 2)
-        item["stakePercent"] = round(
-            stake_per_prediction_percent,
-            2,
-        )
-        item["stakePolicy"] = "PER_PREDICTION_PERCENT_OF_BANK"
-
-    history_ids = {str(item.get("id") or "") for item in history}
-    for item in accepted_new_history:
-        item_id = str(item.get("id") or "")
-        if item_id and item_id not in history_ids:
-            history.append(item)
-            history_ids.add(item_id)
     history_by_id = {str(item.get("id") or ""): item for item in history}
 
     for index, prediction in enumerate(public_predictions, start=1):
@@ -4784,19 +4893,6 @@ def main() -> int:
             history_item["rank"] = index
             history_item["rankLabel"] = prediction["rankLabel"]
             history_item["analysisSourceLabel"] = prediction["analysisSourceLabel"]
-            prediction["stake"] = round(
-                float(history_item.get("stake") or 0),
-                2,
-            )
-            prediction["stakePercent"] = float(
-                history_item.get("stakePercent")
-                or config.get("stakePerPredictionPercent")
-                or 20
-            )
-            prediction["stakePolicy"] = str(
-                history_item.get("stakePolicy")
-                or "PER_PREDICTION_PERCENT_OF_BANK"
-            )
 
     state["predictions"] = public_predictions
     state["history"] = history
@@ -4816,6 +4912,7 @@ def main() -> int:
             "selectedPredictions": len(public_predictions),
             "activePendingPredictions": len(active_public),
             "newPredictions": len(accepted_new_history),
+            "stakeRecordsRepaired": stake_records_repaired,
             "legacyPendingVoided": legacy_voided,
             "settledPredictions": settled_count,
             "source": "football-data.org + The Odds API",
@@ -5162,6 +5259,45 @@ def run_self_test() -> int:
     if float(config.get("stakePerPredictionPercent") or 0) != 20:
         raise RuntimeError(
             "SELF_TEST: ставка на каждый прогноз должна быть 20%"
+        )
+
+    stake_test_public = [
+        {"id": "legacy-active"},
+        {"id": "already-correct"},
+    ]
+    stake_test_history = [
+        {
+            "id": "legacy-active",
+            "status": "pending",
+            "stake": 0,
+        },
+        {
+            "id": "already-correct",
+            "status": "pending",
+            "stake": 1500.0,
+            "stakePercent": 20,
+            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
+        },
+    ]
+    repaired_count = apply_stake_policy_to_selected_predictions(
+        stake_test_public,
+        stake_test_history,
+        10000.0,
+        20.0,
+        utc_now(),
+    )
+    if repaired_count != 1:
+        raise RuntimeError(
+            f"SELF_TEST: ожидалась одна восстановленная ставка, "
+            f"получено {repaired_count}"
+        )
+    if float(stake_test_public[0].get("stake") or 0) != 2000.0:
+        raise RuntimeError(
+            "SELF_TEST: старая активная ставка не восстановлена до 20%"
+        )
+    if float(stake_test_public[1].get("stake") or 0) != 1500.0:
+        raise RuntimeError(
+            "SELF_TEST: уже зафиксированная ставка была ошибочно изменена"
         )
 
     bank_state = {
