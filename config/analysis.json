@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "timezone": "Europe/Moscow",
   "lookbackDays": 60,
   "lookaheadDays": 1,
@@ -17,15 +17,15 @@
   "minimumDataQuality": 20,
   "minimumBookmakerOdds": 1.45,
   "preferredBookmakerOdds": 1.6,
-  "maximumBookmakerOdds": 5.0,
-  "minimumExpectedValue": 0.02,
+  "maximumBookmakerOdds": 3.2,
+  "minimumExpectedValue": 0.01,
   "fallbackMinimumExpectedValue": 0.0,
   "oddsProvider": "THE_ODDS_API",
   "oddsRegions": "eu",
   "oddsBookmakers": [],
   "preferredBookmakers": [],
   "oddsSelectionMode": "BEST_AVAILABLE",
-  "maximumOddsSportRequests": 8,
+  "maximumOddsSportRequests": 6,
   "maximumOddsAgeMinutes": 30,
   "oddsMatchKickoffToleranceMinutes": 60,
   "minimumOddsMatchScore": 0.78,
@@ -38,9 +38,7 @@
   "allowedMarkets": [
     "HOME_WIN",
     "DRAW",
-    "AWAY_WIN",
-    "OVER_2_5",
-    "UNDER_2_5"
+    "AWAY_WIN"
   ],
   "excludedCompetitionWords": [
     "friendly",
@@ -48,19 +46,29 @@
     "reserve"
   ],
   "competitionScope": "ALL_ACCESSIBLE",
-  "candidateDiversityMode": "ROUND_ROBIN_BY_COMPETITION",
-  "predictionDiversityMode": "ROUND_ROBIN_BY_COUNTRY_AND_COMPETITION",
-  "publicationPolicy": "EXACTLY_FOUR_BEST_VERIFIED_BOOKMAKER_PREDICTIONS_24H",
-  "oddsPolicy": "BOOKMAKER_H2H_AND_TOTALS_MIN_1_45_PREFER_1_60_NON_NEGATIVE_EV",
+  "candidateDiversityMode": "GLOBAL_COUNTRY_ROUND_ROBIN",
+  "predictionDiversityMode": "FOUR_LEAGUES_MINIMUM_THREE_COUNTRIES",
+  "publicationPolicy": "EXACTLY_FOUR_GLOBAL_DIVERSE_BOOKMAKER_PREDICTIONS_24H",
+  "oddsPolicy": "GLOBAL_H2H_DISCOVERY_MIN_1_45_CONSERVATIVE_CONSENSUS",
   "virtualBankPolicy": "EACH_PREDICTION_20_PERCENT_OF_CURRENT_BANK_FIXED_BOOKMAKER_ODDS",
   "minimumTeamNameMatchScore": 0.6,
   "minimumOddsMatchScoreGap": 0.08,
   "requireOddsTimestamp": true,
-  "matchingPolicy": "STRICT_TEAM_TIME_SCORE_AND_AMBIGUITY_GUARD",
+  "matchingPolicy": "GLOBAL_EVENT_NATIVE_OR_STRICT_FOOTBALL_DATA_MATCH",
   "stakePerPredictionPercent": 20,
   "maximumDailyExposurePercent": 80,
   "oddsMarkets": [
-    "h2h",
-    "totals"
-  ]
+    "h2h"
+  ],
+  "globalDiscoveryEnabled": true,
+  "globalDiscoverySource": "THE_ODDS_API_EVENTS",
+  "maximumGlobalDiscoverySports": 100,
+  "globalDiscoveryWorkers": 8,
+  "maximumSettlementSportRequests": 4,
+  "minimumConsensusBookmakers": 3,
+  "maximumConsensusDispersion": 0.1,
+  "consensusProbabilityHaircut": 0.01,
+  "minimumPublishedProbability": 0.5,
+  "minimumPublishedCountries": 3,
+  "quotaPolicy": "FREE_EVENTS_DISCOVERY_SIX_H2H_LEAGUES_FOUR_SCORE_LEAGUES"
 }

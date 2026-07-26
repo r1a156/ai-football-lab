@@ -1,4 +1,4 @@
-name: Ежедневное обновление футбольной аналитики
+name: Ежедневное глобальное обновление футбольной аналитики
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    name: Четыре прогноза со свежими проверенными коэффициентами
+    name: Четыре лучших прогноза из глобального пула лиг
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -50,10 +50,10 @@ jobs:
           test -n "${FOOTBALL_DATA_API_KEY}" || { echo "::error::Не задан FOOTBALL_DATA_API_KEY"; exit 1; }
           test -n "${ODDS_API_KEY}" || { echo "::error::Не задан ODDS_API_KEY"; exit 1; }
           if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY отсутствует; будет использован статистический модуль."
+            echo "::warning::OPENROUTER_API_KEY отсутствует; будет использована статистика и глобальный рыночный консенсус."
           fi
 
-      - name: Статическая и офлайн-проверка
+      - name: Статическая и офлайн-проверка V9
         run: |
           set -euo pipefail
           python -m py_compile scripts/update_predictions.py
@@ -62,7 +62,7 @@ jobs:
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
 
-      - name: Обновление данных и коэффициентов
+      - name: Глобальный поиск и обновление
         env:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V8 R4
+      - name: Проверка результата V9 Global Discovery
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -80,97 +80,85 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
+
           state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
           config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
           report = json.loads(Path("data/last-update-report.json").read_text(encoding="utf-8"))
           meta = state.get("meta", {})
           predictions = state.get("predictions", [])
           target = int(config.get("dailyPredictionCount") or 4)
-          if report.get("status") == "FAILED":
-              raise SystemExit("Pipeline сформировал FAILED-отчёт")
+
+          if report.get("status") != "GREEN":
+              raise SystemExit("Pipeline не сформировал GREEN-отчёт")
+          if not meta.get("globalDiscoveryEnabled"):
+              raise SystemExit("Глобальное обнаружение не включено")
+          if meta.get("globalDiscoverySource") != "THE_ODDS_API_EVENTS":
+              raise SystemExit("Использован неверный источник глобального календаря")
+          if int(meta.get("globalSportsScanned") or 0) <= 0:
+              raise SystemExit("Не просканированы активные футбольные лиги")
+          if int(meta.get("globalLeaguesWithEvents") or 0) <= 0:
+              raise SystemExit("Глобальный поиск не нашёл лиги с матчами")
+          if int(meta.get("globalEventsDiscovered") or 0) <= 0:
+              raise SystemExit("Глобальный поиск не нашёл матчи")
           if len(predictions) != target:
               raise SystemExit(f"Прогнозов {len(predictions)}, ожидалось {target}")
-          if int(meta.get("selectedPredictions") or 0) != len(predictions):
-              raise SystemExit("selectedPredictions не совпадает с predictions")
+          if int(meta.get("selectedPredictions") or 0) != target:
+              raise SystemExit("selectedPredictions не равен четырём")
+
           ids = [int(item["sourceMatchId"]) for item in predictions]
           if len(ids) != len(set(ids)):
-              raise SystemExit("Обнаружены дубли matchId")
-          minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
-          minimum_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
+              raise SystemExit("Обнаружены дубли матчей")
+          leagues = {str(item.get("league") or "") for item in predictions}
+          countries = {str(item.get("country") or "") for item in predictions}
+          if len(leagues) != 4:
+              raise SystemExit(f"Подборка не охватывает четыре лиги: {sorted(leagues)}")
+          minimum_countries = int(config.get("minimumPublishedCountries") or 3)
+          if len(countries) < minimum_countries:
+              raise SystemExit(f"Недостаточно стран: {sorted(countries)}")
+
+          market_counts = {}
           for item in predictions:
+              market = str(item.get("market") or "")
+              market_counts[market] = market_counts.get(market, 0) + 1
               odds = float(item.get("bookmakerOdds") or 0)
+              probability = float(item.get("probability") or 0)
               ev = float(item.get("expectedValue") or -1)
-              if odds < minimum_odds:
-                  raise SystemExit(f"bookmakerOdds ниже {minimum_odds}: {odds}")
-              if ev < minimum_ev:
+              if market not in {"HOME_WIN", "DRAW", "AWAY_WIN"}:
+                  raise SystemExit(f"Неподдерживаемый рынок: {market}")
+              if odds < float(config.get("minimumBookmakerOdds") or 1.45):
+                  raise SystemExit(f"Слишком низкий коэффициент: {odds}")
+              if probability < float(config.get("minimumPublishedProbability") or 0.50):
+                  raise SystemExit(f"Слишком низкая вероятность: {probability}")
+              if ev < float(config.get("fallbackMinimumExpectedValue") or 0.0):
                   raise SystemExit(f"Отрицательный EV: {ev}")
               if item.get("coefficientType") != "BOOKMAKER_MARKET":
                   raise SystemExit("Используется не букмекерский коэффициент")
-              if str(item.get("market") or "") not in {
-                  "HOME_WIN",
-                  "DRAW",
-                  "AWAY_WIN",
-                  "OVER_2_5",
-                  "UNDER_2_5",
-              }:
-                  raise SystemExit("Неподдерживаемый рынок прогноза")
               if not str(item.get("bookmaker") or "").strip():
                   raise SystemExit("Не указан букмекер")
-              if not str(item.get("oddsCapturedAt") or "").strip():
-                  raise SystemExit("Не зафиксировано время коэффициента")
-          if float(config.get("selectionWindowHours") or 0) != 24:
-              raise SystemExit("Окно отбора не равно 24 часам")
-          if int(config.get("maximumOddsAgeMinutes") or 0) > 30:
-              raise SystemExit("Разрешены слишком старые коэффициенты")
-          if float(config.get("stakePerPredictionPercent") or 0) != 20:
-              raise SystemExit(
-                  "Ставка на каждый прогноз должна быть 20% банка"
-              )
-          if float(meta.get("stakePerPredictionPercent") or 0) != 20:
-              raise SystemExit(
-                  "meta.stakePerPredictionPercent должен быть равен 20"
-              )
-          for item in predictions:
               if float(item.get("stakePercent") or 0) != 20:
-                  raise SystemExit(
-                      "Прогноз не получил ставку 20% банка"
-                  )
+                  raise SystemExit("Прогноз не получил ставку 20% банка")
               if float(item.get("stake") or 0) <= 0:
-                  raise SystemExit(
-                      "У прогноза отсутствует виртуальная ставка"
-                  )
-          for item in predictions:
+                  raise SystemExit("У прогноза отсутствует виртуальная ставка")
               age = item.get("oddsAgeMinutes")
               if age is None or float(age) > 30:
-                  raise SystemExit(f"Коэффициент устарел или не имеет времени: {age}")
-              if float(item.get("oddsMatchScore") or 0) < 0.78:
-                  raise SystemExit("Недостаточная надёжность сопоставления матча")
-              kickoff_difference = item.get("oddsKickoffDifferenceMinutes")
-              if kickoff_difference is None:
-                  raise SystemExit(
-                      "Не указано расхождение времени матча"
-                  )
-              try:
-                  kickoff_difference_value = float(kickoff_difference)
-              except (TypeError, ValueError):
-                  raise SystemExit(
-                      "Некорректное расхождение времени матча: "
-                      f"{kickoff_difference}"
-                  )
-              if (
-                  kickoff_difference_value < 0
-                  or kickoff_difference_value > 60
-              ):
-                  raise SystemExit(
-                      "Слишком большое расхождение времени матча: "
-                      f"{kickoff_difference_value}"
-                  )
+                  raise SystemExit(f"Коэффициент устарел: {age}")
+              if not str(item.get("oddsEventId") or ""):
+                  raise SystemExit("Не сохранён oddsEventId")
+              if not str(item.get("oddsSportKey") or ""):
+                  raise SystemExit("Не сохранён oddsSportKey")
+
+          if max(market_counts.values()) > 2:
+              raise SystemExit(f"Один рынок занял больше двух мест: {market_counts}")
           if meta.get("virtualBankOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
-              raise SystemExit("Виртуальный банк настроен не на bookmakerOdds")
-          print("MODE:", meta.get("mode"))
+              raise SystemExit("Банк использует неверный тип коэффициента")
+
+          print("GLOBAL_SPORTS_SCANNED:", meta.get("globalSportsScanned"))
+          print("GLOBAL_LEAGUES_WITH_EVENTS:", meta.get("globalLeaguesWithEvents"))
+          print("GLOBAL_EVENTS_DISCOVERED:", meta.get("globalEventsDiscovered"))
+          print("ODDS_SPORT_KEYS:", meta.get("oddsSportKeys"))
+          print("COUNTRIES:", sorted(countries))
+          print("LEAGUES:", sorted(leagues))
           print("PRED:", len(predictions))
-          print("ODDS_EVENTS:", meta.get("oddsEvents"))
-          print("ODDS_QUOTA:", meta.get("oddsQuota"))
           print("BANK_ODDS_TYPE:", meta.get("virtualBankOddsType"))
           PY
 
@@ -185,5 +173,6 @@ jobs:
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/state.json data/last-update-report.json
-          git commit -m "V8 R4 update bookmaker predictions and 20 percent stakes"
+          git commit -m "V9 update global football predictions"
+          git pull --rebase origin main
           git push origin main

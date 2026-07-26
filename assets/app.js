@@ -258,10 +258,11 @@ function renderPredictions(predictions, meta = {}) {
 
         const sourceLabel = prediction.analysisSourceLabel
             || (
-                prediction.analysisMode ===
-                    "DETERMINISTIC_FALLBACK"
-                    ? "Резервный статистический расчёт"
-                    : "ИИ-анализ"
+                prediction.analysisMode === "GLOBAL_MARKET_CONSENSUS"
+                    ? "Глобальный консенсус букмекеров"
+                    : prediction.analysisMode === "DETERMINISTIC_FALLBACK"
+                        ? "Резервный статистический расчёт"
+                        : "ИИ и статистика"
             );
 
         return `
