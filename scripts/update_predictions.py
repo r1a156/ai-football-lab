@@ -5746,16 +5746,48 @@ def v9_build_event_candidates(
     return candidates, by_event_id, len(matched_candidate_by_event)
 
 
-def v9_market_rows_for_event(
+def v9_maximum_quote_age_minutes(
     event: dict[str, Any],
     config: dict[str, Any],
     now: dt.datetime,
-) -> list[dict[str, Any]]:
-    maximum_age = max(
-        1,
-        int(config.get("maximumOddsAgeMinutes") or 30),
+) -> int:
+    """Use stricter freshness near kickoff and a wider safe window earlier."""
+
+    configured_maximum = max(
+        30,
+        int(config.get("maximumOddsAgeMinutes") or 180),
     )
+    kickoff = _parse_optional_utc(event.get("commence_time"))
+
+    if kickoff is None:
+        return configured_maximum
+
+    hours_to_kickoff = max(
+        0.0,
+        (kickoff - now).total_seconds() / 3600,
+    )
+
+    if hours_to_kickoff <= 2:
+        return min(configured_maximum, 30)
+
+    if hours_to_kickoff <= 6:
+        return min(configured_maximum, 60)
+
+    return configured_maximum
+
+
+def v9_market_rows_for_event(
+    event: dict[str, Any],
+    market_key: str,
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> list[dict[str, Any]]:
     require_timestamp = bool(config.get("requireOddsTimestamp", True))
+    allowed_age = v9_maximum_quote_age_minutes(
+        event,
+        config,
+        now,
+    )
     rows: list[dict[str, Any]] = []
     home = str(event.get("home_team") or "")
     away = str(event.get("away_team") or "")
@@ -5763,70 +5795,124 @@ def v9_market_rows_for_event(
     for bookmaker in event.get("bookmakers", []):
         if not isinstance(bookmaker, dict):
             continue
+
         market = next(
             (
-                item for item in bookmaker.get("markets", [])
+                item
+                for item in bookmaker.get("markets", [])
                 if isinstance(item, dict)
-                and str(item.get("key") or "") == "h2h"
+                and str(item.get("key") or "") == market_key
             ),
             None,
         )
+
         if market is None:
             continue
-        update_value = market.get("last_update") or bookmaker.get("last_update")
+
+        update_value = (
+            market.get("last_update")
+            or bookmaker.get("last_update")
+        )
         update_time = _parse_optional_utc(update_value)
+
         if update_time is None and require_timestamp:
             continue
+
         age_minutes = (
-            max(0.0, (now - update_time).total_seconds() / 60)
+            max(
+                0.0,
+                (now - update_time).total_seconds() / 60,
+            )
             if update_time is not None
             else None
         )
-        if age_minutes is not None and age_minutes > maximum_age:
+
+        if (
+            age_minutes is not None
+            and age_minutes > allowed_age
+        ):
             continue
 
         prices: dict[str, float] = {}
+
         for outcome in market.get("outcomes", []):
             if not isinstance(outcome, dict):
                 continue
+
             name = str(outcome.get("name") or "")
+
             try:
                 price = float(outcome.get("price"))
             except (TypeError, ValueError):
                 continue
+
             if price <= 1.01:
                 continue
-            normalized = _normalize_match_name(name)
-            if normalized in {"draw", "tie", "x"}:
-                prices["DRAW"] = price
-            elif _token_similarity(name, home) >= 0.72:
-                prices["HOME_WIN"] = price
-            elif _token_similarity(name, away) >= 0.72:
-                prices["AWAY_WIN"] = price
 
-        if set(prices) != {"HOME_WIN", "DRAW", "AWAY_WIN"}:
+            normalized = _normalize_match_name(name)
+
+            if market_key == "h2h":
+                if normalized in {"draw", "tie", "x"}:
+                    prices["DRAW"] = price
+                elif _token_similarity(name, home) >= 0.72:
+                    prices["HOME_WIN"] = price
+                elif _token_similarity(name, away) >= 0.72:
+                    prices["AWAY_WIN"] = price
+
+            elif market_key == "totals":
+                try:
+                    point = float(outcome.get("point"))
+                except (TypeError, ValueError):
+                    continue
+
+                if abs(point - 2.5) > 0.001:
+                    continue
+
+                if normalized.startswith("over"):
+                    prices["OVER_2_5"] = price
+                elif normalized.startswith("under"):
+                    prices["UNDER_2_5"] = price
+
+        expected_markets = (
+            {"HOME_WIN", "DRAW", "AWAY_WIN"}
+            if market_key == "h2h"
+            else {"OVER_2_5", "UNDER_2_5"}
+        )
+
+        if set(prices) != expected_markets:
             continue
-        raw_implied = {key: 1.0 / value for key, value in prices.items()}
+
+        raw_implied = {
+            key: 1.0 / value
+            for key, value in prices.items()
+        }
         overround = sum(raw_implied.values())
+
         if overround <= 0:
             continue
+
         normalized_probabilities = {
             key: value / overround
             for key, value in raw_implied.items()
         }
+
         rows.append(
             {
                 "bookmakerKey": str(bookmaker.get("key") or ""),
-                "bookmaker": str(bookmaker.get("title") or "Не указан"),
+                "bookmaker": str(
+                    bookmaker.get("title") or "Не указан"
+                ),
                 "lastUpdate": str(update_value or ""),
                 "ageMinutes": age_minutes,
+                "allowedAgeMinutes": allowed_age,
+                "marketKey": market_key,
                 "prices": prices,
                 "probabilities": normalized_probabilities,
                 "overround": overround,
             }
         )
-    return rows
 
+    return rows
 
 def v9_build_global_market_consensus_pool(
     odds_events: list[dict[str, Any]],
@@ -5836,24 +5922,66 @@ def v9_build_global_market_consensus_pool(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     minimum_books = max(
         2,
-        int(config.get("minimumConsensusBookmakers") or 3),
+        int(config.get("minimumConsensusBookmakers") or 2),
+    )
+    preferred_books = max(
+        minimum_books,
+        int(config.get("preferredConsensusBookmakers") or 3),
     )
     maximum_dispersion = max(
         0.01,
-        float(config.get("maximumConsensusDispersion") or 0.10),
+        float(config.get("maximumConsensusDispersion") or 0.12),
     )
     haircut = max(
         0.0,
-        float(config.get("consensusProbabilityHaircut") or 0.01),
+        float(config.get("consensusProbabilityHaircut") or 0.005),
     )
     minimum_probability = max(
         0.0,
-        float(config.get("minimumPublishedProbability") or 0.50),
+        float(config.get("minimumPublishedProbability") or 0.47),
     )
-    minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
-    maximum_odds = float(config.get("maximumBookmakerOdds") or 3.20)
-    minimum_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
-    preferred_odds = float(config.get("preferredBookmakerOdds") or 1.60)
+    preferred_probability = max(
+        minimum_probability,
+        float(config.get("preferredPublishedProbability") or 0.52),
+    )
+    minimum_odds = float(
+        config.get("minimumBookmakerOdds") or 1.45
+    )
+    maximum_odds = float(
+        config.get("maximumBookmakerOdds") or 3.20
+    )
+    minimum_ev = float(
+        config.get("fallbackMinimumExpectedValue") or 0.0
+    )
+    preferred_odds = float(
+        config.get("preferredBookmakerOdds") or 1.60
+    )
+
+    requested_markets = {
+        str(value)
+        for value in (
+            config.get("oddsMarkets")
+            or ["h2h", "totals"]
+        )
+    }
+
+    market_groups: list[tuple[str, tuple[str, ...]]] = []
+
+    if "h2h" in requested_markets:
+        market_groups.append(
+            (
+                "h2h",
+                ("HOME_WIN", "AWAY_WIN", "DRAW"),
+            )
+        )
+
+    if "totals" in requested_markets:
+        market_groups.append(
+            (
+                "totals",
+                ("OVER_2_5", "UNDER_2_5"),
+            )
+        )
 
     pool: list[dict[str, Any]] = []
     rejected = {
@@ -5863,150 +5991,323 @@ def v9_build_global_market_consensus_pool(
         "odds": 0,
         "expectedValue": 0,
     }
+    rows_by_market = {
+        "h2h": 0,
+        "totals": 0,
+    }
 
     for event in odds_events:
         event_id = str(event.get("id") or "")
         candidate = candidates_by_event.get(event_id)
+
         if candidate is None:
             continue
-        rows = v9_market_rows_for_event(event, config, now)
-        if len(rows) < minimum_books:
-            rejected["insufficientBookmakers"] += 1
-            continue
 
-        for market in ("HOME_WIN", "AWAY_WIN", "DRAW"):
-            selected_row = max(
-                rows,
-                key=lambda row: float(row["prices"][market]),
+        for market_key, markets in market_groups:
+            rows = v9_market_rows_for_event(
+                event,
+                market_key,
+                config,
+                now,
             )
-            consensus_rows = [
-                row for row in rows
-                if row["bookmakerKey"] != selected_row["bookmakerKey"]
-            ]
-            if len(consensus_rows) < 2:
-                consensus_rows = rows
-            probabilities = [
-                float(row["probabilities"][market])
-                for row in consensus_rows
-            ]
-            consensus_probability = float(statistics.median(probabilities))
-            dispersion = (
-                float(statistics.pstdev(probabilities))
-                if len(probabilities) > 1
-                else 0.0
+            rows_by_market[market_key] = (
+                rows_by_market.get(market_key, 0)
+                + len(rows)
             )
-            if dispersion > maximum_dispersion:
-                rejected["dispersion"] += 1
-                continue
-            probability = clamp_number(
-                consensus_probability - haircut,
-                0.01,
-                0.99,
-            )
-            if probability < minimum_probability:
-                rejected["probability"] += 1
-                continue
-            bookmaker_odds = float(selected_row["prices"][market])
-            if not minimum_odds <= bookmaker_odds <= maximum_odds:
-                rejected["odds"] += 1
-                continue
-            expected_value = probability * bookmaker_odds - 1
-            if expected_value < minimum_ev:
-                rejected["expectedValue"] += 1
+
+            if len(rows) < minimum_books:
+                rejected["insufficientBookmakers"] += 1
                 continue
 
-            quote_prices = [float(row["prices"][market]) for row in rows]
-            confidence = int(
-                clamp_number(
-                    48
-                    + min(20, len(rows) * 3)
-                    + max(0.0, (maximum_dispersion - dispersion) * 120)
-                    + max(0.0, (probability - 0.50) * 40),
-                    40,
-                    86,
+            for market in markets:
+                selected_row = max(
+                    rows,
+                    key=lambda row: float(
+                        row["prices"][market]
+                    ),
                 )
-            )
-            data_quality = clamp_number(
-                42 + len(rows) * 6 - dispersion * 100,
-                35,
-                92,
-            )
-            odds_bonus = 4.0 if bookmaker_odds >= preferred_odds else 0.0
-            ranking_score = (
-                probability * 45
-                + confidence * 0.32
-                + data_quality * 0.18
-                + max(0.0, expected_value) * 100 * 0.25
-                + odds_bonus
-                - dispersion * 100
-            )
-            risk = (
-                "LOW"
-                if probability >= 0.57 and len(rows) >= 5 and dispersion <= 0.045
-                else "MEDIUM"
-            )
-            pool.append(
-                {
-                    "matchId": int(candidate["matchId"]),
-                    "market": market,
-                    "probability": round(probability, 6),
-                    "fairOdds": round(1 / probability, 4),
-                    "confidence": confidence,
-                    "risk": risk,
-                    "reason": (
-                        f"Глобальный консенсус {len(rows)} букмекеров: "
-                        f"безмаржинальная вероятность {probability * 100:.1f}%, "
-                        f"разброс {dispersion * 100:.1f} п.п."
-                    ),
-                    "analysisMode": "GLOBAL_MARKET_CONSENSUS",
-                    "analysisTier": "MARKET_CONSENSUS",
-                    "selectionTier": "GLOBAL_DISCOVERY",
-                    "rankingScore": round(ranking_score, 4),
-                    "dataQuality": round(data_quality, 2),
-                    "bookmakerOdds": round(bookmaker_odds, 4),
-                    "bookmaker": selected_row["bookmaker"],
-                    "bookmakerKey": selected_row["bookmakerKey"],
-                    "oddsCapturedAt": now.isoformat(),
-                    "oddsLastUpdate": selected_row["lastUpdate"],
-                    "oddsAgeMinutes": selected_row["ageMinutes"],
-                    "oddsEventId": event_id,
-                    "oddsSportKey": str(event.get("sport_key") or ""),
-                    "oddsSportTitle": str(event.get("sport_title") or ""),
-                    "bookmakerMarket": "h2h",
-                    "bookmakerPoint": None,
-                    "oddsQuoteCount": len(rows),
-                    "oddsMinimum": round(min(quote_prices), 4),
-                    "oddsMedian": round(float(statistics.median(quote_prices)), 4),
-                    "oddsMaximum": round(max(quote_prices), 4),
-                    "oddsSelectionMode": "BEST_AVAILABLE_VS_CONSENSUS",
-                    "oddsMatchScore": 1.0,
-                    "oddsSecondBestMatchScore": 0.0,
-                    "oddsMatchScoreGap": 1.0,
-                    "oddsKickoffDifferenceMinutes": 0.0,
-                    "expectedValue": round(expected_value, 6),
-                    "expectedValuePercent": round(expected_value * 100, 2),
-                    "marketOddsAvailable": True,
-                    "expectedValueAvailable": True,
-                    "coefficientType": "BOOKMAKER_MARKET",
-                    "country": str(candidate.get("country") or ""),
-                    "league": str(
-                        (candidate.get("competition") or {}).get("name") or ""
-                    ),
-                    "sourceProvider": str(
-                        candidate.get("sourceProvider") or "THE_ODDS_API"
-                    ),
-                    "consensusBookmakers": len(rows),
-                    "consensusDispersion": round(dispersion, 6),
-                }
-            )
+                consensus_rows = [
+                    row
+                    for row in rows
+                    if row["bookmakerKey"]
+                    != selected_row["bookmakerKey"]
+                ]
+
+                if len(consensus_rows) < minimum_books:
+                    consensus_rows = rows
+
+                probabilities = [
+                    float(row["probabilities"][market])
+                    for row in consensus_rows
+                ]
+                consensus_probability = float(
+                    statistics.median(probabilities)
+                )
+                dispersion = (
+                    float(statistics.pstdev(probabilities))
+                    if len(probabilities) > 1
+                    else 0.0
+                )
+
+                if dispersion > maximum_dispersion:
+                    rejected["dispersion"] += 1
+                    continue
+
+                probability = clamp_number(
+                    consensus_probability - haircut,
+                    0.01,
+                    0.99,
+                )
+
+                if probability < minimum_probability:
+                    rejected["probability"] += 1
+                    continue
+
+                bookmaker_odds = float(
+                    selected_row["prices"][market]
+                )
+
+                if not minimum_odds <= bookmaker_odds <= maximum_odds:
+                    rejected["odds"] += 1
+                    continue
+
+                expected_value = (
+                    probability * bookmaker_odds - 1
+                )
+
+                if expected_value < minimum_ev:
+                    rejected["expectedValue"] += 1
+                    continue
+
+                quote_prices = [
+                    float(row["prices"][market])
+                    for row in rows
+                ]
+                bookmaker_bonus = min(
+                    12.0,
+                    len(rows) * 2.5,
+                )
+                preferred_book_bonus = (
+                    4.0
+                    if len(rows) >= preferred_books
+                    else 0.0
+                )
+                probability_bonus = (
+                    5.0
+                    if probability >= preferred_probability
+                    else 0.0
+                )
+                odds_bonus = (
+                    4.0
+                    if bookmaker_odds >= preferred_odds
+                    else 0.0
+                )
+
+                confidence = int(
+                    clamp_number(
+                        42
+                        + bookmaker_bonus
+                        + preferred_book_bonus
+                        + max(
+                            0.0,
+                            (
+                                maximum_dispersion
+                                - dispersion
+                            )
+                            * 120,
+                        )
+                        + max(
+                            0.0,
+                            (
+                                probability
+                                - minimum_probability
+                            )
+                            * 45,
+                        ),
+                        38,
+                        88,
+                    )
+                )
+                data_quality = clamp_number(
+                    38
+                    + len(rows) * 7
+                    - dispersion * 100,
+                    35,
+                    94,
+                )
+                ranking_score = (
+                    probability * 48
+                    + confidence * 0.30
+                    + data_quality * 0.18
+                    + max(
+                        0.0,
+                        expected_value,
+                    )
+                    * 100
+                    * 0.22
+                    + probability_bonus
+                    + preferred_book_bonus
+                    + odds_bonus
+                    - dispersion * 100
+                )
+                risk = (
+                    "LOW"
+                    if (
+                        probability >= preferred_probability
+                        and len(rows) >= preferred_books
+                        and dispersion <= 0.05
+                    )
+                    else "MEDIUM"
+                )
+                point = (
+                    2.5
+                    if market_key == "totals"
+                    else None
+                )
+
+                pool.append(
+                    {
+                        "matchId": int(candidate["matchId"]),
+                        "market": market,
+                        "probability": round(
+                            probability,
+                            6,
+                        ),
+                        "fairOdds": round(
+                            1 / probability,
+                            4,
+                        ),
+                        "confidence": confidence,
+                        "risk": risk,
+                        "reason": (
+                            f"Глобальный консенсус "
+                            f"{len(rows)} букмекеров по рынку "
+                            f"{market_key}: безмаржинальная "
+                            f"вероятность "
+                            f"{probability * 100:.1f}%, "
+                            f"разброс "
+                            f"{dispersion * 100:.1f} п.п."
+                        ),
+                        "analysisMode": (
+                            "GLOBAL_MARKET_CONSENSUS"
+                        ),
+                        "analysisTier": (
+                            "MARKET_CONSENSUS"
+                        ),
+                        "selectionTier": (
+                            "GLOBAL_DISCOVERY"
+                        ),
+                        "rankingScore": round(
+                            ranking_score,
+                            4,
+                        ),
+                        "dataQuality": round(
+                            data_quality,
+                            2,
+                        ),
+                        "bookmakerOdds": round(
+                            bookmaker_odds,
+                            4,
+                        ),
+                        "bookmaker": selected_row[
+                            "bookmaker"
+                        ],
+                        "bookmakerKey": selected_row[
+                            "bookmakerKey"
+                        ],
+                        "oddsCapturedAt": (
+                            now.isoformat()
+                        ),
+                        "oddsLastUpdate": selected_row[
+                            "lastUpdate"
+                        ],
+                        "oddsAgeMinutes": selected_row[
+                            "ageMinutes"
+                        ],
+                        "oddsMaximumAgeMinutes": (
+                            selected_row[
+                                "allowedAgeMinutes"
+                            ]
+                        ),
+                        "oddsEventId": event_id,
+                        "oddsSportKey": str(
+                            event.get("sport_key") or ""
+                        ),
+                        "oddsSportTitle": str(
+                            event.get("sport_title") or ""
+                        ),
+                        "bookmakerMarket": market_key,
+                        "bookmakerPoint": point,
+                        "oddsQuoteCount": len(rows),
+                        "oddsMinimum": round(
+                            min(quote_prices),
+                            4,
+                        ),
+                        "oddsMedian": round(
+                            float(
+                                statistics.median(
+                                    quote_prices
+                                )
+                            ),
+                            4,
+                        ),
+                        "oddsMaximum": round(
+                            max(quote_prices),
+                            4,
+                        ),
+                        "oddsSelectionMode": (
+                            "BEST_AVAILABLE_VS_CONSENSUS"
+                        ),
+                        "oddsMatchScore": 1.0,
+                        "oddsSecondBestMatchScore": 0.0,
+                        "oddsMatchScoreGap": 1.0,
+                        "oddsKickoffDifferenceMinutes": 0.0,
+                        "expectedValue": round(
+                            expected_value,
+                            6,
+                        ),
+                        "expectedValuePercent": round(
+                            expected_value * 100,
+                            2,
+                        ),
+                        "marketOddsAvailable": True,
+                        "expectedValueAvailable": True,
+                        "coefficientType": (
+                            "BOOKMAKER_MARKET"
+                        ),
+                        "country": str(
+                            candidate.get("country") or ""
+                        ),
+                        "league": str(
+                            (
+                                candidate.get(
+                                    "competition"
+                                )
+                                or {}
+                            ).get("name")
+                            or ""
+                        ),
+                        "sourceProvider": str(
+                            candidate.get(
+                                "sourceProvider"
+                            )
+                            or "THE_ODDS_API"
+                        ),
+                        "consensusBookmakers": len(rows),
+                        "consensusDispersion": round(
+                            dispersion,
+                            6,
+                        ),
+                    }
+                )
 
     diagnostics = {
         "eventsEvaluated": len(odds_events),
         "consensusOptions": len(pool),
+        "rowsByMarket": rows_by_market,
         "rejected": rejected,
     }
     return pool, diagnostics
-
 
 def v9_merge_prediction_pools(
     model_pool: list[dict[str, Any]],
@@ -6326,7 +6627,7 @@ def v9_resolve_global_history(
 
 
 def v9_main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v9 Global Discovery")
+    log("Запуск AI Football Lab Data Pipeline v9 R4 Adaptive Global Markets")
     config = load_json(CONFIG_PATH)
     old_state = load_json(STATE_PATH)
     _load_optional_dotenv(ROOT / ".env")
@@ -6421,7 +6722,13 @@ def v9_main() -> int:
     pool_config = copy.deepcopy(config)
     pool_config.update(
         {
-            "allowedMarkets": ["HOME_WIN", "DRAW", "AWAY_WIN"],
+            "allowedMarkets": [
+                "HOME_WIN",
+                "DRAW",
+                "AWAY_WIN",
+                "OVER_2_5",
+                "UNDER_2_5",
+            ],
             "maximumPredictions": max(18, len(football_candidates) * 3),
             "minimumConfidence": 0,
             "winMarketMinimumConfidence": 0,
@@ -6558,7 +6865,8 @@ def v9_main() -> int:
             f"oddsLeagues={len(sport_keys)}; oddsEvents={len(odds_events)}; "
             f"modelOptions={len(model_bookmaker_pool)}; "
             f"consensusOptions={len(consensus_pool)}; "
-            f"eligibleOptions={len(combined_pool)}"
+            f"eligibleOptions={len(combined_pool)}; "
+            f"consensusDiagnostics={consensus_diagnostics}"
         )
 
     published_countries = sorted({
@@ -6581,10 +6889,19 @@ def v9_main() -> int:
             f"expected>={minimum_countries}; actual={len(published_countries)}; "
             f"countries={published_countries}"
         )
-    if len(published_leagues) < min(daily_target, 4):
+    minimum_leagues = min(
+        daily_target,
+        max(
+            2,
+            int(config.get("minimumPublishedLeagues") or 3),
+        ),
+    )
+    if len(published_leagues) < minimum_leagues:
         raise RuntimeError(
             "GLOBAL_LEAGUE_DIVERSITY_NOT_MET: "
-            f"actual={len(published_leagues)}; leagues={published_leagues}"
+            f"expected>={minimum_leagues}; "
+            f"actual={len(published_leagues)}; "
+            f"leagues={published_leagues}"
         )
 
     accepted_ids = {str(item.get("id") or "") for item in public_predictions}
@@ -6766,18 +7083,30 @@ def validate_repository_files() -> int:
         raise RuntimeError("maximumPredictions должен быть равен 4")
     if float(config.get("selectionWindowHours") or 0) != 24:
         raise RuntimeError("selectionWindowHours должен быть равен 24")
-    if list(config.get("oddsMarkets") or []) != ["h2h"]:
-        raise RuntimeError("V9 должен использовать h2h как основной рынок")
-    if int(config.get("maximumOddsSportRequests") or 0) > 6:
-        raise RuntimeError("maximumOddsSportRequests должен быть не больше 6")
+    if list(config.get("oddsMarkets") or []) != ["h2h", "totals"]:
+        raise RuntimeError(
+            "V9 R4 должен использовать рынки h2h и totals"
+        )
+    if int(config.get("maximumOddsSportRequests") or 0) > 8:
+        raise RuntimeError(
+            "maximumOddsSportRequests должен быть не больше 8"
+        )
     if int(config.get("maximumSettlementSportRequests") or 0) > 4:
         raise RuntimeError("maximumSettlementSportRequests должен быть не больше 4")
     if float(config.get("minimumBookmakerOdds") or 0) < 1.45:
         raise RuntimeError("minimumBookmakerOdds должен быть не ниже 1.45")
-    if float(config.get("minimumPublishedProbability") or 0) < 0.50:
-        raise RuntimeError("minimumPublishedProbability должен быть не ниже 0.50")
-    if int(config.get("minimumConsensusBookmakers") or 0) < 3:
-        raise RuntimeError("minimumConsensusBookmakers должен быть не меньше 3")
+    if float(config.get("minimumPublishedProbability") or 0) < 0.47:
+        raise RuntimeError(
+            "minimumPublishedProbability должен быть не ниже 0.47"
+        )
+    if int(config.get("minimumConsensusBookmakers") or 0) < 2:
+        raise RuntimeError(
+            "minimumConsensusBookmakers должен быть не меньше 2"
+        )
+    if int(config.get("minimumPublishedLeagues") or 0) < 3:
+        raise RuntimeError(
+            "minimumPublishedLeagues должен быть не меньше 3"
+        )
     if float(config.get("stakePerPredictionPercent") or 0) != 20:
         raise RuntimeError("stakePerPredictionPercent должен быть равен 20")
     if not isinstance(state.get("predictions", []), list):
@@ -6820,17 +7149,21 @@ def run_self_test() -> int:
     config = {
         "minimumLeadHours": 1,
         "selectionWindowHours": 24,
-        "maximumOddsSportRequests": 6,
-        "minimumConsensusBookmakers": 3,
-        "maximumConsensusDispersion": 0.10,
+        "maximumOddsSportRequests": 8,
+        "minimumConsensusBookmakers": 2,
+        "preferredConsensusBookmakers": 3,
+        "maximumConsensusDispersion": 0.12,
         "consensusProbabilityHaircut": 0.005,
-        "minimumPublishedProbability": 0.50,
+        "minimumPublishedProbability": 0.47,
+        "preferredPublishedProbability": 0.52,
         "minimumBookmakerOdds": 1.45,
         "preferredBookmakerOdds": 1.60,
         "maximumBookmakerOdds": 3.20,
         "fallbackMinimumExpectedValue": 0.0,
-        "maximumOddsAgeMinutes": 30,
+        "maximumOddsAgeMinutes": 180,
         "requireOddsTimestamp": True,
+        "oddsMarkets": ["h2h", "totals"],
+        "minimumPublishedLeagues": 3,
         "bestAvailableMinimumConfidence": 40,
         "stakePerPredictionPercent": 20,
         "timezone": "Europe/Moscow",
@@ -6846,6 +7179,8 @@ def run_self_test() -> int:
         ("soccer_italy_test", "Italy Test League", "Италия"),
         ("soccer_brazil_test", "Brazil Test League", "Бразилия"),
         ("soccer_chile_test", "Chile Test League", "Чили"),
+        ("soccer_poland_test", "Poland Test League", "Польша"),
+        ("soccer_argentina_test", "Argentina Test League", "Аргентина"),
     ]
     for index, (sport_key, title, country) in enumerate(countries, start=1):
         kickoff = now + dt.timedelta(hours=3 + index)
@@ -6877,7 +7212,25 @@ def run_self_test() -> int:
                                 {"name": "Draw", "price": 4.20},
                                 {"name": away, "price": 5.20},
                             ],
-                        }
+                        },
+                        {
+                            "key": "totals",
+                            "last_update": now.isoformat(),
+                            "outcomes": [
+                                {
+                                    "name": "Over",
+                                    "price": 1.88
+                                    + bookmaker_index * 0.025,
+                                    "point": 2.5,
+                                },
+                                {
+                                    "name": "Under",
+                                    "price": 2.02
+                                    + bookmaker_index * 0.020,
+                                    "point": 2.5,
+                                },
+                            ],
+                        },
                     ],
                 }
             )
@@ -6895,14 +7248,14 @@ def run_self_test() -> int:
         )
 
     selected_sports = v9_select_global_sport_keys(summaries, [], config)
-    if len(selected_sports) != 6:
+    if len(selected_sports) != 8:
         raise RuntimeError("SELF_TEST: глобальный выбор лиг неполон")
     candidates, by_event, matched = v9_build_event_candidates(
         events,
         [],
         config,
     )
-    if matched != 0 or len(candidates) != 6:
+    if matched != 0 or len(candidates) != 8:
         raise RuntimeError("SELF_TEST: неверно построены глобальные кандидаты")
     pool, diagnostics = v9_build_global_market_consensus_pool(
         events,
@@ -6946,12 +7299,28 @@ def run_self_test() -> int:
 
     first = history[0]
     first["sourceProvider"] = "THE_ODDS_API"
+    settlement_scores = {
+        "HOME_WIN": (2, 0),
+        "AWAY_WIN": (0, 2),
+        "DRAW": (1, 1),
+        "OVER_2_5": (2, 1),
+        "UNDER_2_5": (1, 0),
+    }
+    home_score, away_score = settlement_scores[
+        str(first.get("market") or "")
+    ]
     score_event = {
         "id": first["oddsEventId"],
         "completed": True,
         "scores": [
-            {"name": first["home"], "score": "2"},
-            {"name": first["away"], "score": "0"},
+            {
+                "name": first["home"],
+                "score": str(home_score),
+            },
+            {
+                "name": first["away"],
+                "score": str(away_score),
+            },
         ],
     }
     bank_state = {
@@ -6967,6 +7336,7 @@ def run_self_test() -> int:
     print(
         "SELF_TEST_GREEN_V9 "
         f"SPORTS={len(selected_sports)} EVENTS={len(events)} "
+        f"MARKETS=h2h,totals "
         f"OPTIONS={len(pool)} PRED={len(selected)} COUNTRIES=4 "
         f"BANK={bank_state['bank']['current']:.2f}"
     )

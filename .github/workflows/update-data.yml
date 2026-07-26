@@ -1,4 +1,4 @@
-name: Ежедневное глобальное обновление футбольной аналитики
+name: Ежедневное глобальное обновление футбольной аналитики V9 R4
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    name: Четыре лучших прогноза из глобального пула лиг
+    name: Четыре лучших прогноза из глобального пула рынков
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -72,7 +72,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --update
 
-      - name: Проверка результата V9 Global Discovery
+      - name: Проверка результата V9 R4 Adaptive Global Markets
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
@@ -110,8 +110,13 @@ jobs:
               raise SystemExit("Обнаружены дубли матчей")
           leagues = {str(item.get("league") or "") for item in predictions}
           countries = {str(item.get("country") or "") for item in predictions}
-          if len(leagues) != 4:
-              raise SystemExit(f"Подборка не охватывает четыре лиги: {sorted(leagues)}")
+          minimum_leagues = int(
+              config.get("minimumPublishedLeagues") or 3
+          )
+          if len(leagues) < minimum_leagues:
+              raise SystemExit(
+                  f"Недостаточно разных лиг: {sorted(leagues)}"
+              )
           minimum_countries = int(config.get("minimumPublishedCountries") or 3)
           if len(countries) < minimum_countries:
               raise SystemExit(f"Недостаточно стран: {sorted(countries)}")
@@ -123,8 +128,16 @@ jobs:
               odds = float(item.get("bookmakerOdds") or 0)
               probability = float(item.get("probability") or 0)
               ev = float(item.get("expectedValue") or -1)
-              if market not in {"HOME_WIN", "DRAW", "AWAY_WIN"}:
-                  raise SystemExit(f"Неподдерживаемый рынок: {market}")
+              if market not in {
+                  "HOME_WIN",
+                  "DRAW",
+                  "AWAY_WIN",
+                  "OVER_2_5",
+                  "UNDER_2_5",
+              }:
+                  raise SystemExit(
+                      f"Неподдерживаемый рынок: {market}"
+                  )
               if odds < float(config.get("minimumBookmakerOdds") or 1.45):
                   raise SystemExit(f"Слишком низкий коэффициент: {odds}")
               if probability < float(config.get("minimumPublishedProbability") or 0.50):
@@ -140,8 +153,21 @@ jobs:
               if float(item.get("stake") or 0) <= 0:
                   raise SystemExit("У прогноза отсутствует виртуальная ставка")
               age = item.get("oddsAgeMinutes")
-              if age is None or float(age) > 30:
-                  raise SystemExit(f"Коэффициент устарел: {age}")
+              allowed_age = item.get(
+                  "oddsMaximumAgeMinutes"
+              )
+              if allowed_age is None:
+                  allowed_age = config.get(
+                      "maximumOddsAgeMinutes"
+                  ) or 180
+              if (
+                  age is None
+                  or float(age) > float(allowed_age)
+              ):
+                  raise SystemExit(
+                      "Коэффициент устарел: "
+                      f"age={age}; allowed={allowed_age}"
+                  )
               if not str(item.get("oddsEventId") or ""):
                   raise SystemExit("Не сохранён oddsEventId")
               if not str(item.get("oddsSportKey") or ""):
@@ -173,6 +199,6 @@ jobs:
           git config user.name "AI Football Lab Bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/state.json data/last-update-report.json
-          git commit -m "V9 update global football predictions"
+          git commit -m "V9 R4 update adaptive global football predictions"
           git pull --rebase origin main
           git push origin main

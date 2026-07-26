@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "timezone": "Europe/Moscow",
   "lookbackDays": 60,
   "lookaheadDays": 1,
@@ -25,8 +25,8 @@
   "oddsBookmakers": [],
   "preferredBookmakers": [],
   "oddsSelectionMode": "BEST_AVAILABLE",
-  "maximumOddsSportRequests": 6,
-  "maximumOddsAgeMinutes": 30,
+  "maximumOddsSportRequests": 8,
+  "maximumOddsAgeMinutes": 180,
   "oddsMatchKickoffToleranceMinutes": 60,
   "minimumOddsMatchScore": 0.78,
   "selectionWindowHours": 24,
@@ -38,7 +38,9 @@
   "allowedMarkets": [
     "HOME_WIN",
     "DRAW",
-    "AWAY_WIN"
+    "AWAY_WIN",
+    "OVER_2_5",
+    "UNDER_2_5"
   ],
   "excludedCompetitionWords": [
     "friendly",
@@ -48,8 +50,8 @@
   "competitionScope": "ALL_ACCESSIBLE",
   "candidateDiversityMode": "GLOBAL_COUNTRY_ROUND_ROBIN",
   "predictionDiversityMode": "FOUR_LEAGUES_MINIMUM_THREE_COUNTRIES",
-  "publicationPolicy": "EXACTLY_FOUR_GLOBAL_DIVERSE_BOOKMAKER_PREDICTIONS_24H",
-  "oddsPolicy": "GLOBAL_H2H_DISCOVERY_MIN_1_45_CONSERVATIVE_CONSENSUS",
+  "publicationPolicy": "EXACTLY_FOUR_GLOBAL_DIVERSE_REAL_ODDS_PREDICTIONS_24H",
+  "oddsPolicy": "GLOBAL_H2H_TOTALS_MIN_1_45_POSITIVE_EV_ADAPTIVE_FRESHNESS",
   "virtualBankPolicy": "EACH_PREDICTION_20_PERCENT_OF_CURRENT_BANK_FIXED_BOOKMAKER_ODDS",
   "minimumTeamNameMatchScore": 0.6,
   "minimumOddsMatchScoreGap": 0.08,
@@ -58,17 +60,21 @@
   "stakePerPredictionPercent": 20,
   "maximumDailyExposurePercent": 80,
   "oddsMarkets": [
-    "h2h"
+    "h2h",
+    "totals"
   ],
   "globalDiscoveryEnabled": true,
   "globalDiscoverySource": "THE_ODDS_API_EVENTS",
   "maximumGlobalDiscoverySports": 100,
   "globalDiscoveryWorkers": 8,
   "maximumSettlementSportRequests": 4,
-  "minimumConsensusBookmakers": 3,
-  "maximumConsensusDispersion": 0.1,
-  "consensusProbabilityHaircut": 0.01,
-  "minimumPublishedProbability": 0.5,
+  "minimumConsensusBookmakers": 2,
+  "maximumConsensusDispersion": 0.12,
+  "consensusProbabilityHaircut": 0.005,
+  "minimumPublishedProbability": 0.47,
   "minimumPublishedCountries": 3,
-  "quotaPolicy": "FREE_EVENTS_DISCOVERY_SIX_H2H_LEAGUES_FOUR_SCORE_LEAGUES"
+  "quotaPolicy": "FREE_EVENTS_DISCOVERY_EIGHT_LEAGUES_H2H_TOTALS_ONE_REGION",
+  "preferredConsensusBookmakers": 3,
+  "preferredPublishedProbability": 0.52,
+  "minimumPublishedLeagues": 3
 }
