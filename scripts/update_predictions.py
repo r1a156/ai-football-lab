@@ -253,11 +253,22 @@ def fetch_matches(
     date_to: dt.date,
     competitions: list[str],
 ) -> list[dict[str, Any]]:
-    parameters = {
+    parameters: dict[str, str] = {
         "dateFrom": iso_date(date_from),
         "dateTo": iso_date(date_to),
-        "competitions": ",".join(competitions),
     }
+
+    normalized_competitions = sorted({
+        str(item).strip()
+        for item in competitions
+        if str(item).strip()
+    })
+
+    # Empty list means: request every competition accessible to the
+    # authenticated football-data.org account. No fixed country list is
+    # imposed by the application.
+    if normalized_competitions:
+        parameters["competitions"] = ",".join(normalized_competitions)
 
     url = (
         f"{FOOTBALL_API_BASE}/matches?"
@@ -635,6 +646,84 @@ def candidate_quality_score(
 
 
 
+def select_diverse_candidates(
+    candidates: list[dict[str, Any]],
+    maximum_candidates: int,
+) -> list[dict[str, Any]]:
+    """Round-robin candidate pool across available competitions.
+
+    The strongest candidate of every available competition is considered
+    before the second candidate of any competition. If only one competition
+    is available, its candidates are still returned normally.
+    """
+
+    maximum_candidates = max(0, int(maximum_candidates))
+
+    if maximum_candidates == 0 or not candidates:
+        return []
+
+    ranked = sorted(
+        candidates,
+        key=lambda item: (
+            -float(item.get("dataQuality") or 0),
+            str(item.get("utcDate") or ""),
+            int(item.get("matchId") or 0),
+        ),
+    )
+
+    buckets: dict[str, list[dict[str, Any]]] = {}
+
+    for candidate in ranked:
+        competition = candidate.get("competition") or {}
+        country = str(candidate.get("country") or "UNKNOWN")
+        competition_code = str(competition.get("code") or "").strip()
+        competition_name = str(competition.get("name") or "").strip()
+        bucket_key = "|".join(
+            value
+            for value in (
+                country,
+                competition_code,
+                competition_name,
+            )
+            if value
+        ) or "UNKNOWN"
+        buckets.setdefault(bucket_key, []).append(candidate)
+
+    bucket_keys = sorted(
+        buckets,
+        key=lambda key: (
+            -float(buckets[key][0].get("dataQuality") or 0),
+            str(buckets[key][0].get("utcDate") or ""),
+            key,
+        ),
+    )
+
+    selected: list[dict[str, Any]] = []
+    round_index = 0
+
+    while len(selected) < maximum_candidates:
+        progress = False
+
+        for key in bucket_keys:
+            bucket = buckets[key]
+
+            if round_index >= len(bucket):
+                continue
+
+            selected.append(bucket[round_index])
+            progress = True
+
+            if len(selected) >= maximum_candidates:
+                break
+
+        if not progress:
+            break
+
+        round_index += 1
+
+    return selected
+
+
 def build_candidates(
     scheduled_matches: list[dict[str, Any]],
     team_form: dict[int, dict[str, Any]],
@@ -743,18 +832,15 @@ def build_candidates(
 
         candidates.append(candidate)
 
-    candidates.sort(
-        key=lambda item: (
-            -float(item.get("dataQuality") or 0),
-            str(item.get("utcDate") or ""),
-        )
+    maximum_candidates = max(
+        1,
+        int(config.get("maximumCandidates") or 24),
     )
 
-    maximum_candidates = int(
-        config.get("maximumCandidates") or 12
+    return select_diverse_candidates(
+        candidates,
+        maximum_candidates,
     )
-
-    return candidates[:maximum_candidates]
 
 
 def build_analysis_prompt(
@@ -2383,6 +2469,69 @@ def extract_public_match_status(
     }
 
 
+def select_diverse_public_predictions(
+    predictions: list[dict[str, Any]],
+    maximum_predictions: int,
+) -> list[dict[str, Any]]:
+    """Preserve ranking while preventing one competition from monopolising output.
+
+    Selection is round-robin across country/competition buckets. This is a
+    diversity rule, not a fake quota: every item has already passed the same
+    quality guard. When only one bucket exists, all slots may come from it.
+    """
+
+    maximum_predictions = max(0, int(maximum_predictions))
+
+    if maximum_predictions == 0 or not predictions:
+        return []
+
+    buckets: dict[str, list[dict[str, Any]]] = {}
+
+    for prediction in predictions:
+        country = str(prediction.get("country") or "UNKNOWN")
+        league = str(
+            prediction.get("leagueOriginal")
+            or prediction.get("league")
+            or "UNKNOWN"
+        )
+        buckets.setdefault(f"{country}|{league}", []).append(prediction)
+
+    bucket_keys = sorted(
+        buckets,
+        key=lambda key: (
+            -float(buckets[key][0].get("rankingScore") or 0),
+            -int(buckets[key][0].get("confidence") or 0),
+            str(buckets[key][0].get("utcDate") or ""),
+            key,
+        ),
+    )
+
+    selected: list[dict[str, Any]] = []
+    round_index = 0
+
+    while len(selected) < maximum_predictions:
+        progress = False
+
+        for key in bucket_keys:
+            bucket = buckets[key]
+
+            if round_index >= len(bucket):
+                continue
+
+            selected.append(bucket[round_index])
+            progress = True
+
+            if len(selected) >= maximum_predictions:
+                break
+
+        if not progress:
+            break
+
+        round_index += 1
+
+    return selected
+
+
 def finalize_public_selection(
     public_predictions: list[dict[str, Any]],
     history_records: list[dict[str, Any]],
@@ -2530,7 +2679,10 @@ def finalize_public_selection(
             str(item.get("utcDate") or ""),
         )
     )
-    accepted = accepted[:maximum_predictions]
+    accepted = select_diverse_public_predictions(
+        accepted,
+        maximum_predictions,
+    )
 
     accepted_ids = {
         str(item.get("id") or "")
@@ -2938,13 +3090,29 @@ def main() -> int:
         int(config.get("lookaheadDays") or 3),
     )
     competitions = [
-        str(item)
+        str(item).strip()
         for item in config.get("competitions", [])
         if str(item).strip()
     ]
+    competition_scope = str(
+        config.get("competitionScope") or "ALL_ACCESSIBLE"
+    ).strip().upper()
 
-    if not competitions:
-        raise RuntimeError("В конфигурации отсутствуют соревнования")
+    if competition_scope == "ALL_ACCESSIBLE":
+        competitions = []
+        log(
+            "Охват соревнований: все турниры, доступные текущему "
+            "football-data.org аккаунту."
+        )
+    elif not competitions:
+        raise RuntimeError(
+            "competitionScope=CONFIGURED, но config.competitions пуст."
+        )
+    else:
+        log(
+            "Охват соревнований ограничен конфигурацией: "
+            + ", ".join(competitions)
+        )
 
     recent_matches = fetch_matches_chunked(
         football_api_key,
@@ -3000,9 +3168,34 @@ def main() -> int:
 
     log(f"Недавних матчей: {len(recent_matches)}")
     log(f"Завершённых матчей для формы: {len(finished_matches)}")
+    available_countries = sorted({
+        str((match.get("area") or {}).get("name") or "").strip()
+        for match in scheduled_matches
+        if str((match.get("area") or {}).get("name") or "").strip()
+    })
+    available_competitions = sorted({
+        str((match.get("competition") or {}).get("name") or "").strip()
+        for match in scheduled_matches
+        if str((match.get("competition") or {}).get("name") or "").strip()
+    })
+    candidate_countries = sorted({
+        str(candidate.get("country") or "").strip()
+        for candidate in candidates
+        if str(candidate.get("country") or "").strip()
+    })
+    candidate_competitions = sorted({
+        str((candidate.get("competition") or {}).get("name") or "").strip()
+        for candidate in candidates
+        if str((candidate.get("competition") or {}).get("name") or "").strip()
+    })
+
     log(f"Предстоящих матчей: {len(scheduled_matches)}")
+    log(f"Доступных стран: {len(available_countries)}")
+    log(f"Доступных соревнований: {len(available_competitions)}")
     log(f"Команд с формой: {len(team_form)}")
     log(f"Кандидатов радара: {len(candidates)}")
+    log(f"Стран в радаре: {len(candidate_countries)}")
+    log(f"Соревнований в радаре: {len(candidate_competitions)}")
     log(f"Завершено pending-прогнозов: {settled_count}")
 
     history = [
@@ -3254,6 +3447,14 @@ def main() -> int:
             "activePendingPredictions": len(active_public),
             "newPredictions": len(accepted_new_history),
             "source": "football-data.org",
+            "competitionScope": competition_scope,
+            "configuredCompetitions": competitions,
+            "availableCountries": available_countries,
+            "availableCompetitions": available_competitions,
+            "candidateCountries": candidate_countries,
+            "candidateCompetitions": candidate_competitions,
+            "candidateDiversityMode": "ROUND_ROBIN_BY_COMPETITION",
+            "predictionDiversityMode": "ROUND_ROBIN_BY_COUNTRY_AND_COMPETITION",
             "analysisProvider": analysis_provider,
             "analysisModel": model_name,
             "analysisMode": analysis_mode,
@@ -3322,6 +3523,11 @@ def main() -> int:
             "settledPredictions": settled_count,
             "analysisModel": model_name,
             "analysisStatus": analysis_status,
+            "competitionScope": competition_scope,
+            "availableCountries": available_countries,
+            "availableCompetitions": available_competitions,
+            "candidateCountries": candidate_countries,
+            "candidateCompetitions": candidate_competitions,
         },
     )
     write_json_atomic(REPORT_PATH, report)
@@ -3370,6 +3576,20 @@ def validate_repository_files() -> int:
 
     if not isinstance(config.get("competitions"), list):
         raise RuntimeError("config.competitions должен быть массивом")
+
+    competition_scope = str(
+        config.get("competitionScope") or "ALL_ACCESSIBLE"
+    ).strip().upper()
+
+    if competition_scope not in {"ALL_ACCESSIBLE", "CONFIGURED"}:
+        raise RuntimeError(
+            "config.competitionScope должен быть ALL_ACCESSIBLE или CONFIGURED"
+        )
+
+    if competition_scope == "CONFIGURED" and not config.get("competitions"):
+        raise RuntimeError(
+            "Для competitionScope=CONFIGURED нужен непустой competitions"
+        )
 
     if not isinstance(config.get("allowedMarkets"), list):
         raise RuntimeError("config.allowedMarkets должен быть массивом")
@@ -3483,9 +3703,48 @@ def run_self_test() -> int:
                 f"SELF_TEST: fairOdds вне диапазона: {fair_odds}"
             )
 
+    diversity_input = [
+        {
+            "id": f"diverse-{index}",
+            "sourceMatchId": 1000 + index,
+            "country": country,
+            "league": league,
+            "leagueOriginal": league,
+            "rankingScore": 100 - index,
+            "confidence": 80,
+            "utcDate": (
+                utc_now() + dt.timedelta(hours=8 + index)
+            ).isoformat(),
+        }
+        for index, (country, league) in enumerate(
+            [
+                ("Brazil", "Serie A"),
+                ("Brazil", "Serie A"),
+                ("England", "Premier League"),
+                ("Spain", "La Liga"),
+                ("Brazil", "Serie A"),
+            ],
+            start=1,
+        )
+    ]
+    diversity_result = select_diverse_public_predictions(
+        diversity_input,
+        3,
+    )
+    diversity_countries = {
+        str(item.get("country") or "")
+        for item in diversity_result
+    }
+
+    if len(diversity_countries) < 3:
+        raise RuntimeError(
+            "SELF_TEST: финальный отбор не обеспечил межстрановую диверсификацию"
+        )
+
     print(
         "SELF_TEST_GREEN "
-        f"PRED={len(predictions)}"
+        f"PRED={len(predictions)} "
+        f"DIVERSE_COUNTRIES={len(diversity_countries)}"
     )
     return 0
 

@@ -1,9 +1,9 @@
 {
-  "version": 3,
+  "version": 4,
   "timezone": "Europe/Moscow",
   "lookbackDays": 60,
-  "lookaheadDays": 3,
-  "maximumCandidates": 20,
+  "lookaheadDays": 2,
+  "maximumCandidates": 30,
   "minimumPredictions": 3,
   "maximumPredictions": 5,
   "minimumConfidence": 70,
@@ -11,24 +11,14 @@
   "minimumProbability": 0.52,
   "maximumProbability": 0.69,
   "minimumModelOdds": 1.45,
-  "maximumModelOdds": 2.10,
+  "maximumModelOdds": 2.1,
   "minimumDataQuality": 42,
-  "selectionWindowHours": 72,
+  "selectionWindowHours": 36,
   "minimumLeadHours": 3,
   "minimumTeamMatches": 2,
   "maximumTotalStakePercent": 20,
   "startingVirtualBank": 10000,
-  "competitions": [
-    "PL",
-    "PD",
-    "BL1",
-    "SA",
-    "FL1",
-    "DED",
-    "PPL",
-    "BSA",
-    "WC"
-  ],
+  "competitions": [],
   "allowedMarkets": [
     "HOME_WIN",
     "AWAY_WIN",
@@ -49,5 +39,8 @@
     "super cup",
     "qualification",
     "play-off"
-  ]
+  ],
+  "competitionScope": "ALL_ACCESSIBLE",
+  "candidateDiversityMode": "ROUND_ROBIN_BY_COMPETITION",
+  "predictionDiversityMode": "ROUND_ROBIN_BY_COUNTRY_AND_COMPETITION"
 }
