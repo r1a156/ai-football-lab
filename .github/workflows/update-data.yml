@@ -122,8 +122,26 @@ jobs:
                   raise SystemExit(f"Коэффициент устарел или не имеет времени: {age}")
               if float(item.get("oddsMatchScore") or 0) < 0.78:
                   raise SystemExit("Недостаточная надёжность сопоставления матча")
-              if float(item.get("oddsKickoffDifferenceMinutes") or 999) > 60:
-                  raise SystemExit("Слишком большое расхождение времени матча")
+              kickoff_difference = item.get("oddsKickoffDifferenceMinutes")
+              if kickoff_difference is None:
+                  raise SystemExit(
+                      "Не указано расхождение времени матча"
+                  )
+              try:
+                  kickoff_difference_value = float(kickoff_difference)
+              except (TypeError, ValueError):
+                  raise SystemExit(
+                      "Некорректное расхождение времени матча: "
+                      f"{kickoff_difference}"
+                  )
+              if (
+                  kickoff_difference_value < 0
+                  or kickoff_difference_value > 60
+              ):
+                  raise SystemExit(
+                      "Слишком большое расхождение времени матча: "
+                      f"{kickoff_difference_value}"
+                  )
           if meta.get("virtualBankOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
               raise SystemExit("Виртуальный банк настроен не на bookmakerOdds")
           print("MODE:", meta.get("mode"))
