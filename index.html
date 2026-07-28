@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-version="V10_R6_FINAL_LIVE_LEARNING">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -122,10 +122,32 @@
             <div class="live-strip-track">
                 <span><i></i> Футбол: <strong id="stripSoccer">—</strong></span>
                 <span><i></i> Хоккей: <strong id="stripHockey">—</strong></span>
+                <span><i></i> Сейчас идут: <strong id="stripLive">0</strong></span>
                 <span><i></i> Точность лучших: <strong id="stripAccuracy">—</strong></span>
                 <span><i></i> Доходность банка: <strong id="stripRoi">—</strong></span>
                 <span><i></i> Источник коэффициентов: <strong>глобальная букмекерская линия</strong></span>
             </div>
+        </section>
+
+        <section class="section shell live-section" id="live-matches" aria-labelledby="liveMatchesTitle">
+            <div class="section-heading reveal">
+                <div>
+                    <span class="section-index">СЕЙЧАС</span>
+                    <p class="section-kicker">Текущий счёт и пересчёт вероятности</p>
+                    <h2 id="liveMatchesTitle">Матчи сейчас</h2>
+                </div>
+                <div class="section-meta">
+                    <span id="liveUpdated">Ожидание первого обновления</span>
+                    <strong id="liveStatus">Нет активных матчей</strong>
+                </div>
+            </div>
+            <div class="live-match-grid" id="liveMatchGrid">
+                <div class="analysis-loading">Система автоматически покажет счёт, когда начнётся один из отслеживаемых матчей.</div>
+            </div>
+            <p class="live-safety-note">
+                Текущий пересчёт не меняет исходный прогноз, коэффициент и виртуальную ставку.
+                Банк пересчитывается только после подтверждённого финального результата.
+            </p>
         </section>
 
         <section class="section shell" id="best-bets">
@@ -270,6 +292,71 @@
                 </p>
             </div>
 
+            <div class="prediction-statistics reveal" aria-label="Статистика всех прогнозов">
+                <article class="statistics-panel statistics-panel-all">
+                    <div class="statistics-panel-head">
+                        <div>
+                            <span>Все 15 прогнозов</span>
+                            <strong id="allPredictionAccuracy">—</strong>
+                        </div>
+                        <small id="allPredictionSettled">0 завершено</small>
+                    </div>
+                    <div class="statistics-counters">
+                        <div><span>Прошло</span><strong id="allPredictionWon">0</strong></div>
+                        <div><span>Не прошло</span><strong id="allPredictionLost">0</strong></div>
+                        <div><span>Возврат</span><strong id="allPredictionPush">0</strong></div>
+                        <div><span>Ожидается</span><strong id="allPredictionPending">0</strong></div>
+                    </div>
+                </article>
+                <article class="statistics-panel statistics-panel-best">
+                    <div class="statistics-panel-head">
+                        <div>
+                            <span>Лучшие четыре</span>
+                            <strong id="bestPredictionAccuracy">—</strong>
+                        </div>
+                        <small id="bestPredictionSettled">0 завершено</small>
+                    </div>
+                    <div class="statistics-counters">
+                        <div><span>Выиграно</span><strong id="bestPredictionWon">0</strong></div>
+                        <div><span>Проиграно</span><strong id="bestPredictionLost">0</strong></div>
+                        <div><span>Возврат</span><strong id="bestPredictionPush">0</strong></div>
+                        <div><span>Ожидается</span><strong id="bestPredictionPending">0</strong></div>
+                    </div>
+                </article>
+                <article class="statistics-panel statistics-panel-window">
+                    <div class="statistics-panel-head">
+                        <div>
+                            <span>Последние 30 дней</span>
+                            <strong id="windowThirtyAccuracy">—</strong>
+                        </div>
+                        <small id="windowThirtySettled">0 завершено</small>
+                    </div>
+                    <div class="model-readiness">
+                        <span>Состояние обучения</span>
+                        <strong id="modelLearningStage">Сбор выборки</strong>
+                        <small id="modelLearningSamples">0 результатов</small>
+                    </div>
+                </article>
+            </div>
+
+            <div class="statistics-breakdown reveal">
+                <div class="statistics-breakdown-head">
+                    <div>
+                        <span>Где модель точнее</span>
+                        <strong>Результаты по спорту, рынкам и диапазонам коэффициента</strong>
+                    </div>
+                    <div class="statistics-tabs" role="group" aria-label="Раздел статистики">
+                        <button class="filter-chip is-active" type="button" data-statistics-tab="market">Рынки</button>
+                        <button class="filter-chip" type="button" data-statistics-tab="sport">Спорт</button>
+                        <button class="filter-chip" type="button" data-statistics-tab="odds">Коэффициенты</button>
+                        <button class="filter-chip" type="button" data-statistics-tab="league">Лиги</button>
+                    </div>
+                </div>
+                <div class="statistics-breakdown-list" id="statisticsBreakdownList">
+                    <div class="empty-mini">Данные накапливаются</div>
+                </div>
+            </div>
+
             <div class="learning-grid">
                 <article class="learning-card learning-score reveal">
                     <div class="learning-card-head">
@@ -326,13 +413,20 @@
                 <div>
                     <span class="section-index">05</span>
                     <p class="section-kicker">Фактические результаты</p>
-                    <h2>История лучших ставок</h2>
+                    <h2>История прогнозов</h2>
                 </div>
-                <div class="history-filters" role="group" aria-label="Фильтры истории">
-                    <button class="filter-chip is-active" data-history-filter="all" type="button">Все</button>
-                    <button class="filter-chip" data-history-filter="won" type="button">Выигрыш</button>
-                    <button class="filter-chip" data-history-filter="lost" type="button">Проигрыш</button>
-                    <button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button>
+                <div class="history-filter-stack">
+                    <div class="history-filters" role="group" aria-label="Тип истории">
+                        <button class="filter-chip is-active" data-history-scope="best" type="button">Лучшие ставки</button>
+                        <button class="filter-chip" data-history-scope="all" type="button">Все прогнозы</button>
+                    </div>
+                    <div class="history-filters" role="group" aria-label="Статус прогноза">
+                        <button class="filter-chip is-active" data-history-filter="all" type="button">Все</button>
+                        <button class="filter-chip" data-history-filter="won" type="button">Прошло</button>
+                        <button class="filter-chip" data-history-filter="lost" type="button">Не прошло</button>
+                        <button class="filter-chip" data-history-filter="push" type="button">Возврат</button>
+                        <button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button>
+                    </div>
                 </div>
             </div>
 
@@ -358,7 +452,8 @@
                 <article><span>02</span><strong>Сценарий игры</strong><p>Ожидаемый счёт, исходы, тоталы, форы, обе забьют и командные тоталы.</p></article>
                 <article><span>03</span><strong>Проверка цены</strong><p>Вероятность модели сравнивается с рынком без букмекерской маржи.</p></article>
                 <article><span>04</span><strong>15 → 4</strong><p>Из полной аналитики выбираются четыре сильнейших разных события для виртуального банка.</p></article>
-                <article><span>05</span><strong>Обучение</strong><p>Калибровка по завершённым матчам с защитой от выводов на малой выборке.</p></article>
+                <article><span>05</span><strong>Живой матч</strong><p>Текущий счёт и отдельная live-вероятность без изменения исходной ставки.</p></article>
+                <article><span>06</span><strong>Обучение</strong><p>Калибровка по всем завершённым прогнозам с защитой от выводов на малой выборке.</p></article>
             </div>
         </section>
 
@@ -386,7 +481,7 @@
         </div>
         <div class="footer-status">
             <span id="footerUpdated">Данные загружаются</span>
-            <span>Версия 10</span>
+            <span>Версия 10 R6</span>
         </div>
     </footer>
 

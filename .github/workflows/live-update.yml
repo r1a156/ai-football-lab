@@ -1,0 +1,107 @@
+# V10_R6_LIVE_AUTO_REFRESH
+name: V10 R6 Живой счёт и онлайн-калибровка
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/update_live.py"
+      - "scripts/update_predictions.py"
+      - "config/analysis.json"
+      - ".github/workflows/live-update.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v10-r6-live-match-intelligence
+  cancel-in-progress: true
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUTF8: "1"
+
+jobs:
+  live:
+    name: Обновить текущий счёт и вероятности
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Получить исходный код
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Настроить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Проверить исходный код текущих матчей
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/update_predictions.py scripts/update_live.py
+          python -m json.tool config/analysis.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/live-state.json > /dev/null
+          python -m json.tool data/live-learning.json > /dev/null
+          python scripts/update_live.py --validate
+
+      - name: Обновить отслеживаемые матчи
+        shell: bash
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+        run: |
+          set -euo pipefail
+          python scripts/update_live.py --update
+
+      - name: Проверить обновлённые данные
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m json.tool data/live-state.json > /dev/null
+          python -m json.tool data/live-learning.json > /dev/null
+          python scripts/update_live.py --validate
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          live = json.loads(Path("data/live-state.json").read_text(encoding="utf-8"))
+          learning = json.loads(Path("data/live-learning.json").read_text(encoding="utf-8"))
+
+          if live.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
+              raise SystemExit("Live state marker mismatch")
+          if learning.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
+              raise SystemExit("Live learning marker mismatch")
+          for event in live.get("events") or []:
+              if not event.get("eventId"):
+                  raise SystemExit("Live event without eventId")
+              if not event.get("originalPredictionImmutable"):
+                  raise SystemExit("Live event lost original-prediction immutability guard")
+          print("LIVE_STATE_ACCEPTANCE=GREEN")
+          print("LIVE_TRACKED=", len(live.get("events") or []))
+          print("LIVE_ACTIVE=", len(live.get("activeEventIds") or []))
+          print("LIVE_LEARNING=", learning.get("statistics"))
+          PY
+
+      - name: Сохранить изменившиеся данные
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/live-state.json data/live-learning.json
+          if git diff --cached --quiet; then
+            echo "No live data changes to commit."
+            exit 0
+          fi
+          git commit -m "V10 R6 refresh live score and online calibration [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main

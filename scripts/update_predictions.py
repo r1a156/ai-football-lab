@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # V10_GLOBAL_MULTISPORT_INTELLIGENCE
+# V10_R6_FINAL_LIVE_LEARNING_STATISTICS
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -43,6 +44,10 @@ INDEX_PATH = ROOT / "index.html"
 APP_PATH = ROOT / "assets" / "app.js"
 STYLE_PATH = ROOT / "assets" / "styles.css"
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-data.yml"
+LIVE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "live-update.yml"
+LIVE_STATE_PATH = ROOT / "data" / "live-state.json"
+LIVE_LEARNING_PATH = ROOT / "data" / "live-learning.json"
+LIVE_SCRIPT_PATH = ROOT / "scripts" / "update_live.py"
 
 ODDS_API_BASE = "https://api.the-odds-api.com/v4"
 FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
@@ -53,6 +58,8 @@ STATE_VERSION = "10.0.0"
 PIPELINE_MARKER = "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
 SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
 WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
+LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
+LIVE_MARKER = "V10_R6_LIVE_MATCH_INTELLIGENCE"
 RESET_MARKER = "V10_CLEAN_MODEL_RESET"
 
 UTC = dt.timezone.utc
@@ -346,6 +353,11 @@ def validate_config(config: dict[str, Any]) -> None:
     fallback_hockey = safe_int(config.get("minimumHockeySportRequestsForFallback"), 1)
     if fallback_hockey < 0:
         raise RuntimeError("minimumHockeySportRequestsForFallback must not be negative")
+    live_refresh = safe_int(config.get("liveRefreshMinutes"), 10)
+    if live_refresh < 5 or live_refresh > 60:
+        raise RuntimeError("liveRefreshMinutes must be in 5..60")
+    if safe_int(config.get("liveMaximumOddsScoreCallsPerRun"), 3) < 0:
+        raise RuntimeError("liveMaximumOddsScoreCallsPerRun must not be negative")
 
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
@@ -393,15 +405,29 @@ def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dic
             "bestSegment": "Недостаточно данных",
             "settledAnalyses": 0,
             "settledBestBets": 0,
+            "allPredictions": {},
+            "bestBets": {},
+            "windows": {},
+            "bySport": [],
+            "byMarket": [],
+            "byLeague": [],
+            "byOddsBand": [],
         },
         "learning": {
-            "version": 1,
+            "version": 2,
             "updatedAt": iso_z(now),
             "segments": {},
             "calibrationBins": {},
             "totalSettledAnalyses": 0,
             "totalSettledBestBets": 0,
             "modelNotes": [],
+            "modelReadiness": {
+                "stage": "Сбор выборки",
+                "settledSamples": 0,
+                "minimumSamples": safe_int(config.get("learningMinimumSegmentSamples"), 20),
+                "fullWeightSamples": safe_int(config.get("learningFullWeightSamples"), 120),
+                "maximumProbabilityAdjustment": safe_float(config.get("learningMaximumProbabilityAdjustment"), 0.08),
+            },
         },
         "quota": {},
     }
@@ -462,6 +488,8 @@ def migrate_state(
     state["learning"].setdefault("segments", {})
     state["learning"].setdefault("calibrationBins", {})
     state["learning"].setdefault("modelNotes", [])
+    state["learning"].setdefault("modelReadiness", {})
+    state["learning"]["version"] = 2
 
     old_stats = source.get("statistics") if isinstance(source.get("statistics"), dict) else {}
     state["statistics"].update(old_stats)
@@ -1858,6 +1886,9 @@ def evaluate_event_markets(
             "analysisScore": round(analysis_score, 4),
             "bestBetScore": round(best_bet_score, 4),
             "expectedScore": model.get("expectedScore"),
+            "expectedHomeGoals": round(safe_float(model.get("homeLambda")), 4),
+            "expectedAwayGoals": round(safe_float(model.get("awayLambda")), 4),
+            "modelComponents": copy.deepcopy(model.get("components") or {}),
             "mostLikelyScores": model.get("mostLikelyScores"),
             "homeWinProbability": round(safe_float(model.get("homeWinProbability")), 6),
             "drawProbability": round(safe_float(model.get("drawProbability")), 6),
@@ -1994,6 +2025,9 @@ def event_to_analysis_record(
         "analysisScore": selected.get("analysisScore"),
         "bestBetScore": selected.get("bestBetScore"),
         "expectedScore": selected.get("expectedScore"),
+        "expectedHomeGoals": selected.get("expectedHomeGoals"),
+        "expectedAwayGoals": selected.get("expectedAwayGoals"),
+        "modelComponents": copy.deepcopy(selected.get("modelComponents") or {}),
         "mostLikelyScores": selected.get("mostLikelyScores"),
         "homeWinProbability": selected.get("homeWinProbability"),
         "drawProbability": selected.get("drawProbability"),
@@ -3059,29 +3093,117 @@ def update_bank_metrics(state: dict[str, Any]) -> None:
 
 
 def update_statistics(state: dict[str, Any]) -> None:
-    analysis_settled = [
-        item
-        for item in state.get("analysisHistory") or []
-        if isinstance(item, dict) and item.get("status") in {"won", "lost", "push"}
-    ]
-    bets_settled = [
-        item
-        for item in state.get("history") or []
+    analysis_records = [
+        item for item in state.get("analysisHistory") or []
         if isinstance(item, dict)
-        and item.get("recordType") == "BEST_BET"
-        and item.get("status") in {"won", "lost", "push"}
+    ]
+    best_records = [
+        item for item in state.get("history") or []
+        if isinstance(item, dict) and item.get("recordType") == "BEST_BET"
     ]
 
-    def accuracy(records: list[dict[str, Any]]) -> float:
-        wins = sum(1 for item in records if item.get("status") == "won")
-        losses = sum(1 for item in records if item.get("status") == "lost")
-        denominator = wins + losses
-        return round(wins / denominator * 100, 1) if denominator else 0.0
+    terminal = {"won", "lost", "push", "void", "cancelled", "postponed"}
 
+    def record_time(item: dict[str, Any]) -> dt.datetime | None:
+        return parse_datetime(
+            item.get("settledAt")
+            or item.get("commenceTime")
+            or item.get("utcDate")
+            or item.get("publishedAt")
+        )
+
+    def summary(records: list[dict[str, Any]]) -> dict[str, Any]:
+        statuses = [str(item.get("status") or "pending").lower() for item in records]
+        won = statuses.count("won")
+        lost = statuses.count("lost")
+        pushes = statuses.count("push")
+        voids = sum(status in {"void", "cancelled", "postponed"} for status in statuses)
+        pending = sum(status not in terminal for status in statuses)
+        decided = won + lost
+        settled = won + lost + pushes
+        profit = round(sum(safe_float(item.get("profit")) for item in records), 2)
+        return {
+            "total": len(records),
+            "settled": settled,
+            "decided": decided,
+            "won": won,
+            "lost": lost,
+            "push": pushes,
+            "void": voids,
+            "pending": pending,
+            "accuracy": round(won / decided * 100, 1) if decided else 0.0,
+            "profit": profit,
+        }
+
+    def odds_band(value: float) -> str:
+        if value < 1.55:
+            return "1,35–1,54"
+        if value < 1.80:
+            return "1,55–1,79"
+        if value < 2.20:
+            return "1,80–2,19"
+        return "2,20+"
+
+    def grouped(
+        records: list[dict[str, Any]],
+        key_fn: Any,
+        *,
+        minimum_decided: int = 1,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        buckets: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for item in records:
+            key = str(key_fn(item) or "Не указано")
+            buckets[key].append(item)
+        result: list[dict[str, Any]] = []
+        for key, items in buckets.items():
+            values = summary(items)
+            if values["decided"] < minimum_decided:
+                continue
+            result.append({"key": key, **values})
+        result.sort(
+            key=lambda row: (
+                safe_int(row.get("decided")),
+                safe_float(row.get("accuracy")),
+            ),
+            reverse=True,
+        )
+        return result[:limit]
+
+    now = utc_now()
+    windows: dict[str, Any] = {}
+    for label, days in (("7", 7), ("30", 30), ("90", 90)):
+        threshold = now - dt.timedelta(days=days)
+        windows[label] = {
+            "allPredictions": summary([
+                item for item in analysis_records
+                if (record_time(item) or dt.datetime.min.replace(tzinfo=UTC)) >= threshold
+            ]),
+            "bestBets": summary([
+                item for item in best_records
+                if (record_time(item) or dt.datetime.min.replace(tzinfo=UTC)) >= threshold
+            ]),
+        }
+    windows["all"] = {
+        "allPredictions": summary(analysis_records),
+        "bestBets": summary(best_records),
+    }
+
+    analysis_summary = summary(analysis_records)
+    best_summary = summary(best_records)
+    bets_settled = [
+        item for item in best_records
+        if str(item.get("status") or "") in {"won", "lost", "push"}
+    ]
     average_odds = mean(
-        [safe_float(item.get("bookmakerOdds") or item.get("odds")) for item in bets_settled if safe_float(item.get("bookmakerOdds") or item.get("odds")) > 1],
+        [
+            safe_float(item.get("bookmakerOdds") or item.get("odds"))
+            for item in bets_settled
+            if safe_float(item.get("bookmakerOdds") or item.get("odds")) > 1
+        ],
         0.0,
     )
+
     streak = 0
     streak_type = ""
     for item in reversed(bets_settled):
@@ -3094,32 +3216,94 @@ def update_statistics(state: dict[str, Any]) -> None:
             break
         streak += 1
     streak_text = (
-        f"{streak} выигрышных подряд" if streak_type == "won" and streak else f"{streak} проигрышных подряд" if streak_type == "lost" and streak else "Нет серии"
+        f"{streak} выигрышных подряд"
+        if streak_type == "won" and streak
+        else f"{streak} проигрышных подряд"
+        if streak_type == "lost" and streak
+        else "Нет серии"
     )
 
-    segments = state.get("learning", {}).get("segments", {}) if isinstance(state.get("learning"), dict) else {}
+    segments = (
+        state.get("learning", {}).get("segments", {})
+        if isinstance(state.get("learning"), dict)
+        else {}
+    )
     eligible = [
         (key, value)
         for key, value in segments.items()
-        if isinstance(value, dict) and safe_int(value.get("settled")) >= 10 and key.startswith("MARKET|")
+        if isinstance(value, dict)
+        and safe_int(value.get("settled")) >= 10
+        and key.startswith("MARKET|")
     ]
     best_segment = "Недостаточно данных"
     if eligible:
-        key, value = max(eligible, key=lambda row: (safe_float(row[1].get("hitRate")), safe_int(row[1].get("settled"))))
-        best_segment = f"{key.split('|')[-1]} · {safe_float(value.get('hitRate')) * 100:.1f}%"
+        key, value = max(
+            eligible,
+            key=lambda row: (
+                safe_float(row[1].get("hitRate")),
+                safe_int(row[1].get("settled")),
+            ),
+        )
+        best_segment = (
+            f"{key.split('|')[-1]} · "
+            f"{safe_float(value.get('hitRate')) * 100:.1f}%"
+        )
+
+    learning = state.setdefault("learning", {})
+    settled_samples = safe_int(analysis_summary.get("settled"))
+    minimum_samples = 20
+    full_samples = 120
+    if settled_samples < minimum_samples:
+        stage = "Сбор выборки"
+    elif settled_samples < full_samples:
+        stage = "Активная калибровка"
+    else:
+        stage = "Стабильная калибровка"
+    learning["modelReadiness"] = {
+        "stage": stage,
+        "settledSamples": settled_samples,
+        "minimumSamples": minimum_samples,
+        "fullWeightSamples": full_samples,
+        "maximumProbabilityAdjustment": 0.08,
+        "updatedAt": iso_z(now),
+    }
 
     state["statistics"] = {
-        "analysisAccuracy": accuracy(analysis_settled),
-        "bestBetsAccuracy": accuracy(bets_settled),
+        "analysisAccuracy": analysis_summary["accuracy"],
+        "bestBetsAccuracy": best_summary["accuracy"],
         "averageOdds": round(average_odds, 2),
         "currentStreak": streak_text,
         "bestSegment": best_segment,
-        "settledAnalyses": len(analysis_settled),
-        "settledBestBets": len(bets_settled),
-        "wonBestBets": sum(1 for item in bets_settled if item.get("status") == "won"),
-        "lostBestBets": sum(1 for item in bets_settled if item.get("status") == "lost"),
-        "pushBestBets": sum(1 for item in bets_settled if item.get("status") == "push"),
-        "pendingBestBets": sum(1 for item in state.get("history") or [] if isinstance(item, dict) and item.get("recordType") == "BEST_BET" and item.get("status") == "pending"),
+        "settledAnalyses": analysis_summary["settled"],
+        "settledBestBets": best_summary["settled"],
+        "wonBestBets": best_summary["won"],
+        "lostBestBets": best_summary["lost"],
+        "pushBestBets": best_summary["push"],
+        "pendingBestBets": best_summary["pending"],
+        "allPredictions": analysis_summary,
+        "bestBets": best_summary,
+        "windows": windows,
+        "bySport": grouped(
+            analysis_records,
+            lambda item: sport_label(str(item.get("sport") or "soccer")),
+            limit=10,
+        ),
+        "byMarket": grouped(
+            analysis_records,
+            lambda item: str(item.get("marketFamily") or market_family(str(item.get("market") or ""))),
+            limit=20,
+        ),
+        "byLeague": grouped(
+            analysis_records,
+            lambda item: str(item.get("leagueRu") or russian_display_text(item.get("league"))),
+            minimum_decided=3,
+            limit=20,
+        ),
+        "byOddsBand": grouped(
+            analysis_records,
+            lambda item: odds_band(safe_float(item.get("bookmakerOdds") or item.get("odds"))),
+            limit=10,
+        ),
     }
 
 
@@ -3469,7 +3653,17 @@ def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: 
 def validate_repository_files() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
-    required = [STATE_PATH, INDEX_PATH, APP_PATH, STYLE_PATH, WORKFLOW_PATH]
+    required = [
+        STATE_PATH,
+        INDEX_PATH,
+        APP_PATH,
+        STYLE_PATH,
+        WORKFLOW_PATH,
+        LIVE_WORKFLOW_PATH,
+        LIVE_STATE_PATH,
+        LIVE_LEARNING_PATH,
+        LIVE_SCRIPT_PATH,
+    ]
     for path in required:
         if not path.exists():
             raise RuntimeError(f"Required file missing: {path.relative_to(ROOT)}")
@@ -3479,6 +3673,14 @@ def validate_repository_files() -> int:
         raise RuntimeError("Site marker missing")
     if WORKFLOW_MARKER not in WORKFLOW_PATH.read_text(encoding="utf-8"):
         raise RuntimeError("Workflow marker missing")
+    if LIVE_WORKFLOW_MARKER not in LIVE_WORKFLOW_PATH.read_text(encoding="utf-8"):
+        raise RuntimeError("Live workflow marker missing")
+    if LIVE_MARKER not in LIVE_SCRIPT_PATH.read_text(encoding="utf-8"):
+        raise RuntimeError("Live script marker missing")
+    if load_json(LIVE_STATE_PATH, {}).get("sourceMarker") != LIVE_MARKER:
+        raise RuntimeError("Live state marker missing")
+    if load_json(LIVE_LEARNING_PATH, {}).get("sourceMarker") != LIVE_MARKER:
+        raise RuntimeError("Live learning marker missing")
     state = load_json(STATE_PATH, {})
     validate_state(state, config, allow_legacy=True)
     print("VALIDATION_GREEN_V10")
@@ -3662,6 +3864,15 @@ def run_self_test() -> int:
     validate_state(state, test_config, allow_legacy=False)
     if not state.get("learning", {}).get("segments"):
         raise RuntimeError("SELF_TEST learning segments were not updated")
+    statistics_probe = state.get("statistics") or {}
+    if not isinstance(statistics_probe.get("allPredictions"), dict):
+        raise RuntimeError("SELF_TEST detailed all-prediction statistics missing")
+    if not isinstance(statistics_probe.get("bestBets"), dict):
+        raise RuntimeError("SELF_TEST detailed best-bet statistics missing")
+    if not isinstance(statistics_probe.get("windows"), dict):
+        raise RuntimeError("SELF_TEST statistics windows missing")
+    if safe_int(statistics_probe.get("allPredictions", {}).get("settled")) < 1:
+        raise RuntimeError("SELF_TEST settled analysis statistics missing")
     localization_probe = apply_russian_display_fields({
         "country": "England",
         "league": "English Premier League",
@@ -3689,7 +3900,8 @@ def run_self_test() -> int:
         f"ANALYSIS={len(daily)} BEST={len(best)} EXACT_FOUR=YES RUSSIAN_UI=YES "
         f"SOCCER={sum(1 for item in daily if item['sport'] == 'soccer')} "
         f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
-        f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f}"
+        f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f} "
+        f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE"
     )
     return 0
 

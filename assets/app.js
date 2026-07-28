@@ -1,16 +1,21 @@
 /* V10_SITE_PREMIUM_DASHBOARD */
+/* V10_R6_LIVE_STATISTICS_RUSSIAN_UI */
 (() => {
     "use strict";
 
     const STATE_URL = "data/state.json";
+    const LIVE_URL = "data/live-state.json";
     const REFRESH_INTERVAL_MS = 60_000;
     const MOSCOW_TIME_ZONE = "Europe/Moscow";
 
     const runtime = {
         state: null,
+        liveState: null,
         signature: "",
         sportFilter: "all",
         historyFilter: "all",
+        historyScope: "best",
+        statisticsTab: "market",
         refreshTimer: null,
         freshnessTimer: null,
         chartFrame: null,
@@ -35,19 +40,31 @@
     async function loadState({ notify }) {
         setConnectionState("loading", notify ? "Проверяем обновление" : "");
         try {
-            const response = await fetch(`${STATE_URL}?v=${Date.now()}`, {
-                cache: "no-store",
-                headers: { Accept: "application/json" },
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+            const [stateResult, liveResult] = await Promise.allSettled([
+                fetch(`${STATE_URL}?v=${Date.now()}`, {
+                    cache: "no-store",
+                    headers: { Accept: "application/json" },
+                }),
+                fetch(`${LIVE_URL}?v=${Date.now()}`, {
+                    cache: "no-store",
+                    headers: { Accept: "application/json" },
+                }),
+            ]);
+            if (stateResult.status !== "fulfilled" || !stateResult.value.ok) {
+                const status = stateResult.status === "fulfilled" ? stateResult.value.status : "сеть";
+                throw new Error(`Не удалось загрузить основное состояние: ${status}`);
             }
-            const state = await response.json();
-            const signature = createStateSignature(state);
+            const state = await stateResult.value.json();
+            let liveState = runtime.liveState || normalizeLiveState({});
+            if (liveResult.status === "fulfilled" && liveResult.value.ok) {
+                liveState = normalizeLiveState(await liveResult.value.json());
+            }
+            const signature = createStateSignature(state, liveState);
             const changed = signature !== runtime.signature;
             runtime.state = normalizeState(state);
+            runtime.liveState = liveState;
             runtime.signature = signature;
-            renderApplication(runtime.state);
+            renderApplication(runtime.state, runtime.liveState);
             setConnectionState("ready", notify || changed ? "Данные актуализированы" : "");
         } catch (error) {
             console.error("Не удалось загрузить состояние", error);
@@ -71,10 +88,19 @@
               ? normalized.predictions
               : [];
         normalized.history = Array.isArray(normalized.history) ? normalized.history : [];
+        normalized.analysisHistory = Array.isArray(normalized.analysisHistory) ? normalized.analysisHistory : [];
         return normalized;
     }
 
-    function createStateSignature(state) {
+    function normalizeLiveState(value) {
+        const normalized = value && typeof value === "object" ? value : {};
+        normalized.events = Array.isArray(normalized.events) ? normalized.events : [];
+        normalized.activeEventIds = Array.isArray(normalized.activeEventIds) ? normalized.activeEventIds : [];
+        normalized.providerHealth = normalized.providerHealth && typeof normalized.providerHealth === "object" ? normalized.providerHealth : {};
+        return normalized;
+    }
+
+    function createStateSignature(state, liveState) {
         const meta = state?.meta || {};
         const bank = state?.bank || {};
         return [
@@ -84,20 +110,25 @@
             state?.bestBets?.length || state?.predictions?.length || 0,
             bank.current || 0,
             state?.history?.length || 0,
+            liveState?.updatedAt || "",
+            liveState?.events?.length || 0,
+            liveState?.activeEventIds?.length || 0,
         ].join("|");
     }
 
-    function renderApplication(state) {
-        renderMeta(state);
+    function renderApplication(state, liveState) {
+        renderMeta(state, liveState);
+        renderLiveMatches(liveState);
         renderBestBets(state.bestBets, state.meta, state.bank);
         renderDailyAnalysis(state.dailyAnalysis);
         renderBank(state.bank, state.statistics);
+        renderStatistics(state.statistics, state.learning);
         renderLearning(state.learning, state.statistics);
-        renderHistory(state.history);
+        renderHistory(state.history, state.analysisHistory);
         updateFreshnessLabels();
     }
 
-    function renderMeta(state) {
+    function renderMeta(state, liveState) {
         const { meta = {}, bank = {}, statistics = {}, dailyAnalysis = [], bestBets = [] } = state;
         const soccerCount = Number(meta.soccerAnalyses ?? dailyAnalysis.filter((item) => item.sport === "soccer").length);
         const hockeyCount = Number(meta.hockeyAnalyses ?? dailyAnalysis.filter((item) => item.sport === "ice_hockey").length);
@@ -110,6 +141,7 @@
         setText("heroUpdated", formatCompactDateTime(meta.updatedAt));
         setText("stripSoccer", soccerCount);
         setText("stripHockey", hockeyCount);
+        setText("stripLive", Array.isArray(liveState?.activeEventIds) ? liveState.activeEventIds.length : 0);
         setText("stripAccuracy", formatPercent(statistics.bestBetsAccuracy));
         setText("stripRoi", formatSignedPercent(bank.roi));
         setText("footerUpdated", `Обновлено ${formatDateTime(meta.updatedAt)}`);
@@ -119,6 +151,57 @@
         statusNode?.classList.toggle("is-green", status === "GREEN");
         statusNode?.classList.toggle("is-red", status === "RED");
         setText("systemStatus", status === "GREEN" ? "Актуально" : status === "RED" ? "Ошибка" : "Ограничено");
+    }
+
+    function liveEventFor(record) {
+        const eventId = String(record?.eventId || "");
+        return (runtime.liveState?.events || []).find((item) => String(item?.eventId || "") === eventId) || null;
+    }
+
+    function renderLiveMatches(liveState = {}) {
+        const grid = document.getElementById("liveMatchGrid");
+        if (!grid) return;
+        const events = Array.isArray(liveState.events) ? liveState.events : [];
+        const active = events.filter((item) => item.status === "LIVE");
+        const relevant = (active.length ? active : events.filter((item) => item.status === "SCHEDULED").slice(0, 4)).slice(0, 6);
+        setText("liveUpdated", liveState.updatedAt ? `Обновлено ${formatDateTime(liveState.updatedAt)}` : "Ожидание обновления");
+        setText("liveStatus", active.length ? `Сейчас идут: ${active.length}` : events.length ? "Отслеживание расписания" : "Нет активных матчей");
+        if (!relevant.length) {
+            grid.innerHTML = `<div class="analysis-loading">Система автоматически покажет счёт, когда начнётся один из 15 отслеживаемых матчей.</div>`;
+            return;
+        }
+        grid.innerHTML = relevant.map((item) => liveMatchTemplate(item)).join("");
+    }
+
+    function liveMatchTemplate(item) {
+        const probability = number(item.liveProbability) * 100;
+        const hasScore = item.homeScore !== null && item.homeScore !== undefined && item.awayScore !== null && item.awayScore !== undefined;
+        const status = item.status === "LIVE" ? "Матч идёт" : item.statusRu || "Ожидается";
+        return `
+            <article class="live-match-card ${item.status === "LIVE" ? "is-live" : ""}">
+                <div class="live-match-top">
+                    <span class="live-pulse">${escapeHtml(status)}</span>
+                    <span>${escapeHtml(item.sportLabel || sportName(item.sport))}</span>
+                </div>
+                <small>${escapeHtml([russianDisplayText(item.countryRu || item.country), russianDisplayText(item.leagueRu || item.league)].filter(Boolean).join(" · "))}</small>
+                <div class="live-score-line">
+                    <strong>${escapeHtml(russianDisplayText(item.homeRu || item.home))}</strong>
+                    <b>${hasScore ? escapeHtml(item.score) : "— : —"}</b>
+                    <strong>${escapeHtml(russianDisplayText(item.awayRu || item.away))}</strong>
+                </div>
+                <div class="live-clock">${escapeHtml(item.clockLabel || formatMatchTime(item.commenceTime))}</div>
+                <div class="live-prediction-row">
+                    <div><span>Исходный прогноз</span><strong>${escapeHtml(russianDisplayText(item.pickRu || item.pick || "—"))}</strong></div>
+                    <div><span>Текущая вероятность</span><strong>${formatNumber(probability, 1)}%</strong></div>
+                </div>
+                <p>${escapeHtml(item.liveReason || "Текущая оценка появится после получения счёта.")}</p>
+            </article>`;
+    }
+
+    function liveInlineTemplate(record) {
+        const live = liveEventFor(record);
+        if (!live || live.status !== "LIVE") return "";
+        return `<div class="inline-live"><span>Матч идёт · ${escapeHtml(live.clockLabel || "сейчас")}</span><strong>${escapeHtml(live.score || "— : —")}</strong><b>${formatNumber(number(live.liveProbability) * 100, 1)}%</b></div>`;
     }
 
     function renderBestBets(bestBets, meta, bank) {
@@ -181,6 +264,7 @@
                     <div class="metric-block"><span>Ожидаемая доходность</span><strong class="${ev >= 0 ? "is-positive" : ""}">${formatSignedNumber(ev, 1)}%</strong></div>
                     <div class="metric-block"><span>Данные</span><strong>${formatNumber(dataQuality, 0)}/100</strong></div>
                 </div>
+                ${liveInlineTemplate(bet)}
                 <div class="bet-card-footer">
                     <span>Виртуальная ставка</span>
                     <strong>${formatCurrency(bet.stake)} · ${formatNumber(bet.stakePercent, 0)}%</strong>
@@ -229,6 +313,7 @@
                     <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
                     <strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong>
                     <span>${escapeHtml(displayLeague(item))} · ${formatMatchTime(item.commenceTime || item.utcDate)}</span>
+                    ${liveInlineTemplate(item)}
                 </div>
                 <div class="analysis-pick">
                     <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
@@ -385,6 +470,60 @@
             .replace(".", "");
     }
 
+    function renderStatistics(statistics = {}, learning = {}) {
+        const all = statistics.allPredictions || {};
+        const best = statistics.bestBets || {};
+        const thirty = statistics.windows?.["30"]?.allPredictions || {};
+        const readiness = learning.modelReadiness || {};
+
+        setText("allPredictionAccuracy", formatPercent(all.accuracy));
+        setText("allPredictionSettled", `${number(all.settled)} завершено`);
+        setText("allPredictionWon", number(all.won));
+        setText("allPredictionLost", number(all.lost));
+        setText("allPredictionPush", number(all.push));
+        setText("allPredictionPending", number(all.pending));
+
+        setText("bestPredictionAccuracy", formatPercent(best.accuracy));
+        setText("bestPredictionSettled", `${number(best.settled)} завершено`);
+        setText("bestPredictionWon", number(best.won));
+        setText("bestPredictionLost", number(best.lost));
+        setText("bestPredictionPush", number(best.push));
+        setText("bestPredictionPending", number(best.pending));
+
+        setText("windowThirtyAccuracy", formatPercent(thirty.accuracy));
+        setText("windowThirtySettled", `${number(thirty.settled)} завершено`);
+        setText("modelLearningStage", readiness.stage || "Сбор выборки");
+        setText("modelLearningSamples", `${number(readiness.settledSamples)} результатов`);
+        renderStatisticsBreakdown(statistics);
+    }
+
+    function renderStatisticsBreakdown(statistics = {}) {
+        const container = document.getElementById("statisticsBreakdownList");
+        if (!container) return;
+        const source = runtime.statisticsTab === "sport"
+            ? statistics.bySport
+            : runtime.statisticsTab === "odds"
+              ? statistics.byOddsBand
+              : runtime.statisticsTab === "league"
+                ? statistics.byLeague
+                : statistics.byMarket;
+        const rows = Array.isArray(source) ? source.slice(0, 12) : [];
+        if (!rows.length) {
+            container.innerHTML = `<div class="empty-mini">Для этого раздела пока недостаточно завершённых прогнозов</div>`;
+            return;
+        }
+        container.innerHTML = rows.map((item) => {
+            const key = runtime.statisticsTab === "market" ? segmentName(item.key) : russianDisplayText(item.key);
+            return `
+                <div class="statistics-breakdown-row">
+                    <div><strong>${escapeHtml(key)}</strong><span>${number(item.decided)} решений · ${number(item.push)} возвратов</span></div>
+                    <div><span>Прошло</span><strong>${number(item.won)}</strong></div>
+                    <div><span>Не прошло</span><strong>${number(item.lost)}</strong></div>
+                    <b>${formatPercent(item.accuracy)}</b>
+                </div>`;
+        }).join("");
+    }
+
     function renderLearning(learning = {}, statistics = {}) {
         const analysisAccuracy = number(statistics.analysisAccuracy);
         const bestAccuracy = number(statistics.bestBetsAccuracy);
@@ -449,11 +588,12 @@
         }).join("");
     }
 
-    function renderHistory(history) {
+    function renderHistory(history, analysisHistory) {
         const container = document.getElementById("historyTable");
         if (!container) return;
-        const records = history
-            .filter((item) => item && (item.recordType === "BEST_BET" || !item.recordType))
+        const sourceRecords = runtime.historyScope === "all" ? analysisHistory : history;
+        const records = (Array.isArray(sourceRecords) ? sourceRecords : [])
+            .filter((item) => item && (runtime.historyScope === "all" || item.recordType === "BEST_BET" || !item.recordType))
             .filter((item) => runtime.historyFilter === "all" || String(item.status || "pending") === runtime.historyFilter)
             .slice()
             .sort((left, right) => String(right.publishedAt || right.commenceTime || "").localeCompare(String(left.publishedAt || left.commenceTime || "")))
@@ -471,9 +611,9 @@
                 <div class="history-row">
                     <div class="history-match"><strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong><span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayLeague(item))} · ${formatShortDate(item.commenceTime || item.utcDate)}</span></div>
                     <div class="history-pick"><strong>${escapeHtml(displayPick(item))}</strong><span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(displayBookmaker(item))}</span></div>
-                    <div class="history-cell"><span>Ставка</span><strong>${formatCurrency(item.stake)}</strong></div>
+                    <div class="history-cell"><span>${runtime.historyScope === "all" ? "Вероятность" : "Ставка"}</span><strong>${runtime.historyScope === "all" ? formatPercent(number(item.modelProbability || item.probability) * 100) : formatCurrency(item.stake)}</strong></div>
                     <div class="history-cell"><span>Счёт</span><strong>${escapeHtml(item.score || "—")}</strong></div>
-                    <div class="history-cell"><span>Результат</span><strong class="${profit > 0 ? "positive" : ""}">${profit ? formatSignedCurrency(profit) : "—"}</strong></div>
+                    <div class="history-cell"><span>Результат</span><strong class="${profit > 0 ? "positive" : ""}">${runtime.historyScope === "all" ? statusLabel(status) : profit ? formatSignedCurrency(profit) : statusLabel(status)}</strong></div>
                     <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
                 </div>`;
         }).join("");
@@ -487,11 +627,25 @@
                 renderDailyAnalysis(runtime.state?.dailyAnalysis || []);
             });
         });
+        document.querySelectorAll("[data-history-scope]").forEach((button) => {
+            button.addEventListener("click", () => {
+                runtime.historyScope = button.dataset.historyScope || "best";
+                document.querySelectorAll("[data-history-scope]").forEach((node) => node.classList.toggle("is-active", node === button));
+                renderHistory(runtime.state?.history || [], runtime.state?.analysisHistory || []);
+            });
+        });
+        document.querySelectorAll("[data-statistics-tab]").forEach((button) => {
+            button.addEventListener("click", () => {
+                runtime.statisticsTab = button.dataset.statisticsTab || "market";
+                document.querySelectorAll("[data-statistics-tab]").forEach((node) => node.classList.toggle("is-active", node === button));
+                renderStatisticsBreakdown(runtime.state?.statistics || {});
+            });
+        });
         document.querySelectorAll("[data-history-filter]").forEach((button) => {
             button.addEventListener("click", () => {
                 runtime.historyFilter = button.dataset.historyFilter || "all";
                 document.querySelectorAll("[data-history-filter]").forEach((node) => node.classList.toggle("is-active", node === button));
-                renderHistory(runtime.state?.history || []);
+                renderHistory(runtime.state?.history || [], runtime.state?.analysisHistory || []);
             });
         });
     }
@@ -533,6 +687,17 @@
         return [...runtime.state.dailyAnalysis, ...runtime.state.bestBets].find((item) => String(item.id) === String(id)) || null;
     }
 
+    function dialogLiveTemplate(record) {
+        const live = liveEventFor(record);
+        if (!live || live.status !== "LIVE") return "";
+        return `
+            <div class="dialog-live-panel">
+                <div><span>Матч идёт</span><strong>${escapeHtml(live.score || "— : —")}</strong></div>
+                <div><span>${escapeHtml(live.clockLabel || "сейчас")}</span><strong>${formatNumber(number(live.liveProbability) * 100, 1)}%</strong></div>
+                <p>${escapeHtml(live.liveReason || "Вероятность пересчитана по текущему счёту.")}</p>
+            </div>`;
+    }
+
     function openAnalysisDialog(record) {
         if (!record) return;
         const dialog = document.getElementById("analysisDialog");
@@ -551,6 +716,7 @@
                 <div class="dialog-eyebrow">${escapeHtml(record.sportLabel || sportName(record.sport))} · ${escapeHtml(displayCountry(record))} · ${escapeHtml(displayLeague(record))}</div>
                 <h3>${escapeHtml(displayTeam(record, "home"))} — ${escapeHtml(displayTeam(record, "away"))}</h3>
                 <div class="dialog-subline">${formatMatchTime(record.commenceTime || record.utcDate)} · ${escapeHtml(displayNarrative(record.expectedResultRu || record.expectedResult || ""))}</div>
+                ${dialogLiveTemplate(record)}
 
                 <div class="dialog-hero-grid">
                     <div class="dialog-pick"><span>Лучший рынок</span><strong>${escapeHtml(displayPick(record))}</strong><b>${formatNumber(record.bookmakerOdds || record.odds, 2)}</b></div>
@@ -624,12 +790,19 @@
     }
 
     function runtimeStatus(item) {
+        const live = liveEventFor(item);
+        if (live?.status === "LIVE") {
+            return `${live.statusRu || "Матч идёт"}${live.score ? ` · ${live.score}` : ""}`;
+        }
+        if (live?.status === "FINISHED") {
+            return `матч завершён${live.score ? ` · ${live.score}` : ""}`;
+        }
         const status = String(item.status || "pending");
-        if (status !== "pending") return statusLabel(status);
+        if (status !== "pending") return statusLabel(status).toLowerCase();
         const kickoff = new Date(item.commenceTime || item.utcDate || 0);
         if (!Number.isFinite(kickoff.getTime())) return "ожидается";
         const diff = kickoff.getTime() - Date.now();
-        if (diff <= 0) return "матч начался";
+        if (diff <= 0) return "ожидается текущий счёт";
         const minutes = Math.ceil(diff / 60_000);
         if (minutes < 60) return `через ${minutes} мин`;
         if (minutes < 1440) return `через ${Math.floor(minutes / 60)} ч`;

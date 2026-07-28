@@ -1,5 +1,5 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Глобальная спортивная аналитика R4
+name: V10 Финальная спортивная аналитика R6
 
 on:
   workflow_dispatch:
@@ -18,11 +18,13 @@ on:
       - main
     paths:
       - "scripts/update_predictions.py"
+      - "scripts/update_live.py"
       - "config/analysis.json"
       - "index.html"
       - "assets/app.js"
       - "assets/styles.css"
       - ".github/workflows/update-data.yml"
+      - ".github/workflows/live-update.yml"
       - "README.md"
       - "data/force-generation-request.json"
 
@@ -58,11 +60,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile scripts/update_predictions.py
+          python -m py_compile scripts/update_predictions.py scripts/update_live.py
           python -m json.tool config/analysis.json > /dev/null
           python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/live-state.json > /dev/null
+          python -m json.tool data/live-learning.json > /dev/null
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
+          python scripts/update_live.py --validate
+          python scripts/update_live.py --self-test
 
       - name: Validate browser JavaScript
         shell: bash
@@ -249,6 +255,17 @@ jobs:
           if abs(float(bank.get("activeExposure") or 0) - expected_exposure) > 0.02:
               raise SystemExit("Virtual bank exposure does not match pending best bets")
 
+          statistics = state.get("statistics") or {}
+          if not isinstance(statistics.get("allPredictions"), dict):
+              raise SystemExit("Detailed statistics for all predictions are missing")
+          if not isinstance(statistics.get("bestBets"), dict):
+              raise SystemExit("Detailed statistics for best bets are missing")
+          if not isinstance(statistics.get("windows"), dict):
+              raise SystemExit("Statistics windows are missing")
+          learning = state.get("learning") or {}
+          if not isinstance(learning.get("modelReadiness"), dict):
+              raise SystemExit("Learning readiness status is missing")
+
           print("V10_STATE_VALIDATION=GREEN")
           print("RESET_MARKER=", meta.get("resetMarker"))
           print("MODEL_EPOCH=", meta.get("modelEpoch"))
@@ -260,6 +277,9 @@ jobs:
           print("BANK=", bank.get("current"))
           print("ACTIVE_EXPOSURE=", bank.get("activeExposure"))
           print("ODDS_QUOTA=", state.get("quota"))
+          print("ALL_PREDICTIONS_STATISTICS=", statistics.get("allPredictions"))
+          print("BEST_BETS_STATISTICS=", statistics.get("bestBets"))
+          print("LEARNING_READINESS=", learning.get("modelReadiness"))
           PY
 
       - name: Commit refreshed public data

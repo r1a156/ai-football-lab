@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 13,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -111,5 +111,27 @@
   "bestBetSelectionObjective": "PREDICT_RESULT_FIRST_THEN_RANK_PRICE_AND_RISK",
   "visibleLanguage": "ru-RU",
   "localizationPolicy": "ALL_VISIBLE_TEXT_AND_TEAM_NAMES_RUSSIAN",
-  "teamNamePolicy": "DETERMINISTIC_RUSSIAN_TRANSLITERATION_WITH_DICTIONARY"
+  "teamNamePolicy": "DETERMINISTIC_RUSSIAN_TRANSLITERATION_WITH_DICTIONARY",
+  "liveEnabled": true,
+  "liveRefreshMinutes": 10,
+  "liveLookaheadMinutes": 90,
+  "livePastHoursSoccer": 5,
+  "livePastHoursHockey": 6,
+  "liveCompletedRetentionHours": 12,
+  "liveMaximumOddsScoreCallsPerRun": 3,
+  "liveSnapshotsPerEventLimit": 72,
+  "liveLearningSessionLimit": 500,
+  "liveLearningMinimumSamples": 15,
+  "liveLearningFullWeightSamples": 80,
+  "liveMaximumProbabilityAdjustment": 0.06,
+  "liveScoreProviderPriority": [
+    "NHL_PUBLIC_LIVE",
+    "FOOTBALL_DATA_LIVE",
+    "THE_ODDS_API_SCORES"
+  ],
+  "liveStatePolicy": "SEPARATE_FROM_BANK_AND_PUBLISHED_PREDICTIONS",
+  "statisticsPolicy": "ALL_FIFTEEN_AND_BEST_FOUR_SEPARATE_WITH_WINDOWS_AND_SEGMENTS",
+  "learningPolicy": "PREMATCH_CALIBRATION_FROM_SETTLED_RESULTS_AND_SEPARATE_LIVE_CALIBRATION",
+  "liveOddsQueryBeforeStartMinutes": 10,
+  "liveOddsQuotaReserve": 50
 }
