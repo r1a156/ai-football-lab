@@ -2,12 +2,408 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "MIGRATION",
-  "finishedAt": "2026-07-28T06:06:51Z",
+  "mode": "auto",
+  "startedAt": "2026-07-28T06:48:07Z",
+  "finishedAt": "2026-07-28T06:48:22Z",
   "diagnostics": {
-    "history": 20,
-    "analysisHistory": 0,
-    "bank": 10713.33
+    "generated": true,
+    "settlement": {
+      "analysisSettled": 0,
+      "bestBetsSettled": 4,
+      "unresolved": 0
+    },
+    "duePending": 4,
+    "selectedSportKeys": [
+      "soccer_uefa_champs_league_qualification",
+      "soccer_argentina_primera_division",
+      "soccer_brazil_serie_b",
+      "soccer_sweden_superettan",
+      "soccer_conmebol_copa_sudamericana"
+    ],
+    "discovery": {
+      "activeSports": 42,
+      "events": 17,
+      "soccerEvents": 17,
+      "hockeyEvents": 0,
+      "windowHours": 24,
+      "errors": []
+    },
+    "analysis": {
+      "oddsEvents": 17,
+      "eventsWithQuotes": 17,
+      "eventsWithAnalysis": 17,
+      "marketCandidates": 98,
+      "bySport": {
+        "soccer": 17
+      },
+      "byMarketFamily": {
+        "TOTAL": 58,
+        "HANDICAP": 23,
+        "OUTCOME": 13,
+        "BTTS": 4
+      },
+      "publishedAnalysis": 15
+    },
+    "dailyAnalysis": 15,
+    "bestBets": 0,
+    "newBestBets": 0,
+    "footballDataMatches": 0,
+    "quota": {
+      "provider": "THE_ODDS_API",
+      "requestsRemaining": "385",
+      "requestsUsed": "115",
+      "requestsLast": "3",
+      "estimatedCreditsThisRun": 25,
+      "calls": 66,
+      "updatedAt": "2026-07-28T06:48:07Z"
+    },
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "SCORES:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.117
+      },
+      {
+        "label": "ODDS_SPORTS",
+        "status": 200,
+        "elapsedSeconds": 0.054
+      },
+      {
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "label": "EVENTS:icehockey_nhl",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.117
+      },
+      {
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.12
+      },
+      {
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.123
+      },
+      {
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.038
+      },
+      {
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.047
+      },
+      {
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.043
+      },
+      {
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.044
+      },
+      {
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.048
+      },
+      {
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.054
+      },
+      {
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.058
+      },
+      {
+        "label": "EVENTS:soccer_epl",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.074
+      },
+      {
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.066
+      },
+      {
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.078
+      },
+      {
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.045
+      },
+      {
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.05
+      },
+      {
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.139
+      },
+      {
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.098
+      },
+      {
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.133
+      },
+      {
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.054
+      },
+      {
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.057
+      },
+      {
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.067
+      },
+      {
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.044
+      },
+      {
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.066
+      },
+      {
+        "label": "EVENTS:soccer_russia_premier_league",
+        "status": 200,
+        "elapsedSeconds": 0.076
+      },
+      {
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.05
+      },
+      {
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.058
+      },
+      {
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.052
+      },
+      {
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 429,
+        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+      },
+      {
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.046
+      },
+      {
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.052
+      },
+      {
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.132
+      },
+      {
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.186
+      },
+      {
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.048
+      },
+      {
+        "label": "ODDS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "label": "ODDS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "label": "ODDS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.122
+      },
+      {
+        "label": "ODDS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.124
+      },
+      {
+        "label": "ODDS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.14
+      },
+      {
+        "label": "MARKETS:16da0ac17df035ef762b98ba1a3b3bf9",
+        "status": 200,
+        "elapsedSeconds": 0.061
+      },
+      {
+        "label": "ADVANCED_ODDS:16da0ac17df035ef762b98ba1a3b3bf9",
+        "status": 200,
+        "elapsedSeconds": 0.063
+      },
+      {
+        "label": "MARKETS:e2c5099df1e9688c5ff6b99ae4077f6c",
+        "status": 200,
+        "elapsedSeconds": 0.054
+      },
+      {
+        "label": "ADVANCED_ODDS:e2c5099df1e9688c5ff6b99ae4077f6c",
+        "status": 200,
+        "elapsedSeconds": 0.046
+      }
+    ]
   },
   "warnings": [],
   "errors": []
