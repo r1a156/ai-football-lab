@@ -22,6 +22,7 @@
         initializeRevealObserver();
         initializeFilters();
         initializeDialog();
+        initializeMobileNavigation();
         window.addEventListener("resize", debounce(() => renderBankChart(runtime.state?.bank), 120));
         window.addEventListener("online", () => loadState({ notify: true }));
         window.addEventListener("offline", () => setConnectionState("offline"));
@@ -117,7 +118,7 @@
         const statusNode = document.getElementById("topbarStatus");
         statusNode?.classList.toggle("is-green", status === "GREEN");
         statusNode?.classList.toggle("is-red", status === "RED");
-        setText("systemStatus", status === "GREEN" ? "Данные актуальны" : status === "RED" ? "Ошибка обновления" : "Ограниченные данные");
+        setText("systemStatus", status === "GREEN" ? "Актуально" : status === "RED" ? "Ошибка" : "Ограничено");
     }
 
     function renderBestBets(bestBets, meta, bank) {
@@ -233,9 +234,11 @@
                     <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
                     <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
                 </div>
-                <div class="analysis-stat"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
-                <div class="analysis-stat"><small>Коэфф.</small><strong>${formatNumber(odds, 2)}</strong></div>
-                <div class="analysis-stat"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)}</strong></div>
+                <div class="analysis-stats">
+                    <div class="analysis-stat analysis-probability"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
+                    <div class="analysis-stat analysis-odds"><small>Коэффициент</small><strong>${formatNumber(odds, 2)}</strong></div>
+                    <div class="analysis-stat analysis-edge"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                </div>
                 <span class="analysis-chevron">›</span>
             </div>`;
     }
@@ -243,18 +246,24 @@
     function renderBank(bank = {}, statistics = {}) {
         const starting = number(bank.starting);
         const current = number(bank.current);
-        const active = number(bank.activeExposure);
+        const active = Math.max(0, number(bank.activeExposure));
+        const available = Math.max(0, current - active);
+        const profit = current - starting;
         const roi = number(bank.roi);
         setText("currentBank", formatCurrency(current));
         setText("startingBank", formatCurrency(starting));
         setText("activeExposure", formatCurrency(active));
+        setText("bankExposureInline", formatCurrency(active));
+        setText("availableBank", formatCurrency(available));
+        setText("availableBankCard", formatCurrency(available));
+        setText("bankProfit", formatSignedCurrency(profit));
         setText("activeExposurePercent", current > 0 ? `${formatNumber((active / current) * 100, 0)}% текущего банка` : "—");
         setText("maxDrawdown", `${formatNumber(bank.maxDrawdown, 2)}%`);
-        setText("averageOdds", number(statistics.averageOdds) > 0 ? formatNumber(statistics.averageOdds, 2) : "—");
         setText("bankRoi", formatSignedPercent(roi));
         document.getElementById("bankRoi")?.classList.toggle("is-negative", roi < 0);
+        document.getElementById("bankProfit")?.classList.toggle("is-negative", profit < 0);
         const history = Array.isArray(bank.history) ? bank.history : [];
-        setText("bankHistoryCaption", history.length ? `${history.length} зафиксированных точек` : "История накапливается");
+        setText("bankHistoryCaption", history.length ? `${history.length} закрытых точек` : "История накапливается");
         renderBankChart(bank);
     }
 
@@ -275,22 +284,36 @@
             ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
             const width = rect.width;
             const height = rect.height;
-            const padding = { top: 24, right: 10, bottom: 25, left: 10 };
-            const innerWidth = width - padding.left - padding.right;
-            const innerHeight = height - padding.top - padding.bottom;
-            const minimum = Math.min(...values);
-            const maximum = Math.max(...values);
+            const compact = width < 520;
+            const padding = { top: 24, right: 12, bottom: compact ? 30 : 34, left: compact ? 44 : 60 };
+            const innerWidth = Math.max(1, width - padding.left - padding.right);
+            const innerHeight = Math.max(1, height - padding.top - padding.bottom);
+            const minimumRaw = Math.min(...values);
+            const maximumRaw = Math.max(...values);
+            const visualMargin = Math.max(1, (maximumRaw - minimumRaw) * 0.12);
+            const minimum = minimumRaw - visualMargin;
+            const maximum = maximumRaw + visualMargin;
             const range = Math.max(1, maximum - minimum);
+            const ruble = new Intl.NumberFormat("ru-RU", {
+                notation: "compact",
+                maximumFractionDigits: 1,
+            });
 
             ctx.clearRect(0, 0, width, height);
+            ctx.font = `${compact ? 9 : 10}px Inter, sans-serif`;
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "rgba(183,192,207,.72)";
             ctx.strokeStyle = "rgba(255,255,255,.055)";
             ctx.lineWidth = 1;
             for (let i = 0; i <= 4; i += 1) {
                 const y = padding.top + (innerHeight / 4) * i;
+                const labelValue = maximum - (range / 4) * i;
                 ctx.beginPath();
                 ctx.moveTo(padding.left, y);
                 ctx.lineTo(width - padding.right, y);
                 ctx.stroke();
+                ctx.textAlign = "right";
+                ctx.fillText(ruble.format(labelValue), padding.left - 8, y);
             }
 
             const points = values.map((value, index) => ({
@@ -298,8 +321,21 @@
                 y: padding.top + innerHeight - ((value - minimum) / range) * innerHeight,
             }));
 
+            const starting = number(bank.starting);
+            if (starting > 0 && starting >= minimum && starting <= maximum) {
+                const baselineY = padding.top + innerHeight - ((starting - minimum) / range) * innerHeight;
+                ctx.save();
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = "rgba(95,224,255,.26)";
+                ctx.beginPath();
+                ctx.moveTo(padding.left, baselineY);
+                ctx.lineTo(width - padding.right, baselineY);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             const gradient = ctx.createLinearGradient(0, padding.top, 0, height);
-            gradient.addColorStop(0, "rgba(184,255,74,.24)");
+            gradient.addColorStop(0, "rgba(184,255,74,.25)");
             gradient.addColorStop(1, "rgba(184,255,74,0)");
             ctx.beginPath();
             ctx.moveTo(points[0].x, height - padding.bottom);
@@ -315,20 +351,38 @@
                 else ctx.lineTo(point.x, point.y);
             });
             ctx.strokeStyle = "#b8ff4a";
-            ctx.lineWidth = 2.2;
+            ctx.lineWidth = compact ? 2 : 2.3;
             ctx.lineJoin = "round";
             ctx.lineCap = "round";
-            ctx.shadowColor = "rgba(184,255,74,.38)";
-            ctx.shadowBlur = 12;
+            ctx.shadowColor = "rgba(184,255,74,.35)";
+            ctx.shadowBlur = 10;
             ctx.stroke();
             ctx.shadowBlur = 0;
 
-            const last = points[points.length - 1];
-            ctx.beginPath();
-            ctx.arc(last.x, last.y, 4.5, 0, Math.PI * 2);
-            ctx.fillStyle = "#b8ff4a";
-            ctx.fill();
+            points.forEach((point, index) => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, index === points.length - 1 ? 4.5 : 2.6, 0, Math.PI * 2);
+                ctx.fillStyle = index === points.length - 1 ? "#b8ff4a" : "rgba(184,255,74,.72)";
+                ctx.fill();
+            });
+
+            const firstDate = history[0]?.date;
+            const lastDate = history[history.length - 1]?.date;
+            ctx.fillStyle = "rgba(183,192,207,.66)";
+            ctx.textBaseline = "alphabetic";
+            ctx.textAlign = "left";
+            if (firstDate) ctx.fillText(formatChartDate(firstDate), padding.left, height - 7);
+            ctx.textAlign = "right";
+            if (lastDate) ctx.fillText(formatChartDate(lastDate), width - padding.right, height - 7);
         });
+    }
+
+    function formatChartDate(value) {
+        const date = new Date(value);
+        if (!Number.isFinite(date.getTime())) return "";
+        return new Intl.DateTimeFormat("ru-RU", { day: "2-digit", month: "short" })
+            .format(date)
+            .replace(".", "");
     }
 
     function renderLearning(learning = {}, statistics = {}) {
@@ -440,6 +494,30 @@
                 renderHistory(runtime.state?.history || []);
             });
         });
+    }
+
+    function initializeMobileNavigation() {
+        const links = [...document.querySelectorAll("[data-mobile-nav]")];
+        if (!links.length || !("IntersectionObserver" in window)) return;
+        const sections = links
+            .map((link) => document.getElementById(link.dataset.mobileNav || ""))
+            .filter(Boolean);
+        const observer = new IntersectionObserver((entries) => {
+            const visible = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+            if (!visible) return;
+            links.forEach((link) => {
+                const active = link.dataset.mobileNav === visible.target.id;
+                link.classList.toggle("is-active", active);
+                if (active) link.setAttribute("aria-current", "page");
+                else link.removeAttribute("aria-current");
+            });
+        }, {
+            rootMargin: "-22% 0px -58% 0px",
+            threshold: [0.01, 0.15, 0.35],
+        });
+        sections.forEach((section) => observer.observe(section));
     }
 
     function initializeDialog() {

@@ -2070,3 +2070,471 @@ a {
         transform: none;
     }
 }
+
+
+/* V10_R5_UI_MOBILE_BANK_FIX */
+.brand-title-short {
+    display: none;
+}
+
+section[id] {
+    scroll-margin-top: 96px;
+}
+
+#bank .section-heading {
+    margin-bottom: 30px;
+}
+
+#bank .section-description {
+    max-width: 540px;
+}
+
+.bank-primary {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(95, 224, 255, 0.07), transparent 34%),
+        radial-gradient(circle at 0% 100%, rgba(184, 255, 74, 0.055), transparent 36%),
+        var(--panel);
+}
+
+.bank-primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.bank-liquidity {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.bank-liquidity > div {
+    min-width: 0;
+    padding: 12px 13px;
+    display: grid;
+    gap: 7px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.022);
+}
+
+.bank-liquidity span {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.bank-liquidity strong {
+    overflow: hidden;
+    color: var(--muted-strong);
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bank-liquidity strong.is-negative {
+    color: var(--negative);
+}
+
+.chart-wrap {
+    height: 250px;
+    margin-top: 14px;
+}
+
+.bank-metrics article {
+    min-height: 184px;
+    background:
+        linear-gradient(145deg, rgba(255,255,255,.032), rgba(255,255,255,.012));
+}
+
+.bank-metrics strong {
+    font-size: clamp(22px, 2.1vw, 28px);
+}
+
+.analysis-stats {
+    display: contents;
+}
+
+.analysis-row {
+    overflow: hidden;
+}
+
+.calibration-chart {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
+.connection-toast {
+    max-width: min(360px, calc(100% - 28px));
+}
+
+@media (max-width: 760px) {
+    .topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+    }
+
+    .brand {
+        min-width: 0;
+    }
+
+    .brand-copy {
+        min-width: 0;
+    }
+
+    .brand-copy strong {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .brand-title-full {
+        display: none;
+    }
+
+    .brand-title-short {
+        display: inline;
+    }
+
+    .topbar-status {
+        min-width: 92px;
+        justify-content: flex-end;
+    }
+
+    .topbar-status strong {
+        max-width: none;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
+        font-size: 11px;
+    }
+
+    .hero {
+        padding-top: 54px;
+        gap: 30px;
+    }
+
+    .hero h1 {
+        max-width: 350px;
+        font-size: clamp(38px, 11.6vw, 48px);
+        line-height: 0.98;
+    }
+
+    .hero-copy > p {
+        margin-top: 24px;
+        font-size: 14px;
+        line-height: 1.72;
+    }
+
+    .hero-actions {
+        margin-top: 28px;
+    }
+
+    .principle-row {
+        gap: 7px;
+    }
+
+    .principle-row span {
+        padding: 8px 10px;
+        font-size: 9px;
+    }
+
+    .intelligence-panel {
+        padding: 18px;
+    }
+
+    .signal-visual {
+        height: 240px;
+        margin-top: 12px;
+    }
+
+    .panel-metrics {
+        gap: 8px;
+    }
+
+    .section {
+        padding-top: 72px;
+    }
+
+    .section-heading h2 {
+        font-size: clamp(30px, 9vw, 38px);
+    }
+
+    .analysis-row {
+        min-height: 0;
+        padding: 14px;
+        grid-template-columns: 30px minmax(0, 1fr) 22px;
+        grid-template-rows: auto auto auto;
+        gap: 10px 9px;
+    }
+
+    .analysis-rank {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .analysis-match {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .analysis-chevron {
+        grid-column: 3;
+        grid-row: 1;
+        align-self: center;
+        justify-self: end;
+    }
+
+    .analysis-row .analysis-pick {
+        grid-column: 2 / 4;
+        grid-row: 2;
+        padding-top: 9px;
+    }
+
+    .analysis-stats {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .analysis-stat {
+        min-width: 0;
+        padding: 9px 7px 0;
+        border-top: 1px solid var(--line);
+    }
+
+    .analysis-edge {
+        text-align: right;
+    }
+
+    .analysis-row .analysis-stat:nth-of-type(2),
+    .analysis-row .analysis-stat:nth-of-type(3) {
+        display: grid;
+    }
+
+    .analysis-stat small {
+        overflow: hidden;
+        font-size: 7px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .analysis-stat strong {
+        overflow: hidden;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #bank .section-heading {
+        margin-bottom: 20px;
+    }
+
+    .bank-primary {
+        min-height: auto;
+        padding: 18px;
+    }
+
+    .bank-topline {
+        align-items: center;
+    }
+
+    .bank-topline strong {
+        font-size: clamp(31px, 9vw, 40px);
+    }
+
+    .roi-badge {
+        padding: 7px 10px;
+    }
+
+    .bank-liquidity {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .bank-liquidity > div:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .chart-wrap {
+        height: 220px;
+        margin-top: 10px;
+    }
+
+    .chart-caption {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 9px;
+    }
+
+    .bank-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .bank-metrics article {
+        min-height: 132px;
+        padding: 15px;
+    }
+
+    .bank-metrics strong {
+        font-size: 21px;
+    }
+
+    .bank-metrics small {
+        font-size: 8px;
+    }
+
+    .calibration-chart {
+        padding-bottom: 8px;
+    }
+
+    .connection-toast {
+        top: 82px;
+        right: 12px;
+        bottom: auto;
+        min-width: 0;
+        width: auto;
+        padding: 10px 12px;
+    }
+}
+
+@media (max-width: 430px) {
+    .analysis-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .bank-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .analysis-summary div,
+    .bank-metrics article {
+        min-height: 118px;
+    }
+
+    .panel-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .panel-metrics div {
+        min-height: 78px;
+    }
+
+    .learning-card {
+        padding: 18px;
+    }
+
+    .dialog-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 360px) {
+    .topbar {
+        padding-inline: 11px;
+    }
+
+    .brand-mark {
+        width: 36px;
+        height: 36px;
+    }
+
+    .brand-copy strong {
+        font-size: 11px;
+    }
+
+    .topbar-status {
+        min-width: 82px;
+    }
+
+    .topbar-status strong {
+        font-size: 10px;
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+    .bank-liquidity strong {
+        font-size: 13px;
+    }
+
+    .bank-metrics strong {
+        font-size: 19px;
+    }
+}
+
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 760px) {
+    body {
+        padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    }
+
+    .mobile-nav {
+        position: fixed;
+        z-index: 70;
+        left: 8px;
+        right: 8px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        min-height: 58px;
+        padding: 6px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+        border: 1px solid var(--line-strong);
+        border-radius: 18px;
+        background: rgba(7, 9, 15, 0.9);
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(22px) saturate(145%);
+    }
+
+    .mobile-nav a {
+        min-width: 0;
+        min-height: 44px;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 750;
+        transition: color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+
+    .mobile-nav a.is-active,
+    .mobile-nav a:focus-visible {
+        color: var(--text);
+        background: rgba(184, 255, 74, 0.09);
+        box-shadow: inset 0 0 0 1px rgba(184, 255, 74, 0.12);
+        outline: none;
+    }
+
+    .connection-toast {
+        bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 760px) {
+    .connection-toast {
+        top: auto;
+        bottom: calc(76px + env(safe-area-inset-bottom));
+        width: auto;
+        max-width: calc(100% - 24px);
+    }
+}
