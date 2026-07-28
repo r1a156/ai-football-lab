@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 11,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -96,8 +96,17 @@
     "HYBRID": 0.88,
     "MARKET": 0.68
   },
-  "publicationPolicy": "FIFTEEN_ANALYSES_UP_TO_FOUR_QUALIFIED_BEST_BETS",
+  "publicationPolicy": "FIFTEEN_ANALYSES_EXACTLY_FOUR_RESULT_FIRST_BEST_BETS",
   "predictionObjective": "PREDICT_MATCH_RESULT_FIRST_THEN_EVALUATE_BOOKMAKER_PRICE",
-  "virtualBankPolicy": "TWENTY_PERCENT_PER_QUALIFIED_BEST_BET_FIXED_AT_PUBLICATION",
-  "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
+  "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
+  "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
+  "topFourHardMinimumProbability": 0.42,
+  "topFourHardMinimumDataQuality": 30,
+  "topFourHardMaximumAnomaly": 85,
+  "resultFirstMinimumProbability": 0.5,
+  "resultFirstMinimumDataQuality": 42,
+  "resultFirstMinimumAgreement": 42,
+  "resultFirstMaximumAnomaly": 65,
+  "resultFirstMinimumExpectedValue": -0.1,
+  "bestBetSelectionObjective": "PREDICT_RESULT_FIRST_THEN_RANK_PRICE_AND_RISK"
 }

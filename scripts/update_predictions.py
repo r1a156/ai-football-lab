@@ -3,7 +3,7 @@
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
-It publishes fifteen daily analyses and up to four qualified virtual-bank bets.
+It publishes fifteen daily analyses and exactly four result-first virtual-bank bets.
 Only the qualified best bets affect the virtual bank.
 
 No third-party Python packages are required.
@@ -53,6 +53,7 @@ STATE_VERSION = "10.0.0"
 PIPELINE_MARKER = "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
 SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
 WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
+RESET_MARKER = "V10_CLEAN_MODEL_RESET"
 
 UTC = dt.timezone.utc
 
@@ -2049,6 +2050,209 @@ def active_pending_best_bets(state: dict[str, Any], now: dt.datetime) -> list[di
     return active
 
 
+def best_bet_selection_tier(
+    candidate: dict[str, Any],
+    config: dict[str, Any],
+) -> tuple[str, list[str]]:
+    probability = safe_float(candidate.get("modelProbability"))
+    edge = safe_float(candidate.get("edge"))
+    ev = safe_float(candidate.get("expectedValue"))
+    data_quality = safe_float(candidate.get("dataQuality"))
+    agreement = safe_float(candidate.get("agreement"))
+    anomaly = safe_float(candidate.get("anomaly"))
+    odds = safe_float(
+        candidate.get("bookmakerOdds")
+        or candidate.get("odds")
+    )
+    quote_count = safe_int(candidate.get("quoteCount"))
+
+    hard_failures: list[str] = []
+
+    if odds < safe_float(config.get("minimumBookmakerOdds"), 1.35):
+        hard_failures.append("Коэффициент ниже допустимого")
+    if odds > safe_float(config.get("maximumBookmakerOdds"), 5.0):
+        hard_failures.append("Коэффициент выше допустимого")
+    if quote_count < safe_int(config.get("minimumBookmakers"), 2):
+        hard_failures.append("Недостаточно независимых букмекеров")
+    if probability < safe_float(
+        config.get("topFourHardMinimumProbability"),
+        0.42,
+    ):
+        hard_failures.append("Слишком низкая расчётная вероятность")
+    if data_quality < safe_float(
+        config.get("topFourHardMinimumDataQuality"),
+        30,
+    ):
+        hard_failures.append("Критически недостаточно данных")
+    if anomaly > safe_float(
+        config.get("topFourHardMaximumAnomaly"),
+        85,
+    ):
+        hard_failures.append("Критическая рыночная аномальность")
+
+    if hard_failures:
+        return "REJECTED", hard_failures
+
+    strict_qualification = candidate.get("qualification") or {}
+    if bool(strict_qualification.get("qualified")):
+        return "STRICT_QUALIFIED", []
+
+    result_first_probability = safe_float(
+        config.get("resultFirstMinimumProbability"),
+        0.50,
+    )
+    result_first_data_quality = safe_float(
+        config.get("resultFirstMinimumDataQuality"),
+        42,
+    )
+    result_first_agreement = safe_float(
+        config.get("resultFirstMinimumAgreement"),
+        42,
+    )
+    result_first_maximum_anomaly = safe_float(
+        config.get("resultFirstMaximumAnomaly"),
+        65,
+    )
+    result_first_minimum_ev = safe_float(
+        config.get("resultFirstMinimumExpectedValue"),
+        -0.10,
+    )
+
+    if (
+        probability >= result_first_probability
+        and data_quality >= result_first_data_quality
+        and agreement >= result_first_agreement
+        and anomaly <= result_first_maximum_anomaly
+        and ev >= result_first_minimum_ev
+    ):
+        return "RESULT_FIRST", []
+
+    return "TOP_FOUR_AVAILABLE", []
+
+
+def best_bet_result_first_score(
+    candidate: dict[str, Any],
+    tier: str,
+    config: dict[str, Any],
+) -> float:
+    probability = safe_float(candidate.get("modelProbability"))
+    edge = safe_float(candidate.get("edge"))
+    ev = safe_float(candidate.get("expectedValue"))
+    data_quality = safe_float(candidate.get("dataQuality"))
+    agreement = safe_float(candidate.get("agreement"))
+    anomaly = safe_float(candidate.get("anomaly"))
+    odds = safe_float(
+        candidate.get("bookmakerOdds")
+        or candidate.get("odds")
+    )
+
+    tier_bonus = {
+        "STRICT_QUALIFIED": 12.0,
+        "RESULT_FIRST": 6.0,
+        "TOP_FOUR_AVAILABLE": 0.0,
+    }.get(tier, -100.0)
+
+    preferred_minimum_odds = safe_float(
+        config.get("preferredMinimumOdds"),
+        1.55,
+    )
+    preferred_maximum_odds = safe_float(
+        config.get("preferredMaximumOdds"),
+        2.80,
+    )
+
+    price_bonus = 0.0
+    if preferred_minimum_odds <= odds <= preferred_maximum_odds:
+        price_bonus = 7.0
+    elif odds < preferred_minimum_odds:
+        price_bonus = -min(
+            18.0,
+            (preferred_minimum_odds - odds) * 35,
+        )
+    else:
+        price_bonus = -min(
+            10.0,
+            (odds - preferred_maximum_odds) * 8,
+        )
+
+    low_odds_penalty = 0.0
+    if odds <= safe_float(config.get("lowOddsMaximum"), 1.54):
+        required_probability = safe_float(
+            config.get("lowOddsMinimumProbability"),
+            0.72,
+        )
+        required_edge = safe_float(
+            config.get("lowOddsMinimumEdge"),
+            0.08,
+        )
+        if probability < required_probability:
+            low_odds_penalty += 20.0
+        if edge < required_edge:
+            low_odds_penalty += 12.0
+
+    negative_ev_penalty = min(15.0, max(0.0, -ev * 65))
+    negative_edge_penalty = min(12.0, max(0.0, -edge * 70))
+
+    score = (
+        probability * 52
+        + data_quality * 0.18
+        + agreement * 0.17
+        + clamp(edge * 100, -20, 25) * 0.22
+        + clamp(ev * 100, -20, 35) * 0.10
+        - anomaly * 0.14
+        + price_bonus
+        + tier_bonus
+        - low_odds_penalty
+        - negative_ev_penalty
+        - negative_edge_penalty
+    )
+    return round(score, 6)
+
+
+def active_pending_best_bets(
+    state: dict[str, Any],
+    now: dt.datetime,
+) -> list[dict[str, Any]]:
+    active: list[dict[str, Any]] = []
+    seen: set[str] = set()
+
+    for item in state.get("history") or []:
+        if (
+            not isinstance(item, dict)
+            or item.get("recordType") != "BEST_BET"
+        ):
+            continue
+        if str(item.get("status") or "pending") != "pending":
+            continue
+
+        event_id = str(
+            item.get("eventId")
+            or item.get("oddsEventId")
+            or ""
+        )
+        commence = parse_datetime(
+            item.get("commenceTime")
+            or item.get("utcDate")
+        )
+
+        if not event_id or event_id in seen:
+            continue
+        if commence and commence < now - dt.timedelta(days=4):
+            continue
+
+        active.append(migrate_public_prediction(item))
+        seen.add(event_id)
+
+    active.sort(
+        key=lambda item: str(
+            item.get("commenceTime")
+            or item.get("utcDate")
+            or ""
+        )
+    )
+    return active
+
+
 def select_best_bets(
     daily_analysis: list[dict[str, Any]],
     state: dict[str, Any],
@@ -2057,102 +2261,302 @@ def select_best_bets(
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     target = safe_int(config.get("bestBetsTarget"), 4)
     active = active_pending_best_bets(state, now)[:target]
-    used_events = {str(item.get("eventId") or "") for item in active}
+    used_events = {
+        str(item.get("eventId") or "")
+        for item in active
+    }
+
     selected = [copy.deepcopy(item) for item in active]
     newly_selected: list[dict[str, Any]] = []
+
     family_counts: dict[str, int] = defaultdict(int)
     sport_counts: dict[str, int] = defaultdict(int)
     league_counts: dict[str, int] = defaultdict(int)
+
     for item in selected:
-        family_counts[str(item.get("marketFamily") or market_family(str(item.get("market") or "")))] += 1
+        family_counts[
+            str(
+                item.get("marketFamily")
+                or market_family(str(item.get("market") or ""))
+            )
+        ] += 1
         sport_counts[str(item.get("sport") or "soccer")] += 1
         league_counts[str(item.get("league") or "")] += 1
 
-    # Each of the fifteen matches may offer several qualified markets. The main
-    # daily-analysis row remains result-first, while the best-bet layer may use
-    # a stronger alternative price from the same match to preserve market
-    # diversity. One event can still produce only one bank bet.
     candidate_options: list[dict[str, Any]] = []
+
     for analysis in daily_analysis:
         base = copy.deepcopy(analysis)
         base["sourceAnalysisId"] = str(analysis.get("id") or "")
         candidate_options.append(base)
+
         for alternative in analysis.get("alternatives") or []:
             if not isinstance(alternative, dict):
                 continue
+
             option = copy.deepcopy(analysis)
             option.update(copy.deepcopy(alternative))
-            option["sourceAnalysisId"] = str(analysis.get("id") or "")
-            option["id"] = f"bet-{stable_id(analysis.get('eventId'), alternative.get('market'), alternative.get('selectionCode'), alternative.get('point'), analysis.get('publishedAt'))}"
+            option["sourceAnalysisId"] = str(
+                analysis.get("id") or ""
+            )
+            option["id"] = (
+                "bet-"
+                + stable_id(
+                    analysis.get("eventId"),
+                    alternative.get("market"),
+                    alternative.get("selectionCode"),
+                    alternative.get("point"),
+                    analysis.get("publishedAt"),
+                )
+            )
             option["reason"] = deterministic_reason(option)
             candidate_options.append(option)
 
-    candidates = [
-        item
-        for item in candidate_options
-        if bool((item.get("qualification") or {}).get("qualified"))
-        and str(item.get("eventId") or "") not in used_events
-    ]
-    candidates.sort(
-        key=lambda item: (
-            safe_float(item.get("bestBetScore")),
-            safe_float(item.get("modelProbability")),
-            safe_float(item.get("edge")),
-        ),
-        reverse=True,
-    )
+    ranked_candidates: list[dict[str, Any]] = []
+    seen_option_keys: set[str] = set()
 
-    max_family = safe_int(config.get("maximumSameMarketFamilyBestBets"), 2)
-    max_sport = safe_int(config.get("maximumSameSportBestBets"), 4)
-    max_league = safe_int(config.get("maximumSameLeagueBestBets"), 1)
-
-    for candidate in candidates:
-        if len(selected) >= target:
-            break
-        event_id = str(candidate.get("eventId") or "")
+    for source in candidate_options:
+        event_id = str(source.get("eventId") or "")
         if not event_id or event_id in used_events:
             continue
-        family = str(candidate.get("marketFamily") or "OTHER")
-        sport = str(candidate.get("sport") or "soccer")
-        league = str(candidate.get("league") or "")
-        if family_counts[family] >= max_family:
-            continue
-        if sport_counts[sport] >= max_sport:
-            continue
-        if league_counts[league] >= max_league:
-            continue
-        best = copy.deepcopy(candidate)
-        best["recordType"] = "BEST_BET"
-        best["isBestBet"] = True
-        best["analysisMarketDiffers"] = (
-            str(best.get("id") or "") != str(best.get("sourceAnalysisId") or "")
-        )
-        selected.append(best)
-        newly_selected.append(best)
-        used_events.add(event_id)
-        family_counts[family] += 1
-        sport_counts[sport] += 1
-        league_counts[league] += 1
 
-    bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
-    bank_value = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000))
-    stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
-    stake = round(bank_value * stake_percent / 100.0, 2)
+        option_key = "|".join(
+            [
+                event_id,
+                str(source.get("market") or ""),
+                str(source.get("selectionCode") or ""),
+                str(source.get("point") or ""),
+            ]
+        )
+        if option_key in seen_option_keys:
+            continue
+        seen_option_keys.add(option_key)
+
+        tier, hard_failures = best_bet_selection_tier(
+            source,
+            config,
+        )
+        if tier == "REJECTED":
+            continue
+
+        item = copy.deepcopy(source)
+        item["bestBetSelectionTier"] = tier
+        item["bestBetHardFailures"] = hard_failures
+        item["resultFirstScore"] = best_bet_result_first_score(
+            item,
+            tier,
+            config,
+        )
+
+        strict_failures = list(
+            (
+                item.get("qualification")
+                or {}
+            ).get("failures")
+            or []
+        )
+        item["bestBetSoftWarnings"] = strict_failures
+
+        if tier == "STRICT_QUALIFIED":
+            item["bestBetSelectionReason"] = (
+                "Прогноз прошёл все строгие фильтры."
+            )
+        elif tier == "RESULT_FIRST":
+            item["bestBetSelectionReason"] = (
+                "Выбран по надёжности прогноза результата; "
+                "строгие ценовые фильтры использованы как штраф, "
+                "а не как абсолютный запрет."
+            )
+        else:
+            item["bestBetSelectionReason"] = (
+                "Вошёл в четыре сильнейших безопасных варианта "
+                "из ежедневной аналитики."
+            )
+
+        ranked_candidates.append(item)
+
+    tier_order = {
+        "STRICT_QUALIFIED": 0,
+        "RESULT_FIRST": 1,
+        "TOP_FOUR_AVAILABLE": 2,
+    }
+
+    ranked_candidates.sort(
+        key=lambda item: (
+            tier_order.get(
+                str(item.get("bestBetSelectionTier") or ""),
+                9,
+            ),
+            -safe_float(item.get("resultFirstScore")),
+            -safe_float(item.get("modelProbability")),
+            -safe_float(item.get("dataQuality")),
+            -safe_float(item.get("agreement")),
+            -safe_float(item.get("bookmakerOdds")),
+        )
+    )
+
+    max_family = safe_int(
+        config.get("maximumSameMarketFamilyBestBets"),
+        2,
+    )
+    max_sport = safe_int(
+        config.get("maximumSameSportBestBets"),
+        4,
+    )
+    max_league = safe_int(
+        config.get("maximumSameLeagueBestBets"),
+        1,
+    )
+
+    def add_pass(
+        *,
+        preferred_price_only: bool,
+        family_limit: int,
+        sport_limit: int,
+        league_limit: int,
+    ) -> None:
+        for candidate in ranked_candidates:
+            if len(selected) >= target:
+                return
+
+            event_id = str(candidate.get("eventId") or "")
+            if not event_id or event_id in used_events:
+                continue
+
+            odds = safe_float(
+                candidate.get("bookmakerOdds")
+                or candidate.get("odds")
+            )
+            if (
+                preferred_price_only
+                and odds
+                < safe_float(
+                    config.get("preferredMinimumOdds"),
+                    1.55,
+                )
+            ):
+                continue
+
+            family = str(
+                candidate.get("marketFamily")
+                or "OTHER"
+            )
+            sport = str(
+                candidate.get("sport")
+                or "soccer"
+            )
+            league = str(
+                candidate.get("league")
+                or ""
+            )
+
+            if family_counts[family] >= family_limit:
+                continue
+            if sport_counts[sport] >= sport_limit:
+                continue
+            if league_counts[league] >= league_limit:
+                continue
+
+            best = copy.deepcopy(candidate)
+            best["recordType"] = "BEST_BET"
+            best["isBestBet"] = True
+            best["analysisMarketDiffers"] = (
+                str(best.get("id") or "")
+                != str(best.get("sourceAnalysisId") or "")
+            )
+
+            selected.append(best)
+            newly_selected.append(best)
+            used_events.add(event_id)
+            family_counts[family] += 1
+            sport_counts[sport] += 1
+            league_counts[league] += 1
+
+    # First: good price and full diversity.
+    add_pass(
+        preferred_price_only=True,
+        family_limit=max_family,
+        sport_limit=max_sport,
+        league_limit=max_league,
+    )
+
+    # Second: retain preferred price, relax league concentration.
+    add_pass(
+        preferred_price_only=True,
+        family_limit=max_family,
+        sport_limit=max_sport,
+        league_limit=max(2, max_league),
+    )
+
+    # Third: allow lower prices only after higher-value options are exhausted.
+    add_pass(
+        preferred_price_only=False,
+        family_limit=max(3, max_family),
+        sport_limit=max_sport,
+        league_limit=max(2, max_league),
+    )
+
+    # Final fill: exact four strongest distinct events from the fifteen.
+    add_pass(
+        preferred_price_only=False,
+        family_limit=target,
+        sport_limit=target,
+        league_limit=target,
+    )
+
+    if len(daily_analysis) >= target and len(selected) < target:
+        raise RuntimeError(
+            "EXACT_BEST_FOUR_NOT_MET: "
+            f"dailyAnalysis={len(daily_analysis)}; "
+            f"safeOptions={len(ranked_candidates)}; "
+            f"selected={len(selected)}"
+        )
+
+    bank = (
+        state.get("bank")
+        if isinstance(state.get("bank"), dict)
+        else {}
+    )
+    bank_value = safe_float(
+        bank.get("current"),
+        config.get("startingVirtualBank", 10000),
+    )
+    stake_percent = safe_float(
+        config.get("stakePerBestBetPercent"),
+        20.0,
+    )
+    stake = round(
+        bank_value * stake_percent / 100.0,
+        2,
+    )
     published_at = iso_z(now)
 
     for rank, item in enumerate(selected, start=1):
         item["rank"] = rank
-        item["rankLabel"] = "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}"
+        item["rankLabel"] = (
+            "Лучшая ставка дня"
+            if rank == 1
+            else f"Ставка №{rank}"
+        )
         item["recordType"] = "BEST_BET"
         item["isBestBet"] = True
         item.setdefault("status", "pending")
         item.setdefault("publishedAt", published_at)
         item["stakePercent"] = stake_percent
-        if item in newly_selected or safe_float(item.get("stake")) <= 0:
+
+        if (
+            item in newly_selected
+            or safe_float(item.get("stake")) <= 0
+        ):
             item["stake"] = stake
             item["stakeAssignedAt"] = published_at
-        item["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
-        item["bankPolicy"] = "TWENTY_PERCENT_PER_QUALIFIED_BEST_BET"
+
+        item["settlementOddsType"] = (
+            "BOOKMAKER_FIXED_AT_PUBLICATION"
+        )
+        item["bankPolicy"] = (
+            "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET"
+        )
 
     return selected, newly_selected
 
@@ -3043,10 +3447,60 @@ def run_self_test() -> int:
     daily, diagnostics = build_daily_analysis(events, {}, football_context, {}, state, test_config, now)
     if len(daily) != 15:
         raise RuntimeError(f"SELF_TEST expected 15 analyses, got {len(daily)}")
-    best, new_best = select_best_bets(daily, state, test_config, now)
+    best, new_best = select_best_bets(
+        daily,
+        state,
+        test_config,
+        now,
+    )
     if len(best) != 4 or len(new_best) != 4:
-        raise RuntimeError(f"SELF_TEST expected 4 best bets, got {len(best)}")
-    append_new_records_to_history(state, daily, new_best, test_config)
+        raise RuntimeError(
+            f"SELF_TEST expected 4 best bets, got {len(best)}"
+        )
+
+    strict_failure_daily = copy.deepcopy(daily)
+    for analysis in strict_failure_daily:
+        analysis["qualification"] = {
+            "qualified": False,
+            "failures": [
+                "Недостаточное преимущество над рынком",
+                "Недостаточное математическое ожидание",
+            ],
+        }
+        for alternative in analysis.get("alternatives") or []:
+            alternative["qualification"] = {
+                "qualified": False,
+                "failures": [
+                    "Недостаточное преимущество над рынком",
+                ],
+            }
+
+    strict_failure_state = default_state(config, now)
+    fallback_best, fallback_new = select_best_bets(
+        strict_failure_daily,
+        strict_failure_state,
+        config,
+        now,
+    )
+    if len(fallback_best) != 4 or len(fallback_new) != 4:
+        raise RuntimeError(
+            "SELF_TEST exact-four regression failed: "
+            f"best={len(fallback_best)}"
+        )
+    if any(
+        not str(item.get("bestBetSelectionTier") or "")
+        for item in fallback_best
+    ):
+        raise RuntimeError(
+            "SELF_TEST exact-four tier is missing"
+        )
+
+    append_new_records_to_history(
+        state,
+        daily,
+        new_best,
+        test_config,
+    )
     state["dailyAnalysis"] = daily
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
@@ -3066,7 +3520,7 @@ def run_self_test() -> int:
         raise RuntimeError("SELF_TEST learning segments were not updated")
     print(
         "SELF_TEST_GREEN_V10 "
-        f"ANALYSIS={len(daily)} BEST={len(best)} "
+        f"ANALYSIS={len(daily)} BEST={len(best)} EXACT_FOUR=YES "
         f"SOCCER={sum(1 for item in daily if item['sport'] == 'soccer')} "
         f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
         f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f}"
@@ -3111,6 +3565,126 @@ def migrate_state_file() -> int:
     return 0
 
 
+
+def reset_state_file() -> int:
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    now = utc_now()
+    state = default_state(config, now)
+    state["meta"].update(
+        {
+            "status": "INITIALIZED",
+            "dataFreshness": "RESET_PENDING_GENERATION",
+            "analysisDateLocal": "",
+            "analysisGeneratedAt": None,
+            "lastSuccessfulRefreshAt": None,
+            "cleanStart": True,
+            "cleanStartAt": iso_z(now),
+            "resetMarker": RESET_MARKER,
+            "modelEpoch": 1,
+            "notice": (
+                "Новый цикл V10 начат с чистого состояния. "
+                "Банк сброшен до стартового значения, старая история и обучение удалены."
+            ),
+        }
+    )
+    state["bank"]["history"] = [
+        {
+            "date": now.date().isoformat(),
+            "value": round(
+                safe_float(config.get("startingVirtualBank"), 10000.0),
+                2,
+            ),
+            "event": "V10_CLEAN_START",
+        }
+    ]
+    state["learning"]["modelNotes"] = [
+        {
+            "createdAt": iso_z(now),
+            "type": "CLEAN_START",
+            "message": (
+                "История прогнозов, результаты обучения и виртуальный банк "
+                "сброшены по явной команде владельца."
+            ),
+        }
+    ]
+
+    write_json_atomic(STATE_PATH, state)
+    write_json_atomic(
+        REPORT_PATH,
+        {
+            "status": "GREEN",
+            "version": STATE_VERSION,
+            "sourceMarker": PIPELINE_MARKER,
+            "resetMarker": RESET_MARKER,
+            "mode": "CLEAN_RESET",
+            "startedAt": iso_z(now),
+            "finishedAt": iso_z(now),
+            "diagnostics": {
+                "startingBank": state["bank"]["starting"],
+                "currentBank": state["bank"]["current"],
+                "dailyAnalysis": 0,
+                "bestBets": 0,
+                "analysisHistory": 0,
+                "bestBetHistory": 0,
+                "learningSegments": 0,
+                "calibrationBins": 0,
+            },
+            "warnings": [],
+            "errors": [],
+        },
+    )
+    write_json_atomic(
+        DAILY_SNAPSHOT_PATH,
+        {
+            "version": STATE_VERSION,
+            "sourceMarker": PIPELINE_MARKER,
+            "resetMarker": RESET_MARKER,
+            "updatedAt": state["meta"]["updatedAt"],
+            "analysisDateLocal": "",
+            "dailyAnalysis": [],
+            "bestBets": [],
+        },
+    )
+
+    validate_state(state, config, allow_legacy=False)
+
+    if safe_float(state["bank"].get("starting")) != safe_float(
+        config.get("startingVirtualBank"),
+        10000.0,
+    ):
+        raise RuntimeError("Clean reset starting bank mismatch")
+    if safe_float(state["bank"].get("current")) != safe_float(
+        config.get("startingVirtualBank"),
+        10000.0,
+    ):
+        raise RuntimeError("Clean reset current bank mismatch")
+    if any(
+        state.get(key)
+        for key in (
+            "dailyAnalysis",
+            "bestBets",
+            "predictions",
+            "analysisHistory",
+            "history",
+        )
+    ):
+        raise RuntimeError("Clean reset did not clear prediction collections")
+    if state.get("learning", {}).get("segments"):
+        raise RuntimeError("Clean reset did not clear learning segments")
+    if state.get("learning", {}).get("calibrationBins"):
+        raise RuntimeError("Clean reset did not clear calibration bins")
+
+    print("CLEAN_RESET_GREEN_V10")
+    print(f"RESET_MARKER={RESET_MARKER}")
+    print(f"BANK={state['bank']['current']:.2f}")
+    print("DAILY_ANALYSIS=0")
+    print("BEST_BETS=0")
+    print("HISTORY=0")
+    print("LEARNING=0")
+    return 0
+
+
 def cli_main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="AI Football Lab V10 pipeline")
     group = parser.add_mutually_exclusive_group(required=True)
@@ -3120,6 +3694,7 @@ def cli_main(argv: list[str] | None = None) -> int:
     group.add_argument("--validate", action="store_true", help="Validate repository and state")
     group.add_argument("--self-test", action="store_true", help="Run offline synthetic end-to-end test")
     group.add_argument("--migrate-state", action="store_true", help="Migrate legacy state to V10")
+    group.add_argument("--reset-state", action="store_true", help="Reset V10 bank, predictions, history and learning")
     args = parser.parse_args(argv)
 
     if args.validate:
@@ -3128,6 +3703,8 @@ def cli_main(argv: list[str] | None = None) -> int:
         return run_self_test()
     if args.migrate_state:
         return migrate_state_file()
+    if args.reset_state:
+        return reset_state_file()
     if args.update:
         return run_pipeline("update", force_generation=True)
     if args.settle:

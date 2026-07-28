@@ -1,5 +1,5 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Global Sports Intelligence
+name: V10 Global Sports Intelligence R3 Exact Four
 
 on:
   workflow_dispatch:
@@ -24,6 +24,7 @@ on:
       - "assets/styles.css"
       - ".github/workflows/update-data.yml"
       - "README.md"
+      - "data/force-generation-request.json"
 
 permissions:
   contents: write
@@ -71,7 +72,13 @@ jobs:
 
   update:
     name: Refresh events, results, analysis and bank
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'push' &&
+        contains(github.event.head_commit.message, '[v10-force-generation]')
+      )
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -141,9 +148,26 @@ jobs:
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+          V10_EVENT_NAME: ${{ github.event_name }}
+          V10_FORCE_INPUT: ${{ inputs.force_generation || 'false' }}
+          V10_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force_generation }}" = "true" ]; then
+
+          force_generation="false"
+
+          if [ "${V10_EVENT_NAME}" = "workflow_dispatch" ] && [ "${V10_FORCE_INPUT}" = "true" ]; then
+            force_generation="true"
+          fi
+
+          if [ "${V10_EVENT_NAME}" = "push" ] && [[ "${V10_HEAD_COMMIT_MESSAGE}" == *"[v10-force-generation]"* ]]; then
+            force_generation="true"
+          fi
+
+          echo "V10_EVENT_NAME=${V10_EVENT_NAME}"
+          echo "V10_FORCE_GENERATION=${force_generation}"
+
+          if [ "${force_generation}" = "true" ]; then
             python scripts/update_predictions.py --update
           else
             python scripts/update_predictions.py --auto
@@ -172,6 +196,8 @@ jobs:
 
           if meta.get("version") != "10.0.0":
               raise SystemExit("State version is not 10.0.0")
+          if meta.get("cleanStart") and meta.get("resetMarker") != "V10_CLEAN_MODEL_RESET":
+              raise SystemExit("Clean-start state is missing reset marker")
           if meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE":
               raise SystemExit("V10 source marker is missing")
           if report.get("status") not in {"GREEN", "DEGRADED"}:
@@ -180,6 +206,8 @@ jobs:
               raise SystemExit("More than 15 daily analyses were published")
           if len(best) > int(config["bestBetsTarget"]):
               raise SystemExit("More than 4 best bets were published")
+          if len(daily) == int(config["dailyAnalysisTarget"]) and len(best) != int(config["bestBetsTarget"]):
+              raise SystemExit("Fifteen analyses must publish exactly four best bets")
           if meta.get("status") == "GREEN" and len(daily) != int(config["dailyAnalysisTarget"]):
               raise SystemExit("GREEN state must contain exactly 15 analyses")
 
@@ -222,6 +250,8 @@ jobs:
               raise SystemExit("Virtual bank exposure does not match pending best bets")
 
           print("V10_STATE_VALIDATION=GREEN")
+          print("RESET_MARKER=", meta.get("resetMarker"))
+          print("MODEL_EPOCH=", meta.get("modelEpoch"))
           print("STATE_STATUS=", meta.get("status"))
           print("DAILY_ANALYSIS=", len(daily))
           print("BEST_BETS=", len(best))
