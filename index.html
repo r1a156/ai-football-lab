@@ -1,469 +1,391 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#07110f">
-
-    <title>AI Football Lab — аналитика футбольных матчей</title>
-
-    <meta
-        name="description"
-        content="Экспериментальная система анализа футбольных матчей с виртуальным банком, статистикой и прозрачным журналом прогнозов."
-    >
-
-    <link rel="stylesheet" href="assets/styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#07090f">
+    <meta name="description" content="AI Football Lab V10 — глобальная аналитика футбола и хоккея, 15 прогнозов дня и до 4 квалифицированных лучших ставок.">
+    <title>AI Football Lab V10 — Sports Intelligence</title>
+    <link rel="stylesheet" href="assets/styles.css?v=10.0.0">
 </head>
-
 <body>
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-    <div class="grid-background"></div>
+    <div class="page-noise" aria-hidden="true"></div>
+    <div class="aurora aurora-a" aria-hidden="true"></div>
+    <div class="aurora aurora-b" aria-hidden="true"></div>
 
-    <header class="topbar">
+    <header class="topbar" id="top">
         <a class="brand" href="#top" aria-label="AI Football Lab">
-            <span class="brand-symbol">
-                <span class="brand-ball"></span>
-                <span class="brand-pulse"></span>
+            <span class="brand-mark" aria-hidden="true">
+                <span class="brand-orbit"></span>
+                <span class="brand-core"></span>
             </span>
-
             <span class="brand-copy">
                 <strong>AI Football Lab</strong>
-                <small></small>
+                <small>V10 · Sports Intelligence</small>
             </span>
         </a>
 
         <nav class="desktop-nav" aria-label="Основная навигация">
-            <a href="#predictions">Прогнозы</a>
-            <a href="#bank">Виртуальный банк</a>
-            
-            <a href="#history">История</a>
+            <a href="#best-bets">Лучшие</a>
+            <a href="#daily-analysis">15 прогнозов</a>
+            <a href="#bank">Банк</a>
+            <a href="#learning">Обучение</a>
         </nav>
 
-        <div class="system-status">
-            <span class="status-dot"></span>
-            <span>Система активна</span>
+        <div class="topbar-status" id="topbarStatus">
+            <span class="status-pulse"></span>
+            <span>
+                <small>Состояние</small>
+                <strong id="systemStatus">Загрузка</strong>
+            </span>
         </div>
     </header>
 
-    <main id="top">
-        <section class="hero">
-            <div class="hero-content">
+    <main>
+        <section class="hero shell">
+            <div class="hero-copy reveal">
                 <div class="eyebrow">
-                    <span class="eyebrow-dot"></span>
-                    ИИ-анализ футбольных матчей
+                    <span class="eyebrow-line"></span>
+                    Глобальная спортивная аналитика
                 </div>
-
                 <h1>
-                    Лучшие прогнозы на ближайшие матчи
+                    Сначала прогнозируем
+                    <span>саму игру.</span>
+                    Затем оцениваем цену.
                 </h1>
-
-                <p class="hero-description">
-                    Ежедневный анализ лучших футбольных матчей.
+                <p>
+                    Система анализирует футбол по доступным странам и лигам,
+                    подключает хоккей при нехватке качественных событий,
+                    формирует 15 прогнозов и выделяет до четырёх ставок,
+                    прошедших строгую проверку данных, вероятности и рынка.
                 </p>
-
                 <div class="hero-actions">
-                    <a class="primary-button" href="#predictions">
-                        <span>Открыть прогнозы</span>
-                        <span class="button-arrow">↗</span>
+                    <a class="button button-primary" href="#best-bets">
+                        Открыть лучшие ставки
+                        <span>↗</span>
                     </a>
-
-                    <a class="secondary-button" href="#method">
-                        
+                    <a class="button button-secondary" href="#daily-analysis">
+                        Смотреть все 15
                     </a>
                 </div>
-
-                <div class="hero-principles">
-                    <div>
-                        <strong>4–5</strong>
-                        <span>отобранных событий</span>
-                    </div>
-
-                    <div>
-                        <strong>20%</strong>
-                        <span>виртуальная доля банка</span>
-                    </div>
-
-                    <div>
-                        <strong>100%</strong>
-                        <span>публичная история</span>
-                    </div>
+                <div class="principle-row">
+                    <span>Результат прежде коэффициента</span>
+                    <span>Футбол + хоккей</span>
+                    <span>Обучение на завершённых матчах</span>
                 </div>
             </div>
 
-            <div class="hero-visual" aria-hidden="true">
-                <div class="radar-card">
-                    <div class="radar-header">
-                        <div>
-                            <small></small>
-                            <strong></strong>
-                        </div>
-
-                        <span class="live-label">ОНЛАЙН</span>
+            <aside class="intelligence-panel reveal" aria-label="Сводка системы">
+                <div class="panel-head">
+                    <div>
+                        <small>LIVE INTELLIGENCE</small>
+                        <strong>Контур актуальных данных</strong>
                     </div>
+                    <span class="live-chip"><i></i> LIVE</span>
+                </div>
 
-                    <div class="radar">
-                        <div class="radar-ring ring-one"></div>
-                        <div class="radar-ring ring-two"></div>
-                        <div class="radar-ring ring-three"></div>
-                        <div class="radar-line radar-line-x"></div>
-                        <div class="radar-line radar-line-y"></div>
-                        <div class="radar-sweep"></div>
-
-                        <span class="radar-point point-one"></span>
-                        <span class="radar-point point-two"></span>
-                        <span class="radar-point point-three"></span>
-
-                        <div class="radar-center">
-                            <strong id="radarCount">24</strong>
-                            <span>матча изучено</span>
-                        </div>
-                    </div>
-
-                    <div class="radar-footer">
-                        <div>
-                            <span>Форма</span>
-                            <strong>88%</strong>
-                        </div>
-
-                        <div>
-                            <span>Мотивация</span>
-                            <strong>92%</strong>
-                        </div>
-
-                        <div>
-                            <span>Риск</span>
-                            <strong>Низкий</strong>
-                        </div>
+                <div class="signal-visual" aria-hidden="true">
+                    <div class="signal-grid"></div>
+                    <div class="signal-wave wave-one"></div>
+                    <div class="signal-wave wave-two"></div>
+                    <div class="signal-node node-a"></div>
+                    <div class="signal-node node-b"></div>
+                    <div class="signal-node node-c"></div>
+                    <div class="signal-center">
+                        <strong id="heroAnalysisCount">—</strong>
+                        <span>событий</span>
                     </div>
                 </div>
+
+                <div class="panel-metrics">
+                    <div>
+                        <span>Лучших ставок</span>
+                        <strong id="heroBestCount">—</strong>
+                    </div>
+                    <div>
+                        <span>Лиг в анализе</span>
+                        <strong id="heroLeagueCount">—</strong>
+                    </div>
+                    <div>
+                        <span>Виртуальный банк</span>
+                        <strong id="heroBank">—</strong>
+                    </div>
+                    <div>
+                        <span>Последнее обновление</span>
+                        <strong id="heroUpdated">—</strong>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="live-strip" aria-label="Текущие показатели">
+            <div class="live-strip-track">
+                <span><i></i> Футбол: <strong id="stripSoccer">—</strong></span>
+                <span><i></i> Хоккей: <strong id="stripHockey">—</strong></span>
+                <span><i></i> Точность лучших: <strong id="stripAccuracy">—</strong></span>
+                <span><i></i> ROI банка: <strong id="stripRoi">—</strong></span>
+                <span><i></i> Источник коэффициентов: <strong>The Odds API</strong></span>
             </div>
         </section>
 
-        <section class="ticker" aria-label="Показатели системы">
-            <div class="ticker-track">
-                <span>АНАЛИЗ ФОРМЫ</span>
-                <i></i>
-                <span>ТУРНИРНАЯ МОТИВАЦИЯ</span>
-                <i></i>
-                <span>ОЦЕНКА РИСКОВ</span>
-                <i></i>
-                <span>ВИРТУАЛЬНЫЙ БАНК</span>
-                <i></i>
-                <span>ОТКРЫТАЯ СТАТИСТИКА</span>
-                <i></i>
-                <span>БЕЗ ГАРАНТИЙ ДОХОДА</span>
-            </div>
-        </section>
-
-        <section class="section" id="predictions">
-            <div class="section-heading">
+        <section class="section shell" id="best-bets">
+            <div class="section-heading reveal">
                 <div>
                     <span class="section-index">01</span>
-                    <p class="section-kicker"></p>
-                    <h2>Прогнозы системы</h2>
+                    <p class="section-kicker">Квалифицированный отбор</p>
+                    <h2>Лучшие ставки дня</h2>
                 </div>
-
-                <div class="update-info" aria-live="polite">
-                    <div class="update-info-main">
-                        <span>Обновлено</span>
-                        <strong id="lastUpdated">Загрузка...</strong>
-                    </div>
-
-                    <div class="data-connection">
-                        <span
-                            id="refreshIndicator"
-                            class="refresh-indicator is-loading"
-                            aria-hidden="true"
-                        ></span>
-
-                        <span id="dataFreshness">
-                            Проверяем актуальность данных
-                        </span>
-                    </div>
+                <div class="section-meta">
+                    <span id="bestBetsUpdated">Обновление данных…</span>
+                    <strong id="bestBetsExposure">Экспозиция —</strong>
                 </div>
             </div>
 
-            <div id="predictionsGrid" class="predictions-grid">
-                <div class="loading-card">
-                    <span class="loading-spinner"></span>
-                    <p>Загружаем аналитическую выборку...</p>
-                </div>
+            <div class="best-bets-grid" id="bestBetsGrid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
             </div>
         </section>
 
-        <section class="section" id="bank">
-            <div class="section-heading">
+        <section class="section shell" id="daily-analysis">
+            <div class="section-heading reveal">
                 <div>
                     <span class="section-index">02</span>
-                    <p class="section-kicker"></p>
+                    <p class="section-kicker">Полная аналитическая выборка</p>
+                    <h2>15 прогнозов дня</h2>
+                </div>
+                <div class="analysis-controls" role="group" aria-label="Фильтры прогнозов">
+                    <button class="filter-chip is-active" data-sport-filter="all" type="button">Все</button>
+                    <button class="filter-chip" data-sport-filter="soccer" type="button">Футбол</button>
+                    <button class="filter-chip" data-sport-filter="ice_hockey" type="button">Хоккей</button>
+                </div>
+            </div>
+
+            <div class="analysis-summary reveal">
+                <div>
+                    <span>Проанализировано</span>
+                    <strong id="analysisCount">—</strong>
+                </div>
+                <div>
+                    <span>Страны и регионы</span>
+                    <strong id="countryCount">—</strong>
+                </div>
+                <div>
+                    <span>Рыночные семейства</span>
+                    <strong id="marketFamilyCount">—</strong>
+                </div>
+                <div>
+                    <span>Качество данных</span>
+                    <strong id="averageDataQuality">—</strong>
+                </div>
+            </div>
+
+            <div class="analysis-list" id="analysisList">
+                <div class="analysis-loading">Загрузка аналитической выборки…</div>
+            </div>
+        </section>
+
+        <section class="section shell" id="bank">
+            <div class="section-heading reveal">
+                <div>
+                    <span class="section-index">03</span>
+                    <p class="section-kicker">Только квалифицированные ставки</p>
                     <h2>Виртуальный банк</h2>
                 </div>
-
-                <p class="section-note">
-                    Виртуальный расчёт и расчётные коэффициенты используются только для проверки качества
-                    аналитической модели.
+                <p class="section-description">
+                    На каждую опубликованную лучшую ставку фиксируется 20% банка.
+                    Остальные аналитические прогнозы на баланс не влияют.
                 </p>
             </div>
 
             <div class="bank-layout">
-                <article class="bank-main-card">
-                    <div class="bank-main-top">
+                <article class="bank-card bank-primary reveal">
+                    <div class="bank-topline">
                         <div>
-                            <span>Текущий виртуальный банк</span>
+                            <span>Текущий баланс</span>
                             <strong id="currentBank">—</strong>
                         </div>
-
-                        <div id="bankChange" class="change-badge">—</div>
+                        <span class="roi-badge" id="bankRoi">—</span>
                     </div>
-
-                    <div class="bank-chart-wrap">
-                        <canvas id="bankChart" aria-label="График виртуального банка"></canvas>
+                    <div class="chart-wrap">
+                        <canvas id="bankChart" aria-label="Динамика виртуального банка"></canvas>
                     </div>
-
-                    <div class="bank-legend">
-                        <span>
-                            <i class="legend-line"></i>
-                            Динамика банка
-                        </span>
-
-                        <span id="chartPeriod">Последние результаты</span>
+                    <div class="chart-caption">
+                        <span><i></i> Зафиксированный баланс</span>
+                        <span id="bankHistoryCaption">Нет данных</span>
                     </div>
                 </article>
 
-                <div class="bank-stat-grid">
-                    <article class="stat-card">
+                <div class="bank-metrics reveal">
+                    <article>
                         <span>Стартовый банк</span>
                         <strong id="startingBank">—</strong>
-                        <small>Исходная контрольная точка</small>
+                        <small>Базовая точка расчёта</small>
                     </article>
-
-                    <article class="stat-card">
-                        <span>Доля на прогноз</span>
-                        <strong id="stakePercent">20%</strong>
-                        <small>От банка на момент публикации</small>
+                    <article>
+                        <span>Активная экспозиция</span>
+                        <strong id="activeExposure">—</strong>
+                        <small id="activeExposurePercent">—</small>
                     </article>
-
-                    <article class="stat-card">
-                        <span>Общая доходность</span>
-                        <strong id="roiValue">—</strong>
-                        <small>Виртуальный показатель</small>
-                    </article>
-
-                    <article class="stat-card">
+                    <article>
                         <span>Максимальная просадка</span>
-                        <strong id="drawdownValue">—</strong>
-                        <small>Контроль риска модели</small>
+                        <strong id="maxDrawdown">—</strong>
+                        <small>От локального максимума</small>
+                    </article>
+                    <article>
+                        <span>Средний коэффициент</span>
+                        <strong id="averageOdds">—</strong>
+                        <small>Завершённые лучшие ставки</small>
                     </article>
                 </div>
             </div>
         </section>
 
-        <section class="section" id="analytics">
-            <div class="section-heading">
-                <div>
-                    <span class="section-index">03</span>
-                    <p class="section-kicker"></p>
-                    <h2>Статистика модели</h2>
-                </div>
-            </div>
-
-            <div class="analytics-grid">
-                <article class="metric-card metric-large">
-                    <div class="metric-header">
-                        <span>Точность завершённых прогнозов</span>
-                        <small>За весь период</small>
-                    </div>
-
-                    <div class="accuracy-layout">
-                        <div class="accuracy-ring" id="accuracyRing">
-                            <div>
-                                <strong id="accuracyValue">—</strong>
-                                <span>точность</span>
-                            </div>
-                        </div>
-
-                        <div class="accuracy-details">
-                            <div>
-                                <span>Успешные</span>
-                                <strong id="wonCount">—</strong>
-                            </div>
-
-                            <div>
-                                <span>Неуспешные</span>
-                                <strong id="lostCount">—</strong>
-                            </div>
-
-                            <div>
-                                <span>Ожидают результата</span>
-                                <strong id="pendingCount">—</strong>
-                            </div>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="metric-card">
-                    <span class="metric-label">Средний расчётный коэффициент</span>
-                    <strong class="metric-value" id="averageOdds">—</strong>
-                    <p>Среднее значение опубликованных событий</p>
-                </article>
-
-                <article class="metric-card">
-                    <span class="metric-label">Всего прогнозов</span>
-                    <strong class="metric-value" id="totalPredictions">—</strong>
-                    <p>Включая завершённые и текущие</p>
-                </article>
-
-                <article class="metric-card">
-                    <span class="metric-label">Текущая серия</span>
-                    <strong class="metric-value" id="currentStreak">—</strong>
-                    <p>Последовательность результатов</p>
-                </article>
-
-                <article class="metric-card">
-                    <span class="metric-label">Лучший сегмент</span>
-                    <strong class="metric-value metric-text" id="bestSegment">—</strong>
-                    <p>Наиболее стабильная категория</p>
-                </article>
-            </div>
-        </section>
-
-        <section class="section method-section" id="method">
-            <div class="section-heading">
+        <section class="section shell" id="learning">
+            <div class="section-heading reveal">
                 <div>
                     <span class="section-index">04</span>
-                    <p class="section-kicker">Принципы отбора</p>
-                    <h2>Как система принимает решение</h2>
+                    <p class="section-kicker">Калибровка на реальных результатах</p>
+                    <h2>Обучение системы</h2>
                 </div>
+                <p class="section-description">
+                    Ошибки учитываются по спорту, лиге, рынку и диапазону коэффициента.
+                    Коррекция включается только после накопления достаточной выборки.
+                </p>
             </div>
 
-            <div class="method-grid">
-                <article>
-                    <span class="method-number">01</span>
-                    <div class="method-icon">⌁</div>
-                    <h3>Первичный фильтр</h3>
-                    <p>
-                        Исключаются товарищеские, молодёжные и кубковые матчи,
-                        а также события с недостаточным объёмом данных.
-                    </p>
+            <div class="learning-grid">
+                <article class="learning-card learning-score reveal">
+                    <div class="learning-card-head">
+                        <span>Точность аналитики</span>
+                        <small id="settledAnalysisCount">— завершено</small>
+                    </div>
+                    <div class="score-orbit" id="analysisAccuracyOrbit">
+                        <div>
+                            <strong id="analysisAccuracy">—</strong>
+                            <span>всех прогнозов</span>
+                        </div>
+                    </div>
+                    <p>Рассчитывается по всей ежедневной выборке, а не только по ставкам.</p>
                 </article>
 
-                <article>
-                    <span class="method-number">02</span>
-                    <div class="method-icon">◫</div>
-                    <h3>Сравнение формы</h3>
-                    <p>
-                        Анализируются последние результаты, домашняя и гостевая
-                        форма, забитые и пропущенные мячи.
-                    </p>
+                <article class="learning-card learning-score reveal">
+                    <div class="learning-card-head">
+                        <span>Точность лучших ставок</span>
+                        <small id="settledBestCount">— завершено</small>
+                    </div>
+                    <div class="score-orbit score-orbit-accent" id="bestAccuracyOrbit">
+                        <div>
+                            <strong id="bestAccuracy">—</strong>
+                            <span>лучший контур</span>
+                        </div>
+                    </div>
+                    <p id="currentStreak">Нет завершённой серии</p>
                 </article>
 
-                <article>
-                    <span class="method-number">03</span>
-                    <div class="method-icon">◎</div>
-                    <h3>Оценка мотивации</h3>
-                    <p>
-                        Учитываются турнирное положение, борьба за повышение,
-                        сохранение места в лиге и плотность календаря.
-                    </p>
+                <article class="learning-card calibration-card reveal">
+                    <div class="learning-card-head">
+                        <span>Калибровка вероятностей</span>
+                        <small>Прогноз против факта</small>
+                    </div>
+                    <div class="calibration-chart" id="calibrationChart">
+                        <div class="empty-mini">Недостаточно завершённых прогнозов</div>
+                    </div>
                 </article>
 
-                <article>
-                    <span class="method-number">04</span>
-                    <div class="method-icon">△</div>
-                    <h3>Контроль риска</h3>
-                    <p>
-                        Прогноз публикуется только при достаточном уровне
-                        уверенности и понятном сценарии матча.
-                    </p>
-                </article>
-
-                <article>
-                    <span class="method-number">05</span>
-                    <div class="method-icon">↻</div>
-                    <h3>Обратная связь</h3>
-                    <p>
-                        После завершения матча результат добавляется в журнал и
-                        используется для дальнейшей корректировки правил.
-                    </p>
+                <article class="learning-card segment-card reveal">
+                    <div class="learning-card-head">
+                        <span>Лучшие сегменты</span>
+                        <small>Не менее 10 результатов</small>
+                    </div>
+                    <div class="segment-list" id="segmentList">
+                        <div class="empty-mini">Данные накапливаются</div>
+                    </div>
                 </article>
             </div>
         </section>
 
-        <section class="section" id="history">
-            <div class="section-heading">
+        <section class="section shell" id="history">
+            <div class="section-heading reveal">
                 <div>
                     <span class="section-index">05</span>
-                    <p class="section-kicker"></p>
-                    <h2>История прогнозов</h2>
+                    <p class="section-kicker">Фактические результаты</p>
+                    <h2>История лучших ставок</h2>
                 </div>
-
-                <div class="history-filters">
-                    <button type="button" class="filter-button active" data-filter="all">
-                        Все
-                    </button>
-
-                    <button type="button" class="filter-button" data-filter="won">
-                        Успешные
-                    </button>
-
-                    <button type="button" class="filter-button" data-filter="lost">
-                        Неуспешные
-                    </button>
-
-                    <button type="button" class="filter-button" data-filter="pending">
-                        Ожидают
-                    </button>
+                <div class="history-filters" role="group" aria-label="Фильтры истории">
+                    <button class="filter-chip is-active" data-history-filter="all" type="button">Все</button>
+                    <button class="filter-chip" data-history-filter="won" type="button">Выигрыш</button>
+                    <button class="filter-chip" data-history-filter="lost" type="button">Проигрыш</button>
+                    <button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button>
                 </div>
             </div>
 
-            <div class="history-table-wrap">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Дата</th>
-                            <th>Матч</th>
-                            <th>Прогноз</th>
-                            <th>Расчётный коэффициент</th>
-                            <th>Результат</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="historyBody">
-                        <tr>
-                            <td colspan="6" class="table-loading">
-                                Загрузка истории...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="history-panel reveal">
+                <div class="history-table" id="historyTable">
+                    <div class="analysis-loading">Загрузка истории…</div>
+                </div>
             </div>
         </section>
 
-        
+        <section class="method-section shell reveal" id="method">
+            <div class="method-intro">
+                <span class="section-index">06</span>
+                <p class="section-kicker">Методология V10</p>
+                <h2>Результат матча — главный объект анализа</h2>
+                <p>
+                    Коэффициент не определяет прогноз. Система сначала строит вероятностную
+                    картину матча, затем сравнивает её с безмаржинальной оценкой рынка.
+                </p>
+            </div>
+            <div class="method-steps">
+                <article><span>01</span><strong>Глобальный поиск</strong><p>Все доступные футбольные лиги; хоккей подключается при нехватке событий.</p></article>
+                <article><span>02</span><strong>Сценарий игры</strong><p>Ожидаемый счёт, исходы, тоталы, форы, обе забьют и командные тоталы.</p></article>
+                <article><span>03</span><strong>Проверка цены</strong><p>Вероятность модели сравнивается с рынком без букмекерской маржи.</p></article>
+                <article><span>04</span><strong>15 → до 4</strong><p>Банк участвует только в прогнозах, прошедших все квалификационные пороги.</p></article>
+                <article><span>05</span><strong>Обучение</strong><p>Калибровка по завершённым матчам с защитой от выводов на малой выборке.</p></article>
+            </div>
+        </section>
+
+        <section class="disclaimer shell reveal">
+            <span class="disclaimer-icon">!</span>
+            <div>
+                <strong>Аналитическая модель не гарантирует выигрыш.</strong>
+                <p>
+                    Вероятности являются расчётными оценками. Виртуальный банк используется
+                    для тестирования стратегии и не является рекомендацией совершать ставки.
+                    Индекс аномальности отражает необычное поведение рынка, но не доказывает
+                    договорной характер матча.
+                </p>
+            </div>
+        </section>
     </main>
 
-    <footer>
+    <footer class="footer shell">
         <div class="footer-brand">
-            <span class="brand-symbol small">
-                <span class="brand-ball"></span>
-                <span class="brand-pulse"></span>
+            <span class="brand-mark brand-mark-small" aria-hidden="true">
+                <span class="brand-orbit"></span>
+                <span class="brand-core"></span>
             </span>
-
-            <div>
-                <strong>AI Football Lab</strong>
-                <span>Открытая экспериментальная аналитика</span>
-            </div>
+            <span><strong>AI Football Lab</strong><small>Global Sports Intelligence</small></span>
         </div>
-
-        <p>
-            Данные обновляются автоматически. Версия интерфейса
-            <span id="appVersion">1.0.0</span>
-        </p>
+        <div class="footer-status">
+            <span id="footerUpdated">Данные загружаются</span>
+            <span>V10.0.0</span>
+        </div>
     </footer>
 
-    <script src="assets/app.js?v=4.5.0"></script>
+    <dialog class="analysis-dialog" id="analysisDialog">
+        <button class="dialog-close" id="dialogClose" type="button" aria-label="Закрыть">×</button>
+        <div id="dialogContent"></div>
+    </dialog>
+
+    <div class="connection-toast" id="connectionToast" role="status" aria-live="polite">
+        <span></span>
+        <strong>Обновление данных</strong>
+    </div>
+
+    <script src="assets/app.js?v=10.0.0"></script>
 </body>
 </html>
-

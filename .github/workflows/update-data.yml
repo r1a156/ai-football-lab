@@ -1,7 +1,17 @@
-name: Ежедневное глобальное обновление футбольной аналитики V9 R6
+# V10_AUTO_REFRESH_PIPELINE
+name: V10 Global Sports Intelligence
 
 on:
   workflow_dispatch:
+    inputs:
+      force_generation:
+        description: "Сформировать новый список 15 прогнозов независимо от даты"
+        required: false
+        default: false
+        type: boolean
+
+  schedule:
+    - cron: "17 */3 * * *"
 
   push:
     branches:
@@ -9,51 +19,42 @@ on:
     paths:
       - "scripts/update_predictions.py"
       - "config/analysis.json"
+      - "index.html"
       - "assets/app.js"
+      - "assets/styles.css"
       - ".github/workflows/update-data.yml"
-
-  schedule:
-    - cron: "17 5 * * *"
+      - "README.md"
 
 permissions:
   contents: write
 
 concurrency:
-  group: football-analysis-update
+  group: v10-global-sports-intelligence
   cancel-in-progress: false
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUTF8: "1"
+
 jobs:
-  update:
-    name: Четыре лучших прогноза из глобального пула рынков
+  validate:
+    name: V10 static and offline validation
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
-      - name: Получение проекта
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Установка Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Проверка секретов
+      - name: Compile and validate source
         shell: bash
-        env:
-          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-        run: |
-          set -euo pipefail
-          test -n "${FOOTBALL_DATA_API_KEY}" || { echo "::error::Не задан FOOTBALL_DATA_API_KEY"; exit 1; }
-          test -n "${ODDS_API_KEY}" || { echo "::error::Не задан ODDS_API_KEY"; exit 1; }
-          if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY отсутствует; будет использована статистика и глобальный рыночный консенсус."
-          fi
-
-      - name: Статическая и офлайн-проверка V9
         run: |
           set -euo pipefail
           python -m py_compile scripts/update_predictions.py
@@ -62,207 +63,192 @@ jobs:
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
 
-      - name: Глобальный поиск и обновление
+      - name: Validate browser JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/app.js
+
+  update:
+    name: Refresh events, results, analysis and bank
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check required and optional data sources
+        shell: bash
         env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${ODDS_API_KEY}" || {
+            echo "::error::ODDS_API_KEY is required for V10 production refresh"
+            exit 1
+          }
+          if [ -z "${FOOTBALL_DATA_API_KEY}" ]; then
+            echo "::warning::FOOTBALL_DATA_API_KEY is missing; football events outside supported competitions will use the MARKET data tier."
+          fi
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "::warning::OPENROUTER_API_KEY is missing; deterministic explanations will be used."
+          fi
+
+      - name: Migrate legacy state when required
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("data/state.json")
+          state = json.loads(path.read_text(encoding="utf-8-sig"))
+          meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+          needs_migration = (
+              meta.get("version") != "10.0.0"
+              or meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
+              or not isinstance(state.get("dailyAnalysis"), list)
+              or not isinstance(state.get("bestBets"), list)
+          )
+          print(f"STATE_MIGRATION_REQUIRED={str(needs_migration).upper()}")
+          Path(".v10-migration-required").write_text(
+              "YES" if needs_migration else "NO",
+              encoding="ascii",
+          )
+          PY
+          if [ "$(cat .v10-migration-required)" = "YES" ]; then
+            python scripts/update_predictions.py --migrate-state
+          fi
+          rm -f .v10-migration-required
+
+      - name: Run V10 refresh
+        shell: bash
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           set -euo pipefail
-          python scripts/update_predictions.py --update
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.force_generation }}" = "true" ]; then
+            python scripts/update_predictions.py --update
+          else
+            python scripts/update_predictions.py --auto
+          fi
 
-      - name: Проверка результата V9 R6 Probability First
+      - name: Validate published V10 state
+        shell: bash
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
+          python -m json.tool data/ai_daily_analysis.json > /dev/null
+          python scripts/update_predictions.py --validate
           python - <<'PY'
           import json
           from pathlib import Path
 
           state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
-          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
           report = json.loads(Path("data/last-update-report.json").read_text(encoding="utf-8"))
-          meta = state.get("meta", {})
-          predictions = state.get("predictions", [])
-          target = int(config.get("dailyPredictionCount") or 4)
+          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
 
-          if report.get("status") != "GREEN":
-              raise SystemExit("Pipeline не сформировал GREEN-отчёт")
-          if not meta.get("globalDiscoveryEnabled"):
-              raise SystemExit("Глобальное обнаружение не включено")
-          if meta.get("globalDiscoverySource") != "THE_ODDS_API_EVENTS":
-              raise SystemExit("Использован неверный источник глобального календаря")
-          if int(meta.get("globalSportsScanned") or 0) <= 0:
-              raise SystemExit("Не просканированы активные футбольные лиги")
-          if int(meta.get("globalLeaguesWithEvents") or 0) <= 0:
-              raise SystemExit("Глобальный поиск не нашёл лиги с матчами")
-          if int(meta.get("globalEventsDiscovered") or 0) <= 0:
-              raise SystemExit("Глобальный поиск не нашёл матчи")
-          if len(predictions) != target:
-              raise SystemExit(f"Прогнозов {len(predictions)}, ожидалось {target}")
-          if int(meta.get("selectedPredictions") or 0) != target:
-              raise SystemExit("selectedPredictions не равен четырём")
+          meta = state.get("meta") or {}
+          daily = state.get("dailyAnalysis") or []
+          best = state.get("bestBets") or []
+          bank = state.get("bank") or {}
 
-          ids = [int(item["sourceMatchId"]) for item in predictions]
-          if len(ids) != len(set(ids)):
-              raise SystemExit("Обнаружены дубли матчей")
-          leagues = {str(item.get("league") or "") for item in predictions}
-          countries = {str(item.get("country") or "") for item in predictions}
-          minimum_leagues = int(
-              config.get("minimumPublishedLeagues") or 3
-          )
-          if len(leagues) < minimum_leagues:
-              raise SystemExit(
-                  f"Недостаточно разных лиг: {sorted(leagues)}"
-              )
-          minimum_countries = int(config.get("minimumPublishedCountries") or 3)
-          if len(countries) < minimum_countries:
-              raise SystemExit(f"Недостаточно стран: {sorted(countries)}")
+          if meta.get("version") != "10.0.0":
+              raise SystemExit("State version is not 10.0.0")
+          if meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE":
+              raise SystemExit("V10 source marker is missing")
+          if report.get("status") not in {"GREEN", "DEGRADED"}:
+              raise SystemExit(f"Pipeline report is not publishable: {report.get('status')}")
+          if len(daily) > int(config["dailyAnalysisTarget"]):
+              raise SystemExit("More than 15 daily analyses were published")
+          if len(best) > int(config["bestBetsTarget"]):
+              raise SystemExit("More than 4 best bets were published")
+          if meta.get("status") == "GREEN" and len(daily) != int(config["dailyAnalysisTarget"]):
+              raise SystemExit("GREEN state must contain exactly 15 analyses")
 
-          market_counts = {}
-          for item in predictions:
-              market = str(item.get("market") or "")
-              market_counts[market] = market_counts.get(market, 0) + 1
-              odds = float(item.get("bookmakerOdds") or 0)
-              probability = float(item.get("probability") or 0)
-              ev = float(item.get("expectedValue") or -1)
-              if market not in {
-                  "HOME_WIN",
-                  "DRAW",
-                  "AWAY_WIN",
-                  "OVER_2_5",
-                  "UNDER_2_5",
-              }:
-                  raise SystemExit(
-                      f"Неподдерживаемый рынок: {market}"
-                  )
-              if odds < float(config.get("minimumBookmakerOdds") or 1.45):
-                  raise SystemExit(f"Слишком низкий коэффициент: {odds}")
-              if probability < float(
-                  config.get("minimumPublishedProbability") or 0.47
-              ):
-                  raise SystemExit(
-                      f"Слишком низкая вероятность: {probability}"
-                  )
+          daily_events = [str(item.get("eventId") or "") for item in daily]
+          if any(not value for value in daily_events):
+              raise SystemExit("A daily analysis has no eventId")
+          if len(daily_events) != len(set(daily_events)):
+              raise SystemExit("Duplicate events exist in dailyAnalysis")
 
-              value_tier = str(
-                  item.get("valueTier") or ""
-              )
-              if value_tier == "STRICT_VALUE":
-                  minimum_tier_ev = float(
-                      config.get("strictMinimumExpectedValue")
-                      or 0.0
-                  )
-                  minimum_tier_probability = float(
-                      config.get("minimumPublishedProbability")
-                      or 0.47
-                  )
-              elif value_tier == "PROBABILITY_FIRST":
-                  minimum_tier_ev = float(
-                      config.get(
-                          "probabilityFirstMinimumExpectedValue"
-                      )
-                      or -0.12
-                  )
-                  minimum_tier_probability = float(
-                      config.get(
-                          "probabilityFirstMinimumProbability"
-                      )
-                      or 0.52
-                  )
-              elif value_tier == "HIGH_PROBABILITY_FALLBACK":
-                  minimum_tier_ev = float(
-                      config.get("safetyMinimumExpectedValue")
-                      or -0.16
-                  )
-                  minimum_tier_probability = float(
-                      config.get("safetyMinimumProbability")
-                      or 0.56
-                  )
-              else:
-                  raise SystemExit(
-                      f"Неизвестный уровень отбора: {value_tier}"
-                  )
+          best_events = [str(item.get("eventId") or "") for item in best]
+          if any(not value for value in best_events):
+              raise SystemExit("A best bet has no eventId")
+          if len(best_events) != len(set(best_events)):
+              raise SystemExit("Duplicate events exist in bestBets")
 
-              if probability < minimum_tier_probability:
-                  raise SystemExit(
-                      "Вероятность ниже порога уровня: "
-                      f"tier={value_tier}; probability={probability}; "
-                      f"minimum={minimum_tier_probability}"
-                  )
-
-              if ev < minimum_tier_ev:
-                  raise SystemExit(
-                      "EV ниже контролируемого порога: "
-                      f"tier={value_tier}; ev={ev}; "
-                      f"minimum={minimum_tier_ev}"
-                  )
-
-              if item.get("coefficientType") != "BOOKMAKER_MARKET":
-                  raise SystemExit("Используется не букмекерский коэффициент")
-              if not bool(item.get("marketOddsAvailable")):
-                  raise SystemExit(
-                      "Букмекерский коэффициент потерян финальным guard"
-                  )
-              if not bool(item.get("expectedValueAvailable")):
-                  raise SystemExit(
-                      "Ожидаемое значение потеряно финальным guard"
-                  )
+          for item in daily:
+              if float(item.get("bookmakerOdds") or item.get("odds") or 0) <= 1:
+                  raise SystemExit("Daily analysis does not contain real bookmaker odds")
               if not str(item.get("bookmaker") or "").strip():
-                  raise SystemExit("Не указан букмекер")
+                  raise SystemExit("Daily analysis does not contain bookmaker name")
+              if not item.get("isBestBet") and float(item.get("stake") or 0) != 0:
+                  raise SystemExit("A non-best analysis affects the virtual bank")
+
+          for item in best:
               if float(item.get("stakePercent") or 0) != 20:
-                  raise SystemExit("Прогноз не получил ставку 20% банка")
+                  raise SystemExit("Every best bet must use 20 percent stake")
               if float(item.get("stake") or 0) <= 0:
-                  raise SystemExit("У прогноза отсутствует виртуальная ставка")
-              age = item.get("oddsAgeMinutes")
-              allowed_age = item.get(
-                  "oddsMaximumAgeMinutes"
-              )
-              if allowed_age is None:
-                  allowed_age = config.get(
-                      "maximumOddsAgeMinutes"
-                  ) or 180
-              if (
-                  age is None
-                  or float(age) > float(allowed_age)
-              ):
-                  raise SystemExit(
-                      "Коэффициент устарел: "
-                      f"age={age}; allowed={allowed_age}"
-                  )
-              if not str(item.get("oddsEventId") or ""):
-                  raise SystemExit("Не сохранён oddsEventId")
-              if not str(item.get("oddsSportKey") or ""):
-                  raise SystemExit("Не сохранён oddsSportKey")
+                  raise SystemExit("A best bet has no fixed virtual stake")
+              if float(item.get("bookmakerOdds") or item.get("odds") or 0) <= 1:
+                  raise SystemExit("A best bet does not contain real bookmaker odds")
+              if item.get("settlementOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
+                  raise SystemExit("A best bet has the wrong settlement odds policy")
 
-          if max(market_counts.values()) > 2:
-              raise SystemExit(f"Один рынок занял больше двух мест: {market_counts}")
-          if meta.get("virtualBankOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
-              raise SystemExit("Банк использует неверный тип коэффициента")
+          expected_exposure = sum(
+              float(item.get("stake") or 0)
+              for item in best
+              if str(item.get("status") or "pending") == "pending"
+          )
+          if abs(float(bank.get("activeExposure") or 0) - expected_exposure) > 0.02:
+              raise SystemExit("Virtual bank exposure does not match pending best bets")
 
-          print("GLOBAL_SPORTS_SCANNED:", meta.get("globalSportsScanned"))
-          print("GLOBAL_LEAGUES_WITH_EVENTS:", meta.get("globalLeaguesWithEvents"))
-          print("GLOBAL_EVENTS_DISCOVERED:", meta.get("globalEventsDiscovered"))
-          print("ODDS_SPORT_KEYS:", meta.get("oddsSportKeys"))
-          print("COUNTRIES:", sorted(countries))
-          print("LEAGUES:", sorted(leagues))
-          print("PRED:", len(predictions))
-          print("BANK_ODDS_TYPE:", meta.get("virtualBankOddsType"))
+          print("V10_STATE_VALIDATION=GREEN")
+          print("STATE_STATUS=", meta.get("status"))
+          print("DAILY_ANALYSIS=", len(daily))
+          print("BEST_BETS=", len(best))
+          print("SOCCER=", sum(item.get("sport") == "soccer" for item in daily))
+          print("HOCKEY=", sum(item.get("sport") == "ice_hockey" for item in daily))
+          print("BANK=", bank.get("current"))
+          print("ACTIVE_EXPOSURE=", bank.get("activeExposure"))
+          print("ODDS_QUOTA=", state.get("quota"))
           PY
 
-      - name: Сохранение обновлённых данных
+      - name: Commit refreshed public data
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- data/state.json data/last-update-report.json; then
-            echo "Данные не изменились. Коммит не требуется."
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            data/state.json \
+            data/last-update-report.json \
+            data/ai_daily_analysis.json
+
+          if git diff --cached --quiet; then
+            echo "No public data changes to commit."
             exit 0
           fi
-          git config user.name "AI Football Lab Bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/state.json data/last-update-report.json
-          git commit -m "V9 R6 update probability-first global predictions"
+
+          git commit -m "V10 refresh sports analysis, results and virtual bank"
           git pull --rebase origin main
-          git push origin main
+          git push origin HEAD:main

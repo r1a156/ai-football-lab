@@ -1,7775 +1,3158 @@
 #!/usr/bin/env python3
-"""
-AI Football Lab
-Автоматическое получение матчей, подготовка статистики,
-анализ через OpenRouter и обновление публичного состояния сайта.
+# V10_GLOBAL_MULTISPORT_INTELLIGENCE
+"""AI Football Lab V10: global football-first, hockey-fallback analytics.
 
-Используются только модули стандартной библиотеки Python.
+The pipeline predicts match scenarios first, then evaluates bookmaker prices.
+It publishes fifteen daily analyses and up to four qualified virtual-bank bets.
+Only the qualified best bets affect the virtual bank.
+
+No third-party Python packages are required.
 """
 
 from __future__ import annotations
 
 import argparse
 import concurrent.futures
-import hashlib
 import copy
 import datetime as dt
-import difflib
+import hashlib
 import json
 import math
 import os
 import pathlib
+import random
 import re
 import statistics
 import sys
+import tempfile
 import time
 import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
+from collections import defaultdict
+from typing import Any, Iterable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-
-from zoneinfo import ZoneInfo
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "analysis.json"
 STATE_PATH = ROOT / "data" / "state.json"
 REPORT_PATH = ROOT / "data" / "last-update-report.json"
+DAILY_SNAPSHOT_PATH = ROOT / "data" / "ai_daily_analysis.json"
+INDEX_PATH = ROOT / "index.html"
+APP_PATH = ROOT / "assets" / "app.js"
+STYLE_PATH = ROOT / "assets" / "styles.css"
+WORKFLOW_PATH = ROOT / ".github" / "workflows" / "update-data.yml"
 
-FOOTBALL_API_BASE = "https://api.football-data.org/v4"
-OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 ODDS_API_BASE = "https://api.the-odds-api.com/v4"
-PUBLIC_SITE_URL = "https://r1a156.github.io/ai-football-lab/"
+FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
+NHL_API_BASE = "https://api-web.nhle.com/v1"
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-HTTP_TIMEOUT_SECONDS = 60
-REQUEST_RETRIES = 3
+STATE_VERSION = "10.0.0"
+PIPELINE_MARKER = "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
+SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
+WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
 
-
-MARKET_LABELS = {
-    "HOME_WIN": "Победа хозяев",
-    "AWAY_WIN": "Победа гостей",
-    "DRAW": "Ничья",
-    "HOME_OR_DRAW": "Хозяева не проиграют",
-    "AWAY_OR_DRAW": "Гости не проиграют",
-    "OVER_1_5": "Тотал больше 1,5",
-    "OVER_2_5": "Тотал больше 2,5",
-    "UNDER_2_5": "Тотал меньше 2,5",
-    "UNDER_3_5": "Тотал меньше 3,5",
-    "HOME_OVER_0_5": "Хозяева забьют",
-    "AWAY_OVER_0_5": "Гости забьют",
-    "BOTH_SCORE": "Обе команды забьют",
-}
+UTC = dt.timezone.utc
 
 
-COUNTRY_TRANSLATIONS = {
-    "England": "Англия",
-    "Spain": "Испания",
-    "Germany": "Германия",
-    "Italy": "Италия",
-    "France": "Франция",
-    "Netherlands": "Нидерланды",
-    "Portugal": "Португалия",
-    "Brazil": "Бразилия",
-}
+# ---------------------------------------------------------------------------
+# Generic helpers
+# ---------------------------------------------------------------------------
 
 
 def log(message: str) -> None:
-    timestamp = dt.datetime.now(dt.timezone.utc).strftime("%H:%M:%S")
-    print(f"[{timestamp} UTC] {message}", flush=True)
-
-
-def load_json(path: pathlib.Path) -> dict[str, Any]:
-    if not path.exists():
-        raise RuntimeError(f"Файл не найден: {path}")
-
-    with path.open("r", encoding="utf-8") as file:
-        data = json.load(file)
-
-    if not isinstance(data, dict):
-        raise RuntimeError(f"Корень JSON должен быть объектом: {path}")
-
-    return data
-
-
-def write_json_atomic(path: pathlib.Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    temporary_path = path.with_suffix(path.suffix + ".tmp")
-
-    serialized = json.dumps(
-        data,
-        ensure_ascii=False,
-        indent=2,
-        sort_keys=False,
-    )
-
-    temporary_path.write_text(
-        serialized + "\n",
-        encoding="utf-8",
-    )
-
-    temporary_path.replace(path)
-
-
-def require_environment_variable(name: str) -> str:
-    value = os.getenv(name, "").strip()
-
-    if not value:
-        raise RuntimeError(
-            f"Не задан обязательный секрет или параметр окружения: {name}"
-        )
-
-    return value
-
-
-def request_json(
-    url: str,
-    *,
-    method: str = "GET",
-    headers: dict[str, str] | None = None,
-    payload: dict[str, Any] | None = None,
-    timeout_seconds: int | float | None = None,
-    retries: int | None = None,
-) -> dict[str, Any]:
-    """Выполняет JSON-запрос с ограниченными повторными попытками."""
-
-    request_headers = {
-        "Accept": "application/json",
-        "User-Agent": "AI-Football-Lab/3.0",
-    }
-
-    if headers:
-        request_headers.update(headers)
-
-    body: bytes | None = None
-
-    if payload is not None:
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        request_headers["Content-Type"] = "application/json"
-
-    request_timeout = max(
-        1,
-        int(timeout_seconds or HTTP_TIMEOUT_SECONDS),
-    )
-
-    maximum_attempts = max(
-        1,
-        int(retries or REQUEST_RETRIES),
-    )
-
-    last_error: Exception | None = None
-
-    for attempt in range(1, maximum_attempts + 1):
-        request = urllib.request.Request(
-            url=url,
-            data=body,
-            headers=request_headers,
-            method=method,
-        )
-
-        try:
-            with urllib.request.urlopen(
-                request,
-                timeout=request_timeout,
-            ) as response:
-                raw = response.read().decode("utf-8")
-                parsed = json.loads(raw)
-
-                if not isinstance(parsed, dict):
-                    raise RuntimeError(
-                        f"API вернул неожиданный тип данных: {url}"
-                    )
-
-                return parsed
-
-        except urllib.error.HTTPError as error:
-            response_body = ""
-
-            try:
-                response_body = error.read().decode(
-                    "utf-8",
-                    errors="replace",
-                )
-            except Exception:
-                response_body = ""
-
-            last_error = RuntimeError(
-                f"HTTP {error.code} для {url}: "
-                f"{response_body[:700]}"
-            )
-
-            if error.code not in {408, 429, 500, 502, 503, 504}:
-                raise last_error
-
-        except (
-            urllib.error.URLError,
-            TimeoutError,
-            json.JSONDecodeError,
-        ) as error:
-            last_error = error
-
-        if attempt < maximum_attempts:
-            delay = min(15, attempt * 5)
-            log(
-                f"Повтор запроса через {delay} секунд. "
-                f"Попытка {attempt}/{maximum_attempts}"
-            )
-            time.sleep(delay)
-
-    raise RuntimeError(
-        "Запрос завершился ошибкой после "
-        f"{maximum_attempts} попыток: {last_error}"
-    )
-
-
-
-def request_json_value(
-    url: str,
-    *,
-    method: str = "GET",
-    headers: dict[str, str] | None = None,
-    payload: dict[str, Any] | None = None,
-    timeout_seconds: int | float | None = None,
-    retries: int | None = None,
-) -> tuple[Any, dict[str, str]]:
-    """JSON request that accepts an object or an array and returns headers."""
-
-    request_headers = {
-        "Accept": "application/json",
-        "User-Agent": "AI-Football-Lab/7.0",
-    }
-    if headers:
-        request_headers.update(headers)
-
-    body: bytes | None = None
-    if payload is not None:
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-        request_headers["Content-Type"] = "application/json"
-
-    request_timeout = max(1, int(timeout_seconds or HTTP_TIMEOUT_SECONDS))
-    maximum_attempts = max(1, int(retries or REQUEST_RETRIES))
-    last_error: Exception | None = None
-
-    for attempt in range(1, maximum_attempts + 1):
-        request = urllib.request.Request(
-            url=url,
-            data=body,
-            headers=request_headers,
-            method=method,
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=request_timeout) as response:
-                raw = response.read().decode("utf-8")
-                parsed = json.loads(raw)
-                response_headers = {
-                    str(key).lower(): str(value)
-                    for key, value in response.headers.items()
-                }
-                return parsed, response_headers
-        except urllib.error.HTTPError as error:
-            response_body = ""
-            try:
-                response_body = error.read().decode("utf-8", errors="replace")
-            except Exception:
-                pass
-            last_error = RuntimeError(
-                f"HTTP {error.code} для {url}: {response_body[:700]}"
-            )
-            if error.code not in {408, 429, 500, 502, 503, 504}:
-                raise last_error
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
-            last_error = error
-
-        if attempt < maximum_attempts:
-            delay = min(15, attempt * 5)
-            log(
-                f"Повтор запроса через {delay} секунд. "
-                f"Попытка {attempt}/{maximum_attempts}"
-            )
-            time.sleep(delay)
-
-    raise RuntimeError(
-        "Запрос завершился ошибкой после "
-        f"{maximum_attempts} попыток: {last_error}"
-    )
-
-
-
-def iso_date(value: dt.date) -> str:
-    return value.isoformat()
+    stamp = dt.datetime.now(tz=UTC).isoformat(timespec="seconds")
+    print(f"[{stamp}] {message}", flush=True)
 
 
 def utc_now() -> dt.datetime:
-    return dt.datetime.now(dt.timezone.utc)
+    return dt.datetime.now(tz=UTC)
 
 
-def fallback_timezone(
-    timezone_name: str,
-) -> dt.tzinfo:
-    """Return a dependency-free fallback for critical time zones.
-
-    Windows Python installations may not contain the IANA tz database and
-    therefore ZoneInfo can fail even for UTC. The production workflow runs on
-    Linux, but local validation must remain fully portable.
-    """
-
-    normalized = str(timezone_name or "UTC").strip().lower()
-
-    if normalized in {
-        "utc",
-        "etc/utc",
-        "etc/gmt",
-        "gmt",
-        "z",
-    }:
-        return dt.timezone.utc
-
-    fixed_offsets = {
-        "europe/moscow": 3,
-    }
-    offset_hours = fixed_offsets.get(normalized)
-
-    if offset_hours is not None:
-        return dt.timezone(
-            dt.timedelta(hours=offset_hours),
-            name=str(timezone_name or "Europe/Moscow"),
-        )
-
-    return dt.timezone.utc
+def load_json(path: pathlib.Path, default: Any = None) -> Any:
+    if not path.exists():
+        return copy.deepcopy(default)
+    text = path.read_text(encoding="utf-8-sig")
+    if not text.strip():
+        return copy.deepcopy(default)
+    return json.loads(text)
 
 
-def configured_timezone(
-    config: dict[str, Any],
-) -> dt.tzinfo:
-    timezone_name = str(
-        config.get("timezone")
-        or "Europe/Moscow"
-    )
+def write_json_atomic(path: pathlib.Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        newline="\n",
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as handle:
+        handle.write(payload)
+        temporary = pathlib.Path(handle.name)
+    temporary.replace(path)
 
+
+def parse_datetime(value: Any) -> dt.datetime | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
     try:
-        return ZoneInfo(timezone_name)
-    except Exception as error:
-        timezone = fallback_timezone(timezone_name)
-        log(
-            "Системная база часовых поясов недоступна; "
-            f"используется встроенный fallback для {timezone_name}: "
-            f"{type(error).__name__}"
-        )
-        return timezone
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        parsed = dt.datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.astimezone(UTC)
+    except ValueError:
+        return None
 
 
-def parse_utc_datetime(value: str) -> dt.datetime:
-    normalized = value.replace("Z", "+00:00")
-    parsed = dt.datetime.fromisoformat(normalized)
-
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
-
-    return parsed.astimezone(dt.timezone.utc)
-
-
-def fetch_matches(
-    api_key: str,
-    *,
-    date_from: dt.date,
-    date_to: dt.date,
-    competitions: list[str],
-) -> list[dict[str, Any]]:
-    parameters: dict[str, str] = {
-        "dateFrom": iso_date(date_from),
-        "dateTo": iso_date(date_to),
-    }
-
-    normalized_competitions = sorted({
-        str(item).strip()
-        for item in competitions
-        if str(item).strip()
-    })
-
-    # Empty list means: request every competition accessible to the
-    # authenticated football-data.org account. No fixed country list is
-    # imposed by the application.
-    if normalized_competitions:
-        parameters["competitions"] = ",".join(normalized_competitions)
-
-    url = (
-        f"{FOOTBALL_API_BASE}/matches?"
-        f"{urllib.parse.urlencode(parameters)}"
+def iso_z(value: dt.datetime) -> str:
+    return value.astimezone(UTC).replace(microsecond=0).isoformat().replace(
+        "+00:00", "Z"
     )
 
-    log(
-        "Получение матчей "
-        f"{date_from.isoformat()} — {date_to.isoformat()}"
-    )
 
-    response = request_json(
-        url,
-        headers={
-            "X-Auth-Token": api_key,
-        },
-    )
-
-    matches = response.get("matches", [])
-
-    if not isinstance(matches, list):
-        raise RuntimeError(
-            "Football-Data вернул некорректный список matches"
-        )
-
-    return [
-        match
-        for match in matches
-        if isinstance(match, dict)
-    ]
+def configured_timezone(config: dict[str, Any]) -> dt.tzinfo:
+    name = str(config.get("timezone") or "Europe/Moscow")
+    try:
+        return ZoneInfo(name)
+    except ZoneInfoNotFoundError:
+        offsets = {
+            "europe/moscow": 3,
+            "utc": 0,
+            "etc/utc": 0,
+        }
+        return dt.timezone(dt.timedelta(hours=offsets.get(name.lower(), 0)))
 
 
-
-def fetch_matches_chunked(
-    api_key: str,
-    *,
-    date_from: dt.date,
-    date_to: dt.date,
-    competitions: list[str],
-    maximum_days_per_request: int = 10,
-    pause_seconds: float = 7.0,
-) -> list[dict[str, Any]]:
-    """
-    Football-Data ограничивает общий endpoint матчей
-    диапазоном не более 10 дней.
-
-    Функция разбивает большой период на последовательные
-    непересекающиеся интервалы и объединяет результаты
-    с дедупликацией по match.id.
-    """
-
-    if date_to < date_from:
-        raise ValueError(
-            "date_to не может быть раньше date_from"
-        )
-
-    maximum_days_per_request = max(
-        1,
-        min(int(maximum_days_per_request), 10),
-    )
-
-    collected_by_id: dict[int, dict[str, Any]] = {}
-    cursor = date_from
-    request_number = 0
-
-    while cursor <= date_to:
-        chunk_end = min(
-            cursor + dt.timedelta(
-                days=maximum_days_per_request - 1
-            ),
-            date_to,
-        )
-
-        request_number += 1
-
-        log(
-            f"Запрос исторического чанка "
-            f"#{request_number}: "
-            f"{cursor.isoformat()} — "
-            f"{chunk_end.isoformat()}"
-        )
-
-        chunk_matches = fetch_matches(
-            api_key,
-            date_from=cursor,
-            date_to=chunk_end,
-            competitions=competitions,
-        )
-
-        for match in chunk_matches:
-            try:
-                match_id = int(match["id"])
-            except (
-                KeyError,
-                TypeError,
-                ValueError,
-            ):
-                continue
-
-            collected_by_id[match_id] = match
-
-        cursor = chunk_end + dt.timedelta(days=1)
-
-        if cursor <= date_to and pause_seconds > 0:
-            time.sleep(pause_seconds)
-
-    result = list(collected_by_id.values())
-
-    result.sort(
-        key=lambda item: str(
-            item.get("utcDate") or ""
-        )
-    )
-
-    log(
-        f"Чанков получено: {request_number}; "
-        f"уникальных матчей: {len(result)}"
-    )
-
-    return result
-
-def competition_is_allowed(
-    match: dict[str, Any],
-    config: dict[str, Any],
-) -> bool:
-    competition = match.get("competition") or {}
-
-    competition_type = str(
-        competition.get("type") or ""
-    ).upper()
-
-    if competition_type and competition_type != "LEAGUE":
-        return False
-
-    competition_name = str(
-        competition.get("name") or ""
-    ).lower()
-
-    excluded_words = config.get(
-        "excludedCompetitionWords",
-        [],
-    )
-
-    for word in excluded_words:
-        if str(word).lower() in competition_name:
-            return False
-
-    return True
+def clamp(value: float, minimum: float, maximum: float) -> float:
+    return max(minimum, min(maximum, value))
 
 
-def get_team_id(match: dict[str, Any], side: str) -> int | None:
-    team = match.get(side) or {}
-    value = team.get("id")
+def safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        number = float(value)
+        if math.isfinite(number):
+            return number
+    except (TypeError, ValueError):
+        pass
+    return default
 
+
+def safe_int(value: Any, default: int = 0) -> int:
     try:
         return int(value)
     except (TypeError, ValueError):
-        return None
+        return default
 
 
-def get_team_name(match: dict[str, Any], side: str) -> str:
-    team = match.get(side) or {}
-
-    return str(
-        team.get("shortName")
-        or team.get("name")
-        or team.get("tla")
-        or "Неизвестная команда"
-    )
+def mean(values: Iterable[float], default: float = 0.0) -> float:
+    prepared = [float(value) for value in values]
+    return statistics.fmean(prepared) if prepared else default
 
 
-def final_score(match: dict[str, Any]) -> tuple[int, int] | None:
-    if str(match.get("status") or "").upper() != "FINISHED":
-        return None
-
-    score = match.get("score") or {}
-    full_time = score.get("fullTime") or {}
-
-    home = full_time.get("home")
-    away = full_time.get("away")
-
-    if home is None or away is None:
-        return None
-
-    try:
-        return int(home), int(away)
-    except (TypeError, ValueError):
-        return None
+def stdev(values: Iterable[float], default: float = 0.0) -> float:
+    prepared = [float(value) for value in values]
+    return statistics.pstdev(prepared) if len(prepared) > 1 else default
 
 
-def build_team_form(
-    finished_matches: list[dict[str, Any]],
-) -> dict[int, dict[str, Any]]:
-    """Строит общую и домашнюю/выездную форму команд."""
+def normalize_text(value: Any) -> str:
+    text = unicodedata.normalize("NFKD", str(value or ""))
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = text.lower().replace("&", " and ")
+    text = re.sub(r"\b(fc|cf|sc|ac|afc|fk|hc|club|deportivo|calcio)\b", " ", text)
+    text = re.sub(r"[^a-z0-9а-яё]+", " ", text, flags=re.IGNORECASE)
+    return " ".join(text.split())
 
-    rows_by_team: dict[int, list[dict[str, Any]]] = {}
 
-    sorted_matches = sorted(
-        finished_matches,
-        key=lambda item: str(item.get("utcDate") or ""),
-    )
+def token_similarity(left: Any, right: Any) -> float:
+    a = set(normalize_text(left).split())
+    b = set(normalize_text(right).split())
+    if not a or not b:
+        return 0.0
+    intersection = len(a & b)
+    union = len(a | b)
+    containment = intersection / max(1, min(len(a), len(b)))
+    jaccard = intersection / max(1, union)
+    return max(containment, jaccard)
 
-    for match in sorted_matches:
-        result = final_score(match)
 
-        if result is None:
-            continue
+def stable_id(*parts: Any) -> str:
+    payload = "|".join(str(part) for part in parts)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
 
-        home_goals, away_goals = result
-        home_id = get_team_id(match, "homeTeam")
-        away_id = get_team_id(match, "awayTeam")
 
-        if home_id is None or away_id is None:
-            continue
+def market_family(market: str) -> str:
+    market = str(market or "").upper()
+    if market.startswith("H2H") or market in {"HOME_WIN", "DRAW", "AWAY_WIN"}:
+        return "OUTCOME"
+    if "TOTAL" in market or market.startswith("OVER") or market.startswith("UNDER"):
+        return "TOTAL"
+    if "SPREAD" in market or "HANDICAP" in market:
+        return "HANDICAP"
+    if "BTTS" in market:
+        return "BTTS"
+    if "DOUBLE_CHANCE" in market:
+        return "DOUBLE_CHANCE"
+    if "DRAW_NO_BET" in market:
+        return "DRAW_NO_BET"
+    return "OTHER"
 
-        home_points = (
-            3 if home_goals > away_goals
-            else 1 if home_goals == away_goals
-            else 0
-        )
 
-        away_points = (
-            3 if away_goals > home_goals
-            else 1 if away_goals == home_goals
-            else 0
-        )
+def result_status_label(status: str) -> str:
+    return {
+        "pending": "Ожидается",
+        "won": "Выигрыш",
+        "lost": "Проигрыш",
+        "push": "Возврат",
+        "void": "Отмена",
+    }.get(status, status)
 
-        rows_by_team.setdefault(home_id, []).append(
-            {
-                "points": home_points,
-                "goalsFor": home_goals,
-                "goalsAgainst": away_goals,
-                "venue": "HOME",
-                "date": match.get("utcDate"),
-            }
-        )
 
-        rows_by_team.setdefault(away_id, []).append(
-            {
-                "points": away_points,
-                "goalsFor": away_goals,
-                "goalsAgainst": home_goals,
-                "venue": "AWAY",
-                "date": match.get("utcDate"),
-            }
-        )
+# ---------------------------------------------------------------------------
+# HTTP client and quota tracking
+# ---------------------------------------------------------------------------
 
-    def summarize(
-        rows: list[dict[str, Any]],
-        limit: int,
-    ) -> dict[str, Any]:
-        recent = rows[-limit:]
-        games = len(recent)
 
-        if not games:
-            return {
-                "games": 0,
-                "points": 0,
-                "pointsPerGame": 0.0,
-                "goalsFor": 0,
-                "goalsAgainst": 0,
-                "goalsForPerGame": 0.0,
-                "goalsAgainstPerGame": 0.0,
-                "winRate": 0.0,
-                "drawRate": 0.0,
-                "lossRate": 0.0,
-                "nonLossRate": 0.0,
-                "scoredRate": 0.0,
-                "concededRate": 0.0,
-                "cleanSheetRate": 0.0,
-                "over15Rate": 0.0,
-                "under35Rate": 0.0,
-                "bothScoreRate": 0.0,
-            }
-
-        points = sum(int(item["points"]) for item in recent)
-        goals_for = sum(int(item["goalsFor"]) for item in recent)
-        goals_against = sum(int(item["goalsAgainst"]) for item in recent)
-
-        wins = sum(1 for item in recent if int(item["points"]) == 3)
-        draws = sum(1 for item in recent if int(item["points"]) == 1)
-        losses = games - wins - draws
-        scored_games = sum(1 for item in recent if int(item["goalsFor"]) > 0)
-        conceded_games = sum(1 for item in recent if int(item["goalsAgainst"]) > 0)
-        clean_sheets = sum(1 for item in recent if int(item["goalsAgainst"]) == 0)
-        over_15_games = sum(
-            1
-            for item in recent
-            if int(item["goalsFor"]) + int(item["goalsAgainst"]) >= 2
-        )
-        under_35_games = sum(
-            1
-            for item in recent
-            if int(item["goalsFor"]) + int(item["goalsAgainst"]) <= 3
-        )
-        both_score_games = sum(
-            1
-            for item in recent
-            if int(item["goalsFor"]) > 0
-            and int(item["goalsAgainst"]) > 0
-        )
-
-        return {
-            "games": games,
-            "points": points,
-            "pointsPerGame": round(points / games, 3),
-            "goalsFor": goals_for,
-            "goalsAgainst": goals_against,
-            "goalsForPerGame": round(goals_for / games, 3),
-            "goalsAgainstPerGame": round(goals_against / games, 3),
-            "winRate": round(wins / games, 4),
-            "drawRate": round(draws / games, 4),
-            "lossRate": round(losses / games, 4),
-            "nonLossRate": round((wins + draws) / games, 4),
-            "scoredRate": round(scored_games / games, 4),
-            "concededRate": round(conceded_games / games, 4),
-            "cleanSheetRate": round(clean_sheets / games, 4),
-            "over15Rate": round(over_15_games / games, 4),
-            "under35Rate": round(under_35_games / games, 4),
-            "bothScoreRate": round(both_score_games / games, 4),
+class ApiClient:
+    def __init__(self) -> None:
+        self.calls: list[dict[str, Any]] = []
+        self.odds_quota = {
+            "requestsRemaining": None,
+            "requestsUsed": None,
+            "requestsLast": None,
+            "estimatedCreditsThisRun": 0,
         }
 
-    result: dict[int, dict[str, Any]] = {}
-
-    for team_id, rows in rows_by_team.items():
-        overall = summarize(rows, 8)
-        home_rows = [item for item in rows if item.get("venue") == "HOME"]
-        away_rows = [item for item in rows if item.get("venue") == "AWAY"]
-
-        overall["homeVenue"] = summarize(home_rows, 5)
-        overall["awayVenue"] = summarize(away_rows, 5)
-        result[team_id] = overall
-
-    return result
-
-
-
-def candidate_quality_score(
-    home_form: dict[str, Any],
-    away_form: dict[str, Any],
-) -> float:
-    home_games = int(home_form.get("games") or 0)
-    away_games = int(away_form.get("games") or 0)
-
-    home_venue_games = int(
-        (home_form.get("homeVenue") or {}).get("games") or 0
-    )
-    away_venue_games = int(
-        (away_form.get("awayVenue") or {}).get("games") or 0
-    )
-
-    overall_coverage = (
-        min(home_games, 8) + min(away_games, 8)
-    ) / 16
-
-    venue_coverage = (
-        min(home_venue_games, 5) + min(away_venue_games, 5)
-    ) / 10
-
-    maximum_games = max(home_games, away_games, 1)
-    sample_balance = 1 - abs(home_games - away_games) / maximum_games
-
-    home_over = float(home_form.get("over15Rate") or 0)
-    away_over = float(away_form.get("over15Rate") or 0)
-    observable_signal = (home_over + away_over) / 2
-
-    score = (
-        overall_coverage * 55
-        + venue_coverage * 20
-        + sample_balance * 10
-        + observable_signal * 15
-    )
-
-    return round(clamp_number(score, 0, 100), 2)
-
-
-
-def select_diverse_candidates(
-    candidates: list[dict[str, Any]],
-    maximum_candidates: int,
-) -> list[dict[str, Any]]:
-    """Round-robin candidate pool across available competitions.
-
-    The strongest candidate of every available competition is considered
-    before the second candidate of any competition. If only one competition
-    is available, its candidates are still returned normally.
-    """
-
-    maximum_candidates = max(0, int(maximum_candidates))
-
-    if maximum_candidates == 0 or not candidates:
-        return []
-
-    ranked = sorted(
-        candidates,
-        key=lambda item: (
-            -float(item.get("dataQuality") or 0),
-            str(item.get("utcDate") or ""),
-            int(item.get("matchId") or 0),
-        ),
-    )
-
-    buckets: dict[str, list[dict[str, Any]]] = {}
-
-    for candidate in ranked:
-        competition = candidate.get("competition") or {}
-        country = str(candidate.get("country") or "UNKNOWN")
-        competition_code = str(competition.get("code") or "").strip()
-        competition_name = str(competition.get("name") or "").strip()
-        bucket_key = "|".join(
-            value
-            for value in (
-                country,
-                competition_code,
-                competition_name,
-            )
-            if value
-        ) or "UNKNOWN"
-        buckets.setdefault(bucket_key, []).append(candidate)
-
-    bucket_keys = sorted(
-        buckets,
-        key=lambda key: (
-            -float(buckets[key][0].get("dataQuality") or 0),
-            str(buckets[key][0].get("utcDate") or ""),
-            key,
-        ),
-    )
-
-    selected: list[dict[str, Any]] = []
-    round_index = 0
-
-    while len(selected) < maximum_candidates:
-        progress = False
-
-        for key in bucket_keys:
-            bucket = buckets[key]
-
-            if round_index >= len(bucket):
-                continue
-
-            selected.append(bucket[round_index])
-            progress = True
-
-            if len(selected) >= maximum_candidates:
-                break
-
-        if not progress:
-            break
-
-        round_index += 1
-
-    return selected
-
-
-def build_candidates(
-    scheduled_matches: list[dict[str, Any]],
-    team_form: dict[int, dict[str, Any]],
-    config: dict[str, Any],
-) -> list[dict[str, Any]]:
-    candidates: list[dict[str, Any]] = []
-
-    minimum_team_matches = max(
-        1,
-        int(config.get("minimumTeamMatches") or 1),
-    )
-
-
-    minimum_lead_hours = max(
-        0.0,
-        float(config.get("minimumLeadHours") or 4),
-    )
-
-    reference_now = utc_now()
-    selection_window_hours = max(
-        1.0,
-        float(config.get("selectionWindowHours") or 24),
-    )
-    earliest_allowed_kickoff = (
-        reference_now
-        + dt.timedelta(hours=minimum_lead_hours)
-    )
-    latest_allowed_kickoff = (
-        earliest_allowed_kickoff
-        + dt.timedelta(hours=selection_window_hours)
-    )
-
-    for match in scheduled_matches:
-        try:
-            kickoff_utc = parse_utc_datetime(
-                str(match.get("utcDate") or "")
-            )
-        except Exception:
-            continue
-
-        if kickoff_utc <= earliest_allowed_kickoff:
-            continue
-
-        if kickoff_utc > latest_allowed_kickoff:
-            continue
-
-        if not competition_is_allowed(match, config):
-            continue
-
-        match_id = match.get("id")
-        home_id = get_team_id(match, "homeTeam")
-        away_id = get_team_id(match, "awayTeam")
-
-        if match_id is None or home_id is None or away_id is None:
-            continue
-
-        home_form = team_form.get(
-            home_id,
-            {
-                "games": 0,
-            },
-        )
-
-        away_form = team_form.get(
-            away_id,
-            {
-                "games": 0,
-            },
-        )
-
-        # Для честного анализа нужны хотя бы некоторые
-        # недавние данные по обеим командам.
-        if (
-            int(home_form.get("games") or 0) < minimum_team_matches
-            or int(away_form.get("games") or 0) < minimum_team_matches
-        ):
-            continue
-
-        competition = match.get("competition") or {}
-        area = match.get("area") or {}
-
-        candidate = {
-            "matchId": int(match_id),
-            "utcDate": str(match.get("utcDate") or ""),
-            "competition": {
-                "code": str(
-                    competition.get("code") or ""
-                ),
-                "name": str(
-                    competition.get("name")
-                    or "Неизвестная лига"
-                ),
-            },
-            "country": str(
-                area.get("name") or ""
-            ),
-            "homeTeam": {
-                "id": home_id,
-                "name": get_team_name(
-                    match,
-                    "homeTeam",
-                ),
-                "form": home_form,
-            },
-            "awayTeam": {
-                "id": away_id,
-                "name": get_team_name(
-                    match,
-                    "awayTeam",
-                ),
-                "form": away_form,
-            },
+    def request_json(
+        self,
+        url: str,
+        *,
+        headers: dict[str, str] | None = None,
+        timeout: int = 30,
+        retries: int = 2,
+        label: str = "HTTP",
+        allow_not_found: bool = False,
+    ) -> Any:
+        request_headers = {
+            "Accept": "application/json",
+            "User-Agent": "AI-Football-Lab-V10/10.0",
         }
+        if headers:
+            request_headers.update(headers)
 
-        candidate["dataQuality"] = candidate_quality_score(
-            home_form,
-            away_form,
-        )
-
-        candidates.append(candidate)
-
-    maximum_candidates = max(
-        1,
-        int(config.get("maximumCandidates") or 24),
-    )
-
-    return select_diverse_candidates(
-        candidates,
-        maximum_candidates,
-    )
-
-
-def build_analysis_prompt(
-    candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> str:
-    allowed_markets = [
-        str(value)
-        for value in config.get("allowedMarkets", [])
-    ]
-
-    minimum_confidence = int(
-        config.get("minimumConfidence") or 55
-    )
-
-    maximum_predictions = max(
-        1,
-        int(config.get("maximumPredictions") or 4),
-    )
-
-    minimum_probability = float(
-        config.get("minimumProbability") or 0.52
-    )
-
-    maximum_probability = float(
-        config.get("maximumProbability") or 0.95
-    )
-
-    minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.01
-    )
-
-    if minimum_model_odds > 1:
-        maximum_probability = min(
-            maximum_probability,
-            1 / minimum_model_odds,
-        )
-
-    candidate_json = json.dumps(
-        candidates,
-        ensure_ascii=False,
-        separators=(",", ":"),
-    )
-
-    return f"""
-Ты — строгий аналитический модуль футбольных матчей.
-
-Используй только переданные числовые показатели. Не используй внешние
-знания, составы, новости, слухи и букмекерские коэффициенты. Не выдумывай
-отсутствующие данные.
-
-Отбери не более {maximum_predictions} прогнозов. Пустой массив допустим,
-если статистическое основание недостаточно. Не создавай прогноз ради
-заполнения карточек.
-
-Важно различать два показателя:
-- confidence — надёжность самого анализа и полнота данных;
-- probability — оценка вероятности наступления выбранного события.
-
-Требования:
-1. confidence должен быть не ниже {minimum_confidence}.
-2. probability должен быть от {minimum_probability:.2f} до
-   {maximum_probability:.4f}.
-3. Один прогноз на один matchId.
-4. market — только одно из значений:
-   {json.dumps(allowed_markets, ensure_ascii=False)}
-5. risk — только LOW или MEDIUM.
-6. reason — краткое статистическое объяснение на русском языке.
-7. Не возвращай fairOdds или букмекерские коэффициенты: backend рассчитает
-   математический коэффициент как 1 / probability.
-8. Верни только корректный JSON без markdown и текста вокруг него.
-
-Формат ответа:
-{{
-  "predictions": [
-    {{
-      "matchId": 123,
-      "market": "OVER_1_5",
-      "confidence": 74,
-      "probability": 0.64,
-      "risk": "MEDIUM",
-      "reason": "Краткое статистическое основание."
-    }}
-  ]
-}}
-
-КАНДИДАТЫ И СТАТИСТИКА:
-{candidate_json}
-""".strip()
-
-
-
-def extract_json_object(text: str) -> dict[str, Any]:
-    cleaned = text.strip()
-
-    if cleaned.startswith("```"):
-        cleaned = re.sub(
-            r"^```(?:json)?\s*",
-            "",
-            cleaned,
-            flags=re.IGNORECASE,
-        )
-
-        cleaned = re.sub(
-            r"\s*```$",
-            "",
-            cleaned,
-        )
-
-    try:
-        parsed = json.loads(cleaned)
-
-        if isinstance(parsed, dict):
-            return parsed
-    except json.JSONDecodeError:
-        pass
-
-    start = cleaned.find("{")
-    end = cleaned.rfind("}")
-
-    if start < 0 or end <= start:
-        raise RuntimeError(
-            "OpenRouter не вернул JSON-объект"
-        )
-
-    fragment = cleaned[start:end + 1]
-    parsed = json.loads(fragment)
-
-    if not isinstance(parsed, dict):
-        raise RuntimeError(
-            "Ответ модели не является JSON-объектом"
-        )
-
-    return parsed
-
-
-# V4_4R1_OPENROUTER_RESILIENCE
-
-
-def call_openrouter(
-    api_key: str,
-    prompt: str,
-) -> tuple[dict[str, Any], str]:
-    """Вызывает OpenRouter без вложенного каскада повторов."""
-
-    configured_model = str(
-        os.getenv("OPENROUTER_MODEL")
-        or "google/gemini-2.5-flash-lite"
-    ).strip()
-
-    if not configured_model:
-        configured_model = "openrouter/auto"
-
-    candidate_models = [configured_model]
-
-    if configured_model != "openrouter/auto":
-        candidate_models.append("openrouter/auto")
-
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": PUBLIC_SITE_URL,
-        "X-Title": "AI Football Lab",
-    }
-
-    last_error: Exception | None = None
-
-    for model_index, model_name in enumerate(candidate_models):
-        attempts = 2 if model_index == 0 else 1
-
-        for attempt in range(1, attempts + 1):
-            payload = {
-                "model": model_name,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": (
-                            "Ты строгий аналитический модуль. "
-                            "Отвечай только корректным JSON без markdown."
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    },
-                ],
-                "temperature": 0.1,
-                "max_tokens": 3000,
-                "stream": False,
-                "provider": {
-                    "allow_fallbacks": True,
-                },
-            }
-
-            log(
-                "Запрос OpenRouter: "
-                f"модель={model_name}; попытка={attempt}/{attempts}"
-            )
-
+        last_error: Exception | None = None
+        for attempt in range(retries + 1):
+            started = time.monotonic()
             try:
-                response = request_json(
-                    OPENROUTER_API_URL,
-                    method="POST",
-                    headers=headers,
-                    payload=payload,
-                    timeout_seconds=180,
-                    retries=1,
-                )
-
-                choices = response.get("choices") or []
-
-                if not choices:
-                    raise RuntimeError("OpenRouter не вернул choices")
-
-                message = choices[0].get("message") or {}
-                content = message.get("content")
-
-                if isinstance(content, list):
-                    content = "".join(
-                        str(item.get("text") or "")
-                        if isinstance(item, dict)
-                        else str(item)
-                        for item in content
+                request = urllib.request.Request(url, headers=request_headers)
+                with urllib.request.urlopen(request, timeout=timeout) as response:
+                    body = response.read().decode("utf-8")
+                    response_headers = {key.lower(): value for key, value in response.headers.items()}
+                    elapsed = round(time.monotonic() - started, 3)
+                    self.calls.append(
+                        {
+                            "label": label,
+                            "status": response.status,
+                            "elapsedSeconds": elapsed,
+                        }
                     )
-
-                content = str(content or "").strip()
-
-                if not content:
-                    raise RuntimeError("OpenRouter вернул пустой content")
-
-                parsed = extract_json_object(content)
-                returned_model = str(
-                    response.get("model") or model_name
+                    self._capture_odds_headers(response_headers)
+                    return json.loads(body) if body.strip() else None
+            except urllib.error.HTTPError as exc:
+                last_error = exc
+                body = ""
+                try:
+                    body = exc.read().decode("utf-8", errors="replace")
+                except Exception:
+                    pass
+                self.calls.append(
+                    {
+                        "label": label,
+                        "status": exc.code,
+                        "error": body[:400],
+                    }
                 )
+                if allow_not_found and exc.code == 404:
+                    return None
+                if exc.code in {401, 403, 404, 422}:
+                    raise RuntimeError(f"{label} failed HTTP {exc.code}: {body[:500]}") from exc
+                if attempt < retries:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+            except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                last_error = exc
+                self.calls.append({"label": label, "status": "ERROR", "error": str(exc)})
+                if attempt < retries:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+        raise RuntimeError(f"{label} failed after retries: {last_error}")
 
-                log(
-                    "OpenRouter успешно ответил; "
-                    f"модель={returned_model}"
-                )
-
-                return parsed, returned_model
-
-            except Exception as error:
-                last_error = error
-                log(
-                    "Предупреждение OpenRouter: "
-                    f"{type(error).__name__}: {error}"
-                )
-
-                if attempt < attempts:
-                    time.sleep(10 * attempt)
-
-    raise RuntimeError(
-        "OpenRouter недоступен после ограниченного числа попыток: "
-        f"{last_error}"
-    )
-
-
-
-def model_odds_preference_bonus(
-    fair_odds: float,
-    config: dict[str, Any],
-) -> float:
-    """Ranks the requested coefficient band without treating higher as safer."""
-
-    minimum_odds = float(
-        config.get("minimumModelOdds") or 1.45
-    )
-    preferred_minimum = float(
-        config.get("preferredModelOdds") or 1.60
-    )
-    preferred_maximum = float(
-        config.get("preferredModelOddsMaximum") or 2.20
-    )
-    maximum_odds = float(
-        config.get("maximumModelOdds") or 2.80
-    )
-
-    if fair_odds < minimum_odds or fair_odds > maximum_odds:
-        return -1000.0
-
-    if preferred_minimum <= fair_odds <= preferred_maximum:
-        return 12.0
-
-    if fair_odds < preferred_minimum:
-        span = max(0.01, preferred_minimum - minimum_odds)
-        progress = (fair_odds - minimum_odds) / span
-        return round(4.0 + 4.0 * max(0.0, min(progress, 1.0)), 4)
-
-    span = max(0.01, maximum_odds - preferred_maximum)
-    progress = (fair_odds - preferred_maximum) / span
-    return round(8.0 - 6.0 * max(0.0, min(progress, 1.0)), 4)
+    def _capture_odds_headers(self, headers: dict[str, str]) -> None:
+        mapping = {
+            "x-requests-remaining": "requestsRemaining",
+            "x-requests-used": "requestsUsed",
+            "x-requests-last": "requestsLast",
+        }
+        for source, target in mapping.items():
+            if source in headers:
+                self.odds_quota[target] = headers[source]
+        if headers.get("x-requests-last"):
+            self.odds_quota["estimatedCreditsThisRun"] += safe_int(
+                headers["x-requests-last"], 0
+            )
 
 
+# ---------------------------------------------------------------------------
+# Configuration and state migration
+# ---------------------------------------------------------------------------
 
-def normalize_model_predictions(
-    model_result: dict[str, Any],
-    candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> list[dict[str, Any]]:
-    raw_predictions = model_result.get("predictions", [])
 
-    if not isinstance(raw_predictions, list):
-        raise RuntimeError("Поле predictions должно быть массивом")
-
-    candidates_by_id = {
-        int(candidate["matchId"]): candidate
-        for candidate in candidates
+def validate_config(config: dict[str, Any]) -> None:
+    required = {
+        "dailyAnalysisTarget",
+        "bestBetsTarget",
+        "stakePerBestBetPercent",
+        "featuredMarkets",
+        "sourceMarker",
     }
-
-    allowed_markets = {
-        str(value)
-        for value in config.get("allowedMarkets", [])
-    }
-
-    minimum_confidence = int(
-        config.get("minimumConfidence") or 55
-    )
-    win_market_minimum_confidence = int(
-        config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 60)
-    )
-    minimum_probability = float(
-        config.get("minimumProbability") or 0.52
-    )
-    maximum_probability = float(
-        config.get("maximumProbability") or 0.95
-    )
-    minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.01
-    )
-    maximum_model_odds = float(
-        config.get("maximumModelOdds") or 10.0
-    )
-    minimum_data_quality = float(
-        config.get("minimumDataQuality") or 25
-    )
-    maximum_predictions = max(
-        1,
-        int(config.get("maximumPredictions") or 4),
-    )
-
-    if minimum_model_odds > 1:
-        maximum_probability = min(
-            maximum_probability,
-            1 / minimum_model_odds,
-        )
-
-    if maximum_model_odds > 1:
-        minimum_probability = max(
-            minimum_probability,
-            1 / maximum_model_odds,
-        )
-
-    win_markets = {"HOME_WIN", "AWAY_WIN"}
-    normalized: list[dict[str, Any]] = []
-    used_match_ids: set[int] = set()
-
-    for index, raw in enumerate(raw_predictions):
-        if not isinstance(raw, dict):
-            log(f"AI prediction #{index + 1} отклонён: не объект")
-            continue
-
-        try:
-            match_id = int(raw.get("matchId"))
-            confidence = int(round(float(raw.get("confidence"))))
-            probability = float(raw.get("probability"))
-        except (TypeError, ValueError):
-            log(f"AI prediction #{index + 1} отклонён: неверные числа")
-            continue
-
-        if 1 < probability <= 100:
-            probability /= 100
-
-        market = str(raw.get("market") or "").upper().strip()
-        risk = str(raw.get("risk") or "").upper().strip()
-        reason = str(raw.get("reason") or "").strip()
-
-        candidate = candidates_by_id.get(match_id)
-
-        if candidate is None:
-            log(f"AI prediction отклонён: неизвестный matchId={match_id}")
-            continue
-
-        if match_id in used_match_ids:
-            log(f"AI prediction отклонён: дубль matchId={match_id}")
-            continue
-
-        if market not in allowed_markets:
-            log(
-                "AI prediction отклонён: "
-                f"market={market}; matchId={match_id}"
-            )
-            continue
-
-        data_quality = float(candidate.get("dataQuality") or 0)
-
-        if data_quality < minimum_data_quality:
-            log(
-                "AI prediction отклонён по качеству данных: "
-                f"matchId={match_id}; quality={data_quality:.1f}"
-            )
-            continue
-
-        required_confidence = (
-            win_market_minimum_confidence
-            if market in win_markets
-            else minimum_confidence
-        )
-
-        maximum_supported_confidence = int(
-            round(clamp_number(62 + data_quality * 0.28, 68, 88))
-        )
-        confidence = min(
-            max(0, min(confidence, 100)),
-            maximum_supported_confidence,
-        )
-
-        if confidence < required_confidence:
-            log(
-                "AI prediction отклонён по уверенности: "
-                f"matchId={match_id}; confidence={confidence}; "
-                f"required={required_confidence}"
-            )
-            continue
-
-        if not minimum_probability <= probability <= maximum_probability:
-            log(
-                "AI prediction отклонён по вероятности: "
-                f"matchId={match_id}; probability={probability:.4f}; "
-                f"range={minimum_probability:.4f}-{maximum_probability:.4f}"
-            )
-            continue
-
-        if not reason:
-            log(f"AI prediction отклонён без reason: matchId={match_id}")
-            continue
-
-        fair_odds = round(1 / probability, 2)
-
-        if not minimum_model_odds <= fair_odds <= maximum_model_odds:
-            log(
-                "AI prediction отклонён по расчётному коэффициенту: "
-                f"matchId={match_id}; fairOdds={fair_odds:.2f}"
-            )
-            continue
-
-        if risk not in {"LOW", "MEDIUM"}:
-            risk = "LOW" if confidence >= 78 else "MEDIUM"
-
-        ranking_score = round(
-            confidence * 0.50
-            + probability * 100 * 0.25
-            + data_quality * 0.25
-            + model_odds_preference_bonus(fair_odds, config),
-            4,
-        )
-
-        normalized.append(
-            {
-                "matchId": match_id,
-                "market": market,
-                "confidence": confidence,
-                "probability": round(probability, 4),
-                "fairOdds": fair_odds,
-                "risk": risk,
-                "reason": reason[:500],
-                "analysisMode": "AI",
-                "rankingScore": ranking_score,
-                "dataQuality": round(data_quality, 2),
-            }
-        )
-        used_match_ids.add(match_id)
-
-    normalized.sort(
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -int(item.get("confidence") or 0),
-            str(item.get("matchId") or ""),
-        )
-    )
-
-    return normalized[:maximum_predictions]
+    missing = sorted(required - set(config))
+    if missing:
+        raise RuntimeError(f"Missing config keys: {missing}")
+    if config.get("sourceMarker") != PIPELINE_MARKER:
+        raise RuntimeError("Config source marker mismatch")
+    if safe_int(config.get("dailyAnalysisTarget")) != 15:
+        raise RuntimeError("dailyAnalysisTarget must be 15")
+    if safe_int(config.get("bestBetsTarget")) != 4:
+        raise RuntimeError("bestBetsTarget must be 4")
+    if safe_float(config.get("stakePerBestBetPercent")) != 20.0:
+        raise RuntimeError("stakePerBestBetPercent must be 20")
+    if safe_float(config.get("maximumDailyExposurePercent")) != 80.0:
+        raise RuntimeError("maximumDailyExposurePercent must be 80")
+    if safe_int(config.get("maximumOddsSportRequests")) < 1:
+        raise RuntimeError("maximumOddsSportRequests must be positive")
+    generation_hour = safe_int(config.get("dailyGenerationHourLocal"), 8)
+    if generation_hour < 0 or generation_hour > 23:
+        raise RuntimeError("dailyGenerationHourLocal must be in 0..23")
+    fallback_hockey = safe_int(config.get("minimumHockeySportRequestsForFallback"), 1)
+    if fallback_hockey < 0:
+        raise RuntimeError("minimumHockeySportRequestsForFallback must not be negative")
 
 
-
-def evaluate_market(
-    market: str,
-    home_goals: int,
-    away_goals: int,
-) -> bool:
-    if market == "HOME_WIN":
-        return home_goals > away_goals
-
-    if market == "AWAY_WIN":
-        return away_goals > home_goals
-
-    if market == "DRAW":
-        return home_goals == away_goals
-
-    if market == "HOME_OR_DRAW":
-        return home_goals >= away_goals
-
-    if market == "AWAY_OR_DRAW":
-        return away_goals >= home_goals
-
-    if market == "OVER_1_5":
-        return home_goals + away_goals >= 2
-
-    if market == "UNDER_3_5":
-        return home_goals + away_goals <= 3
-
-    if market == "HOME_OVER_0_5":
-        return home_goals >= 1
-
-    if market == "AWAY_OVER_0_5":
-        return away_goals >= 1
-
-    if market == "BOTH_SCORE":
-        return home_goals >= 1 and away_goals >= 1
-
-    raise RuntimeError(
-        f"Неизвестный рынок: {market}"
-    )
-
-
-def ensure_real_state(
-    old_state: dict[str, Any],
-    config: dict[str, Any],
-) -> dict[str, Any]:
-    current_mode = str(
-        (old_state.get("meta") or {}).get("mode") or ""
-    )
-
-    if current_mode == "real":
-        state = copy.deepcopy(old_state)
-        state.setdefault("meta", {})
-        state.setdefault("predictions", [])
-        state.setdefault("history", [])
-        state.setdefault("statistics", {})
-        state.setdefault("bank", {})
-        return state
-
-    starting_bank = float(
-        config.get("startingVirtualBank") or 10000
-    )
-
-    log(
-        "Обнаружен демонстрационный или пустой режим. "
-        "Создаётся чистое реальное состояние."
-    )
-
+def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
+    now = now or utc_now()
+    starting = safe_float(config.get("startingVirtualBank"), 10000.0)
     return {
         "meta": {
-            "version": "9.0.1",
-            "mode": "real",
-            "updatedAt": None,
-            "analyzedMatches": 0,
-            "candidateMatches": 0,
-            "selectedPredictions": 0,
-            "source": "football-data.org",
-            "analysisProvider": "Не запускался",
-            "timezone": str(
-                config.get("timezone") or "Europe/Moscow"
-            ),
-            "minimumLeadHours": float(
-                config.get("minimumLeadHours") or 1
-            ),
+            "version": STATE_VERSION,
+            "mode": "production",
+            "updatedAt": iso_z(now),
+            "analysisDateLocal": "",
+            "status": "INITIALIZED",
+            "sourceMarker": PIPELINE_MARKER,
+            "dataFreshness": "INITIALIZED",
             "notice": (
-                "Расчётные коэффициенты модели не являются "
-                "букмекерской линией."
+                "Система сначала прогнозирует сценарий матча, затем оценивает "
+                "цену букмекерского рынка. Гарантия выигрыша отсутствует."
             ),
         },
+        "dailyAnalysis": [],
+        "bestBets": [],
+        "predictions": [],
+        "analysisHistory": [],
+        "history": [],
         "bank": {
-            "starting": starting_bank,
-            "current": starting_bank,
-            "stakePercent": float(
-                config.get("stakePerPredictionPercent") or 20
-            ),
-            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
+            "starting": round(starting, 2),
+            "current": round(starting, 2),
+            "stakePercent": 20,
             "roi": 0.0,
             "maxDrawdown": 0.0,
+            "activeExposure": 0.0,
             "history": [
                 {
-                    "date": utc_now().date().isoformat(),
-                    "value": starting_bank,
-                    "event": "REAL_MODE_START",
+                    "date": now.date().isoformat(),
+                    "value": round(starting, 2),
+                    "event": "V10_START",
                 }
             ],
         },
         "statistics": {
+            "analysisAccuracy": 0.0,
+            "bestBetsAccuracy": 0.0,
             "averageOdds": 0.0,
-            "currentStreak": "Нет завершённых прогнозов",
+            "currentStreak": "Нет завершённых ставок",
             "bestSegment": "Недостаточно данных",
+            "settledAnalyses": 0,
+            "settledBestBets": 0,
         },
-        "predictions": [],
-        "history": [],
+        "learning": {
+            "version": 1,
+            "updatedAt": iso_z(now),
+            "segments": {},
+            "calibrationBins": {},
+            "totalSettledAnalyses": 0,
+            "totalSettledBestBets": 0,
+            "modelNotes": [],
+        },
+        "quota": {},
     }
 
 
-
-def resolve_existing_history(
-    state: dict[str, Any],
-    matches_by_id: dict[int, dict[str, Any]],
-) -> int:
-    history = state.get("history") or []
-    bank = state.get("bank") or {}
-
-    current_bank = float(
-        bank.get("current")
-        or bank.get("starting")
-        or 10000
-    )
-
-    settled_count = 0
-
-    for entry in history:
-        if not isinstance(entry, dict):
-            continue
-
-        if entry.get("status") != "pending":
-            continue
-
-        try:
-            match_id = int(entry.get("sourceMatchId"))
-        except (TypeError, ValueError):
-            continue
-
-        match = matches_by_id.get(match_id)
-
-        if not match:
-            continue
-
-        match_status = str(match.get("status") or "").upper()
-
-        if match.get("utcDate"):
-            entry["utcDate"] = str(match.get("utcDate"))
-
-        entry.update(extract_public_match_status(match))
-
-        if match_status == "CANCELLED":
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = "MATCH_CANCELLED"
-            settled_count += 1
-            continue
-
-        result = final_score(match)
-
-        if result is None:
-            continue
-
-        home_goals, away_goals = result
-        market = str(entry.get("market") or "")
-
-        try:
-            won = evaluate_market(
-                market,
-                home_goals,
-                away_goals,
-            )
-        except RuntimeError:
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = "UNKNOWN_MARKET"
-            settled_count += 1
-            continue
-
-        stake = float(entry.get("stake") or 0)
-        fair_odds = float(
-            entry.get("fairOdds")
-            or entry.get("odds")
-            or 1
-        )
-
-        if won:
-            profit = stake * max(0.0, fair_odds - 1)
-            current_bank += profit
-            entry["status"] = "won"
-            entry["profit"] = round(profit, 2)
-        else:
-            current_bank -= stake
-            entry["status"] = "lost"
-            entry["profit"] = round(-stake, 2)
-
-        entry["score"] = f"{home_goals}:{away_goals}"
-        entry["settledAt"] = utc_now().isoformat()
-        entry["settlementOddsType"] = "MODEL_FAIR_SIMULATION"
-
-        bank.setdefault("history", []).append(
-            {
-                "date": utc_now().date().isoformat(),
-                "value": round(current_bank, 2),
-                "event": (
-                    "PREDICTION_WON"
-                    if won
-                    else "PREDICTION_LOST"
-                ),
-                "matchId": match_id,
-            }
-        )
-
-        settled_count += 1
-
-    bank["current"] = round(current_bank, 2)
-    state["bank"] = bank
-
-    return settled_count
-
-
-
-
-# =============================================================================
-# V4_5_DETERMINISTIC_FALLBACK
-# =============================================================================
-
-def clamp_number(
-    value: float,
-    minimum: float,
-    maximum: float,
-) -> float:
-    return min(maximum, max(minimum, value))
-
-
-def _mean(values: list[float]) -> float:
-    return sum(values) / len(values) if values else 0.0
-
-
-def _standard_deviation(values: list[float]) -> float:
-    if len(values) < 2:
-        return 0.0
-
-    average = _mean(values)
-    variance = sum((value - average) ** 2 for value in values) / len(values)
-    return math.sqrt(variance)
-
-
-def _preferred_venue_form(
-    form: dict[str, Any],
-    venue_key: str,
+def migrate_state(
+    source: dict[str, Any] | None,
+    config: dict[str, Any],
+    now: dt.datetime | None = None,
 ) -> dict[str, Any]:
-    venue = form.get(venue_key) or {}
-
-    if int(venue.get("games") or 0) >= 2:
-        return venue
-
-    return form
-
-
-def _poisson_over_15(expected_total: float) -> float:
-    expected_total = clamp_number(expected_total, 0.1, 5.0)
-    return 1 - math.exp(-expected_total) * (1 + expected_total)
-
-
-def _poisson_over_25(expected_total: float) -> float:
-    expected_total = clamp_number(expected_total, 0.1, 5.0)
-    under_or_equal_two = sum(
-        math.exp(-expected_total)
-        * expected_total ** goals
-        / math.factorial(goals)
-        for goals in range(3)
-    )
-    return clamp_number(1 - under_or_equal_two, 0, 1)
-
-
-def _poisson_under_25(expected_total: float) -> float:
-    expected_total = clamp_number(expected_total, 0.1, 5.0)
-    cumulative = sum(
-        math.exp(-expected_total)
-        * expected_total ** goals
-        / math.factorial(goals)
-        for goals in range(3)
-    )
-    return clamp_number(cumulative, 0, 1)
-
-
-def _poisson_under_35(expected_total: float) -> float:
-    expected_total = clamp_number(expected_total, 0.1, 5.0)
-    cumulative = sum(
-        math.exp(-expected_total)
-        * expected_total ** goals
-        / math.factorial(goals)
-        for goals in range(4)
-    )
-    return clamp_number(cumulative, 0, 1)
-
-
-
-def _poisson_draw(expected_home: float, expected_away: float) -> float:
-    expected_home = clamp_number(expected_home, 0.05, 5.0)
-    expected_away = clamp_number(expected_away, 0.05, 5.0)
-    probability = sum(
-        (
-            math.exp(-expected_home)
-            * expected_home ** goals
-            / math.factorial(goals)
-        )
-        * (
-            math.exp(-expected_away)
-            * expected_away ** goals
-            / math.factorial(goals)
-        )
-        for goals in range(9)
-    )
-    return clamp_number(probability, 0, 1)
-
-
-def build_deterministic_predictions(
-    candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Формирует честный статистический пул без искусственных заглушек."""
-
-    if not candidates:
-        return []
-
-    allowed_markets = {
-        str(value)
-        for value in config.get("allowedMarkets", [])
-    }
-
-    maximum_predictions = max(
-        1,
-        int(config.get("maximumPredictions") or 4),
-    )
-    minimum_confidence = int(
-        config.get("minimumConfidence") or 55
-    )
-    win_market_minimum_confidence = int(
-        config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 60)
-    )
-    minimum_probability = float(
-        config.get("minimumProbability") or 0.52
-    )
-    maximum_probability = float(
-        config.get("maximumProbability") or 0.95
-    )
-    minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.01
-    )
-    maximum_model_odds = float(
-        config.get("maximumModelOdds") or 10.0
-    )
-    minimum_data_quality = float(
-        config.get("minimumDataQuality") or 25
-    )
-
-    if minimum_model_odds > 1:
-        maximum_probability = min(
-            maximum_probability,
-            1 / minimum_model_odds,
-        )
-
-    if maximum_model_odds > 1:
-        minimum_probability = max(
-            minimum_probability,
-            1 / maximum_model_odds,
-        )
-
-    win_markets = {"HOME_WIN", "AWAY_WIN"}
-    ranked: list[dict[str, Any]] = []
-
-    for candidate in candidates:
-        home_form = candidate.get("homeTeam", {}).get("form", {})
-        away_form = candidate.get("awayTeam", {}).get("form", {})
-        home_venue = _preferred_venue_form(home_form, "homeVenue")
-        away_venue = _preferred_venue_form(away_form, "awayVenue")
-
-        data_quality = float(candidate.get("dataQuality") or 0)
-
-        if data_quality < minimum_data_quality:
-            continue
-
-        home_ppg = float(home_venue.get("pointsPerGame") or 0)
-        away_ppg = float(away_venue.get("pointsPerGame") or 0)
-        home_gf = float(home_venue.get("goalsForPerGame") or 0)
-        home_ga = float(home_venue.get("goalsAgainstPerGame") or 0)
-        away_gf = float(away_venue.get("goalsForPerGame") or 0)
-        away_ga = float(away_venue.get("goalsAgainstPerGame") or 0)
-
-        expected_home = clamp_number((home_gf + away_ga) / 2, 0.1, 3.0)
-        expected_away = clamp_number((away_gf + home_ga) / 2, 0.1, 3.0)
-        expected_total = expected_home + expected_away
-
-        form_edge = home_ppg - away_ppg
-        goal_edge = expected_home - expected_away
-
-        market_components: dict[str, list[float]] = {
-            "OVER_1_5": [
-                _poisson_over_15(expected_total),
-                float(home_form.get("over15Rate") or 0),
-                float(away_form.get("over15Rate") or 0),
-            ],
-            "OVER_2_5": [
-                _poisson_over_25(expected_total),
-                clamp_number(
-                    float(home_form.get("over15Rate") or 0) * 0.72,
-                    0,
-                    1,
-                ),
-                clamp_number(
-                    float(away_form.get("over15Rate") or 0) * 0.72,
-                    0,
-                    1,
-                ),
-            ],
-            "UNDER_2_5": [
-                _poisson_under_25(expected_total),
-                clamp_number(
-                    float(home_form.get("under35Rate") or 0) * 0.78,
-                    0,
-                    1,
-                ),
-                clamp_number(
-                    float(away_form.get("under35Rate") or 0) * 0.78,
-                    0,
-                    1,
-                ),
-            ],
-            "UNDER_3_5": [
-                _poisson_under_35(expected_total),
-                float(home_form.get("under35Rate") or 0),
-                float(away_form.get("under35Rate") or 0),
-            ],
-            "HOME_OVER_0_5": [
-                float(home_venue.get("scoredRate") or 0),
-                float(away_venue.get("concededRate") or 0),
-                clamp_number(expected_home / 1.5, 0, 1),
-            ],
-            "AWAY_OVER_0_5": [
-                float(away_venue.get("scoredRate") or 0),
-                float(home_venue.get("concededRate") or 0),
-                clamp_number(expected_away / 1.5, 0, 1),
-            ],
-            "BOTH_SCORE": [
-                float(home_form.get("bothScoreRate") or 0),
-                float(away_form.get("bothScoreRate") or 0),
-                float(home_venue.get("scoredRate") or 0)
-                * float(away_venue.get("concededRate") or 0),
-                float(away_venue.get("scoredRate") or 0)
-                * float(home_venue.get("concededRate") or 0),
-            ],
-            "HOME_OR_DRAW": [
-                float(home_venue.get("nonLossRate") or 0),
-                1 - float(away_venue.get("winRate") or 0),
-                clamp_number(0.58 + form_edge * 0.08, 0.35, 0.80),
-            ],
-            "AWAY_OR_DRAW": [
-                float(away_venue.get("nonLossRate") or 0),
-                1 - float(home_venue.get("winRate") or 0),
-                clamp_number(0.58 - form_edge * 0.08, 0.35, 0.80),
-            ],
-            "HOME_WIN": [
-                float(home_venue.get("winRate") or 0),
-                float(away_venue.get("lossRate") or 0),
-                clamp_number(0.46 + form_edge * 0.09 + goal_edge * 0.07, 0.20, 0.75),
-            ],
-            "AWAY_WIN": [
-                float(away_venue.get("winRate") or 0),
-                float(home_venue.get("lossRate") or 0),
-                clamp_number(0.46 - form_edge * 0.09 - goal_edge * 0.07, 0.20, 0.75),
-            ],
-            "DRAW": [
-                _poisson_draw(expected_home, expected_away),
-                float(home_form.get("drawRate") or 0),
-                float(away_form.get("drawRate") or 0),
-                clamp_number(0.32 - abs(form_edge) * 0.07 - abs(goal_edge) * 0.06, 0.12, 0.40),
-            ],
-        }
-
-        for market, components in market_components.items():
-            if market not in allowed_markets:
-                continue
-
-            cleaned_components = [
-                clamp_number(float(value), 0, 1)
-                for value in components
-            ]
-            probability = _mean(cleaned_components)
-
-            if not minimum_probability <= probability <= maximum_probability:
-                continue
-
-            fair_odds = round(1 / probability, 2)
-
-            if not minimum_model_odds <= fair_odds <= maximum_model_odds:
-                continue
-
-            agreement = clamp_number(
-                100 - _standard_deviation(cleaned_components) * 220,
-                0,
-                100,
-            )
-            signal_strength = clamp_number(
-                (probability - 0.50) / 0.20 * 100,
-                0,
-                100,
-            )
-            confidence = int(
-                round(
-                    0.55 * data_quality
-                    + 0.25 * agreement
-                    + 0.20 * signal_strength
-                )
-            )
-            confidence = int(clamp_number(confidence, 0, 88))
-
-            required_confidence = (
-                win_market_minimum_confidence
-                if market in win_markets
-                else minimum_confidence
-            )
-
-            if confidence < required_confidence:
-                continue
-
-            reason_map = {
-                "OVER_1_5": (
-                    "Модель формы оценивает вероятность минимум двух голов "
-                    f"в {probability * 100:.0f}%; средний ожидаемый тотал "
-                    f"{expected_total:.2f}."
-                ),
-                "OVER_2_5": (
-                    "Пуассоновская модель и текущая результативность дают "
-                    f"вероятность минимум трёх голов {probability * 100:.0f}%; "
-                    f"ожидаемый тотал {expected_total:.2f}."
-                ),
-                "UNDER_2_5": (
-                    "Пуассоновская модель и текущая результативность дают "
-                    f"вероятность не более двух голов {probability * 100:.0f}%; "
-                    f"ожидаемый тотал {expected_total:.2f}."
-                ),
-                "UNDER_3_5": (
-                    "Модель формы оценивает вероятность не более трёх голов "
-                    f"в {probability * 100:.0f}%; средний ожидаемый тотал "
-                    f"{expected_total:.2f}."
-                ),
-                "HOME_OVER_0_5": (
-                    "Хозяева регулярно забивают, а гости допускают голы; "
-                    f"оценка события {probability * 100:.0f}%."
-                ),
-                "AWAY_OVER_0_5": (
-                    "Гости регулярно забивают, а хозяева допускают голы; "
-                    f"оценка события {probability * 100:.0f}%."
-                ),
-                "BOTH_SCORE": (
-                    "Показатели результативности и пропущенных голов обеих "
-                    f"команд дают оценку {probability * 100:.0f}%."
-                ),
-                "HOME_OR_DRAW": (
-                    "Домашняя форма хозяев и выездная форма гостей дают "
-                    f"оценку непоражения хозяев {probability * 100:.0f}%."
-                ),
-                "AWAY_OR_DRAW": (
-                    "Выездная форма гостей и домашняя форма хозяев дают "
-                    f"оценку непоражения гостей {probability * 100:.0f}%."
-                ),
-                "HOME_WIN": (
-                    "Преимущество хозяев по форме и ожидаемым голам даёт "
-                    f"оценку победы {probability * 100:.0f}%."
-                ),
-                "AWAY_WIN": (
-                    "Преимущество гостей по форме и ожидаемым голам даёт "
-                    f"оценку победы {probability * 100:.0f}%."
-                ),
-                "DRAW": (
-                    "Баланс формы и пуассоновская модель голов дают "
-                    f"оценку ничьей {probability * 100:.0f}%."
-                ),
-            }
-
-            ranking_score = round(
-                confidence * 0.55
-                + probability * 100 * 0.25
-                + data_quality * 0.20
-                + model_odds_preference_bonus(fair_odds, config),
-                4,
-            )
-
-            ranked.append(
-                {
-                    "matchId": int(candidate["matchId"]),
-                    "market": market,
-                    "confidence": confidence,
-                    "probability": round(probability, 4),
-                    "fairOdds": fair_odds,
-                    "risk": "LOW" if confidence >= 78 else "MEDIUM",
-                    "reason": reason_map[market],
-                    "analysisMode": "DETERMINISTIC_STATISTICAL",
-                    "rankingScore": ranking_score,
-                    "dataQuality": round(data_quality, 2),
-                }
-            )
-
-    ranked.sort(
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -int(item.get("confidence") or 0),
-            str(item.get("matchId") or ""),
-        )
-    )
-
-    result: list[dict[str, Any]] = []
-    used_matches: set[int] = set()
-    one_prediction_per_match = bool(
-        config.get("onePredictionPerMatch", True)
-    )
-
-    for item in ranked:
-        match_id = int(item["matchId"])
-
-        if one_prediction_per_match and match_id in used_matches:
-            continue
-
-        result.append(item)
-        used_matches.add(match_id)
-
-        if len(result) >= maximum_predictions:
-            break
-
-    return result
-
-
-
-def localize_existing_history(
-    state: dict[str, Any],
-) -> None:
-    """
-    Русифицирует старые записи, не удаляя и не пересчитывая
-    финансовые результаты.
-    """
-
-    history = state.get("history", [])
-
-    if not isinstance(history, list):
-        return
-
-    for item in history:
-        if not isinstance(item, dict):
-            continue
-
-        source_home = str(item.get("home") or "")
-        source_away = str(item.get("away") or "")
-        source_league = str(item.get("league") or "")
-
-        item.setdefault("homeOriginal", source_home)
-        item.setdefault("awayOriginal", source_away)
-        item.setdefault("leagueOriginal", source_league)
-
-        item["home"] = localize_team_name(source_home)
-        item["away"] = localize_team_name(source_away)
-        item["league"] = localize_competition_name(
-            source_league
-        )
-
-
-
-def prediction_to_public_records(
-    prediction: dict[str, Any],
-    candidate: dict[str, Any],
-    *,
-    stake: float,
-    config: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    kickoff_utc = parse_utc_datetime(candidate["utcDate"])
-    timezone = configured_timezone(config)
-    kickoff = kickoff_utc.astimezone(timezone)
-    timezone_name = str(
-        config.get("timezone") or "Europe/Moscow"
-    )
-
-    competition = candidate["competition"]
-    home_team = candidate["homeTeam"]["name"]
-    away_team = candidate["awayTeam"]["name"]
-    market = str(prediction["market"])
-    market_label = MARKET_LABELS[market]
-
-    country_value = candidate.get("country", "")
-    country = COUNTRY_TRANSLATIONS.get(
-        country_value,
-        country_value or "Международный турнир",
-    )
-
-    risk_code = str(prediction.get("risk") or "MEDIUM").upper()
-    risk_label = "Низкий" if risk_code == "LOW" else "Средний"
-    fair_odds = round(float(prediction["fairOdds"]), 2)
-    probability = round(float(prediction["probability"]), 4)
-    confidence = int(prediction["confidence"])
-
-    common = {
-        "id": f"real-{candidate['matchId']}-{market.lower()}",
-        "sourceMatchId": int(candidate["matchId"]),
-        "league": competition["name"],
-        "country": country,
-        "date": kickoff.date().isoformat(),
-        "time": kickoff.strftime("%H:%M"),
-        "utcDate": candidate["utcDate"],
-        "timezone": timezone_name,
-        "home": home_team,
-        "away": away_team,
-        "market": market,
-        "pick": market_label,
-        "odds": fair_odds,
-        "fairOdds": fair_odds,
-        "oddsLabel": "Модельный коэффициент (не букмекерский)",
-        "probability": probability,
-        "probabilityPercent": round(probability * 100, 1),
-        "confidence": confidence,
-        "risk": risk_label,
-        "riskCode": risk_code,
-        "reason": str(prediction.get("reason") or "")[:500],
-        "analysisMode": str(
-            prediction.get("analysisMode") or "AI"
-        ),
-        "rankingScore": round(
-            float(prediction.get("rankingScore") or 0),
-            4,
-        ),
-        "dataQuality": round(
-            float(
-                prediction.get("dataQuality")
-                or candidate.get("dataQuality")
-                or 0
-            ),
-            2,
-        ),
-        "coefficientType": "MODEL_FAIR",
-        "marketOddsAvailable": False,
-        "expectedValueAvailable": False,
-    }
-
-    public_prediction = dict(common)
-
-    history_record = dict(common)
-    history_record.update(
+    now = now or utc_now()
+    state = default_state(config, now)
+    source = source if isinstance(source, dict) else {}
+
+    old_meta = source.get("meta") if isinstance(source.get("meta"), dict) else {}
+    state["meta"].update(old_meta)
+    state["meta"].update(
         {
-            "stake": round(stake, 2),
-            "score": "",
-            "status": "pending",
-            "publishedAt": utc_now().isoformat(),
-            "settlementOddsType": "MODEL_FAIR_SIMULATION",
+            "version": STATE_VERSION,
+            "sourceMarker": PIPELINE_MARKER,
+            "migrationAt": iso_z(now),
         }
     )
 
-    return public_prediction, history_record
-
-
-def pending_history_to_public_record(
-    entry: dict[str, Any],
-    match: dict[str, Any] | None,
-    config: dict[str, Any],
-) -> dict[str, Any] | None:
-    try:
-        match_id = int(entry.get("sourceMatchId"))
-        probability = float(entry.get("probability") or 0)
-        fair_odds = float(
-            entry.get("fairOdds") or entry.get("odds") or 0
-        )
-        confidence = int(entry.get("confidence") or 0)
-    except (TypeError, ValueError):
-        return None
-
-    if probability <= 0 and fair_odds > 1:
-        probability = 1 / fair_odds
-
-    risk_code = str(entry.get("riskCode") or "").upper()
-
-    if risk_code not in {"LOW", "MEDIUM"}:
-        risk_code = "LOW" if confidence >= 78 else "MEDIUM"
-
-    result = {
-        "id": str(entry.get("id") or f"real-{match_id}"),
-        "sourceMatchId": match_id,
-        "league": str(entry.get("league") or "Неизвестная лига"),
-        "country": str(entry.get("country") or ""),
-        "date": str(entry.get("date") or ""),
-        "time": str(entry.get("time") or ""),
-        "utcDate": str(
-            (match or {}).get("utcDate")
-            or entry.get("utcDate")
-            or ""
-        ),
-        "timezone": str(
-            entry.get("timezone")
-            or config.get("timezone")
-            or "Europe/Moscow"
-        ),
-        "home": str(entry.get("home") or ""),
-        "away": str(entry.get("away") or ""),
-        "market": str(entry.get("market") or ""),
-        "pick": str(entry.get("pick") or ""),
-        "odds": round(fair_odds, 2),
-        "fairOdds": round(fair_odds, 2),
-        "oddsLabel": "Модельный коэффициент (не букмекерский)",
-        "probability": round(probability, 4),
-        "probabilityPercent": round(probability * 100, 1),
-        "confidence": confidence,
-        "risk": "Низкий" if risk_code == "LOW" else "Средний",
-        "riskCode": risk_code,
-        "reason": str(
-            entry.get("reason")
-            or "Ранее опубликованный прогноз остаётся активным до начала матча."
-        ),
-        "analysisMode": str(
-            entry.get("analysisMode") or "EXISTING_PENDING"
-        ),
-        "rankingScore": float(
-            entry.get("rankingScore") or confidence
-        ),
-        "dataQuality": float(entry.get("dataQuality") or 0),
-        "coefficientType": "MODEL_FAIR",
-        "marketOddsAvailable": False,
-        "expectedValueAvailable": False,
-        "isExistingPending": True,
-    }
-
-    result.update(extract_public_match_status(match))
-    return result
-
-
-
-def calculate_streak(
-    completed_history: list[dict[str, Any]],
-) -> str:
-    if not completed_history:
-        return "Нет завершённых прогнозов"
-
-    latest_status = completed_history[-1].get(
-        "status"
-    )
-
-    count = 0
-
-    for entry in reversed(completed_history):
-        if entry.get("status") != latest_status:
-            break
-
-        count += 1
-
-    if latest_status == "won":
-        return f"{count} успешных подряд"
-
-    return f"{count} неуспешных подряд"
-
-
-def calculate_best_segment(
-    completed_history: list[dict[str, Any]],
-) -> str:
-    markets: dict[str, dict[str, int]] = {}
-
-    for entry in completed_history:
-        market = str(
-            entry.get("market") or ""
-        )
-
-        if not market:
-            continue
-
-        bucket = markets.setdefault(
-            market,
-            {
-                "won": 0,
-                "total": 0,
-            },
-        )
-
-        bucket["total"] += 1
-
-        if entry.get("status") == "won":
-            bucket["won"] += 1
-
-    eligible = [
-        (
-            market,
-            values["won"] / values["total"],
-            values["total"],
-        )
-        for market, values in markets.items()
-        if values["total"] >= 3
-    ]
-
-    if not eligible:
-        return "Недостаточно данных"
-
-    eligible.sort(
-        key=lambda item: (
-            -item[1],
-            -item[2],
-        )
-    )
-
-    best_market = eligible[0][0]
-
-    return MARKET_LABELS.get(
-        best_market,
-        best_market,
-    )
-
-
-
-# =============================================================================
-# V4_4_PUBLIC_SELECTION_PIPELINE
-# =============================================================================
-
-COMPETITION_NAMES_RU: dict[str, str] = {
-    "Premier League": "Английская Премьер-лига",
-    "Primera Division": "Испанская Ла Лига",
-    "La Liga": "Испанская Ла Лига",
-    "Bundesliga": "Немецкая Бундеслига",
-    "Serie A": "Итальянская Серия А",
-    "Ligue 1": "Французская Лига 1",
-    "Eredivisie": "Нидерландская Эредивизи",
-    "Primeira Liga": "Португальская Примейра-лига",
-    "Campeonato Brasileiro Série A": "Бразильская Серия А",
-    "FIFA World Cup": "Чемпионат мира",
-    "World Cup": "Чемпионат мира",
-}
-
-TEAM_NAMES_RU: dict[str, str] = {
-    # Бразилия
-    "Athletico Paranaense": "Атлетико Паранаэнсе",
-    "Atletico Paranaense": "Атлетико Паранаэнсе",
-    "Paranaense": "Атлетико Паранаэнсе",
-    "Atlético Mineiro": "Атлетико Минейро",
-    "Atletico Mineiro": "Атлетико Минейро",
-    "Bahia": "Баия",
-    "Botafogo": "Ботафого",
-    "Bragantino": "Брагантино",
-    "Red Bull Bragantino": "Ред Булл Брагантино",
-    "Ceará": "Сеара",
-    "Ceara": "Сеара",
-    "Corinthians": "Коринтианс",
-    "Coritiba": "Коритиба",
-    "Cruzeiro": "Крузейро",
-    "Flamengo": "Фламенго",
-    "Fluminense": "Флуминенсе",
-    "Fortaleza": "Форталеза",
-    "Grêmio": "Гремио",
-    "Gremio": "Гремио",
-    "Internacional": "Интернасьонал",
-    "Juventude": "Жувентуде",
-    "Palmeiras": "Палмейрас",
-    "Santos": "Сантос",
-    "São Paulo": "Сан-Паулу",
-    "Sao Paulo": "Сан-Паулу",
-    "Sport Recife": "Спорт Ресифи",
-    "Vasco da Gama": "Васко да Гама",
-    "Vitória": "Витория",
-    "Vitoria": "Витория",
-    "Clube do Remo": "Ремо",
-
-    # Англия
-    "Arsenal": "Арсенал",
-    "Aston Villa": "Астон Вилла",
-    "Bournemouth": "Борнмут",
-    "Brentford": "Брентфорд",
-    "Brighton & Hove Albion": "Брайтон",
-    "Burnley": "Бёрнли",
-    "Chelsea": "Челси",
-    "Crystal Palace": "Кристал Пэлас",
-    "Everton": "Эвертон",
-    "Fulham": "Фулхэм",
-    "Leeds United": "Лидс Юнайтед",
-    "Liverpool": "Ливерпуль",
-    "Manchester City": "Манчестер Сити",
-    "Manchester United": "Манчестер Юнайтед",
-    "Newcastle United": "Ньюкасл Юнайтед",
-    "Nottingham Forest": "Ноттингем Форест",
-    "Sunderland": "Сандерленд",
-    "Tottenham Hotspur": "Тоттенхэм",
-    "West Ham United": "Вест Хэм Юнайтед",
-    "Wolverhampton Wanderers": "Вулверхэмптон",
-
-    # Испания
-    "FC Barcelona": "Барселона",
-    "Barcelona": "Барселона",
-    "Real Madrid": "Реал Мадрид",
-    "Atletico Madrid": "Атлетико Мадрид",
-    "Atlético de Madrid": "Атлетико Мадрид",
-    "Athletic Club": "Атлетик Бильбао",
-    "Sevilla FC": "Севилья",
-    "Valencia CF": "Валенсия",
-    "Villarreal CF": "Вильярреал",
-    "Real Sociedad": "Реал Сосьедад",
-    "Real Betis": "Реал Бетис",
-
-    # Германия
-    "Bayern Munich": "Бавария",
-    "FC Bayern München": "Бавария",
-    "Borussia Dortmund": "Боруссия Дортмунд",
-    "Bayer Leverkusen": "Байер",
-    "RB Leipzig": "РБ Лейпциг",
-
-    # Италия
-    "Inter Milan": "Интер",
-    "Internazionale": "Интер",
-    "AC Milan": "Милан",
-    "Juventus": "Ювентус",
-    "Napoli": "Наполи",
-    "AS Roma": "Рома",
-    "Lazio": "Лацио",
-    "Atalanta": "Аталанта",
-
-    # Франция
-    "Paris Saint-Germain": "Пари Сен-Жермен",
-    "Paris Saint Germain": "Пари Сен-Жермен",
-    "Olympique Marseille": "Марсель",
-    "Olympique Lyonnais": "Лион",
-    "AS Monaco": "Монако",
-    "Lille OSC": "Лилль",
-}
-
-MATCH_STATUS_RU: dict[str, str] = {
-    "SCHEDULED": "Запланирован",
-    "TIMED": "Ожидается начало",
-    "IN_PLAY": "Матч идёт",
-    "PAUSED": "Перерыв",
-    "FINISHED": "Завершён",
-    "POSTPONED": "Перенесён",
-    "SUSPENDED": "Приостановлен",
-    "CANCELLED": "Отменён",
-    "AWARDED": "Результат присуждён",
-}
-
-
-def transliterate_latin_name(value: str) -> str:
-    """
-    Запасной детерминированный вариант для неизвестных латинских названий.
-
-    Сначала всегда используется точный словарь. Транслитерация нужна только
-    для нового названия, которого ещё нет в каталоге.
-    """
-
-    combinations = {
-        "shch": "щ",
-        "sch": "щ",
-        "ch": "ч",
-        "sh": "ш",
-        "zh": "ж",
-        "kh": "х",
-        "th": "т",
-        "ph": "ф",
-        "ck": "к",
-        "qu": "кв",
-        "wh": "у",
-        "ya": "я",
-        "yu": "ю",
-        "yo": "ё",
-        "ye": "е",
-        "ai": "ай",
-        "ay": "ай",
-        "oi": "ой",
-        "oy": "ой",
-        "ou": "у",
-    }
-
-    characters = {
-        "a": "а",
-        "b": "б",
-        "c": "к",
-        "d": "д",
-        "e": "е",
-        "f": "ф",
-        "g": "г",
-        "h": "х",
-        "i": "и",
-        "j": "дж",
-        "k": "к",
-        "l": "л",
-        "m": "м",
-        "n": "н",
-        "o": "о",
-        "p": "п",
-        "q": "к",
-        "r": "р",
-        "s": "с",
-        "t": "т",
-        "u": "у",
-        "v": "в",
-        "w": "у",
-        "x": "кс",
-        "y": "и",
-        "z": "з",
-    }
-
-    normalized = (
-        value
-        .replace("ã", "a")
-        .replace("á", "a")
-        .replace("à", "a")
-        .replace("â", "a")
-        .replace("ä", "a")
-        .replace("é", "e")
-        .replace("è", "e")
-        .replace("ê", "e")
-        .replace("í", "i")
-        .replace("ó", "o")
-        .replace("ô", "o")
-        .replace("õ", "o")
-        .replace("ú", "u")
-        .replace("ü", "u")
-        .replace("ç", "c")
-        .replace("ñ", "n")
-    )
-
-    lower = normalized.lower()
-    result: list[str] = []
-    index = 0
-
-    while index < len(lower):
-        matched = False
-
-        for size in (4, 3, 2):
-            part = lower[index:index + size]
-
-            if part in combinations:
-                result.append(combinations[part])
-                index += size
-                matched = True
-                break
-
-        if matched:
-            continue
-
-        character = lower[index]
-        result.append(characters.get(character, character))
-        index += 1
-
-    transliterated = "".join(result)
-
-    words = [
-        word[:1].upper() + word[1:]
-        if word
-        else word
-        for word in transliterated.split(" ")
-    ]
-
-    return " ".join(words)
-
-
-def localize_team_name(value: str) -> str:
-    source = str(value or "").strip()
-
-    if not source:
-        return "Неизвестная команда"
-
-    exact = TEAM_NAMES_RU.get(source)
-
-    if exact:
-        return exact
-
-    if re.search(r"[А-Яа-яЁё]", source):
-        return source
-
-    return transliterate_latin_name(source)
-
-
-def localize_competition_name(value: str) -> str:
-    source = str(value or "").strip()
-
-    if not source:
-        return "Неизвестный турнир"
-
-    exact = COMPETITION_NAMES_RU.get(source)
-
-    if exact:
-        return exact
-
-    if re.search(r"[А-Яа-яЁё]", source):
-        return source
-
-    return transliterate_latin_name(source)
-
-
-def localize_reason(
-    value: str,
-    replacements: dict[str, str],
-) -> str:
-    localized = str(value or "").strip()
-
-    for source, target in sorted(
-        replacements.items(),
-        key=lambda item: len(item[0]),
-        reverse=True,
-    ):
-        if not source or source == target:
-            continue
-
-        localized = localized.replace(source, target)
-
-    return localized
-
-
-def extract_public_match_status(
-    match: dict[str, Any] | None,
-) -> dict[str, Any]:
-    if not isinstance(match, dict):
-        return {
-            "matchStatus": "UNKNOWN",
-            "matchStatusLabel": "Статус уточняется",
-            "homeScore": None,
-            "awayScore": None,
-            "liveScore": "",
-            "minute": None,
-        }
-
-    status = str(match.get("status") or "UNKNOWN").upper()
-    score = match.get("score") or {}
-
-    selected_score: dict[str, Any] = {}
-
-    for key in (
-        "fullTime",
-        "regularTime",
-        "halfTime",
-    ):
-        candidate = score.get(key)
-
-        if isinstance(candidate, dict):
-            home = candidate.get("home")
-            away = candidate.get("away")
-
-            if home is not None or away is not None:
-                selected_score = candidate
-                break
-
-    home_score = selected_score.get("home")
-    away_score = selected_score.get("away")
-
-    live_score = ""
-
-    if home_score is not None and away_score is not None:
-        live_score = f"{home_score}:{away_score}"
-
-    minute_value = (
-        match.get("minute")
-        or match.get("elapsed")
-        or match.get("matchMinute")
-    )
-
-    try:
-        minute = int(minute_value)
-    except (TypeError, ValueError):
-        minute = None
-
-    return {
-        "matchStatus": status,
-        "matchStatusLabel": MATCH_STATUS_RU.get(
-            status,
-            "Статус уточняется",
-        ),
-        "homeScore": home_score,
-        "awayScore": away_score,
-        "liveScore": live_score,
-        "minute": minute,
-    }
-
-
-def select_diverse_public_predictions(
-    predictions: list[dict[str, Any]],
-    maximum_predictions: int,
-) -> list[dict[str, Any]]:
-    """Preserve ranking while preventing one competition from monopolising output.
-
-    Selection is round-robin across country/competition buckets. This is a
-    diversity rule, not a fake quota: every item has already passed the same
-    quality guard. When only one bucket exists, all slots may come from it.
-    """
-
-    maximum_predictions = max(0, int(maximum_predictions))
-
-    if maximum_predictions == 0 or not predictions:
-        return []
-
-    buckets: dict[str, list[dict[str, Any]]] = {}
-
-    for prediction in predictions:
-        country = str(prediction.get("country") or "UNKNOWN")
-        league = str(
-            prediction.get("leagueOriginal")
-            or prediction.get("league")
-            or "UNKNOWN"
-        )
-        buckets.setdefault(f"{country}|{league}", []).append(prediction)
-
-    bucket_keys = sorted(
-        buckets,
-        key=lambda key: (
-            -float(buckets[key][0].get("rankingScore") or 0),
-            -int(buckets[key][0].get("confidence") or 0),
-            str(buckets[key][0].get("utcDate") or ""),
-            key,
-        ),
-    )
-
-    selected: list[dict[str, Any]] = []
-    round_index = 0
-
-    while len(selected) < maximum_predictions:
-        progress = False
-
-        for key in bucket_keys:
-            bucket = buckets[key]
-
-            if round_index >= len(bucket):
-                continue
-
-            selected.append(bucket[round_index])
-            progress = True
-
-            if len(selected) >= maximum_predictions:
-                break
-
-        if not progress:
-            break
-
-        round_index += 1
-
-    return selected
-
-
-def finalize_public_selection(
-    public_predictions: list[dict[str, Any]],
-    history_records: list[dict[str, Any]],
-    matches_by_id: dict[int, dict[str, Any]],
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Единый финальный guard для новых и активных прогнозов."""
-
-    minimum_confidence = int(
-        config.get("minimumConfidence") or 55
-    )
-    win_market_minimum_confidence = int(
-        config.get("winMarketMinimumConfidence")
-        or max(minimum_confidence + 3, 60)
-    )
-    minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.01
-    )
-    maximum_model_odds = float(
-        config.get("maximumModelOdds") or 10.0
-    )
-    window_hours = max(
-        1.0,
-        float(config.get("selectionWindowHours") or 24),
-    )
-    maximum_predictions = max(
-        0,
-        int(config.get("maximumPredictions") or 4),
-    )
-    minimum_lead_hours = max(
-        0.0,
-        float(config.get("minimumLeadHours") or 1),
-    )
-    best_available_minimum_confidence = max(
-        0,
-        int(config.get("bestAvailableMinimumConfidence") or 35),
-    )
-
-    window_start = now + dt.timedelta(hours=minimum_lead_hours)
-    window_end = window_start + dt.timedelta(hours=window_hours)
-    win_markets = {"HOME_WIN", "AWAY_WIN"}
-
-    history_by_id = {
-        str(item.get("id") or ""): item
-        for item in history_records
-        if isinstance(item, dict)
-    }
-
-    accepted_by_match: dict[int, dict[str, Any]] = {}
-
-    for prediction in public_predictions:
-        if not isinstance(prediction, dict):
-            continue
-
-        try:
-            kickoff = parse_utc_datetime(
-                str(prediction.get("utcDate") or "")
-            )
-            confidence = int(prediction.get("confidence") or 0)
-            model_odds = float(
-                prediction.get("fairOdds")
-                or prediction.get("odds")
-                or 0
-            )
-            probability = float(prediction.get("probability") or 0)
-            match_id = int(prediction.get("sourceMatchId"))
-        except (TypeError, ValueError):
-            continue
-
-        market = str(prediction.get("market") or "").upper()
-        required_confidence = (
-            win_market_minimum_confidence
-            if market in win_markets
-            else minimum_confidence
-        )
-
-        if kickoff < window_start or kickoff > window_end:
-            log(
-                "Финальный guard: прогноз вне окна; "
-                f"matchId={match_id}; kickoff={kickoff.isoformat()}"
-            )
-            continue
-
-        value_tier = str(
-            prediction.get("valueTier") or ""
-        ).upper()
-        is_best_available = (
-            str(
-                prediction.get("selectionTier") or ""
-            ).upper()
-            == "BEST_AVAILABLE"
-            or value_tier in {
-                "PROBABILITY_FIRST",
-                "HIGH_PROBABILITY_FALLBACK",
-            }
-        )
-
-        if confidence < required_confidence:
-            if (
-                not is_best_available
-                or confidence < best_available_minimum_confidence
-            ):
-                log(
-                    "Финальный guard: низкая уверенность; "
-                    f"matchId={match_id}; confidence={confidence}"
-                )
-                continue
-
-        if not minimum_model_odds <= model_odds <= maximum_model_odds:
-            log(
-                "Финальный guard: коэффициент вне диапазона; "
-                f"matchId={match_id}; fairOdds={model_odds:.2f}"
-            )
-            continue
-
-        if probability <= 0:
-            probability = 1 / model_odds
-            prediction["probability"] = round(probability, 4)
-
-        source_home = str(prediction.get("home") or "")
-        source_away = str(prediction.get("away") or "")
-        source_league = str(prediction.get("league") or "")
-
-        localized_home = localize_team_name(source_home)
-        localized_away = localize_team_name(source_away)
-        localized_league = localize_competition_name(source_league)
-
-        prediction["homeOriginal"] = source_home
-        prediction["awayOriginal"] = source_away
-        prediction["leagueOriginal"] = source_league
-        prediction["home"] = localized_home
-        prediction["away"] = localized_away
-        prediction["league"] = localized_league
-        prediction["reason"] = localize_reason(
-            str(prediction.get("reason") or ""),
-            {
-                source_home: localized_home,
-                source_away: localized_away,
-                source_league: localized_league,
-            },
-        )
-        prediction["selectionWindowHours"] = window_hours
-        prediction["minimumModelOdds"] = minimum_model_odds
-        prediction["maximumModelOdds"] = maximum_model_odds
-
-        is_bookmaker_prediction = (
-            str(
-                prediction.get("coefficientType") or ""
-            )
-            == "BOOKMAKER_MARKET"
-            and float(
-                prediction.get("bookmakerOdds")
-                or prediction.get("odds")
-                or 0
-            )
-            > 1
-        )
-
-        if is_bookmaker_prediction:
-            prediction["marketOddsAvailable"] = True
-            prediction["expectedValueAvailable"] = True
-            prediction["coefficientType"] = "BOOKMAKER_MARKET"
-            prediction["oddsLabel"] = "Коэффициент букмекера"
-            prediction["odds"] = float(
-                prediction.get("bookmakerOdds")
-                or prediction.get("odds")
-            )
-        else:
-            prediction["marketOddsAvailable"] = False
-            prediction["expectedValueAvailable"] = False
-            prediction["coefficientType"] = "MODEL_FAIR"
-            prediction["oddsLabel"] = (
-                "Модельный коэффициент (не букмекерский)"
-            )
-
-        prediction["probabilityPercent"] = round(
-            probability * 100,
-            1,
-        )
-        prediction.update(
-            extract_public_match_status(matches_by_id.get(match_id))
-        )
-
-        current = accepted_by_match.get(match_id)
-
-        if current is None or float(
-            prediction.get("rankingScore") or 0
-        ) > float(current.get("rankingScore") or 0):
-            accepted_by_match[match_id] = prediction
-
-    accepted = list(accepted_by_match.values())
-    accepted.sort(
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -int(item.get("confidence") or 0),
-            str(item.get("utcDate") or ""),
-        )
-    )
-    accepted = select_diverse_public_predictions(
-        accepted,
-        maximum_predictions,
-    )
-
-    accepted_ids = {
-        str(item.get("id") or "")
-        for item in accepted
-    }
-
-    accepted_history: list[dict[str, Any]] = []
-
-    for prediction in accepted:
-        history_record = history_by_id.get(
-            str(prediction.get("id") or "")
-        )
-
-        if history_record is None:
-            continue
-
-        history_record["home"] = prediction.get("home")
-        history_record["away"] = prediction.get("away")
-        history_record["league"] = prediction.get("league")
-        history_record["reason"] = prediction.get("reason")
-        history_record["rank"] = prediction.get("rank")
-        history_record["marketOddsAvailable"] = bool(
-            prediction.get("marketOddsAvailable")
-        )
-        history_record["expectedValueAvailable"] = bool(
-            prediction.get("expectedValueAvailable")
-        )
-        history_record["coefficientType"] = str(
-            prediction.get("coefficientType") or ""
-        )
-        history_record["oddsLabel"] = str(
-            prediction.get("oddsLabel") or ""
-        )
-        history_record.update(
-            extract_public_match_status(
-                matches_by_id.get(
-                    int(prediction.get("sourceMatchId") or 0)
-                )
-            )
-        )
-        accepted_history.append(history_record)
-
-    accepted_history = [
-        item
-        for item in accepted_history
-        if str(item.get("id") or "") in accepted_ids
-    ]
-
-    return accepted, accepted_history
-
-
-
-
-def update_statistics(
-    state: dict[str, Any],
-) -> None:
-    history = [
-        item
-        for item in state.get("history", [])
-        if isinstance(item, dict)
-    ]
-
-    completed = [
-        item
-        for item in history
-        if item.get("status") in {
-            "won",
-            "lost",
-        }
-    ]
-
-    odds_values = [
-        float(item.get("fairOdds") or 0)
-        for item in history
-        if float(item.get("fairOdds") or 0) > 0
-    ]
-
-    average_odds = (
-        sum(odds_values) / len(odds_values)
-        if odds_values
-        else 0
-    )
-
-    statistics = state.setdefault(
-        "statistics",
-        {},
-    )
-
-    statistics["averageOdds"] = round(
-        average_odds,
+    old_bank = source.get("bank") if isinstance(source.get("bank"), dict) else {}
+    state["bank"].update(old_bank)
+    state["bank"]["starting"] = round(
+        safe_float(state["bank"].get("starting"), config.get("startingVirtualBank", 10000)),
         2,
     )
-
-    statistics["currentStreak"] = calculate_streak(
-        completed
+    state["bank"]["current"] = round(
+        safe_float(state["bank"].get("current"), state["bank"]["starting"]), 2
     )
+    state["bank"]["stakePercent"] = 20
+    if not isinstance(state["bank"].get("history"), list):
+        state["bank"]["history"] = []
 
-    statistics["bestSegment"] = calculate_best_segment(
-        completed
+    legacy_history = source.get("history") if isinstance(source.get("history"), list) else []
+    state["history"] = [dict(item) for item in legacy_history if isinstance(item, dict)]
+    for item in state["history"]:
+        item.setdefault("recordType", "BEST_BET")
+        item.setdefault("sport", infer_sport_from_key(item.get("oddsSportKey")))
+        item.setdefault("eventId", str(item.get("oddsEventId") or item.get("sourceMatchId") or ""))
+        item.setdefault("modelProbability", safe_float(item.get("probability"), 0.0))
+        item.setdefault("bookmakerOdds", safe_float(item.get("bookmakerOdds") or item.get("odds"), 0.0))
+
+    old_analysis_history = (
+        source.get("analysisHistory")
+        if isinstance(source.get("analysisHistory"), list)
+        else []
     )
-
-    bank = state.setdefault(
-        "bank",
-        {},
-    )
-
-    starting = float(
-        bank.get("starting") or 10000
-    )
-
-    current = float(
-        bank.get("current") or starting
-    )
-
-    roi = (
-        ((current - starting) / starting) * 100
-        if starting
-        else 0
-    )
-
-    bank["roi"] = round(
-        roi,
-        2,
-    )
-
-    values = [
-        float(item.get("value") or 0)
-        for item in bank.get("history", [])
-        if isinstance(item, dict)
+    state["analysisHistory"] = [
+        dict(item) for item in old_analysis_history if isinstance(item, dict)
     ]
 
-    if not values:
-        values = [starting, current]
+    old_learning = source.get("learning") if isinstance(source.get("learning"), dict) else {}
+    state["learning"].update(old_learning)
+    state["learning"].setdefault("segments", {})
+    state["learning"].setdefault("calibrationBins", {})
+    state["learning"].setdefault("modelNotes", [])
 
-    peak = values[0]
-    maximum_drawdown = 0.0
+    old_stats = source.get("statistics") if isinstance(source.get("statistics"), dict) else {}
+    state["statistics"].update(old_stats)
 
-    for value in values:
-        peak = max(peak, value)
+    old_daily = source.get("dailyAnalysis")
+    if not isinstance(old_daily, list):
+        old_daily = []
+    state["dailyAnalysis"] = [dict(item) for item in old_daily if isinstance(item, dict)]
 
-        if peak > 0:
-            drawdown = (
-                (peak - value) / peak
-            ) * 100
+    old_best = source.get("bestBets")
+    if not isinstance(old_best, list):
+        old_best = source.get("predictions") if isinstance(source.get("predictions"), list) else []
+    state["bestBets"] = [migrate_public_prediction(item) for item in old_best if isinstance(item, dict)]
+    state["predictions"] = copy.deepcopy(state["bestBets"])
 
-            maximum_drawdown = max(
-                maximum_drawdown,
-                drawdown,
-            )
-
-    bank["maxDrawdown"] = round(
-        maximum_drawdown,
-        2,
-    )
-
-
-def remove_duplicate_pending_predictions(
-    history: list[dict[str, Any]],
-) -> set[int]:
-    """Возвращает только действительно активные pending matchId."""
-
-    pending_match_ids: set[int] = set()
-
-    for item in history:
-        if not isinstance(item, dict):
-            continue
-
-        if str(item.get("status") or "").lower() != "pending":
-            continue
-
-        try:
-            pending_match_ids.add(int(item.get("sourceMatchId")))
-        except (TypeError, ValueError):
-            continue
-
-    return pending_match_ids
+    state.setdefault("quota", {})
+    update_bank_metrics(state)
+    update_statistics(state)
+    return state
 
 
-def build_active_pending_records(
-    history: list[dict[str, Any]],
-    matches_by_id: dict[int, dict[str, Any]],
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    records: list[dict[str, Any]] = []
-    source_history: list[dict[str, Any]] = []
-
-    minimum_lead_hours = max(
-        0.0,
-        float(config.get("minimumLeadHours") or 1),
-    )
-    window_hours = max(
-        1.0,
-        float(config.get("selectionWindowHours") or 24),
-    )
-    window_start = now + dt.timedelta(hours=minimum_lead_hours)
-    window_end = window_start + dt.timedelta(hours=window_hours)
-
-    for entry in history:
-        if not isinstance(entry, dict):
-            continue
-
-        if str(entry.get("status") or "").lower() != "pending":
-            continue
-
-        try:
-            match_id = int(entry.get("sourceMatchId"))
-        except (TypeError, ValueError):
-            continue
-
-        match = matches_by_id.get(match_id)
-        utc_value = str(
-            (match or {}).get("utcDate")
-            or entry.get("utcDate")
-            or ""
-        )
-
-        try:
-            kickoff = parse_utc_datetime(utc_value)
-        except Exception:
-            continue
-
-        if kickoff < window_start or kickoff > window_end:
-            continue
-
-        record = pending_history_to_public_record(
-            entry,
-            match,
-            config,
-        )
-
-        if record is None:
-            continue
-
-        records.append(record)
-        source_history.append(entry)
-
-    return records, source_history
+def migrate_public_prediction(item: dict[str, Any]) -> dict[str, Any]:
+    migrated = dict(item)
+    migrated.setdefault("recordType", "BEST_BET")
+    migrated.setdefault("eventId", str(item.get("oddsEventId") or item.get("sourceMatchId") or ""))
+    migrated.setdefault("sport", infer_sport_from_key(item.get("oddsSportKey")))
+    migrated.setdefault("sportLabel", "Футбол" if migrated["sport"] == "soccer" else "Хоккей")
+    migrated.setdefault("modelProbability", safe_float(item.get("probability"), 0.0))
+    migrated.setdefault("marketProbability", safe_float(item.get("marketProbability"), 0.0))
+    migrated.setdefault("probability", migrated["modelProbability"])
+    migrated.setdefault("probabilityPercent", round(migrated["modelProbability"] * 100, 1))
+    migrated.setdefault("bookmakerOdds", safe_float(item.get("bookmakerOdds") or item.get("odds"), 0.0))
+    migrated.setdefault("odds", migrated["bookmakerOdds"])
+    migrated.setdefault("status", "pending")
+    migrated.setdefault("marketFamily", market_family(str(item.get("market") or "")))
+    migrated.setdefault("dataTier", "MARKET")
+    migrated.setdefault("dataQuality", safe_float(item.get("dataQuality"), 40.0))
+    migrated.setdefault("agreement", safe_float(item.get("agreement"), 50.0))
+    migrated.setdefault("anomaly", safe_float(item.get("anomaly"), 30.0))
+    return migrated
 
 
+# ---------------------------------------------------------------------------
+# Sport discovery and data adapters
+# ---------------------------------------------------------------------------
 
-def create_report(
-    *,
-    status: str,
-    message: str,
-    details: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    return {
-        "status": status,
-        "message": message,
-        "timestamp": utc_now().isoformat(),
-        "details": details or {},
+
+def infer_sport_from_key(sport_key: Any) -> str:
+    key = str(sport_key or "").lower()
+    if key.startswith("icehockey_") or "hockey" in key:
+        return "ice_hockey"
+    return "soccer"
+
+
+def classify_sport(sport: dict[str, Any]) -> str | None:
+    key = str(sport.get("key") or "").lower()
+    group = str(sport.get("group") or "").lower()
+    if key.startswith("soccer_") or group == "soccer":
+        return "soccer"
+    if key.startswith("icehockey_") or "ice hockey" in group:
+        return "ice_hockey"
+    return None
+
+
+def sport_label(sport: str) -> str:
+    return "Футбол" if sport == "soccer" else "Хоккей"
+
+
+def infer_country(sport_key: str, sport_title: str) -> str:
+    key = sport_key.lower()
+    mapping = {
+        "england": "Англия",
+        "epl": "Англия",
+        "efl": "Англия",
+        "germany": "Германия",
+        "bundesliga": "Германия",
+        "spain": "Испания",
+        "la_liga": "Испания",
+        "italy": "Италия",
+        "serie_a": "Италия",
+        "france": "Франция",
+        "ligue_one": "Франция",
+        "brazil": "Бразилия",
+        "argentina": "Аргентина",
+        "usa": "США",
+        "mls": "США",
+        "mexico": "Мексика",
+        "netherlands": "Нидерланды",
+        "portugal": "Португалия",
+        "turkey": "Турция",
+        "belgium": "Бельгия",
+        "scotland": "Шотландия",
+        "sweden": "Швеция",
+        "finland": "Финляндия",
+        "norway": "Норвегия",
+        "denmark": "Дания",
+        "australia": "Австралия",
+        "japan": "Япония",
+        "korea": "Южная Корея",
+        "china": "Китай",
+        "chile": "Чили",
+        "colombia": "Колумбия",
+        "nhl": "США / Канада",
+        "ahl": "США / Канада",
+        "sweden_hockey": "Швеция",
+        "finland_hockey": "Финляндия",
     }
+    haystack = f"{key} {sport_title.lower()}"
+    for token, country in mapping.items():
+        if token in haystack:
+            return country
+    if any(token in haystack for token in ("uefa", "champions", "europa")):
+        return "Европа"
+    if any(token in haystack for token in ("conmebol", "copa_libertadores")):
+        return "Южная Америка"
+    return "Международный турнир"
 
 
-def merge_prediction_sources(
-    ai_predictions: list[dict[str, Any]],
-    statistical_predictions: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> list[dict[str, Any]]:
-    """Объединяет AI и статистику, сохраняя один прогноз на матч."""
-
-    maximum_predictions = max(
-        1,
-        int(config.get("maximumPredictions") or 4),
-    )
-
-    by_key: dict[tuple[int, str], dict[str, Any]] = {}
-
-    for item in statistical_predictions:
-        key = (int(item["matchId"]), str(item["market"]))
-        by_key[key] = dict(item)
-
-    for ai_item in ai_predictions:
-        key = (int(ai_item["matchId"]), str(ai_item["market"]))
-        statistical_item = by_key.get(key)
-
-        if statistical_item is None:
-            enriched = dict(ai_item)
-            enriched["rankingScore"] = round(
-                float(enriched.get("rankingScore") or 0) + 2,
-                4,
-            )
-            by_key[key] = enriched
-            continue
-
-        probability = round(
-            float(ai_item["probability"]) * 0.60
-            + float(statistical_item["probability"]) * 0.40,
-            4,
-        )
-        confidence = int(
-            round(
-                float(ai_item["confidence"]) * 0.60
-                + float(statistical_item["confidence"]) * 0.40
-                + 2
-            )
-        )
-        confidence = int(clamp_number(confidence, 0, 88))
-        fair_odds = round(1 / probability, 2)
-
-        consensus = dict(ai_item)
-        consensus.update(
-            {
-                "probability": probability,
-                "fairOdds": fair_odds,
-                "confidence": confidence,
-                "risk": "LOW" if confidence >= 78 else "MEDIUM",
-                "analysisMode": "AI_STAT_CONSENSUS",
-                "rankingScore": round(
-                    max(
-                        float(ai_item.get("rankingScore") or 0),
-                        float(
-                            statistical_item.get("rankingScore") or 0
-                        ),
-                    ) + 5,
-                    4,
-                ),
-                "dataQuality": max(
-                    float(ai_item.get("dataQuality") or 0),
-                    float(
-                        statistical_item.get("dataQuality") or 0
-                    ),
-                ),
-                "reason": (
-                    str(ai_item.get("reason") or "")
-                    + " Статистический модуль подтверждает выбранный рынок."
-                )[:500],
-            }
-        )
-        by_key[key] = consensus
-
-    ranked = list(by_key.values())
-    ranked.sort(
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -int(item.get("confidence") or 0),
-            str(item.get("matchId") or ""),
-        )
-    )
-
-    selected: list[dict[str, Any]] = []
-    used_match_ids: set[int] = set()
-
-    for item in ranked:
-        match_id = int(item["matchId"])
-
-        if match_id in used_match_ids:
-            continue
-
-        selected.append(item)
-        used_match_ids.add(match_id)
-
-        if len(selected) >= maximum_predictions:
-            break
-
-    return selected
+def league_allowed(sport: dict[str, Any], config: dict[str, Any]) -> bool:
+    if not sport.get("active", True) or sport.get("has_outrights"):
+        return False
+    text = f"{sport.get('key', '')} {sport.get('title', '')} {sport.get('description', '')}".lower()
+    for word in config.get("excludedSportKeyWords", []):
+        if str(word).lower() in text:
+            return False
+    for word in config.get("excludedLeagueWords", []):
+        if str(word).lower() in text:
+            return False
+    return classify_sport(sport) is not None
 
 
-def complete_daily_selection(
-    selected: list[dict[str, Any]],
-    candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-    excluded_match_ids: set[int] | None = None,
-) -> list[dict[str, Any]]:
-    """Доводит дневную подборку до целевого числа реальными расчётами.
-
-    Сначала сохраняются строгие AI/статистические прогнозы. Если их меньше
-    дневной цели, используются следующие по рейтингу варианты того же
-    статистического движка с честно сохранёнными probability/confidence.
-    Фиксированный рынок или искусственная вероятность не подставляются.
-    """
-
-    target_count = max(
-        1,
-        int(
-            config.get("dailyPredictionCount")
-            or config.get("maximumPredictions")
-            or 4
-        ),
-    )
-    excluded = {
-        int(value)
-        for value in (excluded_match_ids or set())
-    }
-    result: list[dict[str, Any]] = []
-    used_match_ids: set[int] = set(excluded)
-
-    for item in selected:
-        try:
-            match_id = int(item["matchId"])
-        except (KeyError, TypeError, ValueError):
-            continue
-
-        if match_id in used_match_ids:
-            continue
-
-        result.append(dict(item))
-        used_match_ids.add(match_id)
-
-        if len(result) >= target_count:
-            return result
-
-    minimum_model_odds = float(
-        config.get("minimumModelOdds") or 1.45
-    )
-    maximum_model_odds = float(
-        config.get("maximumModelOdds") or 2.80
-    )
-
-    relaxed_config = copy.deepcopy(config)
-    relaxed_config.update(
-        {
-            "maximumPredictions": max(
-                target_count * 8,
-                len(candidates),
-                target_count,
-            ),
-            "minimumConfidence": 0,
-            "winMarketMinimumConfidence": 0,
-            "minimumProbability": max(
-                0.01,
-                1 / maximum_model_odds,
-            ),
-            "maximumProbability": min(
-                0.99,
-                1 / minimum_model_odds,
-            ),
-            "minimumModelOdds": minimum_model_odds,
-            "maximumModelOdds": maximum_model_odds,
-            "minimumDataQuality": 0,
-        }
-    )
-
-    supplemental = build_deterministic_predictions(
-        candidates,
-        relaxed_config,
-    )
-
-    for source_item in supplemental:
-        try:
-            match_id = int(source_item["matchId"])
-        except (KeyError, TypeError, ValueError):
-            continue
-
-        if match_id in used_match_ids:
-            continue
-
-        item = dict(source_item)
-        item["analysisMode"] = "BEST_AVAILABLE_STATISTICAL"
-        item["selectionTier"] = "BEST_AVAILABLE"
-        item["risk"] = "MEDIUM"
-        item["reason"] = (
-            str(item.get("reason") or "")
-            + " Включён в ежедневную четвёрку как следующий лучший "
-              "статистически рассчитанный вариант."
-        )[:500]
-
-        result.append(item)
-        used_match_ids.add(match_id)
-
-        if len(result) >= target_count:
-            break
-
-    return result[:target_count]
-
-
-def _load_optional_dotenv(path: pathlib.Path) -> None:
-    """Поддерживает локальный .env, не задавая вопросов в консоли."""
-
-    if not path.exists():
-        return
-
-    for raw_line in path.read_text(
-        encoding="utf-8-sig",
-        errors="replace",
-    ).splitlines():
-        line = raw_line.strip()
-
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-
-        name, value = line.split("=", 1)
-        name = name.strip()
-        value = value.strip().strip('"').strip("'")
-
-        if name and name not in os.environ:
-            os.environ[name] = value
-
-
-
-# =============================================================================
-# V7_BOOKMAKER_ODDS_AND_REAL_BANK
-# =============================================================================
-
-FOOTBALL_DATA_ODDS_SPORT_KEYS: dict[str, str] = {
-    "PL": "soccer_epl",
-    "ELC": "soccer_efl_champ",
-    "PD": "soccer_spain_la_liga",
-    "BL1": "soccer_germany_bundesliga",
-    "SA": "soccer_italy_serie_a",
-    "FL1": "soccer_france_ligue_one",
-    "DED": "soccer_netherlands_eredivisie",
-    "PPL": "soccer_portugal_primeira_liga",
-    "BSA": "soccer_brazil_campeonato",
-    "CL": "soccer_uefa_champs_league",
-    "WC": "soccer_fifa_world_cup",
-}
-
-TEAM_NAME_ALIASES: dict[str, str] = {
-    "internazionale": "inter milan",
-    "internazionale milano": "inter milan",
-    "inter": "inter milan",
-    "paris saint germain": "psg",
-    "paris st germain": "psg",
-    "fc bayern munchen": "bayern munich",
-    "bayern munchen": "bayern munich",
-    "atletico de madrid": "atletico madrid",
-    "athletic club": "athletic bilbao",
-    "manchester utd": "manchester united",
-    "man utd": "manchester united",
-    "newcastle utd": "newcastle united",
-    "west ham utd": "west ham united",
-    "tottenham hotspur": "tottenham",
-    "wolverhampton wanderers": "wolves",
-    "brighton hove albion": "brighton",
-    "red bull bragantino": "bragantino",
-    "rb bragantino": "bragantino",
-    "sao paulo": "sao paulo",
-}
-
-
-def _normalize_match_name(value: str) -> str:
-    normalized = unicodedata.normalize("NFKD", str(value or ""))
-    normalized = "".join(
-        char for char in normalized
-        if not unicodedata.combining(char)
-    ).lower()
-    normalized = normalized.replace("&", " and ")
-    normalized = re.sub(r"[^a-z0-9]+", " ", normalized)
-    removable = {
-        "fc", "cf", "sc", "ac", "afc", "club", "football",
-        "futebol", "calcio", "de", "do", "da", "the",
-    }
-    tokens = [
-        token for token in normalized.split()
-        if token not in removable
-    ]
-    normalized = " ".join(tokens).strip()
-    return TEAM_NAME_ALIASES.get(normalized, normalized)
-
-
-def _token_similarity(left: str, right: str) -> float:
-    a = _normalize_match_name(left)
-    b = _normalize_match_name(right)
-    if not a or not b:
-        return 0.0
-    if a == b:
-        return 1.0
-    a_tokens = set(a.split())
-    b_tokens = set(b.split())
-    union = a_tokens | b_tokens
-    jaccard = len(a_tokens & b_tokens) / len(union) if union else 0.0
-    sequence = difflib.SequenceMatcher(None, a, b).ratio()
-    containment = 0.92 if (a in b or b in a) else 0.0
-    return max(sequence, jaccard, containment)
-
-
-def fetch_active_soccer_sports(
-    odds_api_key: str,
-) -> tuple[list[dict[str, Any]], dict[str, str]]:
-    query = urllib.parse.urlencode({"apiKey": odds_api_key})
-    payload, headers = request_json_value(
-        f"{ODDS_API_BASE}/sports/?{query}",
-        timeout_seconds=45,
-        retries=3,
-    )
+def fetch_active_sports(client: ApiClient, api_key: str) -> list[dict[str, Any]]:
+    url = f"{ODDS_API_BASE}/sports/?" + urllib.parse.urlencode({"apiKey": api_key})
+    payload = client.request_json(url, label="ODDS_SPORTS")
     if not isinstance(payload, list):
-        raise RuntimeError("The Odds API /sports вернул не массив")
-    sports = [
-        item for item in payload
-        if isinstance(item, dict)
-        and bool(item.get("active", True))
-        and str(item.get("key") or "").startswith("soccer_")
-        and not bool(item.get("has_outrights", False))
-    ]
-    return sports, headers
+        raise RuntimeError("The Odds API /sports returned non-list payload")
+    return [item for item in payload if isinstance(item, dict)]
 
 
-def choose_odds_sport_keys(
-    sports: list[dict[str, Any]],
-    candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> list[str]:
-    available = {
-        str(item.get("key") or ""): item
-        for item in sports
-        if str(item.get("key") or "")
+def fetch_sport_events(
+    client: ApiClient,
+    api_key: str,
+    sport: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+) -> list[dict[str, Any]]:
+    sport_key = str(sport["key"])
+    params = {
+        "apiKey": api_key,
+        "dateFormat": "iso",
+        "commenceTimeFrom": iso_z(start),
+        "commenceTimeTo": iso_z(end),
     }
-    maximum = max(
-        1,
-        int(config.get("maximumOddsSportRequests") or 12),
-    )
-    chosen: list[str] = []
-
-    for candidate in candidates:
-        code = str(
-            (candidate.get("competition") or {}).get("code") or ""
-        ).upper()
-        key = FOOTBALL_DATA_ODDS_SPORT_KEYS.get(code)
-        if key and key in available and key not in chosen:
-            chosen.append(key)
-
-    candidate_labels = []
-    for candidate in candidates:
-        competition = candidate.get("competition") or {}
-        label = " ".join(
-            part for part in [
-                str(competition.get("name") or ""),
-                str(candidate.get("country") or ""),
-            ] if part
-        )
-        if label:
-            candidate_labels.append(label)
-
-    scored: list[tuple[float, str]] = []
-    for key, sport in available.items():
-        if key in chosen:
+    url = f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/events?" + urllib.parse.urlencode(params)
+    payload = client.request_json(url, label=f"EVENTS:{sport_key}")
+    if not isinstance(payload, list):
+        return []
+    result: list[dict[str, Any]] = []
+    for event in payload:
+        if not isinstance(event, dict):
             continue
-        sport_label = " ".join(
-            str(sport.get(field) or "")
-            for field in ("title", "description", "group", "key")
-        )
-        score = max(
-            (_token_similarity(label, sport_label) for label in candidate_labels),
-            default=0.0,
-        )
-        scored.append((score, key))
-
-    scored.sort(key=lambda item: (-item[0], item[1]))
-    for score, key in scored:
-        if len(chosen) >= maximum:
-            break
-        if score >= 0.28:
-            chosen.append(key)
-
-    if len(chosen) < maximum:
-        for key in sorted(available):
-            if key not in chosen:
-                chosen.append(key)
-            if len(chosen) >= maximum:
-                break
-
-    return chosen[:maximum]
+        commence = parse_datetime(event.get("commence_time"))
+        if not commence or commence < start or commence > end:
+            continue
+        normalized = dict(event)
+        normalized["sport_key"] = sport_key
+        normalized["sport_title"] = str(sport.get("title") or sport_key)
+        normalized["sport_type"] = classify_sport(sport)
+        normalized["country"] = infer_country(sport_key, normalized["sport_title"])
+        result.append(normalized)
+    return result
 
 
-
-def format_odds_api_timestamp(value: dt.datetime) -> str:
-    """Return the exact UTC timestamp format accepted by The Odds API."""
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=dt.timezone.utc)
-
-    normalized = (
-        value
-        .astimezone(dt.timezone.utc)
-        .replace(microsecond=0)
-    )
-    return normalized.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def fetch_bookmaker_events(
-    odds_api_key: str,
-    sport_keys: list[str],
+def discover_events(
+    client: ApiClient,
+    api_key: str,
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    regions = str(config.get("oddsRegions") or "eu").strip()
-    bookmakers = [
-        str(value).strip()
-        for value in config.get("oddsBookmakers", [])
-        if str(value).strip()
+    sports = [sport for sport in fetch_active_sports(client, api_key) if league_allowed(sport, config)]
+    sports = sports[: safe_int(config.get("maximumDiscoverySports"), 120)]
+    minimum_lead = dt.timedelta(minutes=safe_int(config.get("minimumLeadMinutes"), 45))
+    start = now + minimum_lead
+
+    windows = [safe_int(config.get("primaryWindowHours"), 24)] + [
+        safe_int(value) for value in config.get("expandedWindowHours", [36, 48])
     ]
-    lead_hours = max(0.0, float(config.get("minimumLeadHours") or 1))
-    window_hours = max(1.0, float(config.get("selectionWindowHours") or 24))
-    time_from = now + dt.timedelta(hours=lead_hours)
-    time_to = time_from + dt.timedelta(hours=window_hours)
+    windows = sorted(set(window for window in windows if window > 0))
 
-    events_by_id: dict[str, dict[str, Any]] = {}
-    quota = {
-        "requestsUsed": None,
-        "requestsRemaining": None,
-        "requestsLast": None,
-        "sportRequests": 0,
-        "sportErrors": [],
+    best_events: list[dict[str, Any]] = []
+    used_window = windows[-1]
+    errors: list[str] = []
+    for window in windows:
+        end = now + dt.timedelta(hours=window)
+        events: list[dict[str, Any]] = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            future_map = {
+                executor.submit(fetch_sport_events, client, api_key, sport, start, end): sport
+                for sport in sports
+            }
+            for future in concurrent.futures.as_completed(future_map):
+                sport = future_map[future]
+                try:
+                    events.extend(future.result())
+                except Exception as exc:  # keep other leagues alive
+                    errors.append(f"{sport.get('key')}: {exc}")
+        events.sort(key=lambda item: str(item.get("commence_time") or ""))
+        best_events = events
+        used_window = window
+        soccer_count = sum(1 for event in events if event.get("sport_type") == "soccer")
+        total_count = len(events)
+        if soccer_count >= safe_int(config.get("minimumFootballAnalysisBeforeHockey"), 15) or total_count >= 24:
+            break
+
+    diagnostics = {
+        "activeSports": len(sports),
+        "events": len(best_events),
+        "soccerEvents": sum(1 for event in best_events if event.get("sport_type") == "soccer"),
+        "hockeyEvents": sum(1 for event in best_events if event.get("sport_type") == "ice_hockey"),
+        "windowHours": used_window,
+        "errors": errors[:20],
     }
-
-    for sport_key in sport_keys:
-        parameters: dict[str, str] = {
-            "apiKey": odds_api_key,
-            "markets": ",".join(
-                str(value)
-                for value in (
-                    config.get("oddsMarkets")
-                    or ["h2h", "totals"]
-                )
-            ),
-            "oddsFormat": "decimal",
-            "dateFormat": "iso",
-            "commenceTimeFrom": format_odds_api_timestamp(time_from),
-            "commenceTimeTo": format_odds_api_timestamp(time_to),
-        }
-        if bookmakers:
-            parameters["bookmakers"] = ",".join(bookmakers)
-        else:
-            parameters["regions"] = regions
-
-        url = (
-            f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/odds/?"
-            f"{urllib.parse.urlencode(parameters)}"
-        )
-        try:
-            payload, headers = request_json_value(
-                url,
-                timeout_seconds=60,
-                retries=2,
-            )
-            quota["sportRequests"] = int(quota["sportRequests"]) + 1
-            quota["requestsUsed"] = headers.get("x-requests-used")
-            quota["requestsRemaining"] = headers.get("x-requests-remaining")
-            quota["requestsLast"] = headers.get("x-requests-last")
-            if not isinstance(payload, list):
-                raise RuntimeError("ответ /odds не является массивом")
-            for event in payload:
-                if not isinstance(event, dict):
-                    continue
-                event_id = str(event.get("id") or "")
-                if event_id:
-                    events_by_id[event_id] = event
-            log(
-                f"The Odds API: {sport_key}; событий={len(payload)}; "
-                f"remaining={quota.get('requestsRemaining')}"
-            )
-        except Exception as error:
-            quota["sportErrors"].append(
-                {"sportKey": sport_key, "error": str(error)}
-            )
-            log(f"The Odds API warning: {sport_key}: {error}")
-
-    events = list(events_by_id.values())
-    events.sort(key=lambda item: str(item.get("commence_time") or ""))
-    return events, quota
+    return best_events, diagnostics
 
 
-def match_candidate_to_odds_event(
-    candidate: dict[str, Any],
-    events: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> tuple[dict[str, Any] | None, float]:
-    try:
-        candidate_time = parse_utc_datetime(str(candidate.get("utcDate") or ""))
-    except Exception:
-        return None, 0.0
-
-    tolerance_minutes = max(
-        15,
-        int(config.get("oddsMatchKickoffToleranceMinutes") or 60),
-    )
-    home_name = str((candidate.get("homeTeam") or {}).get("name") or "")
-    away_name = str((candidate.get("awayTeam") or {}).get("name") or "")
-    best_event: dict[str, Any] | None = None
-    best_score = 0.0
-    second_best_score = 0.0
-    minimum_team_name_score = max(
-        0.0,
-        min(1.0, float(config.get("minimumTeamNameMatchScore") or 0.60)),
-    )
-
+def choose_sport_keys_for_odds(
+    events: list[dict[str, Any]], config: dict[str, Any]
+) -> list[str]:
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for event in events:
-        try:
-            event_time = parse_utc_datetime(str(event.get("commence_time") or ""))
-        except Exception:
-            continue
-        difference_minutes = abs((event_time - candidate_time).total_seconds()) / 60
-        if difference_minutes > tolerance_minutes:
-            continue
+        grouped[str(event.get("sport_key"))].append(event)
 
-        direct_home = _token_similarity(home_name, str(event.get("home_team") or ""))
-        direct_away = _token_similarity(away_name, str(event.get("away_team") or ""))
-        reverse_home = _token_similarity(home_name, str(event.get("away_team") or ""))
-        reverse_away = _token_similarity(away_name, str(event.get("home_team") or ""))
-        direct = (direct_home + direct_away) / 2
-        reverse = (reverse_home + reverse_away) / 2
-        orientation = "DIRECT" if direct >= reverse else "REVERSED"
-        name_score = max(direct, reverse)
-        if min(
-            (direct_home, direct_away)
-            if orientation == "DIRECT"
-            else (reverse_home, reverse_away)
-        ) < minimum_team_name_score:
-            continue
-        time_score = max(0.0, 1.0 - difference_minutes / tolerance_minutes)
-        score = name_score * 0.85 + time_score * 0.15
-        if score > best_score:
-            second_best_score = best_score
-            best_event = dict(event)
-            best_event["_orientation"] = orientation
-            best_event["_matchScore"] = round(score, 4)
-            best_event["_kickoffDifferenceMinutes"] = round(difference_minutes, 1)
-            best_score = score
-        elif score > second_best_score:
-            second_best_score = score
+    soccer: list[tuple[float, str, int]] = []
+    hockey: list[tuple[float, str, int]] = []
+    for key, items in grouped.items():
+        sport = str(items[0].get("sport_type"))
+        score = len(items) * 100
+        # Prefer leagues with more events and earlier kickoffs.
+        earliest = min(
+            parse_datetime(item.get("commence_time")) or utc_now()
+            for item in items
+        )
+        score -= earliest.timestamp() / 1e10
+        record = (score, key, len(items))
+        (soccer if sport == "soccer" else hockey).append(record)
 
-    minimum_score = float(config.get("minimumOddsMatchScore") or 0.78)
-    if best_score < minimum_score:
-        return None, best_score
-
-    minimum_gap = max(
-        0.0,
-        float(config.get("minimumOddsMatchScoreGap") or 0.08),
+    soccer.sort(reverse=True)
+    hockey.sort(reverse=True)
+    max_total = safe_int(config.get("maximumOddsSportRequests"), 6)
+    max_soccer = safe_int(config.get("maximumSoccerSportRequests"), 5)
+    max_hockey = safe_int(config.get("maximumHockeySportRequests"), 3)
+    minimum_hockey = safe_int(
+        config.get("minimumHockeySportRequestsForFallback"), 1
     )
-    if (
-        second_best_score >= minimum_score
-        and (best_score - second_best_score) < minimum_gap
-    ):
-        log(
-            "The Odds API: неоднозначное сопоставление матча отклонено; "
-            f"best={best_score:.3f}; second={second_best_score:.3f}"
-        )
-        return None, best_score
 
-    if best_event is not None:
-        best_event["_secondBestMatchScore"] = round(second_best_score, 4)
-        best_event["_matchScoreGap"] = round(
-            best_score - second_best_score,
-            4,
-        )
-    return best_event, best_score
+    # Always reserve a small fallback hockey sample when hockey is available.
+    # The final fifteen remain football-first; hockey is published only when
+    # football does not produce enough qualified analyses. This fixes the old
+    # event-count shortcut where 15 discovered football fixtures could still
+    # produce fewer than 15 usable analyses and no hockey odds had been loaded.
+    reserved_hockey = min(minimum_hockey, max_hockey, len(hockey), max_total)
+    soccer_slots = max(0, min(max_soccer, max_total - reserved_hockey))
+    selected_soccer = soccer[:soccer_slots]
+    selected = [key for _, key, _ in selected_soccer]
 
+    selected_soccer_events = sum(count for _, _, count in selected_soccer)
+    need_more_hockey = selected_soccer_events < safe_int(
+        config.get("minimumFootballAnalysisBeforeHockey"), 15
+    )
+    desired_hockey = reserved_hockey
+    if need_more_hockey:
+        desired_hockey = min(max_hockey, len(hockey), max_total)
 
-def _parse_optional_utc(value: Any) -> dt.datetime | None:
-    try:
-        return parse_utc_datetime(str(value or ""))
-    except Exception:
-        return None
+    # If more hockey fallback is required, replace the weakest soccer keys
+    # rather than exceeding the configured request budget.
+    while len(selected) + desired_hockey > max_total and selected:
+        selected.pop()
 
+    selected.extend(key for _, key, _ in hockey[:desired_hockey])
 
-def extract_bookmaker_quote(
-    event: dict[str, Any],
-    market: str,
-    config: dict[str, Any],
-    captured_at: dt.datetime,
-) -> dict[str, Any] | None:
-    orientation = str(event.get("_orientation") or "DIRECT")
-    event_home = str(event.get("home_team") or "")
-    event_away = str(event.get("away_team") or "")
-    target_market_key = "h2h"
-    target_point: float | None = None
+    # Fill remaining capacity with the strongest unused football leagues, then
+    # unused hockey leagues.
+    if len(selected) < max_total:
+        for _, key, _ in soccer:
+            if key not in selected:
+                selected.append(key)
+                if len(selected) >= max_total:
+                    break
+    if len(selected) < max_total:
+        for _, key, _ in hockey:
+            if key not in selected:
+                selected.append(key)
+                if len(selected) >= max_total:
+                    break
+    return selected
 
-    if market == "HOME_WIN":
-        target = event_home if orientation == "DIRECT" else event_away
-    elif market == "AWAY_WIN":
-        target = event_away if orientation == "DIRECT" else event_home
-    elif market == "DRAW":
-        target = "DRAW"
-    elif market == "OVER_2_5":
-        target_market_key = "totals"
-        target = "OVER"
-        target_point = 2.5
-    elif market == "UNDER_2_5":
-        target_market_key = "totals"
-        target = "UNDER"
-        target_point = 2.5
-    else:
-        return None
-
-    preferred_bookmakers = {
-        str(value).strip().lower()
-        for value in config.get("preferredBookmakers", [])
-        if str(value).strip()
+def odds_query_parameters(config: dict[str, Any], api_key: str) -> dict[str, str]:
+    params = {
+        "apiKey": api_key,
+        "regions": str(config.get("oddsRegions") or "eu"),
+        "markets": ",".join(config.get("featuredMarkets") or ["h2h", "spreads", "totals"]),
+        "oddsFormat": "decimal",
+        "dateFormat": "iso",
     }
-    maximum_age = max(
-        1,
-        int(config.get("maximumOddsAgeMinutes") or 30),
+    bookmakers = [str(value) for value in config.get("oddsBookmakers", []) if str(value)]
+    if bookmakers:
+        params["bookmakers"] = ",".join(bookmakers)
+        params.pop("regions", None)
+    return params
+
+
+def fetch_featured_odds(
+    client: ApiClient,
+    api_key: str,
+    sport_keys: list[str],
+    config: dict[str, Any],
+    now: dt.datetime,
+    window_hours: int,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    params_base = odds_query_parameters(config, api_key)
+    params_base["commenceTimeFrom"] = iso_z(now)
+    params_base["commenceTimeTo"] = iso_z(now + dt.timedelta(hours=window_hours))
+    events: list[dict[str, Any]] = []
+    errors: list[str] = []
+
+    def fetch(key: str) -> list[dict[str, Any]]:
+        url = f"{ODDS_API_BASE}/sports/{urllib.parse.quote(key)}/odds?" + urllib.parse.urlencode(params_base)
+        payload = client.request_json(url, label=f"ODDS:{key}")
+        return payload if isinstance(payload, list) else []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, max(1, len(sport_keys)))) as executor:
+        future_map = {executor.submit(fetch, key): key for key in sport_keys}
+        for future in concurrent.futures.as_completed(future_map):
+            key = future_map[future]
+            try:
+                events.extend(item for item in future.result() if isinstance(item, dict))
+            except Exception as exc:
+                errors.append(f"{key}: {exc}")
+    return events, errors
+
+
+def maybe_fetch_advanced_markets(
+    client: ApiClient,
+    api_key: str,
+    featured_events: list[dict[str, Any]],
+    config: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    remaining = safe_int(client.odds_quota.get("requestsRemaining"), 0)
+    minimum_remaining = safe_int(config.get("advancedMarketsMinimumQuotaRemaining"), 180)
+    max_events = safe_int(config.get("maximumAdvancedEvents"), 2)
+    if max_events <= 0 or (remaining and remaining < minimum_remaining):
+        return {}
+
+    soccer_events = [
+        event
+        for event in featured_events
+        if infer_sport_from_key(event.get("sport_key")) == "soccer"
+    ]
+    soccer_events.sort(
+        key=lambda event: (
+            -sum(len(bookmaker.get("markets") or []) for bookmaker in event.get("bookmakers") or []),
+            str(event.get("commence_time") or ""),
+        )
     )
-    quotes: list[dict[str, Any]] = []
+    selected = soccer_events[:max_events]
+    advanced: dict[str, dict[str, Any]] = {}
+    allowed = set(str(value) for value in config.get("advancedSoccerMarkets", []))
+    max_markets = safe_int(config.get("maximumAdvancedMarketsPerEvent"), 3)
+
+    for event in selected:
+        sport_key = str(event.get("sport_key") or "")
+        event_id = str(event.get("id") or "")
+        if not sport_key or not event_id:
+            continue
+        common = {
+            "apiKey": api_key,
+            "regions": str(config.get("oddsRegions") or "eu"),
+            "dateFormat": "iso",
+        }
+        try:
+            markets_url = (
+                f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/events/"
+                f"{urllib.parse.quote(event_id)}/markets?{urllib.parse.urlencode(common)}"
+            )
+            market_payload = client.request_json(markets_url, label=f"MARKETS:{event_id}")
+            available: set[str] = set()
+            if isinstance(market_payload, dict):
+                for bookmaker in market_payload.get("bookmakers") or []:
+                    for key in bookmaker.get("markets") or []:
+                        if isinstance(key, str):
+                            available.add(key)
+                        elif isinstance(key, dict) and key.get("key"):
+                            available.add(str(key["key"]))
+            chosen = [key for key in config.get("advancedSoccerMarkets", []) if key in available and key in allowed]
+            chosen = chosen[:max_markets]
+            if not chosen:
+                continue
+            odds_params = dict(common)
+            odds_params.update({"markets": ",".join(chosen), "oddsFormat": "decimal"})
+            odds_url = (
+                f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/events/"
+                f"{urllib.parse.quote(event_id)}/odds?{urllib.parse.urlencode(odds_params)}"
+            )
+            payload = client.request_json(odds_url, label=f"ADVANCED_ODDS:{event_id}")
+            if isinstance(payload, dict):
+                advanced[event_id] = payload
+        except Exception as exc:
+            log(f"Advanced markets skipped for {event_id}: {exc}")
+    return advanced
+
+
+# ---------------------------------------------------------------------------
+# Football and NHL statistical context
+# ---------------------------------------------------------------------------
+
+
+def fetch_football_data_matches(
+    client: ApiClient,
+    token: str | None,
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> list[dict[str, Any]]:
+    if not token or not config.get("footballDataEnabled", True):
+        return []
+    lookback = safe_int(config.get("footballDataLookbackDays"), 120)
+    params = {
+        "dateFrom": (now.date() - dt.timedelta(days=lookback)).isoformat(),
+        "dateTo": (now.date() + dt.timedelta(days=2)).isoformat(),
+        "limit": str(safe_int(config.get("footballDataMaximumMatches"), 500)),
+    }
+    url = f"{FOOTBALL_DATA_BASE}/matches?{urllib.parse.urlencode(params)}"
+    try:
+        payload = client.request_json(
+            url,
+            headers={"X-Auth-Token": token},
+            label="FOOTBALL_DATA_MATCHES",
+        )
+    except Exception as exc:
+        log(f"football-data.org unavailable: {exc}")
+        return []
+    matches = payload.get("matches") if isinstance(payload, dict) else []
+    return [item for item in matches if isinstance(item, dict)]
+
+
+def football_match_score(match: dict[str, Any]) -> tuple[int, int] | None:
+    score = match.get("score") if isinstance(match.get("score"), dict) else {}
+    full = score.get("fullTime") if isinstance(score.get("fullTime"), dict) else {}
+    home = full.get("home")
+    away = full.get("away")
+    if home is None or away is None:
+        return None
+    return safe_int(home), safe_int(away)
+
+
+def football_team_names(team: dict[str, Any]) -> set[str]:
+    values = {
+        team.get("name"),
+        team.get("shortName"),
+        team.get("tla"),
+    }
+    return {normalize_text(value) for value in values if normalize_text(value)}
+
+
+def build_football_context(matches: list[dict[str, Any]]) -> dict[str, Any]:
+    team_games: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    finished: list[dict[str, Any]] = []
+    home_goals: list[int] = []
+    away_goals: list[int] = []
+    completed_lookup: list[dict[str, Any]] = []
+
+    for match in matches:
+        status = str(match.get("status") or "")
+        home_team = match.get("homeTeam") if isinstance(match.get("homeTeam"), dict) else {}
+        away_team = match.get("awayTeam") if isinstance(match.get("awayTeam"), dict) else {}
+        score = football_match_score(match)
+        utc_date = parse_datetime(match.get("utcDate"))
+        if score is not None and status in {"FINISHED", "AWARDED"}:
+            home_score, away_score = score
+            home_goals.append(home_score)
+            away_goals.append(away_score)
+            record = {
+                "utcDate": iso_z(utc_date) if utc_date else "",
+                "home": str(home_team.get("name") or ""),
+                "away": str(away_team.get("name") or ""),
+                "homeScore": home_score,
+                "awayScore": away_score,
+                "competition": str((match.get("competition") or {}).get("name") or ""),
+            }
+            finished.append(record)
+            for name in football_team_names(home_team):
+                team_games[name].append({**record, "side": "home", "goalsFor": home_score, "goalsAgainst": away_score})
+            for name in football_team_names(away_team):
+                team_games[name].append({**record, "side": "away", "goalsFor": away_score, "goalsAgainst": home_score})
+            completed_lookup.append({
+                "eventId": str(match.get("id") or ""),
+                "utcDate": utc_date,
+                "home": str(home_team.get("name") or ""),
+                "away": str(away_team.get("name") or ""),
+                "homeScore": home_score,
+                "awayScore": away_score,
+            })
+
+    for games in team_games.values():
+        games.sort(key=lambda item: str(item.get("utcDate") or ""), reverse=True)
+
+    return {
+        "teamGames": dict(team_games),
+        "leagueHomeAverage": mean(home_goals, 1.45),
+        "leagueAwayAverage": mean(away_goals, 1.15),
+        "finished": finished,
+        "completedLookup": completed_lookup,
+    }
+
+
+def find_team_games(team_name: str, context: dict[str, Any]) -> tuple[list[dict[str, Any]], float]:
+    normalized = normalize_text(team_name)
+    direct = context.get("teamGames", {}).get(normalized)
+    if direct:
+        return direct, 1.0
+    best_key = ""
+    best_score = 0.0
+    for key in context.get("teamGames", {}):
+        score = token_similarity(normalized, key)
+        if score > best_score:
+            best_key = key
+            best_score = score
+    if best_score >= 0.72:
+        return context["teamGames"][best_key], best_score
+    return [], best_score
+
+
+def recent_form_summary(games: list[dict[str, Any]], side: str | None = None, limit: int = 10) -> dict[str, float]:
+    selected = [game for game in games if side is None or game.get("side") == side][:limit]
+    if not selected:
+        return {"matches": 0, "gf": 0.0, "ga": 0.0, "points": 0.0, "variance": 0.0}
+    goals_for = [safe_float(game.get("goalsFor")) for game in selected]
+    goals_against = [safe_float(game.get("goalsAgainst")) for game in selected]
+    points = []
+    for gf, ga in zip(goals_for, goals_against):
+        points.append(3.0 if gf > ga else 1.0 if gf == ga else 0.0)
+    return {
+        "matches": len(selected),
+        "gf": mean(goals_for),
+        "ga": mean(goals_against),
+        "points": mean(points) / 3.0,
+        "variance": stdev([gf - ga for gf, ga in zip(goals_for, goals_against)]),
+    }
+
+
+def fetch_nhl_standings(client: ApiClient, enabled: bool) -> dict[str, Any]:
+    if not enabled:
+        return {}
+    try:
+        payload = client.request_json(f"{NHL_API_BASE}/standings/now", label="NHL_STANDINGS")
+    except Exception as exc:
+        log(f"NHL public standings unavailable: {exc}")
+        return {}
+    standings = payload.get("standings") if isinstance(payload, dict) else []
+    result: dict[str, Any] = {}
+    for row in standings or []:
+        if not isinstance(row, dict):
+            continue
+        names: set[str] = set()
+        for key in ("teamName", "teamCommonName", "teamAbbrev", "placeName"):
+            value = row.get(key)
+            if isinstance(value, dict):
+                value = value.get("default")
+            if value:
+                names.add(normalize_text(value))
+        record = {
+            "gamesPlayed": safe_int(row.get("gamesPlayed")),
+            "wins": safe_int(row.get("wins")),
+            "losses": safe_int(row.get("losses")),
+            "otLosses": safe_int(row.get("otLosses")),
+            "goalFor": safe_int(row.get("goalFor")),
+            "goalAgainst": safe_int(row.get("goalAgainst")),
+            "pointPctg": safe_float(row.get("pointPctg")),
+            "regulationWins": safe_int(row.get("regulationWins")),
+        }
+        for name in names:
+            result[name] = record
+    return result
+
+
+def find_nhl_team(team_name: str, standings: dict[str, Any]) -> tuple[dict[str, Any] | None, float]:
+    normalized = normalize_text(team_name)
+    if normalized in standings:
+        return standings[normalized], 1.0
+    best_key = ""
+    best_score = 0.0
+    for key in standings:
+        score = token_similarity(normalized, key)
+        if score > best_score:
+            best_key = key
+            best_score = score
+    return (standings.get(best_key), best_score) if best_score >= 0.72 else (None, best_score)
+
+
+# ---------------------------------------------------------------------------
+# Probability models
+# ---------------------------------------------------------------------------
+
+
+def poisson_probability(lam: float, goals: int) -> float:
+    return math.exp(-lam) * (lam**goals) / math.factorial(goals)
+
+
+def score_matrix(home_lambda: float, away_lambda: float, maximum: int = 10) -> list[list[float]]:
+    home_probs = [poisson_probability(home_lambda, goal) for goal in range(maximum + 1)]
+    away_probs = [poisson_probability(away_lambda, goal) for goal in range(maximum + 1)]
+    matrix = [[home_probs[h] * away_probs[a] for a in range(maximum + 1)] for h in range(maximum + 1)]
+    total = sum(sum(row) for row in matrix)
+    if total > 0:
+        matrix = [[value / total for value in row] for row in matrix]
+    return matrix
+
+
+def matrix_outcome_probability(matrix: list[list[float]], outcome: str) -> float:
+    value = 0.0
+    for home, row in enumerate(matrix):
+        for away, probability in enumerate(row):
+            if outcome == "HOME" and home > away:
+                value += probability
+            elif outcome == "DRAW" and home == away:
+                value += probability
+            elif outcome == "AWAY" and home < away:
+                value += probability
+    return value
+
+
+def matrix_total_probability(matrix: list[list[float]], side: str, line: float) -> float:
+    value = 0.0
+    for home, row in enumerate(matrix):
+        for away, probability in enumerate(row):
+            total = home + away
+            if side == "OVER" and total > line:
+                value += probability
+            elif side == "UNDER" and total < line:
+                value += probability
+            elif total == line:
+                value += probability * 0.5
+    return value
+
+
+def matrix_team_total_probability(
+    matrix: list[list[float]], team: str, side: str, line: float
+) -> float:
+    value = 0.0
+    for home, row in enumerate(matrix):
+        for away, probability in enumerate(row):
+            total = home if team == "HOME" else away
+            if side == "OVER" and total > line:
+                value += probability
+            elif side == "UNDER" and total < line:
+                value += probability
+            elif total == line:
+                value += probability * 0.5
+    return value
+
+
+def matrix_spread_probability(
+    matrix: list[list[float]], team: str, point: float
+) -> float:
+    value = 0.0
+    for home, row in enumerate(matrix):
+        for away, probability in enumerate(row):
+            adjusted = (home + point - away) if team == "HOME" else (away + point - home)
+            if adjusted > 0:
+                value += probability
+            elif abs(adjusted) < 1e-9:
+                value += probability * 0.5
+    return value
+
+
+def matrix_btts_probability(matrix: list[list[float]], yes: bool) -> float:
+    probability_yes = sum(
+        probability
+        for home, row in enumerate(matrix)
+        for away, probability in enumerate(row)
+        if home > 0 and away > 0
+    )
+    return probability_yes if yes else 1.0 - probability_yes
+
+
+def most_likely_scores(matrix: list[list[float]], count: int = 4) -> list[dict[str, Any]]:
+    rows = [
+        (probability, home, away)
+        for home, row in enumerate(matrix)
+        for away, probability in enumerate(row)
+    ]
+    rows.sort(reverse=True)
+    return [
+        {"score": f"{home}:{away}", "probability": round(probability, 4)}
+        for probability, home, away in rows[:count]
+    ]
+
+
+def infer_lambdas_from_market(event_quotes: list[dict[str, Any]], sport: str) -> tuple[float, float]:
+    base_total = 5.8 if sport == "ice_hockey" else 2.6
+    home_prob = 0.43
+    away_prob = 0.32
+    draw_prob = 0.25 if sport == "soccer" else 0.0
+
+    h2h = [quote for quote in event_quotes if quote.get("marketKey") in {"h2h", "h2h_3_way"}]
+    for quote in h2h:
+        selection = quote.get("selectionCode")
+        if selection == "HOME":
+            home_prob = safe_float(quote.get("marketProbability"), home_prob)
+        elif selection == "AWAY":
+            away_prob = safe_float(quote.get("marketProbability"), away_prob)
+        elif selection == "DRAW":
+            draw_prob = safe_float(quote.get("marketProbability"), draw_prob)
+
+    totals = [
+        quote
+        for quote in event_quotes
+        if quote.get("marketKey") in {"totals", "alternate_totals"}
+        and quote.get("selectionCode") == "OVER"
+    ]
+    if totals:
+        selected = min(totals, key=lambda item: abs(safe_float(item.get("point"), base_total) - base_total))
+        line = safe_float(selected.get("point"), base_total)
+        probability = safe_float(selected.get("marketProbability"), 0.5)
+        # A stable approximation: move the expected total around the market line.
+        base_total = clamp(line + (probability - 0.5) * 2.2, 1.2 if sport == "soccer" else 3.5, 8.5)
+
+    ratio = math.log(max(home_prob, 0.03) / max(away_prob, 0.03))
+    goal_difference = clamp(ratio * (0.48 if sport == "soccer" else 0.72), -2.2, 2.2)
+    home_lambda = clamp((base_total + goal_difference) / 2, 0.25, 6.0)
+    away_lambda = clamp(base_total - home_lambda, 0.25, 6.0)
+    if sport == "soccer" and draw_prob > 0.32:
+        midpoint = (home_lambda + away_lambda) / 2
+        home_lambda = home_lambda * 0.8 + midpoint * 0.2
+        away_lambda = away_lambda * 0.8 + midpoint * 0.2
+    return home_lambda, away_lambda
+
+
+def build_event_model(
+    event: dict[str, Any],
+    event_quotes: list[dict[str, Any]],
+    football_context: dict[str, Any],
+    nhl_standings: dict[str, Any],
+) -> dict[str, Any]:
+    sport = infer_sport_from_key(event.get("sport_key"))
+    home = str(event.get("home_team") or "")
+    away = str(event.get("away_team") or "")
+    market_home, market_away = infer_lambdas_from_market(event_quotes, sport)
+    home_lambda = market_home
+    away_lambda = market_away
+    data_tier = "MARKET"
+    data_quality = 42.0
+    source_notes = ["Безмаржинальный консенсус нескольких букмекеров"]
+    model_components: dict[str, Any] = {
+        "marketExpectedHome": round(market_home, 3),
+        "marketExpectedAway": round(market_away, 3),
+    }
+
+    if sport == "soccer":
+        home_games, home_match = find_team_games(home, football_context)
+        away_games, away_match = find_team_games(away, football_context)
+        if home_games and away_games:
+            home_all = recent_form_summary(home_games, None, 10)
+            home_venue = recent_form_summary(home_games, "home", 6)
+            away_all = recent_form_summary(away_games, None, 10)
+            away_venue = recent_form_summary(away_games, "away", 6)
+            league_home = safe_float(football_context.get("leagueHomeAverage"), 1.45)
+            league_away = safe_float(football_context.get("leagueAwayAverage"), 1.15)
+            stat_home = mean(
+                [
+                    home_all["gf"],
+                    home_venue["gf"] or home_all["gf"],
+                    away_all["ga"],
+                    away_venue["ga"] or away_all["ga"],
+                    league_home,
+                ],
+                league_home,
+            )
+            stat_away = mean(
+                [
+                    away_all["gf"],
+                    away_venue["gf"] or away_all["gf"],
+                    home_all["ga"],
+                    home_venue["ga"] or home_all["ga"],
+                    league_away,
+                ],
+                league_away,
+            )
+            sample = min(home_all["matches"], away_all["matches"])
+            stat_weight = clamp(sample / 12.0, 0.25, 0.65)
+            home_lambda = clamp(market_home * (1 - stat_weight) + stat_home * stat_weight, 0.25, 4.2)
+            away_lambda = clamp(market_away * (1 - stat_weight) + stat_away * stat_weight, 0.25, 4.2)
+            data_tier = "FULL" if sample >= 8 and min(home_match, away_match) >= 0.9 else "HYBRID"
+            data_quality = clamp(55 + sample * 3 + min(home_match, away_match) * 12, 55, 92)
+            source_notes.extend(
+                [
+                    f"Форма хозяев: {home_all['gf']:.2f} забито и {home_all['ga']:.2f} пропущено за матч",
+                    f"Форма гостей: {away_all['gf']:.2f} забито и {away_all['ga']:.2f} пропущено за матч",
+                ]
+            )
+            model_components.update(
+                {
+                    "homeRecent": home_all,
+                    "awayRecent": away_all,
+                    "teamNameMatch": round(min(home_match, away_match), 3),
+                }
+            )
+    elif "nhl" in str(event.get("sport_key") or "").lower() and nhl_standings:
+        home_row, home_match = find_nhl_team(home, nhl_standings)
+        away_row, away_match = find_nhl_team(away, nhl_standings)
+        if home_row and away_row:
+            def rates(row: dict[str, Any]) -> tuple[float, float, float]:
+                games = max(1, safe_int(row.get("gamesPlayed")))
+                return (
+                    safe_float(row.get("goalFor")) / games,
+                    safe_float(row.get("goalAgainst")) / games,
+                    safe_float(row.get("pointPctg"), 0.5),
+                )
+
+            home_gf, home_ga, home_points = rates(home_row)
+            away_gf, away_ga, away_points = rates(away_row)
+            stat_home = mean([home_gf, away_ga, 3.0])
+            stat_away = mean([away_gf, home_ga, 2.8])
+            strength_adjustment = clamp((home_points - away_points) * 1.2, -0.7, 0.7)
+            stat_home += strength_adjustment / 2
+            stat_away -= strength_adjustment / 2
+            home_lambda = clamp(market_home * 0.48 + stat_home * 0.52, 1.2, 5.5)
+            away_lambda = clamp(market_away * 0.48 + stat_away * 0.52, 1.2, 5.5)
+            data_tier = "FULL"
+            data_quality = 84.0
+            source_notes.extend(
+                [
+                    f"NHL: результативность хозяев {home_gf:.2f}, пропускают {home_ga:.2f}",
+                    f"NHL: результативность гостей {away_gf:.2f}, пропускают {away_ga:.2f}",
+                ]
+            )
+            model_components.update(
+                {
+                    "homeStanding": home_row,
+                    "awayStanding": away_row,
+                    "teamNameMatch": round(min(home_match, away_match), 3),
+                }
+            )
+
+    matrix = score_matrix(home_lambda, away_lambda, 10 if sport == "soccer" else 14)
+    return {
+        "sport": sport,
+        "homeLambda": round(home_lambda, 4),
+        "awayLambda": round(away_lambda, 4),
+        "expectedScore": f"{home_lambda:.1f} : {away_lambda:.1f}",
+        "mostLikelyScores": most_likely_scores(matrix),
+        "homeWinProbability": matrix_outcome_probability(matrix, "HOME"),
+        "drawProbability": matrix_outcome_probability(matrix, "DRAW"),
+        "awayWinProbability": matrix_outcome_probability(matrix, "AWAY"),
+        "matrix": matrix,
+        "dataTier": data_tier,
+        "dataQuality": round(data_quality, 1),
+        "sourceNotes": source_notes,
+        "components": model_components,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Odds parsing and market evaluation
+# ---------------------------------------------------------------------------
+
+
+def no_vig_probabilities(outcomes: list[dict[str, Any]]) -> dict[int, float]:
+    inverse = []
+    for index, outcome in enumerate(outcomes):
+        price = safe_float(outcome.get("price"), 0.0)
+        if price > 1.0:
+            inverse.append((index, 1.0 / price))
+    total = sum(value for _, value in inverse)
+    if total <= 0:
+        return {}
+    return {index: value / total for index, value in inverse}
+
+
+def normalize_selection(
+    market_key: str,
+    outcome: dict[str, Any],
+    event: dict[str, Any],
+) -> tuple[str, str, str, float | None] | None:
+    name = str(outcome.get("name") or "").strip()
+    description = str(outcome.get("description") or "").strip()
+    point_raw = outcome.get("point")
+    point = safe_float(point_raw) if point_raw is not None else None
+    home = str(event.get("home_team") or "")
+    away = str(event.get("away_team") or "")
+    normalized_name = normalize_text(name)
+    normalized_description = normalize_text(description)
+    key = market_key.lower()
+
+    if key in {"h2h", "h2h_3_way"}:
+        if token_similarity(name, home) >= 0.72:
+            return "HOME", "HOME_WIN", f"Победа {home}", point
+        if token_similarity(name, away) >= 0.72:
+            return "AWAY", "AWAY_WIN", f"Победа {away}", point
+        if normalized_name in {"draw", "tie", "ничья"}:
+            return "DRAW", "DRAW", "Ничья", point
+    elif key in {"totals", "alternate_totals"}:
+        if normalized_name.startswith("over") or normalized_name.startswith("больше"):
+            return "OVER", "TOTAL_OVER", f"Тотал больше {point:g}", point
+        if normalized_name.startswith("under") or normalized_name.startswith("меньше"):
+            return "UNDER", "TOTAL_UNDER", f"Тотал меньше {point:g}", point
+    elif key in {"spreads", "alternate_spreads"}:
+        if token_similarity(name, home) >= 0.72:
+            return "HOME", "SPREAD_HOME", f"{home} с форой {point:+g}", point
+        if token_similarity(name, away) >= 0.72:
+            return "AWAY", "SPREAD_AWAY", f"{away} с форой {point:+g}", point
+    elif key == "btts":
+        if normalized_name in {"yes", "да"}:
+            return "YES", "BTTS_YES", "Обе команды забьют — да", point
+        if normalized_name in {"no", "нет"}:
+            return "NO", "BTTS_NO", "Обе команды забьют — нет", point
+    elif key == "draw_no_bet":
+        if token_similarity(name, home) >= 0.72:
+            return "HOME", "DRAW_NO_BET_HOME", f"{home}, ничья — возврат", point
+        if token_similarity(name, away) >= 0.72:
+            return "AWAY", "DRAW_NO_BET_AWAY", f"{away}, ничья — возврат", point
+    elif key == "double_chance":
+        combined = f"{normalized_name} {normalized_description}"
+        if any(token in combined for token in ("home or draw", "1x", "home draw")):
+            return "HOME_DRAW", "DOUBLE_CHANCE_HOME_DRAW", "Двойной шанс 1X", point
+        if any(token in combined for token in ("draw or away", "x2", "draw away")):
+            return "DRAW_AWAY", "DOUBLE_CHANCE_DRAW_AWAY", "Двойной шанс X2", point
+        if any(token in combined for token in ("home or away", "12", "home away")):
+            return "HOME_AWAY", "DOUBLE_CHANCE_HOME_AWAY", "Двойной шанс 12", point
+    elif key in {"team_totals", "alternate_team_totals"}:
+        target = "HOME" if token_similarity(description, home) >= 0.72 else "AWAY" if token_similarity(description, away) >= 0.72 else ""
+        if not target:
+            return None
+        team_name = home if target == "HOME" else away
+        if normalized_name.startswith("over"):
+            return f"{target}_OVER", f"TEAM_TOTAL_{target}_OVER", f"ИТБ {team_name} {point:g}", point
+        if normalized_name.startswith("under"):
+            return f"{target}_UNDER", f"TEAM_TOTAL_{target}_UNDER", f"ИТМ {team_name} {point:g}", point
+    return None
+
+
+def parse_event_quotes(
+    event: dict[str, Any],
+    now: dt.datetime,
+    config: dict[str, Any],
+) -> list[dict[str, Any]]:
+    grouped: dict[tuple[str, str, float | None], list[dict[str, Any]]] = defaultdict(list)
+    maximum_age = safe_int(config.get("maximumQuoteAgeMinutes"), 240)
+    preferred = set(str(value) for value in config.get("preferredBookmakers", []))
 
     for bookmaker in event.get("bookmakers") or []:
         if not isinstance(bookmaker, dict):
             continue
         bookmaker_key = str(bookmaker.get("key") or "")
         bookmaker_title = str(bookmaker.get("title") or bookmaker_key)
-        if preferred_bookmakers and (
-            bookmaker_key.lower() not in preferred_bookmakers
-            and bookmaker_title.lower() not in preferred_bookmakers
-        ):
-            continue
-
-        for market_data in bookmaker.get("markets") or []:
-            if (
-                not isinstance(market_data, dict)
-                or market_data.get("key") != target_market_key
-            ):
+        bookmaker_update = parse_datetime(bookmaker.get("last_update"))
+        for market in bookmaker.get("markets") or []:
+            if not isinstance(market, dict):
                 continue
-            update_value = market_data.get("last_update") or bookmaker.get("last_update")
-            update_time = _parse_optional_utc(update_value)
-            age_minutes = None
-            require_timestamp = bool(config.get("requireOddsTimestamp", True))
-            if update_time is None:
-                if require_timestamp:
-                    continue
-            else:
-                age_minutes = max(
-                    0.0,
-                    (captured_at - update_time).total_seconds() / 60,
-                )
-                if age_minutes > maximum_age:
-                    continue
-
-            for outcome in market_data.get("outcomes") or []:
-                if not isinstance(outcome, dict):
-                    continue
-                outcome_name = str(outcome.get("name") or "")
-                normalized_outcome = _normalize_match_name(outcome_name)
-
-                if target_market_key == "totals":
-                    try:
-                        outcome_point = float(outcome.get("point"))
-                    except (TypeError, ValueError):
-                        continue
-
-                    if (
-                        target_point is None
-                        or abs(outcome_point - target_point) > 0.001
-                    ):
-                        continue
-
-                    if target == "OVER":
-                        is_target = normalized_outcome.startswith("over")
-                    else:
-                        is_target = normalized_outcome.startswith("under")
+            market_key = str(market.get("key") or "")
+            market_update = parse_datetime(market.get("last_update")) or bookmaker_update
+            age_minutes = (
+                max(0.0, (now - market_update).total_seconds() / 60.0)
+                if market_update
+                else None
+            )
+            if age_minutes is None or age_minutes > maximum_age:
+                continue
+            outcomes = [item for item in market.get("outcomes") or [] if isinstance(item, dict)]
+            # Normalize probabilities within each bookmaker line. For totals/spreads,
+            # a bookmaker market object normally contains one pair per line.
+            line_groups: dict[Any, list[tuple[int, dict[str, Any]]]] = defaultdict(list)
+            for index, outcome in enumerate(outcomes):
+                point = outcome.get("point")
+                numeric_point = safe_float(point) if point is not None else None
+                if market_key in {"spreads", "alternate_spreads"} and numeric_point is not None:
+                    group_key: Any = ("spread", abs(numeric_point))
+                elif market_key in {"team_totals", "alternate_team_totals"}:
+                    group_key = (
+                        "team_total",
+                        normalize_text(outcome.get("description")),
+                        numeric_point,
+                    )
                 else:
-                    is_target = (
-                        normalized_outcome in {"draw", "tie", "x"}
-                        if target == "DRAW"
-                        else _token_similarity(outcome_name, target) >= 0.72
+                    group_key = numeric_point
+                line_groups[group_key].append((index, outcome))
+            for _, indexed in line_groups.items():
+                line_outcomes = [outcome for _, outcome in indexed]
+                probabilities = no_vig_probabilities(line_outcomes)
+                for local_index, outcome in enumerate(line_outcomes):
+                    normalized = normalize_selection(market_key, outcome, event)
+                    if not normalized:
+                        continue
+                    selection_code, market_code, pick, point = normalized
+                    price = safe_float(outcome.get("price"), 0.0)
+                    if price <= 1.0:
+                        continue
+                    grouped[(market_key, selection_code, point)].append(
+                        {
+                            "bookmaker": bookmaker_title,
+                            "bookmakerKey": bookmaker_key,
+                            "price": price,
+                            "probability": probabilities.get(local_index, 1.0 / price),
+                            "lastUpdate": iso_z(market_update) if market_update else "",
+                            "ageMinutes": round(age_minutes, 2) if age_minutes is not None else None,
+                            "preferred": bookmaker_key in preferred,
+                            "marketCode": market_code,
+                            "pick": pick,
+                        }
                     )
 
-                if not is_target:
-                    continue
-                try:
-                    price = float(outcome.get("price"))
-                except (TypeError, ValueError):
-                    continue
-                if not math.isfinite(price) or price <= 1.0:
-                    continue
-                quotes.append(
-                    {
-                        "bookmakerKey": bookmaker_key,
-                        "bookmaker": bookmaker_title,
-                        "bookmakerOdds": round(price, 4),
-                        "oddsLastUpdate": str(update_value or ""),
-                        "oddsAgeMinutes": (
-                            round(age_minutes, 1)
-                            if age_minutes is not None
-                            else None
-                        ),
-                        "outcomeName": outcome_name,
-                        "bookmakerMarket": target_market_key,
-                        "bookmakerPoint": target_point,
-                    }
-                )
-
-    if not quotes:
-        return None
-
-    quotes.sort(key=lambda item: float(item["bookmakerOdds"]))
-    prices = [float(item["bookmakerOdds"]) for item in quotes]
-    selection_mode = str(
-        config.get("oddsSelectionMode") or "BEST_AVAILABLE"
-    ).upper()
-    if selection_mode == "MEDIAN_AVAILABLE":
-        median_value = prices[len(prices) // 2]
-        selected = min(
-            quotes,
-            key=lambda item: abs(float(item["bookmakerOdds"]) - median_value),
+    quotes: list[dict[str, Any]] = []
+    for (market_key, selection_code, point), rows in grouped.items():
+        if not rows:
+            continue
+        rows.sort(key=lambda item: (item["price"], item["preferred"]), reverse=True)
+        best = rows[0]
+        probabilities = [safe_float(item.get("probability")) for item in rows]
+        prices = [safe_float(item.get("price")) for item in rows]
+        quotes.append(
+            {
+                "eventId": str(event.get("id") or ""),
+                "sportKey": str(event.get("sport_key") or ""),
+                "marketKey": market_key,
+                "selectionCode": selection_code,
+                "market": best["marketCode"],
+                "marketFamily": market_family(best["marketCode"]),
+                "pick": best["pick"],
+                "point": point,
+                "bookmakerOdds": round(best["price"], 3),
+                "bookmaker": best["bookmaker"],
+                "bookmakerKey": best["bookmakerKey"],
+                "oddsLastUpdate": best["lastUpdate"],
+                "oddsAgeMinutes": best["ageMinutes"],
+                "quoteCount": len(rows),
+                "marketProbability": clamp(mean(probabilities), 0.01, 0.99),
+                "marketDispersion": stdev(probabilities),
+                "oddsMinimum": min(prices),
+                "oddsMedian": statistics.median(prices),
+                "oddsMaximum": max(prices),
+            }
         )
-    else:
-        selected = max(quotes, key=lambda item: float(item["bookmakerOdds"]))
+    return quotes
 
-    selected = dict(selected)
-    selected.update(
-        {
-            "oddsEventId": str(event.get("id") or ""),
-            "oddsSportKey": str(event.get("sport_key") or ""),
-            "oddsSportTitle": str(event.get("sport_title") or ""),
-            "oddsCapturedAt": captured_at.isoformat(),
-            "oddsQuoteCount": len(quotes),
-            "oddsMinimum": round(min(prices), 4),
-            "oddsMaximum": round(max(prices), 4),
-            "oddsMedian": round(prices[len(prices) // 2], 4),
-            "oddsSelectionMode": selection_mode,
-            "oddsMatchScore": float(event.get("_matchScore") or 0),
-            "oddsSecondBestMatchScore": float(
-                event.get("_secondBestMatchScore") or 0
-            ),
-            "oddsMatchScoreGap": float(event.get("_matchScoreGap") or 0),
-            "oddsKickoffDifferenceMinutes": float(
-                event.get("_kickoffDifferenceMinutes") or 0
-            ),
-        }
+
+def model_probability_for_quote(model: dict[str, Any], quote: dict[str, Any]) -> float:
+    matrix = model["matrix"]
+    selection = str(quote.get("selectionCode") or "")
+    market = str(quote.get("market") or "")
+    market_key = str(quote.get("marketKey") or "")
+    point = safe_float(quote.get("point"), 0.0)
+
+    if market == "SPREAD_HOME":
+        return matrix_spread_probability(matrix, "HOME", point)
+    if market == "SPREAD_AWAY":
+        return matrix_spread_probability(matrix, "AWAY", point)
+    if market == "TEAM_TOTAL_HOME_OVER":
+        return matrix_team_total_probability(matrix, "HOME", "OVER", point)
+    if market == "TEAM_TOTAL_HOME_UNDER":
+        return matrix_team_total_probability(matrix, "HOME", "UNDER", point)
+    if market == "TEAM_TOTAL_AWAY_OVER":
+        return matrix_team_total_probability(matrix, "AWAY", "OVER", point)
+    if market == "TEAM_TOTAL_AWAY_UNDER":
+        return matrix_team_total_probability(matrix, "AWAY", "UNDER", point)
+
+    home_win = matrix_outcome_probability(matrix, "HOME")
+    draw = matrix_outcome_probability(matrix, "DRAW")
+    away_win = matrix_outcome_probability(matrix, "AWAY")
+
+    if selection == "HOME":
+        if market_key == "draw_no_bet":
+            return home_win + draw * 0.5
+        if model.get("sport") == "ice_hockey" and market_key == "h2h":
+            decisive = max(0.001, home_win + away_win)
+            overtime_share = home_win / decisive
+            return home_win + draw * overtime_share
+        return home_win
+    if selection == "DRAW":
+        return draw
+    if selection == "AWAY":
+        if market_key == "draw_no_bet":
+            return away_win + draw * 0.5
+        if model.get("sport") == "ice_hockey" and market_key == "h2h":
+            decisive = max(0.001, home_win + away_win)
+            overtime_share = away_win / decisive
+            return away_win + draw * overtime_share
+        return away_win
+    if selection == "OVER":
+        return matrix_total_probability(matrix, "OVER", point)
+    if selection == "UNDER":
+        return matrix_total_probability(matrix, "UNDER", point)
+    if selection == "YES":
+        return matrix_btts_probability(matrix, True)
+    if selection == "NO":
+        return matrix_btts_probability(matrix, False)
+    if selection == "HOME_DRAW":
+        return home_win + draw
+    if selection == "DRAW_AWAY":
+        return draw + away_win
+    if selection == "HOME_AWAY":
+        return home_win + away_win
+    if selection == "HOME_OVER":
+        return matrix_team_total_probability(matrix, "HOME", "OVER", point)
+    if selection == "HOME_UNDER":
+        return matrix_team_total_probability(matrix, "HOME", "UNDER", point)
+    if selection == "AWAY_OVER":
+        return matrix_team_total_probability(matrix, "AWAY", "OVER", point)
+    if selection == "AWAY_UNDER":
+        return matrix_team_total_probability(matrix, "AWAY", "UNDER", point)
+    return safe_float(quote.get("marketProbability"), 0.5)
+
+def learning_segment_keys(sport: str, league: str, family: str, odds: float) -> list[str]:
+    odds_band = (
+        "LOW" if odds < 1.55 else "MID" if odds < 2.25 else "HIGH" if odds < 3.25 else "VERY_HIGH"
     )
-    return selected
+    league_key = normalize_text(league)[:80] or "unknown"
+    return [
+        f"SPORT|{sport}",
+        f"MARKET|{sport}|{family}",
+        f"LEAGUE|{sport}|{league_key}",
+        f"ODDS|{sport}|{odds_band}",
+        f"LEAGUE_MARKET|{sport}|{league_key}|{family}",
+    ]
 
 
-def build_bookmaker_prediction_pool(
-    model_predictions: list[dict[str, Any]],
-    candidates: list[dict[str, Any]],
+def probability_adjustment(
+    learning: dict[str, Any],
+    sport: str,
+    league: str,
+    family: str,
+    odds: float,
+    config: dict[str, Any],
+) -> tuple[float, list[dict[str, Any]]]:
+    minimum = safe_int(config.get("learningMinimumSegmentSamples"), 20)
+    full = safe_int(config.get("learningFullWeightSamples"), 120)
+    maximum = safe_float(config.get("learningMaximumProbabilityAdjustment"), 0.08)
+    contributions: list[dict[str, Any]] = []
+    total_weight = 0.0
+    weighted_adjustment = 0.0
+    segments = learning.get("segments") if isinstance(learning.get("segments"), dict) else {}
+    for key in learning_segment_keys(sport, league, family, odds):
+        segment = segments.get(key)
+        if not isinstance(segment, dict):
+            continue
+        count = safe_int(segment.get("settled"))
+        if count < minimum:
+            continue
+        bias = safe_float(segment.get("probabilityBias"), 0.0)
+        weight = clamp((count - minimum + 1) / max(1, full - minimum + 1), 0.05, 1.0)
+        weighted_adjustment += clamp(bias, -maximum, maximum) * weight
+        total_weight += weight
+        contributions.append({"segment": key, "samples": count, "bias": round(bias, 4), "weight": round(weight, 3)})
+    if total_weight <= 0:
+        return 0.0, []
+    return clamp(weighted_adjustment / total_weight, -maximum, maximum), contributions
+
+
+def evaluate_event_markets(
+    event: dict[str, Any],
+    quotes: list[dict[str, Any]],
+    model: dict[str, Any],
+    learning: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> list[dict[str, Any]]:
+    sport = model["sport"]
+    league = str(event.get("sport_title") or event.get("sport_key") or "")
+    data_tier = str(model.get("dataTier") or "MARKET")
+    data_quality = safe_float(model.get("dataQuality"), 40.0)
+    tier_weights = config.get("dataTierWeights") if isinstance(config.get("dataTierWeights"), dict) else {}
+    stat_weight = safe_float(tier_weights.get(data_tier), 0.68)
+    stat_weight = clamp(stat_weight, 0.20, 0.82)
+
+    candidates: list[dict[str, Any]] = []
+    for quote in quotes:
+        odds = safe_float(quote.get("bookmakerOdds"), 0.0)
+        if odds < safe_float(config.get("minimumBookmakerOdds"), 1.35) or odds > safe_float(
+            config.get("maximumBookmakerOdds"), 5.0
+        ):
+            continue
+        if safe_int(quote.get("quoteCount")) < safe_int(config.get("minimumBookmakers"), 2):
+            continue
+
+        statistical_probability = model_probability_for_quote(model, quote)
+        market_probability = safe_float(quote.get("marketProbability"), 0.5)
+        raw_probability = statistical_probability * stat_weight + market_probability * (1 - stat_weight)
+        adjustment, learning_evidence = probability_adjustment(
+            learning,
+            sport,
+            league,
+            str(quote.get("marketFamily") or "OTHER"),
+            odds,
+            config,
+        )
+        model_probability = clamp(raw_probability + adjustment, 0.03, 0.97)
+        edge = model_probability - market_probability
+        expected_value = model_probability * odds - 1.0
+        disagreement = abs(statistical_probability - market_probability)
+        agreement = clamp(100 - disagreement * 180 - safe_float(quote.get("marketDispersion")) * 260, 0, 100)
+        anomaly = clamp(
+            safe_float(quote.get("marketDispersion")) * 320
+            + max(0, 3 - safe_int(quote.get("quoteCount"))) * 10
+            + max(0, safe_float(quote.get("oddsAgeMinutes")) - 60) / 12,
+            0,
+            100,
+        )
+        price_score = 100.0
+        preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
+        preferred_max = safe_float(config.get("preferredMaximumOdds"), 2.8)
+        if odds < preferred_min:
+            price_score = clamp(100 - (preferred_min - odds) * 180, 20, 100)
+        elif odds > preferred_max:
+            price_score = clamp(100 - (odds - preferred_max) * 30, 25, 100)
+
+        low_odds_penalty = 0.0
+        if odds <= safe_float(config.get("lowOddsMaximum"), 1.54):
+            required_probability = safe_float(config.get("lowOddsMinimumProbability"), 0.72)
+            required_edge = safe_float(config.get("lowOddsMinimumEdge"), 0.08)
+            if model_probability < required_probability or edge < required_edge:
+                low_odds_penalty = 30.0
+
+        analysis_score = (
+            model_probability * 45
+            + data_quality * 0.20
+            + agreement * 0.15
+            + clamp(edge * 100, -15, 20) * 0.55
+            + price_score * 0.08
+            - anomaly * 0.12
+            - low_odds_penalty
+        )
+        best_bet_score = (
+            model_probability * 35
+            + clamp(edge * 100, -20, 25) * 0.72
+            + clamp(expected_value * 100, -20, 35) * 0.30
+            + data_quality * 0.15
+            + agreement * 0.10
+            + price_score * 0.10
+            - anomaly * 0.18
+            - low_odds_penalty
+        )
+
+        candidate = {
+            **quote,
+            "sport": sport,
+            "sportLabel": sport_label(sport),
+            "league": league,
+            "country": str(event.get("country") or infer_country(str(event.get("sport_key") or ""), league)),
+            "home": str(event.get("home_team") or ""),
+            "away": str(event.get("away_team") or ""),
+            "commenceTime": str(event.get("commence_time") or ""),
+            "modelProbability": round(model_probability, 6),
+            "statisticalProbability": round(statistical_probability, 6),
+            "marketProbability": round(market_probability, 6),
+            "edge": round(edge, 6),
+            "expectedValue": round(expected_value, 6),
+            "confidence": round(model_probability * 100, 1),
+            "dataTier": data_tier,
+            "dataQuality": round(data_quality, 1),
+            "agreement": round(agreement, 1),
+            "anomaly": round(anomaly, 1),
+            "priceScore": round(price_score, 1),
+            "analysisScore": round(analysis_score, 4),
+            "bestBetScore": round(best_bet_score, 4),
+            "expectedScore": model.get("expectedScore"),
+            "mostLikelyScores": model.get("mostLikelyScores"),
+            "homeWinProbability": round(safe_float(model.get("homeWinProbability")), 6),
+            "drawProbability": round(safe_float(model.get("drawProbability")), 6),
+            "awayWinProbability": round(safe_float(model.get("awayWinProbability")), 6),
+            "sourceNotes": list(model.get("sourceNotes") or []),
+            "learningAdjustment": round(adjustment, 6),
+            "learningEvidence": learning_evidence,
+            "evaluatedAt": iso_z(now),
+        }
+        candidate["qualification"] = best_bet_qualification(candidate, config)
+        candidates.append(candidate)
+    candidates.sort(key=lambda item: (safe_float(item.get("analysisScore")), safe_float(item.get("bestBetScore"))), reverse=True)
+    return candidates
+
+
+def best_bet_qualification(candidate: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    failures: list[str] = []
+    probability = safe_float(candidate.get("modelProbability"))
+    edge = safe_float(candidate.get("edge"))
+    ev = safe_float(candidate.get("expectedValue"))
+    data_quality = safe_float(candidate.get("dataQuality"))
+    agreement = safe_float(candidate.get("agreement"))
+    anomaly = safe_float(candidate.get("anomaly"))
+    odds = safe_float(candidate.get("bookmakerOdds"))
+
+    if probability < safe_float(config.get("bestBetMinimumProbability"), 0.54):
+        failures.append("Недостаточная расчётная вероятность")
+    if edge < safe_float(config.get("bestBetMinimumEdge"), 0.025):
+        failures.append("Недостаточное преимущество над рынком")
+    if ev < safe_float(config.get("bestBetMinimumExpectedValue"), 0.025):
+        failures.append("Недостаточное математическое ожидание")
+    if data_quality < safe_float(config.get("bestBetMinimumDataQuality"), 52):
+        failures.append("Недостаточная полнота данных")
+    if agreement < safe_float(config.get("bestBetMinimumAgreement"), 58):
+        failures.append("Модели недостаточно согласованы")
+    if anomaly > safe_float(config.get("bestBetMaximumAnomaly"), 48):
+        failures.append("Повышенная рыночная аномальность")
+    if odds <= safe_float(config.get("lowOddsMaximum"), 1.54):
+        if probability < safe_float(config.get("lowOddsMinimumProbability"), 0.72):
+            failures.append("Низкий коэффициент не подтверждён высокой вероятностью")
+        if edge < safe_float(config.get("lowOddsMinimumEdge"), 0.08):
+            failures.append("Низкий коэффициент не имеет достаточного преимущества")
+    return {"qualified": not failures, "failures": failures}
+
+
+def expected_result_text(candidate: dict[str, Any]) -> str:
+    home = str(candidate.get("home") or "Хозяева")
+    away = str(candidate.get("away") or "Гости")
+    home_p = safe_float(candidate.get("homeWinProbability"))
+    draw_p = safe_float(candidate.get("drawProbability"))
+    away_p = safe_float(candidate.get("awayWinProbability"))
+    if home_p >= max(draw_p, away_p):
+        return f"Наиболее вероятна победа: {home}"
+    if away_p >= max(home_p, draw_p):
+        return f"Наиболее вероятна победа: {away}"
+    return "Наиболее вероятен равный матч"
+
+
+def deterministic_reason(candidate: dict[str, Any]) -> str:
+    probability = safe_float(candidate.get("modelProbability")) * 100
+    edge = safe_float(candidate.get("edge")) * 100
+    data_tier = str(candidate.get("dataTier") or "MARKET")
+    tier_label = {
+        "FULL": "расширенная статистика и рынок",
+        "HYBRID": "статистика доступных турниров и рынок",
+        "MARKET": "безмаржинальный рыночный консенсус",
+    }.get(data_tier, "комбинированные данные")
+    return (
+        f"{expected_result_text(candidate)}. Для рынка «{candidate.get('pick')}» "
+        f"модель оценивает вероятность в {probability:.1f}%. "
+        f"Расчёт опирается на {tier_label}; преимущество над рынком {edge:+.1f} п.п."
+    )
+
+
+def event_to_analysis_record(
+    event: dict[str, Any],
+    selected: dict[str, Any],
+    alternatives: list[dict[str, Any]],
+    rank: int,
+    now: dt.datetime,
+) -> dict[str, Any]:
+    event_id = str(event.get("id") or selected.get("eventId") or "")
+    probability = safe_float(selected.get("modelProbability"))
+    record_id = f"analysis-{stable_id(event_id, selected.get('market'), selected.get('selectionCode'), selected.get('point'), now.date())}"
+    return {
+        "id": record_id,
+        "recordType": "DAILY_ANALYSIS",
+        "rank": rank,
+        "eventId": event_id,
+        "sport": selected.get("sport"),
+        "sportLabel": selected.get("sportLabel"),
+        "sportKey": selected.get("sportKey"),
+        "league": selected.get("league"),
+        "country": selected.get("country"),
+        "home": selected.get("home"),
+        "away": selected.get("away"),
+        "commenceTime": selected.get("commenceTime"),
+        "marketKey": selected.get("marketKey"),
+        "market": selected.get("market"),
+        "marketFamily": selected.get("marketFamily"),
+        "selectionCode": selected.get("selectionCode"),
+        "pick": selected.get("pick"),
+        "point": selected.get("point"),
+        "bookmakerOdds": selected.get("bookmakerOdds"),
+        "odds": selected.get("bookmakerOdds"),
+        "bookmaker": selected.get("bookmaker"),
+        "bookmakerKey": selected.get("bookmakerKey"),
+        "oddsLastUpdate": selected.get("oddsLastUpdate"),
+        "oddsAgeMinutes": selected.get("oddsAgeMinutes"),
+        "quoteCount": selected.get("quoteCount"),
+        "oddsMinimum": selected.get("oddsMinimum"),
+        "oddsMedian": selected.get("oddsMedian"),
+        "oddsMaximum": selected.get("oddsMaximum"),
+        "modelProbability": round(probability, 6),
+        "probability": round(probability, 6),
+        "probabilityPercent": round(probability * 100, 1),
+        "statisticalProbability": selected.get("statisticalProbability"),
+        "marketProbability": selected.get("marketProbability"),
+        "edge": selected.get("edge"),
+        "edgePercent": round(safe_float(selected.get("edge")) * 100, 2),
+        "expectedValue": selected.get("expectedValue"),
+        "expectedValuePercent": round(safe_float(selected.get("expectedValue")) * 100, 2),
+        "confidence": selected.get("confidence"),
+        "dataTier": selected.get("dataTier"),
+        "dataQuality": selected.get("dataQuality"),
+        "agreement": selected.get("agreement"),
+        "anomaly": selected.get("anomaly"),
+        "analysisScore": selected.get("analysisScore"),
+        "bestBetScore": selected.get("bestBetScore"),
+        "expectedScore": selected.get("expectedScore"),
+        "mostLikelyScores": selected.get("mostLikelyScores"),
+        "homeWinProbability": selected.get("homeWinProbability"),
+        "drawProbability": selected.get("drawProbability"),
+        "awayWinProbability": selected.get("awayWinProbability"),
+        "expectedResult": expected_result_text(selected),
+        "reason": deterministic_reason(selected),
+        "sourceNotes": selected.get("sourceNotes"),
+        "learningAdjustment": selected.get("learningAdjustment"),
+        "learningEvidence": selected.get("learningEvidence"),
+        "qualification": selected.get("qualification"),
+        "alternatives": [
+            {
+                "marketKey": item.get("marketKey"),
+                "market": item.get("market"),
+                "marketFamily": item.get("marketFamily"),
+                "selectionCode": item.get("selectionCode"),
+                "pick": item.get("pick"),
+                "point": item.get("point"),
+                "bookmakerOdds": item.get("bookmakerOdds"),
+                "odds": item.get("bookmakerOdds"),
+                "bookmaker": item.get("bookmaker"),
+                "bookmakerKey": item.get("bookmakerKey"),
+                "oddsLastUpdate": item.get("oddsLastUpdate"),
+                "oddsAgeMinutes": item.get("oddsAgeMinutes"),
+                "quoteCount": item.get("quoteCount"),
+                "modelProbability": item.get("modelProbability"),
+                "probability": item.get("modelProbability"),
+                "probabilityPercent": round(safe_float(item.get("modelProbability")) * 100, 1),
+                "statisticalProbability": item.get("statisticalProbability"),
+                "marketProbability": item.get("marketProbability"),
+                "edge": item.get("edge"),
+                "edgePercent": round(safe_float(item.get("edge")) * 100, 2),
+                "expectedValue": item.get("expectedValue"),
+                "expectedValuePercent": round(safe_float(item.get("expectedValue")) * 100, 2),
+                "confidence": item.get("confidence"),
+                "dataTier": item.get("dataTier"),
+                "dataQuality": item.get("dataQuality"),
+                "agreement": item.get("agreement"),
+                "anomaly": item.get("anomaly"),
+                "analysisScore": item.get("analysisScore"),
+                "bestBetScore": item.get("bestBetScore"),
+                "qualification": item.get("qualification"),
+            }
+            for item in alternatives[:5]
+        ],
+        "status": "pending",
+        "score": "",
+        "publishedAt": iso_z(now),
+        "settledAt": None,
+        "isBestBet": False,
+        "stake": 0.0,
+        "stakePercent": 0.0,
+        "profit": 0.0,
+    }
+
+
+def merge_advanced_event(featured: dict[str, Any], advanced: dict[str, Any]) -> dict[str, Any]:
+    merged = copy.deepcopy(featured)
+    bookmakers: dict[str, dict[str, Any]] = {
+        str(bookmaker.get("key")): bookmaker
+        for bookmaker in merged.get("bookmakers") or []
+        if isinstance(bookmaker, dict)
+    }
+    for bookmaker in advanced.get("bookmakers") or []:
+        if not isinstance(bookmaker, dict):
+            continue
+        key = str(bookmaker.get("key") or "")
+        if key not in bookmakers:
+            merged.setdefault("bookmakers", []).append(copy.deepcopy(bookmaker))
+            bookmakers[key] = merged["bookmakers"][-1]
+        else:
+            existing = bookmakers[key]
+            market_keys = {str(market.get("key")) for market in existing.get("markets") or [] if isinstance(market, dict)}
+            for market in bookmaker.get("markets") or []:
+                if isinstance(market, dict) and str(market.get("key")) not in market_keys:
+                    existing.setdefault("markets", []).append(copy.deepcopy(market))
+    return merged
+
+
+def build_daily_analysis(
     odds_events: list[dict[str, Any]],
+    advanced: dict[str, dict[str, Any]],
+    football_context: dict[str, Any],
+    nhl_standings: dict[str, Any],
+    state: dict[str, Any],
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    candidates_by_id = {
-        int(item["matchId"]): item
-        for item in candidates
-    }
-    matched_events: dict[int, dict[str, Any]] = {}
-    unmatched_candidates: list[int] = []
-
-    for candidate in candidates:
-        match_id = int(candidate["matchId"])
-        event, score = match_candidate_to_odds_event(
-            candidate,
-            odds_events,
-            config,
-        )
-        if event is None:
-            unmatched_candidates.append(match_id)
-        else:
-            matched_events[match_id] = event
-
-    minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
-    maximum_odds = float(config.get("maximumBookmakerOdds") or 5.0)
-    fallback_minimum_ev = float(
-        config.get("fallbackMinimumExpectedValue") or 0.0
-    )
-    enriched: list[dict[str, Any]] = []
-
-    for prediction in model_predictions:
-        try:
-            match_id = int(prediction["matchId"])
-            probability = float(prediction["probability"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        event = matched_events.get(match_id)
-        candidate = candidates_by_id.get(match_id)
-        if event is None or candidate is None:
-            continue
-        quote = extract_bookmaker_quote(
-            event,
-            str(prediction.get("market") or ""),
-            config,
-            now,
-        )
-        if quote is None:
-            continue
-        bookmaker_odds = float(quote["bookmakerOdds"])
-        if not minimum_odds <= bookmaker_odds <= maximum_odds:
-            continue
-        expected_value = probability * bookmaker_odds - 1
-        if expected_value < fallback_minimum_ev:
-            continue
-
-        item = dict(prediction)
-        item.update(quote)
-        item["expectedValue"] = round(expected_value, 6)
-        item["expectedValuePercent"] = round(expected_value * 100, 2)
-        item["marketOddsAvailable"] = True
-        item["expectedValueAvailable"] = True
-        item["coefficientType"] = "BOOKMAKER_MARKET"
-        item["country"] = str(candidate.get("country") or "")
-        item["league"] = str(
-            (candidate.get("competition") or {}).get("name") or ""
-        )
-        preferred = float(config.get("preferredBookmakerOdds") or 1.60)
-        odds_bonus = (
-            8.0
-            if bookmaker_odds >= preferred
-            else max(0.0, (bookmaker_odds - minimum_odds) * 10)
-        )
-        item["rankingScore"] = round(
-            float(item.get("rankingScore") or 0) * 0.35
-            + float(item.get("confidence") or 0) * 0.20
-            + float(item.get("dataQuality") or 0) * 0.15
-            + expected_value * 100 * 0.30
-            + odds_bonus,
-            4,
-        )
-        enriched.append(item)
-
+    event_analyses: list[tuple[dict[str, Any], list[dict[str, Any]]]] = []
     diagnostics = {
         "oddsEvents": len(odds_events),
-        "matchedCandidates": len(matched_events),
-        "unmatchedCandidateIds": unmatched_candidates,
-        "bookmakerPredictionOptions": len(enriched),
+        "eventsWithQuotes": 0,
+        "eventsWithAnalysis": 0,
+        "marketCandidates": 0,
+        "bySport": defaultdict(int),
+        "byMarketFamily": defaultdict(int),
     }
-    return enriched, diagnostics
 
-
-def merge_prediction_market_pool(
-    ai_predictions: list[dict[str, Any]],
-    statistical_predictions: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    by_key: dict[tuple[int, str], dict[str, Any]] = {}
-    for item in statistical_predictions:
-        by_key[(int(item["matchId"]), str(item["market"]))] = dict(item)
-    for ai_item in ai_predictions:
-        key = (int(ai_item["matchId"]), str(ai_item["market"]))
-        statistical = by_key.get(key)
-        if statistical is None:
-            by_key[key] = dict(ai_item)
+    for raw_event in odds_events:
+        event_id = str(raw_event.get("id") or "")
+        event = merge_advanced_event(raw_event, advanced.get(event_id, {})) if event_id in advanced else raw_event
+        event["country"] = infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
+        quotes = parse_event_quotes(event, now, config)
+        if not quotes:
             continue
-        probability = round(
-            float(ai_item["probability"]) * 0.60
-            + float(statistical["probability"]) * 0.40,
-            4,
-        )
-        confidence = int(
-            clamp_number(
-                round(
-                    float(ai_item["confidence"]) * 0.60
-                    + float(statistical["confidence"]) * 0.40
-                    + 2
-                ),
-                0,
-                88,
-            )
-        )
-        merged = dict(ai_item)
-        merged.update(
-            {
-                "probability": probability,
-                "fairOdds": round(1 / probability, 2),
-                "confidence": confidence,
-                "analysisMode": "AI_STAT_CONSENSUS",
-                "dataQuality": max(
-                    float(ai_item.get("dataQuality") or 0),
-                    float(statistical.get("dataQuality") or 0),
-                ),
-                "rankingScore": max(
-                    float(ai_item.get("rankingScore") or 0),
-                    float(statistical.get("rankingScore") or 0),
-                ) + 5,
-                "reason": (
-                    str(ai_item.get("reason") or "")
-                    + " Статистический модуль подтверждает выбранный исход."
-                )[:500],
-            }
-        )
-        by_key[key] = merged
-    return list(by_key.values())
+        diagnostics["eventsWithQuotes"] += 1
+        model = build_event_model(event, quotes, football_context, nhl_standings)
+        candidates = evaluate_event_markets(event, quotes, model, state.get("learning", {}), config, now)
+        candidates = [
+            item
+            for item in candidates
+            if safe_float(item.get("modelProbability")) >= safe_float(config.get("analysisMinimumProbability"), 0.42)
+        ]
+        if not candidates:
+            continue
+        diagnostics["eventsWithAnalysis"] += 1
+        diagnostics["marketCandidates"] += len(candidates)
+        diagnostics["bySport"][model["sport"]] += 1
+        for item in candidates:
+            diagnostics["byMarketFamily"][str(item.get("marketFamily"))] += 1
+        event_analyses.append((event, candidates))
 
+    # One selected market per match. The score is result-first, but low-price
+    # options receive a penalty unless the probability and edge are exceptional.
+    selected_per_event: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    for event, candidates in event_analyses:
+        best = max(candidates, key=lambda item: safe_float(item.get("analysisScore")))
+        alternatives = [item for item in candidates if item is not best]
+        alternatives.sort(key=lambda item: safe_float(item.get("analysisScore")), reverse=True)
+        selected_per_event.append((event, best, alternatives))
 
-def select_bookmaker_predictions(
-    prediction_pool: list[dict[str, Any]],
-    target_count: int,
-    config: dict[str, Any],
-    excluded_match_ids: set[int] | None = None,
-) -> list[dict[str, Any]]:
-    excluded = {int(value) for value in (excluded_match_ids or set())}
-    minimum_ev = float(config.get("minimumExpectedValue") or 0.02)
-    fallback_minimum_ev = float(
-        config.get("fallbackMinimumExpectedValue") or 0.0
-    )
-    minimum_confidence = int(config.get("minimumConfidence") or 52)
-    fallback_confidence = int(
-        config.get("bestAvailableMinimumConfidence") or 38
-    )
+    soccer = [row for row in selected_per_event if row[1].get("sport") == "soccer"]
+    hockey = [row for row in selected_per_event if row[1].get("sport") == "ice_hockey"]
+    soccer.sort(key=lambda row: safe_float(row[1].get("analysisScore")), reverse=True)
+    hockey.sort(key=lambda row: safe_float(row[1].get("analysisScore")), reverse=True)
+    target = safe_int(config.get("dailyAnalysisTarget"), 15)
 
-    def eligible(item: dict[str, Any], strict: bool) -> bool:
-        try:
-            match_id = int(item["matchId"])
-            ev = float(item["expectedValue"])
-            confidence = int(item.get("confidence") or 0)
-        except (KeyError, TypeError, ValueError):
-            return False
-        if match_id in excluded:
-            return False
-        if strict:
-            return ev >= minimum_ev and confidence >= minimum_confidence
-        return ev >= fallback_minimum_ev and confidence >= fallback_confidence
+    # Football is primary. Hockey fills only missing places.
+    pool = soccer[:target]
+    if len(pool) < target:
+        pool.extend(hockey[: target - len(pool)])
 
-    ranked = sorted(
-        prediction_pool,
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -float(item.get("expectedValue") or 0),
-            -float(item.get("bookmakerOdds") or 0),
-            -int(item.get("confidence") or 0),
-        ),
-    )
-    result: list[dict[str, Any]] = []
-    used_matches: set[int] = set(excluded)
-
-    for strict in (True, False):
-        for source in ranked:
-            if len(result) >= target_count:
-                break
-            if not eligible(source, strict):
-                continue
-            match_id = int(source["matchId"])
-            if match_id in used_matches:
-                continue
-            item = dict(source)
-            item["selectionTier"] = "STRICT_VALUE" if strict else "BEST_POSITIVE_VALUE"
-            result.append(item)
-            used_matches.add(match_id)
-        if len(result) >= target_count:
+    # Diversify leagues without sacrificing the strongest results.
+    diversified: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    league_counts: dict[str, int] = defaultdict(int)
+    deferred = []
+    for row in pool:
+        league = str(row[1].get("league") or "")
+        if league_counts[league] < 3:
+            diversified.append(row)
+            league_counts[league] += 1
+        else:
+            deferred.append(row)
+    for row in deferred:
+        if len(diversified) >= target:
             break
+        diversified.append(row)
+    diversified = diversified[:target]
 
-    # Preserve quality ranking but prefer different country/league where possible.
-    return select_diverse_public_predictions(result, target_count)
+    records = [
+        event_to_analysis_record(event, selected, alternatives, index, now)
+        for index, (event, selected, alternatives) in enumerate(diversified, start=1)
+    ]
+    diagnostics["bySport"] = dict(diagnostics["bySport"])
+    diagnostics["byMarketFamily"] = dict(diagnostics["byMarketFamily"])
+    diagnostics["publishedAnalysis"] = len(records)
+    return records, diagnostics
 
 
-def migrate_legacy_pending_predictions(state: dict[str, Any]) -> int:
-    migrated = 0
-    for item in state.get("history", []) or []:
-        if not isinstance(item, dict):
+# ---------------------------------------------------------------------------
+# Best bets and virtual bank
+# ---------------------------------------------------------------------------
+
+
+def active_pending_best_bets(state: dict[str, Any], now: dt.datetime) -> list[dict[str, Any]]:
+    active: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in state.get("history") or []:
+        if not isinstance(item, dict) or item.get("recordType") != "BEST_BET":
             continue
-        if str(item.get("status") or "").lower() != "pending":
+        if str(item.get("status") or "pending") != "pending":
             continue
-        try:
-            bookmaker_odds = float(item.get("bookmakerOdds") or 0)
-        except (TypeError, ValueError):
-            bookmaker_odds = 0.0
-        if bookmaker_odds > 1:
+        event_id = str(item.get("eventId") or item.get("oddsEventId") or "")
+        commence = parse_datetime(item.get("commenceTime") or item.get("utcDate"))
+        if not event_id or event_id in seen:
             continue
-        item["status"] = "void"
-        item["profit"] = 0.0
-        item["settledAt"] = utc_now().isoformat()
-        item["settlementReason"] = "LEGACY_MODEL_ODDS_NOT_BOOKMAKER"
-        item["settlementOddsType"] = "VOID_LEGACY_MODEL_ODDS"
-        migrated += 1
-    return migrated
+        # Keep a pending bet until settlement, even if the nominal start passed.
+        if commence and commence < now - dt.timedelta(days=4):
+            continue
+        active.append(migrate_public_prediction(item))
+        seen.add(event_id)
+    active.sort(key=lambda item: str(item.get("commenceTime") or item.get("utcDate") or ""))
+    return active
 
 
-def resolve_existing_history(
+def select_best_bets(
+    daily_analysis: list[dict[str, Any]],
     state: dict[str, Any],
-    matches_by_id: dict[int, dict[str, Any]],
-) -> int:
-    history = state.get("history") or []
-    bank = state.get("bank") or {}
-    current_bank = float(
-        bank.get("current") or bank.get("starting") or 10000
-    )
-    settled_count = 0
-
-    for entry in history:
-        if not isinstance(entry, dict):
-            continue
-        if str(entry.get("status") or "").lower() != "pending":
-            continue
-        try:
-            match_id = int(entry.get("sourceMatchId"))
-            bookmaker_odds = float(entry.get("bookmakerOdds") or 0)
-        except (TypeError, ValueError):
-            continue
-        if bookmaker_odds <= 1:
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = "MISSING_BOOKMAKER_ODDS"
-            continue
-        match = matches_by_id.get(match_id)
-        if not match:
-            continue
-        status = str(match.get("status") or "").upper()
-        if status in {"CANCELLED", "POSTPONED", "SUSPENDED"}:
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = f"MATCH_{status}"
-            entry["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
-            settled_count += 1
-            continue
-        result = final_score(match)
-        if result is None:
-            continue
-        home_goals, away_goals = result
-        won = evaluate_market(
-            str(entry.get("market") or ""),
-            home_goals,
-            away_goals,
-        )
-        stake = float(entry.get("stake") or 0)
-        profit = stake * (bookmaker_odds - 1) if won else -stake
-        current_bank += profit
-        entry["status"] = "won" if won else "lost"
-        entry["profit"] = round(profit, 2)
-        entry["score"] = f"{home_goals}:{away_goals}"
-        entry["settledAt"] = utc_now().isoformat()
-        entry["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
-        bank.setdefault("history", []).append(
-            {
-                "date": utc_now().date().isoformat(),
-                "value": round(current_bank, 2),
-                "event": "PREDICTION_WON" if won else "PREDICTION_LOST",
-                "matchId": match_id,
-                "bookmakerOdds": round(bookmaker_odds, 4),
-            }
-        )
-        settled_count += 1
-
-    bank["current"] = round(current_bank, 2)
-    state["bank"] = bank
-    return settled_count
-
-
-def prediction_to_public_records(
-    prediction: dict[str, Any],
-    candidate: dict[str, Any],
-    *,
-    stake: float,
-    config: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    kickoff_utc = parse_utc_datetime(candidate["utcDate"])
-    timezone = configured_timezone(config)
-    kickoff = kickoff_utc.astimezone(timezone)
-    timezone_name = str(config.get("timezone") or "Europe/Moscow")
-    competition = candidate["competition"]
-    home_team = candidate["homeTeam"]["name"]
-    away_team = candidate["awayTeam"]["name"]
-    market = str(prediction["market"])
-    market_label = MARKET_LABELS[market]
-    country_value = candidate.get("country", "")
-    country = COUNTRY_TRANSLATIONS.get(
-        country_value,
-        country_value or "Международный турнир",
-    )
-    risk_code = str(prediction.get("risk") or "MEDIUM").upper()
-    risk_label = "Низкий" if risk_code == "LOW" else "Средний"
-    fair_odds = round(float(prediction["fairOdds"]), 2)
-    bookmaker_odds = round(float(prediction["bookmakerOdds"]), 2)
-    probability = round(float(prediction["probability"]), 4)
-    confidence = int(prediction["confidence"])
-    ev = round(float(prediction["expectedValue"]), 6)
-    bookmaker = str(prediction.get("bookmaker") or "Не указан")
-    reason = str(prediction.get("reason") or "")[:420]
-    reason = (
-        f"{reason} Букмекер: {bookmaker}; коэффициент {bookmaker_odds:.2f}; "
-        f"ожидаемое преимущество {ev * 100:+.1f}%."
-    )[:500]
-
-    common = {
-        "id": f"real-{candidate['matchId']}-{market.lower()}",
-        "sourceMatchId": int(candidate["matchId"]),
-        "league": competition["name"],
-        "country": country,
-        "date": kickoff.date().isoformat(),
-        "time": kickoff.strftime("%H:%M"),
-        "utcDate": candidate["utcDate"],
-        "timezone": timezone_name,
-        "home": home_team,
-        "away": away_team,
-        "market": market,
-        "pick": market_label,
-        "odds": bookmaker_odds,
-        "bookmakerOdds": bookmaker_odds,
-        "fairOdds": fair_odds,
-        "oddsLabel": "Коэффициент букмекера",
-        "bookmaker": bookmaker,
-        "bookmakerKey": str(prediction.get("bookmakerKey") or ""),
-        "oddsCapturedAt": str(prediction.get("oddsCapturedAt") or ""),
-        "oddsLastUpdate": str(prediction.get("oddsLastUpdate") or ""),
-        "oddsEventId": str(prediction.get("oddsEventId") or ""),
-        "oddsSportKey": str(prediction.get("oddsSportKey") or ""),
-        "bookmakerMarket": str(
-            prediction.get("bookmakerMarket") or "h2h"
-        ),
-        "bookmakerPoint": prediction.get("bookmakerPoint"),
-        "oddsQuoteCount": int(prediction.get("oddsQuoteCount") or 0),
-        "oddsAgeMinutes": prediction.get("oddsAgeMinutes"),
-        "oddsMatchScore": round(
-            float(prediction.get("oddsMatchScore") or 0),
-            4,
-        ),
-        "oddsSecondBestMatchScore": round(
-            float(prediction.get("oddsSecondBestMatchScore") or 0),
-            4,
-        ),
-        "oddsMatchScoreGap": round(
-            float(prediction.get("oddsMatchScoreGap") or 0),
-            4,
-        ),
-        "oddsKickoffDifferenceMinutes": round(
-            float(prediction.get("oddsKickoffDifferenceMinutes") or 0),
-            1,
-        ),
-        "oddsMinimum": float(prediction.get("oddsMinimum") or 0),
-        "oddsMedian": float(prediction.get("oddsMedian") or 0),
-        "oddsMaximum": float(prediction.get("oddsMaximum") or 0),
-        "probability": probability,
-        "probabilityPercent": round(probability * 100, 1),
-        "expectedValue": ev,
-        "expectedValuePercent": round(ev * 100, 2),
-        "confidence": confidence,
-        "risk": risk_label,
-        "riskCode": risk_code,
-        "reason": reason,
-        "analysisMode": str(prediction.get("analysisMode") or "AI"),
-        "selectionTier": str(prediction.get("selectionTier") or ""),
-        "rankingScore": round(float(prediction.get("rankingScore") or 0), 4),
-        "dataQuality": round(
-            float(
-                prediction.get("dataQuality")
-                or candidate.get("dataQuality")
-                or 0
-            ),
-            2,
-        ),
-        "coefficientType": "BOOKMAKER_MARKET",
-        "marketOddsAvailable": True,
-        "expectedValueAvailable": True,
-    }
-    public_prediction = dict(common)
-    history_record = dict(common)
-    history_record.update(
-        {
-            "stake": round(stake, 2),
-            "score": "",
-            "status": "pending",
-            "publishedAt": utc_now().isoformat(),
-            "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
-        }
-    )
-    return public_prediction, history_record
-
-
-def pending_history_to_public_record(
-    entry: dict[str, Any],
-    match: dict[str, Any] | None,
-    config: dict[str, Any],
-) -> dict[str, Any] | None:
-    try:
-        match_id = int(entry.get("sourceMatchId"))
-        probability = float(entry.get("probability") or 0)
-        fair_odds = float(entry.get("fairOdds") or 0)
-        bookmaker_odds = float(entry.get("bookmakerOdds") or entry.get("odds") or 0)
-        confidence = int(entry.get("confidence") or 0)
-        expected_value = float(entry.get("expectedValue") or 0)
-    except (TypeError, ValueError):
-        return None
-    if bookmaker_odds <= 1:
-        return None
-    risk_code = str(entry.get("riskCode") or "").upper()
-    if risk_code not in {"LOW", "MEDIUM"}:
-        risk_code = "LOW" if confidence >= 78 else "MEDIUM"
-    result = {
-        **entry,
-        "id": str(entry.get("id") or f"real-{match_id}"),
-        "sourceMatchId": match_id,
-        "utcDate": str((match or {}).get("utcDate") or entry.get("utcDate") or ""),
-        "odds": round(bookmaker_odds, 2),
-        "bookmakerOdds": round(bookmaker_odds, 2),
-        "fairOdds": round(fair_odds, 2),
-        "oddsLabel": "Коэффициент букмекера",
-        "probability": round(probability, 4),
-        "probabilityPercent": round(probability * 100, 1),
-        "expectedValue": round(expected_value, 6),
-        "expectedValuePercent": round(expected_value * 100, 2),
-        "confidence": confidence,
-        "risk": "Низкий" if risk_code == "LOW" else "Средний",
-        "riskCode": risk_code,
-        "coefficientType": "BOOKMAKER_MARKET",
-        "marketOddsAvailable": True,
-        "expectedValueAvailable": True,
-        "isExistingPending": True,
-    }
-    result.update(extract_public_match_status(match))
-    return result
-
-
-def finalize_public_selection(
-    public_predictions: list[dict[str, Any]],
-    history_records: list[dict[str, Any]],
-    matches_by_id: dict[int, dict[str, Any]],
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    minimum_odds = float(config.get("minimumBookmakerOdds") or 1.45)
-    maximum_odds = float(config.get("maximumBookmakerOdds") or 5.0)
-    minimum_ev = float(config.get("fallbackMinimumExpectedValue") or 0.0)
-    window_hours = max(1.0, float(config.get("selectionWindowHours") or 24))
-    maximum_predictions = max(0, int(config.get("maximumPredictions") or 4))
-    lead_hours = max(0.0, float(config.get("minimumLeadHours") or 1))
-    window_start = now + dt.timedelta(hours=lead_hours)
-    window_end = window_start + dt.timedelta(hours=window_hours)
-    history_by_id = {
-        str(item.get("id") or ""): item
-        for item in history_records
-        if isinstance(item, dict)
-    }
-    accepted_by_match: dict[int, dict[str, Any]] = {}
-
-    for prediction in public_predictions:
-        if not isinstance(prediction, dict):
-            continue
-        try:
-            kickoff = parse_utc_datetime(str(prediction.get("utcDate") or ""))
-            match_id = int(prediction.get("sourceMatchId"))
-            bookmaker_odds = float(
-                prediction.get("bookmakerOdds") or prediction.get("odds") or 0
-            )
-            expected_value = float(prediction.get("expectedValue") or 0)
-        except (TypeError, ValueError):
-            continue
-        if not window_start <= kickoff <= window_end:
-            continue
-        if not minimum_odds <= bookmaker_odds <= maximum_odds:
-            continue
-        if expected_value < minimum_ev:
-            continue
-        if str(prediction.get("coefficientType") or "") != "BOOKMAKER_MARKET":
-            continue
-        if not str(prediction.get("bookmaker") or "").strip():
-            continue
-        prediction["odds"] = round(bookmaker_odds, 2)
-        prediction["bookmakerOdds"] = round(bookmaker_odds, 2)
-        prediction["oddsLabel"] = "Коэффициент букмекера"
-        prediction["marketOddsAvailable"] = True
-        prediction["expectedValueAvailable"] = True
-        prediction["selectionWindowHours"] = window_hours
-        prediction.update(extract_public_match_status(matches_by_id.get(match_id)))
-        current = accepted_by_match.get(match_id)
-        if current is None or float(prediction.get("rankingScore") or 0) > float(
-            current.get("rankingScore") or 0
-        ):
-            accepted_by_match[match_id] = prediction
-
-    accepted = sorted(
-        accepted_by_match.values(),
-        key=lambda item: (
-            -float(item.get("rankingScore") or 0),
-            -float(item.get("expectedValue") or 0),
-            -float(item.get("bookmakerOdds") or 0),
-        ),
-    )
-    accepted = select_diverse_public_predictions(accepted, maximum_predictions)
-    accepted_ids = {str(item.get("id") or "") for item in accepted}
-    accepted_history = [
-        history_by_id[item_id]
-        for item_id in accepted_ids
-        if item_id in history_by_id
-    ]
-    return accepted, accepted_history
-
-
-def update_statistics(state: dict[str, Any]) -> None:
-    history = [
-        item for item in state.get("history", [])
-        if isinstance(item, dict)
-    ]
-    completed = [
-        item for item in history
-        if item.get("status") in {"won", "lost"}
-    ]
-    odds_values = []
-    for item in history:
-        try:
-            value = float(item.get("bookmakerOdds") or 0)
-        except (TypeError, ValueError):
-            continue
-        if value > 1:
-            odds_values.append(value)
-    statistics = state.setdefault("statistics", {})
-    statistics["averageOdds"] = round(
-        sum(odds_values) / len(odds_values) if odds_values else 0,
-        2,
-    )
-    statistics["currentStreak"] = calculate_streak(completed)
-    statistics["bestSegment"] = calculate_best_segment(completed)
-    bank = state.setdefault("bank", {})
-    starting = float(bank.get("starting") or 10000)
-    current = float(bank.get("current") or starting)
-    bank["roi"] = round(((current - starting) / starting) * 100 if starting else 0, 2)
-    values = [
-        float(item.get("value") or 0)
-        for item in bank.get("history", [])
-        if isinstance(item, dict)
-    ] or [starting, current]
-    peak = values[0]
-    maximum_drawdown = 0.0
-    for value in values:
-        peak = max(peak, value)
-        if peak > 0:
-            maximum_drawdown = max(maximum_drawdown, (peak - value) / peak * 100)
-    bank["maxDrawdown"] = round(maximum_drawdown, 2)
-
-
-
-
-def apply_stake_policy_to_selected_predictions(
-    public_predictions: list[dict[str, Any]],
-    history: list[dict[str, Any]],
-    current_bank: float,
-    stake_percent: float,
-    assigned_at: dt.datetime,
-) -> int:
-    """Assign or repair the virtual stake for every selected prediction.
-
-    New records and legacy active pending records must both carry the same
-    per-prediction stake policy. Existing records that already use the current
-    policy are left unchanged so their publication-time stake remains fixed.
-    """
-
-    stake_percent = float(stake_percent)
-    stake_amount = round(
-        float(current_bank) * stake_percent / 100,
-        2,
-    )
-    policy = "PER_PREDICTION_PERCENT_OF_BANK"
-
-    history_by_id = {
-        str(item.get("id") or ""): item
-        for item in history
-        if isinstance(item, dict)
-        and str(item.get("id") or "")
-    }
-
-    repaired = 0
-
-    for prediction in public_predictions:
-        prediction_id = str(prediction.get("id") or "")
-        if not prediction_id:
-            raise RuntimeError(
-                "STAKE_POLICY: у прогноза отсутствует id"
-            )
-
-        history_item = history_by_id.get(prediction_id)
-        if history_item is None:
-            raise RuntimeError(
-                "STAKE_POLICY: не найдена запись истории для прогноза "
-                f"{prediction_id}"
-            )
-
-        try:
-            existing_stake = float(history_item.get("stake") or 0)
-        except (TypeError, ValueError):
-            existing_stake = 0.0
-
-        try:
-            existing_percent = float(
-                history_item.get("stakePercent") or 0
-            )
-        except (TypeError, ValueError):
-            existing_percent = 0.0
-
-        existing_policy = str(
-            history_item.get("stakePolicy") or ""
-        ).strip()
-
-        needs_repair = (
-            existing_stake <= 0
-            or abs(existing_percent - stake_percent) > 0.0001
-            or existing_policy != policy
-        )
-
-        if needs_repair:
-            history_item["stake"] = stake_amount
-            history_item["stakePercent"] = round(
-                stake_percent,
-                2,
-            )
-            history_item["stakePolicy"] = policy
-            history_item["stakeAssignedAt"] = (
-                assigned_at
-                .astimezone(dt.timezone.utc)
-                .replace(microsecond=0)
-                .isoformat()
-                .replace("+00:00", "Z")
-            )
-            history_item["stakeBackfilled"] = True
-            repaired += 1
-
-        prediction["stake"] = round(
-            float(history_item.get("stake") or 0),
-            2,
-        )
-        prediction["stakePercent"] = float(
-            history_item.get("stakePercent") or stake_percent
-        )
-        prediction["stakePolicy"] = str(
-            history_item.get("stakePolicy") or policy
-        )
-        prediction["stakeAssignedAt"] = str(
-            history_item.get("stakeAssignedAt") or ""
-        )
-        prediction["stakeBackfilled"] = bool(
-            history_item.get("stakeBackfilled")
-        )
-
-        if float(prediction.get("stake") or 0) <= 0:
-            raise RuntimeError(
-                "STAKE_POLICY: после назначения ставка осталась нулевой "
-                f"для прогноза {prediction_id}"
-            )
-
-    return repaired
-
-
-def main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v8 R5")
-    config = load_json(CONFIG_PATH)
-    old_state = load_json(STATE_PATH)
-    _load_optional_dotenv(ROOT / ".env")
-
-    football_api_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip()
-    odds_api_key = os.getenv("ODDS_API_KEY", "").strip()
-    openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-    if not football_api_key:
-        raise RuntimeError("Не задан FOOTBALL_DATA_API_KEY")
-    if not odds_api_key:
-        raise RuntimeError(
-            "Не задан ODDS_API_KEY. Для реальных коэффициентов букмекеров "
-            "добавьте GitHub Secret ODDS_API_KEY."
-        )
-
-    now = utc_now()
-    today = now.date()
-    lookback_days = max(10, int(config.get("lookbackDays") or 60))
-    lookahead_days = max(1, int(config.get("lookaheadDays") or 2))
-    competitions = [
-        str(item).strip()
-        for item in config.get("competitions", [])
-        if str(item).strip()
-    ]
-    competition_scope = str(
-        config.get("competitionScope") or "ALL_ACCESSIBLE"
-    ).strip().upper()
-    if competition_scope == "ALL_ACCESSIBLE":
-        competitions = []
-    elif not competitions:
-        raise RuntimeError(
-            "competitionScope=CONFIGURED, но config.competitions пуст"
-        )
-
-    recent_matches = fetch_matches_chunked(
-        football_api_key,
-        date_from=today - dt.timedelta(days=lookback_days),
-        date_to=today,
-        competitions=competitions,
-        maximum_days_per_request=10,
-        pause_seconds=7,
-    )
-    time.sleep(7)
-    upcoming_matches = fetch_matches(
-        football_api_key,
-        date_from=today,
-        date_to=today + dt.timedelta(days=lookahead_days + 1),
-        competitions=competitions,
-    )
-    all_matches_by_id: dict[int, dict[str, Any]] = {}
-    for match in recent_matches + upcoming_matches:
-        try:
-            all_matches_by_id[int(match["id"])] = match
-        except (KeyError, TypeError, ValueError):
-            continue
-    finished_matches = [
-        match for match in recent_matches
-        if final_score(match) is not None
-    ]
-    scheduled_matches = [
-        match for match in upcoming_matches
-        if str(match.get("status") or "").upper() in {"SCHEDULED", "TIMED"}
-    ]
-
-    state = ensure_real_state(old_state, config)
-    localize_existing_history(state)
-    legacy_voided = migrate_legacy_pending_predictions(state)
-    settled_count = resolve_existing_history(state, all_matches_by_id)
-    team_form = build_team_form(finished_matches)
-    candidates = build_candidates(scheduled_matches, team_form, config)
-
-    available_countries = sorted({
-        str((match.get("area") or {}).get("name") or "").strip()
-        for match in scheduled_matches
-        if str((match.get("area") or {}).get("name") or "").strip()
-    })
-    available_competitions = sorted({
-        str((match.get("competition") or {}).get("name") or "").strip()
-        for match in scheduled_matches
-        if str((match.get("competition") or {}).get("name") or "").strip()
-    })
-    candidate_countries = sorted({
-        str(item.get("country") or "").strip()
-        for item in candidates
-        if str(item.get("country") or "").strip()
-    })
-    candidate_competitions = sorted({
-        str((item.get("competition") or {}).get("name") or "").strip()
-        for item in candidates
-        if str((item.get("competition") or {}).get("name") or "").strip()
-    })
-
-    history = [
-        item for item in state.get("history", [])
-        if isinstance(item, dict)
-    ]
-    active_public, active_history = build_active_pending_records(
-        history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    active_public, active_history = finalize_public_selection(
-        active_public,
-        active_history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    active_match_ids = {
-        int(item["sourceMatchId"])
-        for item in active_public
-    }
-
-    pool_config = copy.deepcopy(config)
-    pool_config.update(
-        {
-            "maximumPredictions": max(12, len(candidates) * 3),
-            "minimumConfidence": 0,
-            "winMarketMinimumConfidence": 0,
-            "minimumProbability": 0.05,
-            "maximumProbability": 0.95,
-            "minimumModelOdds": 1.01,
-            "maximumModelOdds": 20.0,
-            "minimumDataQuality": 0,
-            "onePredictionPerMatch": False,
-        }
-    )
-    statistical_predictions = build_deterministic_predictions(
-        candidates,
-        pool_config,
-    )
-    ai_predictions: list[dict[str, Any]] = []
-    model_name = "not-used"
-    openrouter_error_text = ""
-    ai_attempted = False
-    if candidates and openrouter_api_key:
-        ai_attempted = True
-        ai_config = copy.deepcopy(config)
-        ai_config["maximumPredictions"] = min(12, max(4, len(candidates)))
-        try:
-            model_result, model_name = call_openrouter(
-                openrouter_api_key,
-                build_analysis_prompt(candidates, ai_config),
-            )
-            ai_predictions = normalize_model_predictions(
-                model_result,
-                candidates,
-                ai_config,
-            )
-        except Exception as error:
-            openrouter_error_text = str(error)
-            log(f"OpenRouter warning: {error}")
-
-    model_pool = merge_prediction_market_pool(
-        ai_predictions,
-        statistical_predictions,
-    )
-
-    soccer_sports, sports_headers = fetch_active_soccer_sports(odds_api_key)
-    sport_keys = choose_odds_sport_keys(
-        soccer_sports,
-        candidates,
-        config,
-    )
-    odds_events, odds_quota = fetch_bookmaker_events(
-        odds_api_key,
-        sport_keys,
-        config,
-        now,
-    )
-    bookmaker_pool, odds_diagnostics = build_bookmaker_prediction_pool(
-        model_pool,
-        candidates,
-        odds_events,
-        config,
-        now,
-    )
-
-    maximum_predictions = max(1, int(config.get("maximumPredictions") or 4))
-    available_slots = max(0, maximum_predictions - len(active_public))
-    selected = select_bookmaker_predictions(
-        bookmaker_pool,
-        available_slots,
-        config,
-        active_match_ids,
-    )
-
-    candidates_by_id = {
-        int(candidate["matchId"]): candidate
-        for candidate in candidates
-    }
-    new_public: list[dict[str, Any]] = []
-    new_history: list[dict[str, Any]] = []
-    for prediction in selected:
-        candidate = candidates_by_id.get(int(prediction["matchId"]))
-        if candidate is None:
-            continue
-        public_record, history_record = prediction_to_public_records(
-            prediction,
-            candidate,
-            stake=0.0,
-            config=config,
-        )
-        new_public.append(public_record)
-        new_history.append(history_record)
-
-    public_predictions, _ = finalize_public_selection(
-        active_public + new_public,
-        active_history + new_history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    daily_target = max(1, int(config.get("dailyPredictionCount") or 4))
-    if len(public_predictions) != daily_target:
-        raise RuntimeError(
-            "STRICT_DAILY_FOUR_BOOKMAKER_ODDS_NOT_MET: "
-            f"expected={daily_target}; actual={len(public_predictions)}; "
-            f"oddsEvents={len(odds_events)}; matchedCandidates="
-            f"{odds_diagnostics.get('matchedCandidates')}; options="
-            f"{len(bookmaker_pool)}"
-        )
-
-    accepted_ids = {str(item.get("id") or "") for item in public_predictions}
-    accepted_new_history = [
-        item for item in new_history
-        if str(item.get("id") or "") in accepted_ids
-    ]
-
-    history_ids = {str(item.get("id") or "") for item in history}
-    for item in accepted_new_history:
-        item_id = str(item.get("id") or "")
-        if item_id and item_id not in history_ids:
-            history.append(item)
-            history_ids.add(item_id)
-
-    current_bank = float(
-        state.get("bank", {}).get("current")
-        or config.get("startingVirtualBank")
-        or 10000
-    )
-    stake_per_prediction_percent = float(
-        config.get("stakePerPredictionPercent") or 20
-    )
-    stake_records_repaired = apply_stake_policy_to_selected_predictions(
-        public_predictions,
-        history,
-        current_bank,
-        stake_per_prediction_percent,
-        now,
-    )
-
-    history_by_id = {str(item.get("id") or ""): item for item in history}
-
-    for index, prediction in enumerate(public_predictions, start=1):
-        prediction["rank"] = index
-        prediction["rankLabel"] = (
-            "Лучший прогноз дня" if index == 1 else f"Прогноз №{index}"
-        )
-        mode = str(prediction.get("analysisMode") or "")
-        prediction["analysisSourceLabel"] = (
-            "ИИ и статистический консенсус"
-            if mode == "AI_STAT_CONSENSUS"
-            else "ИИ-анализ" if mode == "AI"
-            else "Статистический расчёт"
-        )
-        history_item = history_by_id.get(str(prediction.get("id") or ""))
-        if history_item:
-            history_item["rank"] = index
-            history_item["rankLabel"] = prediction["rankLabel"]
-            history_item["analysisSourceLabel"] = prediction["analysisSourceLabel"]
-
-    state["predictions"] = public_predictions
-    state["history"] = history
-    modes = {str(item.get("analysisMode") or "") for item in public_predictions}
-    analysis_provider = (
-        "OpenRouter + статистика + The Odds API"
-        if modes & {"AI", "AI_STAT_CONSENSUS"}
-        else "Статистика + The Odds API"
-    )
-    state.setdefault("meta", {}).update(
-        {
-            "version": "8.0.0",
-            "mode": "real",
-            "updatedAt": now.isoformat(),
-            "analyzedMatches": len(scheduled_matches),
-            "candidateMatches": len(candidates),
-            "selectedPredictions": len(public_predictions),
-            "activePendingPredictions": len(active_public),
-            "newPredictions": len(accepted_new_history),
-            "stakeRecordsRepaired": stake_records_repaired,
-            "legacyPendingVoided": legacy_voided,
-            "settledPredictions": settled_count,
-            "source": "football-data.org + The Odds API",
-            "competitionScope": competition_scope,
-            "configuredCompetitions": competitions,
-            "availableCountries": available_countries,
-            "availableCompetitions": available_competitions,
-            "candidateCountries": candidate_countries,
-            "candidateCompetitions": candidate_competitions,
-            "analysisProvider": analysis_provider,
-            "analysisModel": model_name,
-            "analysisMode": "BOOKMAKER_VALUE_SELECTION",
-            "analysisStatus": "BOOKMAKER_PREDICTIONS_SELECTED",
-            "analysisError": openrouter_error_text,
-            "aiAttempted": ai_attempted,
-            "aiNormalizedPredictions": len(ai_predictions),
-            "statisticalPredictionOptions": len(statistical_predictions),
-            "modelPredictionOptions": len(model_pool),
-            "oddsSportKeys": sport_keys,
-            "oddsEvents": len(odds_events),
-            "oddsQuota": odds_quota,
-            "oddsDiagnostics": odds_diagnostics,
-            "oddsSportsHeaderRemaining": sports_headers.get("x-requests-remaining"),
-            "timezone": str(config.get("timezone") or "Europe/Moscow"),
-            "minimumLeadHours": float(config.get("minimumLeadHours") or 1),
-            "selectionWindowHours": float(config.get("selectionWindowHours") or 24),
-            "maximumPredictions": maximum_predictions,
-            "dailyPredictionTarget": daily_target,
-            "minimumBookmakerOdds": float(
-                config.get("minimumBookmakerOdds") or 1.45
-            ),
-            "preferredBookmakerOdds": float(
-                config.get("preferredBookmakerOdds") or 1.60
-            ),
-            "minimumExpectedValue": float(
-                config.get("minimumExpectedValue") or 0.02
-            ),
-            "marketOddsAvailable": True,
-            "expectedValueAvailable": True,
-            "virtualBankOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
-            "stakePerPredictionPercent": stake_per_prediction_percent,
-            "maximumDailyExposurePercent": round(
-                daily_target * stake_per_prediction_percent,
-                2,
-            ),
-            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-            "notice": (
-                "Каждый опубликованный прогноз получает виртуальную ставку "
-                f"{stake_per_prediction_percent:.0f}% от текущего банка. "
-                "Расчёт выигрыша выполняется по реальному коэффициенту "
-                "букмекера, зафиксированному при публикации."
-            ),
-        }
-    )
-    update_statistics(state)
-    write_json_atomic(STATE_PATH, state)
-    report = create_report(
-        status="GREEN",
-        message="Опубликованы четыре прогноза с проверенными свежими коэффициентами букмекеров.",
-        details={
-            "lookbackDays": lookback_days,
-            "recentMatches": len(recent_matches),
-            "finishedMatches": len(finished_matches),
-            "scheduledMatches": len(scheduled_matches),
-            "candidateMatches": len(candidates),
-            "oddsSportKeys": sport_keys,
-            "oddsEvents": len(odds_events),
-            "bookmakerOptions": len(bookmaker_pool),
-            "selectedPredictions": len(public_predictions),
-            "newPredictions": len(accepted_new_history),
-            "settledPredictions": settled_count,
-            "legacyPendingVoided": legacy_voided,
-            "oddsQuota": odds_quota,
-            "oddsDiagnostics": odds_diagnostics,
-        },
-    )
-    write_json_atomic(REPORT_PATH, report)
-    log(
-        "Обновление завершено. "
-        f"RADAR={len(candidates)}; ODDS_EVENTS={len(odds_events)}; "
-        f"OPTIONS={len(bookmaker_pool)}; PRED={len(public_predictions)}"
-    )
-    return 0
-
-
-def run_daily_ai_mode() -> int:
-    """Создаёт дневной JSON из уже опубликованного state без API-ключей."""
-
-    state = load_json(STATE_PATH)
-    predictions = [
-        item
-        for item in state.get("predictions", [])
-        if isinstance(item, dict)
-    ]
-    output_path = ROOT / "data" / "ai_daily_analysis.json"
-    payload = {
-        "status": "READY",
-        "model": str(
-            (state.get("meta") or {}).get("analysisModel")
-            or "not-used"
-        ),
-        "generatedAt": utc_now().isoformat(),
-        "matchesAnalyzed": int(
-            (state.get("meta") or {}).get("candidateMatches") or 0
-        ),
-        "recommendations": predictions,
-    }
-    write_json_atomic(output_path, payload)
-    print("DAILY_AI_EXPORT_READY")
-    return 0
-
-
-
-def validate_repository_files() -> int:
-    config = load_json(CONFIG_PATH)
-    state = load_json(STATE_PATH)
-    if str(config.get("oddsProvider") or "") != "THE_ODDS_API":
-        raise RuntimeError("config.oddsProvider должен быть THE_ODDS_API")
-    if int(config.get("dailyPredictionCount") or 0) != 4:
-        raise RuntimeError("dailyPredictionCount должен быть равен 4")
-    if int(config.get("maximumPredictions") or 0) != 4:
-        raise RuntimeError("maximumPredictions должен быть равен 4")
-    if float(config.get("minimumBookmakerOdds") or 0) < 1.45:
-        raise RuntimeError("minimumBookmakerOdds должен быть не ниже 1.45")
-    if float(config.get("preferredBookmakerOdds") or 0) < 1.60:
-        raise RuntimeError("preferredBookmakerOdds должен быть не ниже 1.60")
-    if float(config.get("minimumExpectedValue") or -1) < 0:
-        raise RuntimeError("minimumExpectedValue не может быть отрицательным")
-    if float(config.get("selectionWindowHours") or 0) != 24:
-        raise RuntimeError("selectionWindowHours должен быть равен 24")
-    if int(config.get("maximumOddsAgeMinutes") or 0) > 30:
-        raise RuntimeError("maximumOddsAgeMinutes должен быть не больше 30")
-    if int(config.get("oddsMatchKickoffToleranceMinutes") or 0) > 60:
-        raise RuntimeError(
-            "oddsMatchKickoffToleranceMinutes должен быть не больше 60"
-        )
-    if float(config.get("minimumOddsMatchScore") or 0) < 0.78:
-        raise RuntimeError("minimumOddsMatchScore должен быть не ниже 0.78")
-    if float(config.get("minimumOddsMatchScoreGap") or 0) < 0.08:
-        raise RuntimeError("minimumOddsMatchScoreGap должен быть не ниже 0.08")
-    if float(config.get("stakePerPredictionPercent") or 0) != 20:
-        raise RuntimeError(
-            "stakePerPredictionPercent должен быть равен 20"
-        )
-    if not bool(config.get("requireOddsTimestamp", False)):
-        raise RuntimeError("requireOddsTimestamp должен быть true")
-    allowed = set(config.get("allowedMarkets") or [])
-    supported_markets = {
-        "HOME_WIN",
-        "DRAW",
-        "AWAY_WIN",
-        "OVER_2_5",
-        "UNDER_2_5",
-    }
-    if not allowed or not allowed.issubset(supported_markets):
-        raise RuntimeError(
-            "V8 R4 поддерживает только 1X2 и тотал 2,5"
-        )
-    if not isinstance(state.get("predictions", []), list):
-        raise RuntimeError("state.predictions должен быть массивом")
-    if not isinstance(state.get("history", []), list):
-        raise RuntimeError("state.history должен быть массивом")
-    print("VALIDATION_GREEN_V8_PRODUCTION_HARDENING")
-    return 0
-
-
-def run_self_test() -> int:
-    timestamp_probe = dt.datetime(
-        2026,
-        7,
-        26,
-        20,
-        52,
-        44,
-        165761,
-        tzinfo=dt.timezone.utc,
-    )
-    timestamp_result = format_odds_api_timestamp(timestamp_probe)
-
-    if timestamp_result != "2026-07-26T20:52:44Z":
-        raise RuntimeError(
-            "SELF_TEST: invalid The Odds API timestamp: "
-            f"{timestamp_result}"
-        )
-
-    if "." in timestamp_result:
-        raise RuntimeError(
-            "SELF_TEST: fractional seconds remain in The Odds API timestamp"
-        )
-
-    config = {
-        "allowedMarkets": [
-            "HOME_WIN",
-            "DRAW",
-            "AWAY_WIN",
-            "OVER_2_5",
-            "UNDER_2_5",
-        ],
-        "maximumPredictions": 4,
-        "dailyPredictionCount": 4,
-        "minimumConfidence": 30,
-        "winMarketMinimumConfidence": 30,
-        "bestAvailableMinimumConfidence": 20,
-        "minimumProbability": 0.05,
-        "maximumProbability": 0.95,
-        "minimumModelOdds": 1.01,
-        "maximumModelOdds": 20.0,
-        "minimumDataQuality": 0,
-        "minimumBookmakerOdds": 1.45,
-        "preferredBookmakerOdds": 1.60,
-        "maximumBookmakerOdds": 5.0,
-        "minimumExpectedValue": 0.02,
-        "fallbackMinimumExpectedValue": 0.0,
-        "strictMinimumExpectedValue": 0.0,
-        "probabilityFirstMinimumProbability": 0.52,
-        "probabilityFirstMinimumExpectedValue": -0.12,
-        "safetyMinimumProbability": 0.56,
-        "safetyMinimumExpectedValue": -0.16,
-        "oddsMatchKickoffToleranceMinutes": 60,
-        "minimumOddsMatchScore": 0.78,
-        "maximumOddsAgeMinutes": 30,
-        "minimumTeamNameMatchScore": 0.60,
-        "minimumOddsMatchScoreGap": 0.08,
-        "requireOddsTimestamp": True,
-        "selectionWindowHours": 24,
-        "stakePerPredictionPercent": 20,
-        "oddsSelectionMode": "BEST_AVAILABLE",
-        "preferredBookmakers": [],
-    }
-    strong_form = {
-        "games": 8,
-        "pointsPerGame": 1.75,
-        "goalsForPerGame": 1.55,
-        "goalsAgainstPerGame": 1.05,
-        "winRate": 0.55,
-        "drawRate": 0.25,
-        "lossRate": 0.20,
-        "nonLossRate": 0.80,
-        "scoredRate": 0.80,
-        "concededRate": 0.60,
-        "cleanSheetRate": 0.40,
-        "over15Rate": 0.75,
-        "under35Rate": 0.75,
-        "bothScoreRate": 0.50,
-        "homeVenue": {
-            "games": 5,
-            "pointsPerGame": 1.9,
-            "goalsForPerGame": 1.7,
-            "goalsAgainstPerGame": 0.9,
-            "winRate": 0.65,
-            "drawRate": 0.20,
-            "lossRate": 0.15,
-            "nonLossRate": 0.85,
-            "scoredRate": 0.85,
-            "concededRate": 0.55,
-        },
-        "awayVenue": {
-            "games": 5,
-            "pointsPerGame": 1.35,
-            "goalsForPerGame": 1.2,
-            "goalsAgainstPerGame": 1.35,
-            "winRate": 0.35,
-            "drawRate": 0.25,
-            "lossRate": 0.40,
-            "nonLossRate": 0.60,
-            "scoredRate": 0.70,
-            "concededRate": 0.70,
-        },
-    }
-    base_time = utc_now() + dt.timedelta(hours=8)
-    candidates = []
-    events = []
-    countries = ["England", "Spain", "Germany", "Italy", "France", "Brazil"]
-    for index in range(1, 7):
-        kickoff = base_time + dt.timedelta(hours=index)
-        home = f"Alpha United {index}"
-        away = f"Beta City {index}"
-        candidates.append(
-            {
-                "matchId": index,
-                "utcDate": kickoff.isoformat(),
-                "competition": {"code": "TEST", "name": f"League {index}"},
-                "country": countries[index - 1],
-                "homeTeam": {"id": index * 2, "name": home, "form": copy.deepcopy(strong_form)},
-                "awayTeam": {"id": index * 2 + 1, "name": away, "form": copy.deepcopy(strong_form)},
-                "dataQuality": 80.0,
-            }
-        )
-        events.append(
-            {
-                "id": f"event-{index}",
-                "sport_key": "soccer_test",
-                "sport_title": f"League {index}",
-                "commence_time": kickoff.isoformat(),
-                "home_team": home,
-                "away_team": away,
-                "bookmakers": [
-                    {
-                        "key": "testbook",
-                        "title": "Test Bookmaker",
-                        "last_update": utc_now().isoformat(),
-                        "markets": [
-                            {
-                                "key": "h2h",
-                                "last_update": utc_now().isoformat(),
-                                "outcomes": [
-                                    {"name": home, "price": 2.10 + index * 0.02},
-                                    {"name": "Draw", "price": 3.40},
-                                    {"name": away, "price": 3.10},
-                                ],
-                            }
-                        ],
-                    }
-                ],
-            }
-        )
-
-    pool_config = dict(config)
-    pool_config.update(
-        {
-            "maximumPredictions": 100,
-            "onePredictionPerMatch": False,
-        }
-    )
-    model_pool = build_deterministic_predictions(candidates, pool_config)
-    bookmaker_pool, diagnostics = build_bookmaker_prediction_pool(
-        model_pool,
-        candidates,
-        events,
-        config,
-        utc_now(),
-    )
-    selected = select_bookmaker_predictions(bookmaker_pool, 4, config)
-    if len(selected) != 4:
-        raise RuntimeError(
-            f"SELF_TEST: ожидалось 4 прогноза, получено {len(selected)}; "
-            f"diagnostics={diagnostics}"
-        )
-    if len({int(item["matchId"]) for item in selected}) != 4:
-        raise RuntimeError("SELF_TEST: дубли matchId")
+    target = safe_int(config.get("bestBetsTarget"), 4)
+    active = active_pending_best_bets(state, now)[:target]
+    used_events = {str(item.get("eventId") or "") for item in active}
+    selected = [copy.deepcopy(item) for item in active]
+    newly_selected: list[dict[str, Any]] = []
+    family_counts: dict[str, int] = defaultdict(int)
+    sport_counts: dict[str, int] = defaultdict(int)
+    league_counts: dict[str, int] = defaultdict(int)
     for item in selected:
-        if float(item.get("bookmakerOdds") or 0) < 1.45:
-            raise RuntimeError("SELF_TEST: bookmakerOdds ниже 1.45")
-        if float(item.get("expectedValue") or -1) < 0:
-            raise RuntimeError("SELF_TEST: отрицательный EV")
-        if not item.get("bookmaker"):
-            raise RuntimeError("SELF_TEST: отсутствует bookmaker")
+        family_counts[str(item.get("marketFamily") or market_family(str(item.get("market") or "")))] += 1
+        sport_counts[str(item.get("sport") or "soccer")] += 1
+        league_counts[str(item.get("league") or "")] += 1
 
-    if float(config.get("stakePerPredictionPercent") or 0) != 20:
-        raise RuntimeError(
-            "SELF_TEST: ставка на каждый прогноз должна быть 20%"
-        )
-
-    stake_test_public = [
-        {"id": "legacy-active"},
-        {"id": "already-correct"},
-    ]
-    stake_test_history = [
-        {
-            "id": "legacy-active",
-            "status": "pending",
-            "stake": 0,
-        },
-        {
-            "id": "already-correct",
-            "status": "pending",
-            "stake": 1500.0,
-            "stakePercent": 20,
-            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-        },
-    ]
-    repaired_count = apply_stake_policy_to_selected_predictions(
-        stake_test_public,
-        stake_test_history,
-        10000.0,
-        20.0,
-        utc_now(),
-    )
-    if repaired_count != 1:
-        raise RuntimeError(
-            f"SELF_TEST: ожидалась одна восстановленная ставка, "
-            f"получено {repaired_count}"
-        )
-    if float(stake_test_public[0].get("stake") or 0) != 2000.0:
-        raise RuntimeError(
-            "SELF_TEST: старая активная ставка не восстановлена до 20%"
-        )
-    if float(stake_test_public[1].get("stake") or 0) != 1500.0:
-        raise RuntimeError(
-            "SELF_TEST: уже зафиксированная ставка была ошибочно изменена"
-        )
-
-    bank_state = {
-        "bank": {"starting": 10000.0, "current": 10000.0, "history": []},
-        "history": [
-            {
-                "status": "pending",
-                "sourceMatchId": 999,
-                "market": "HOME_WIN",
-                "stake": 100.0,
-                "bookmakerOdds": 1.80,
-            }
-        ],
-    }
-    finished = {
-        999: {
-            "id": 999,
-            "status": "FINISHED",
-            "score": {"fullTime": {"home": 2, "away": 1}},
-        }
-    }
-    settled = resolve_existing_history(bank_state, finished)
-    if settled != 1 or float(bank_state["bank"]["current"]) != 10080.0:
-        raise RuntimeError(
-            f"SELF_TEST: неверный расчёт банка: {bank_state['bank']}"
-        )
-    print(
-        "SELF_TEST_GREEN_V8 "
-        f"PRED={len(selected)} OPTIONS={len(bookmaker_pool)} "
-        "BANK=10080.00"
-    )
-    return 0
-
-
-
-# =============================================================================
-# V9_GLOBAL_LEAGUE_DISCOVERY
-# =============================================================================
-
-V9_COUNTRY_TOKENS: dict[str, str] = {
-    "argentina": "Аргентина",
-    "australia": "Австралия",
-    "austria": "Австрия",
-    "belgium": "Бельгия",
-    "brazil": "Бразилия",
-    "chile": "Чили",
-    "china": "Китай",
-    "croatia": "Хорватия",
-    "czech": "Чехия",
-    "denmark": "Дания",
-    "ecuador": "Эквадор",
-    "england": "Англия",
-    "finland": "Финляндия",
-    "france": "Франция",
-    "germany": "Германия",
-    "greece": "Греция",
-    "ireland": "Ирландия",
-    "italy": "Италия",
-    "japan": "Япония",
-    "korea": "Южная Корея",
-    "mexico": "Мексика",
-    "netherlands": "Нидерланды",
-    "norway": "Норвегия",
-    "poland": "Польша",
-    "portugal": "Португалия",
-    "romania": "Румыния",
-    "scotland": "Шотландия",
-    "spain": "Испания",
-    "sweden": "Швеция",
-    "switzerland": "Швейцария",
-    "turkey": "Турция",
-    "usa": "США",
-    "uruguay": "Уругвай",
-    "uefa": "Европа",
-    "conmebol": "Южная Америка",
-    "concacaf": "Северная Америка",
-    "fifa": "Международный турнир",
-}
-
-
-def evaluate_market(
-    market: str,
-    home_goals: int,
-    away_goals: int,
-) -> bool:
-    """Final V9 settlement rules for every published market."""
-    total = home_goals + away_goals
-    if market == "HOME_WIN":
-        return home_goals > away_goals
-    if market == "AWAY_WIN":
-        return away_goals > home_goals
-    if market == "DRAW":
-        return home_goals == away_goals
-    if market == "OVER_2_5":
-        return total >= 3
-    if market == "UNDER_2_5":
-        return total <= 2
-    raise RuntimeError(f"Неизвестный рынок V9: {market}")
-
-
-def v9_stable_numeric_id(value: str) -> int:
-    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()
-    return 1_000_000_000_000_000 + (int(digest[:15], 16) % 8_000_000_000_000_000)
-
-
-def v9_infer_country(sport_key: str, sport_title: str = "") -> str:
-    key = str(sport_key or "").lower()
-    title = str(sport_title or "").lower()
-    for token, country in V9_COUNTRY_TOKENS.items():
-        if f"_{token}_" in f"_{key}_" or token in title:
-            return country
-    if "champions league" in title or "europa league" in title:
-        return "Европа"
-    return "Международный турнир"
-
-
-def v9_global_competition_allowed(
-    sport: dict[str, Any],
-    config: dict[str, Any],
-) -> bool:
-    label = " ".join(
-        str(sport.get(field) or "")
-        for field in ("key", "title", "description", "group")
-    ).lower()
-    excluded = [
-        str(value).strip().lower()
-        for value in config.get("excludedCompetitionWords", [])
-        if str(value).strip()
-    ]
-    return not any(word in label for word in excluded)
-
-
-def v9_fetch_events_for_sport(
-    sport: dict[str, Any],
-    odds_api_key: str,
-    time_from: dt.datetime,
-    time_to: dt.datetime,
-) -> tuple[str, list[dict[str, Any]], str | None]:
-    sport_key = str(sport.get("key") or "")
-    parameters = {
-        "apiKey": odds_api_key,
-        "dateFormat": "iso",
-        "commenceTimeFrom": format_odds_api_timestamp(time_from),
-        "commenceTimeTo": format_odds_api_timestamp(time_to),
-    }
-    url = (
-        f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/events?"
-        f"{urllib.parse.urlencode(parameters)}"
-    )
-    try:
-        payload, _ = request_json_value(
-            url,
-            timeout_seconds=45,
-            retries=2,
-        )
-        if not isinstance(payload, list):
-            raise RuntimeError("ответ /events не является массивом")
-        events = [item for item in payload if isinstance(item, dict)]
-        return sport_key, events, None
-    except Exception as error:
-        return sport_key, [], str(error)
-
-
-def v9_discover_global_soccer_events(
-    sports: list[dict[str, Any]],
-    odds_api_key: str,
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
-    lead_hours = max(0.0, float(config.get("minimumLeadHours") or 1))
-    window_hours = max(1.0, float(config.get("selectionWindowHours") or 24))
-    time_from = now + dt.timedelta(hours=lead_hours)
-    time_to = time_from + dt.timedelta(hours=window_hours)
-    eligible_sports = [
-        sport for sport in sports
-        if v9_global_competition_allowed(sport, config)
-    ]
-    maximum_scan = max(
-        1,
-        int(config.get("maximumGlobalDiscoverySports") or 100),
-    )
-    eligible_sports = eligible_sports[:maximum_scan]
-    max_workers = max(
-        1,
-        min(12, int(config.get("globalDiscoveryWorkers") or 8)),
-    )
-
-    events: list[dict[str, Any]] = []
-    summaries: list[dict[str, Any]] = []
-    errors: list[dict[str, str]] = []
-    sport_by_key = {
-        str(sport.get("key") or ""): sport
-        for sport in eligible_sports
-    }
-
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=max_workers,
-    ) as executor:
-        futures = [
-            executor.submit(
-                v9_fetch_events_for_sport,
-                sport,
-                odds_api_key,
-                time_from,
-                time_to,
-            )
-            for sport in eligible_sports
-        ]
-        for future in concurrent.futures.as_completed(futures):
-            sport_key, sport_events, error = future.result()
-            sport = sport_by_key.get(sport_key, {})
-            if error:
-                errors.append({"sportKey": sport_key, "error": error})
+    # Each of the fifteen matches may offer several qualified markets. The main
+    # daily-analysis row remains result-first, while the best-bet layer may use
+    # a stronger alternative price from the same match to preserve market
+    # diversity. One event can still produce only one bank bet.
+    candidate_options: list[dict[str, Any]] = []
+    for analysis in daily_analysis:
+        base = copy.deepcopy(analysis)
+        base["sourceAnalysisId"] = str(analysis.get("id") or "")
+        candidate_options.append(base)
+        for alternative in analysis.get("alternatives") or []:
+            if not isinstance(alternative, dict):
                 continue
-            if not sport_events:
-                continue
-            title = str(sport.get("title") or sport_key)
-            country = v9_infer_country(sport_key, title)
-            for event in sport_events:
-                event = dict(event)
-                event.setdefault("sport_key", sport_key)
-                event.setdefault("sport_title", title)
-                event["_globalCountry"] = country
-                events.append(event)
-            summaries.append(
-                {
-                    "sportKey": sport_key,
-                    "sportTitle": title,
-                    "country": country,
-                    "eventCount": len(sport_events),
-                    "firstKickoff": min(
-                        str(item.get("commence_time") or "")
-                        for item in sport_events
-                    ),
-                }
-            )
+            option = copy.deepcopy(analysis)
+            option.update(copy.deepcopy(alternative))
+            option["sourceAnalysisId"] = str(analysis.get("id") or "")
+            option["id"] = f"bet-{stable_id(analysis.get('eventId'), alternative.get('market'), alternative.get('selectionCode'), alternative.get('point'), analysis.get('publishedAt'))}"
+            option["reason"] = deterministic_reason(option)
+            candidate_options.append(option)
 
-    unique_events: dict[str, dict[str, Any]] = {}
-    for event in events:
-        event_id = str(event.get("id") or "")
-        if event_id:
-            unique_events[event_id] = event
-    result_events = sorted(
-        unique_events.values(),
-        key=lambda item: str(item.get("commence_time") or ""),
-    )
-    summaries.sort(
+    candidates = [
+        item
+        for item in candidate_options
+        if bool((item.get("qualification") or {}).get("qualified"))
+        and str(item.get("eventId") or "") not in used_events
+    ]
+    candidates.sort(
         key=lambda item: (
-            -int(item.get("eventCount") or 0),
-            str(item.get("firstKickoff") or ""),
-            str(item.get("sportTitle") or ""),
-        )
-    )
-    diagnostics = {
-        "sportsScanned": len(eligible_sports),
-        "sportsWithEvents": len(summaries),
-        "eventsDiscovered": len(result_events),
-        "discoveryErrors": errors,
-        "windowFrom": format_odds_api_timestamp(time_from),
-        "windowTo": format_odds_api_timestamp(time_to),
-    }
-    return result_events, summaries, diagnostics
-
-
-def v9_select_global_sport_keys(
-    summaries: list[dict[str, Any]],
-    football_candidates: list[dict[str, Any]],
-    config: dict[str, Any],
-) -> list[str]:
-    maximum = max(
-        1,
-        int(config.get("maximumOddsSportRequests") or 6),
-    )
-    covered_keys = {
-        FOOTBALL_DATA_ODDS_SPORT_KEYS.get(
-            str((candidate.get("competition") or {}).get("code") or "").upper()
-        )
-        for candidate in football_candidates
-    }
-    covered_keys.discard(None)
-
-    prepared: list[dict[str, Any]] = []
-    for summary in summaries:
-        item = dict(summary)
-        item["coverageBonus"] = (
-            1 if item.get("sportKey") in covered_keys else 0
-        )
-        prepared.append(item)
-    prepared.sort(
-        key=lambda item: (
-            -int(item.get("coverageBonus") or 0),
-            -int(item.get("eventCount") or 0),
-            str(item.get("firstKickoff") or ""),
-            str(item.get("sportKey") or ""),
-        )
-    )
-
-    by_country: dict[str, list[dict[str, Any]]] = {}
-    for item in prepared:
-        country = str(item.get("country") or "Международный турнир")
-        by_country.setdefault(country, []).append(item)
-    country_order = sorted(
-        by_country,
-        key=lambda country: (
-            -max(
-                int(item.get("coverageBonus") or 0)
-                for item in by_country[country]
-            ),
-            -max(
-                int(item.get("eventCount") or 0)
-                for item in by_country[country]
-            ),
-            country,
+            safe_float(item.get("bestBetScore")),
+            safe_float(item.get("modelProbability")),
+            safe_float(item.get("edge")),
         ),
+        reverse=True,
     )
 
-    selected: list[str] = []
-    round_index = 0
-    while len(selected) < maximum:
-        progress = False
-        for country in country_order:
-            bucket = by_country[country]
-            if round_index >= len(bucket):
-                continue
-            key = str(bucket[round_index].get("sportKey") or "")
-            if key and key not in selected:
-                selected.append(key)
-                progress = True
-                if len(selected) >= maximum:
-                    break
-        if not progress:
+    max_family = safe_int(config.get("maximumSameMarketFamilyBestBets"), 2)
+    max_sport = safe_int(config.get("maximumSameSportBestBets"), 4)
+    max_league = safe_int(config.get("maximumSameLeagueBestBets"), 1)
+
+    for candidate in candidates:
+        if len(selected) >= target:
             break
-        round_index += 1
-    return selected
+        event_id = str(candidate.get("eventId") or "")
+        if not event_id or event_id in used_events:
+            continue
+        family = str(candidate.get("marketFamily") or "OTHER")
+        sport = str(candidate.get("sport") or "soccer")
+        league = str(candidate.get("league") or "")
+        if family_counts[family] >= max_family:
+            continue
+        if sport_counts[sport] >= max_sport:
+            continue
+        if league_counts[league] >= max_league:
+            continue
+        best = copy.deepcopy(candidate)
+        best["recordType"] = "BEST_BET"
+        best["isBestBet"] = True
+        best["analysisMarketDiffers"] = (
+            str(best.get("id") or "") != str(best.get("sourceAnalysisId") or "")
+        )
+        selected.append(best)
+        newly_selected.append(best)
+        used_events.add(event_id)
+        family_counts[family] += 1
+        sport_counts[sport] += 1
+        league_counts[league] += 1
 
+    bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
+    bank_value = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000))
+    stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
+    stake = round(bank_value * stake_percent / 100.0, 2)
+    published_at = iso_z(now)
 
-def v9_build_event_candidates(
-    odds_events: list[dict[str, Any]],
-    football_candidates: list[dict[str, Any]],
+    for rank, item in enumerate(selected, start=1):
+        item["rank"] = rank
+        item["rankLabel"] = "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}"
+        item["recordType"] = "BEST_BET"
+        item["isBestBet"] = True
+        item.setdefault("status", "pending")
+        item.setdefault("publishedAt", published_at)
+        item["stakePercent"] = stake_percent
+        if item in newly_selected or safe_float(item.get("stake")) <= 0:
+            item["stake"] = stake
+            item["stakeAssignedAt"] = published_at
+        item["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
+        item["bankPolicy"] = "TWENTY_PERCENT_PER_QUALIFIED_BEST_BET"
+
+    return selected, newly_selected
+
+def append_new_records_to_history(
+    state: dict[str, Any],
+    daily_analysis: list[dict[str, Any]],
+    newly_selected: list[dict[str, Any]],
     config: dict[str, Any],
-) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], int]:
-    matched_candidate_by_event: dict[str, dict[str, Any]] = {}
-    for candidate in football_candidates:
-        event, _ = match_candidate_to_odds_event(
-            candidate,
-            odds_events,
-            config,
-        )
-        if event is not None:
-            event_id = str(event.get("id") or "")
-            if event_id:
-                matched_candidate_by_event[event_id] = candidate
+) -> None:
+    analysis_history = state.setdefault("analysisHistory", [])
+    existing_analysis = {str(item.get("id") or "") for item in analysis_history if isinstance(item, dict)}
+    for item in daily_analysis:
+        if str(item.get("id") or "") not in existing_analysis:
+            analysis_history.append(copy.deepcopy(item))
 
-    candidates: list[dict[str, Any]] = []
-    by_event_id: dict[str, dict[str, Any]] = {}
-    for event in odds_events:
-        event_id = str(event.get("id") or "")
-        if not event_id:
-            continue
-        matched = matched_candidate_by_event.get(event_id)
-        if matched is not None:
-            candidate = copy.deepcopy(matched)
-            candidate["sourceProvider"] = "FOOTBALL_DATA"
-            candidate["oddsEventId"] = event_id
-            candidate["oddsSportKey"] = str(event.get("sport_key") or "")
-        else:
-            sport_key = str(event.get("sport_key") or "")
-            title = str(event.get("sport_title") or sport_key)
-            country = str(
-                event.get("_globalCountry")
-                or v9_infer_country(sport_key, title)
-            )
-            bookmaker_count = len([
-                item for item in event.get("bookmakers", [])
-                if isinstance(item, dict)
-            ])
-            candidate = {
-                "matchId": v9_stable_numeric_id(event_id),
-                "utcDate": str(event.get("commence_time") or ""),
-                "competition": {
-                    "code": sport_key.upper(),
-                    "name": title,
-                },
-                "country": country,
-                "homeTeam": {
-                    "id": v9_stable_numeric_id(event_id + ":home"),
-                    "name": str(event.get("home_team") or ""),
-                    "form": {"games": 0},
-                },
-                "awayTeam": {
-                    "id": v9_stable_numeric_id(event_id + ":away"),
-                    "name": str(event.get("away_team") or ""),
-                    "form": {"games": 0},
-                },
-                "dataQuality": min(88.0, 45.0 + bookmaker_count * 5.0),
-                "sourceProvider": "THE_ODDS_API",
-                "oddsEventId": event_id,
-                "oddsSportKey": sport_key,
-            }
-        candidates.append(candidate)
-        by_event_id[event_id] = candidate
-    return candidates, by_event_id, len(matched_candidate_by_event)
+    history = state.setdefault("history", [])
+    existing_best = {str(item.get("id") or "") for item in history if isinstance(item, dict)}
+    for item in newly_selected:
+        if str(item.get("id") or "") not in existing_best:
+            history.append(copy.deepcopy(item))
+
+    state["analysisHistory"] = analysis_history[-safe_int(config.get("analysisHistoryLimit"), 4000) :]
+    state["history"] = history[-safe_int(config.get("historyLimit"), 1200) :]
 
 
-def v9_maximum_quote_age_minutes(
-    event: dict[str, Any],
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> int:
-    """Use stricter freshness near kickoff and a wider safe window earlier."""
-
-    configured_maximum = max(
-        30,
-        int(config.get("maximumOddsAgeMinutes") or 180),
-    )
-    kickoff = _parse_optional_utc(event.get("commence_time"))
-
-    if kickoff is None:
-        return configured_maximum
-
-    hours_to_kickoff = max(
-        0.0,
-        (kickoff - now).total_seconds() / 3600,
-    )
-
-    if hours_to_kickoff <= 2:
-        return min(configured_maximum, 30)
-
-    if hours_to_kickoff <= 6:
-        return min(configured_maximum, 60)
-
-    return configured_maximum
+# ---------------------------------------------------------------------------
+# Settlement and learning
+# ---------------------------------------------------------------------------
 
 
-def v9_market_rows_for_event(
-    event: dict[str, Any],
-    market_key: str,
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> list[dict[str, Any]]:
-    require_timestamp = bool(config.get("requireOddsTimestamp", True))
-    allowed_age = v9_maximum_quote_age_minutes(
-        event,
-        config,
-        now,
-    )
-    rows: list[dict[str, Any]] = []
-    home = str(event.get("home_team") or "")
-    away = str(event.get("away_team") or "")
-
-    for bookmaker in event.get("bookmakers", []):
-        if not isinstance(bookmaker, dict):
-            continue
-
-        market = next(
-            (
-                item
-                for item in bookmaker.get("markets", [])
-                if isinstance(item, dict)
-                and str(item.get("key") or "") == market_key
-            ),
-            None,
-        )
-
-        if market is None:
-            continue
-
-        update_value = (
-            market.get("last_update")
-            or bookmaker.get("last_update")
-        )
-        update_time = _parse_optional_utc(update_value)
-
-        if update_time is None and require_timestamp:
-            continue
-
-        age_minutes = (
-            max(
-                0.0,
-                (now - update_time).total_seconds() / 60,
-            )
-            if update_time is not None
-            else None
-        )
-
-        if (
-            age_minutes is not None
-            and age_minutes > allowed_age
-        ):
-            continue
-
-        prices: dict[str, float] = {}
-
-        for outcome in market.get("outcomes", []):
-            if not isinstance(outcome, dict):
+def due_pending_records(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> list[dict[str, Any]]:
+    pending: list[dict[str, Any]] = []
+    for collection in (state.get("analysisHistory") or [], state.get("history") or []):
+        for item in collection:
+            if not isinstance(item, dict) or str(item.get("status") or "pending") != "pending":
                 continue
-
-            name = str(outcome.get("name") or "")
-
-            try:
-                price = float(outcome.get("price"))
-            except (TypeError, ValueError):
+            commence = parse_datetime(item.get("commenceTime") or item.get("utcDate"))
+            if not commence:
                 continue
+            sport = str(item.get("sport") or infer_sport_from_key(item.get("sportKey") or item.get("oddsSportKey")))
+            delay = safe_int(
+                config.get("settlementDelayMinutesHockey" if sport == "ice_hockey" else "settlementDelayMinutesSoccer"),
+                210 if sport == "ice_hockey" else 150,
+            )
+            if now >= commence + dt.timedelta(minutes=delay):
+                pending.append(item)
+    unique: dict[str, dict[str, Any]] = {}
+    for item in pending:
+        key = str(item.get("eventId") or item.get("oddsEventId") or item.get("sourceMatchId") or "")
+        if key:
+            unique[key] = item
+    return list(unique.values())
 
-            if price <= 1.01:
-                continue
 
-            normalized = _normalize_match_name(name)
-
-            if market_key == "h2h":
-                if normalized in {"draw", "tie", "x"}:
-                    prices["DRAW"] = price
-                elif _token_similarity(name, home) >= 0.72:
-                    prices["HOME_WIN"] = price
-                elif _token_similarity(name, away) >= 0.72:
-                    prices["AWAY_WIN"] = price
-
-            elif market_key == "totals":
-                try:
-                    point = float(outcome.get("point"))
-                except (TypeError, ValueError):
-                    continue
-
-                if abs(point - 2.5) > 0.001:
-                    continue
-
-                if normalized.startswith("over"):
-                    prices["OVER_2_5"] = price
-                elif normalized.startswith("under"):
-                    prices["UNDER_2_5"] = price
-
-        expected_markets = (
-            {"HOME_WIN", "DRAW", "AWAY_WIN"}
-            if market_key == "h2h"
-            else {"OVER_2_5", "UNDER_2_5"}
-        )
-
-        if set(prices) != expected_markets:
+def fetch_scores_for_sport_keys(
+    client: ApiClient,
+    api_key: str,
+    sport_keys: list[str],
+) -> tuple[dict[str, dict[str, Any]], list[str]]:
+    scores: dict[str, dict[str, Any]] = {}
+    errors: list[str] = []
+    for sport_key in sorted(set(sport_keys)):
+        if not sport_key:
             continue
-
-        raw_implied = {
-            key: 1.0 / value
-            for key, value in prices.items()
-        }
-        overround = sum(raw_implied.values())
-
-        if overround <= 0:
-            continue
-
-        normalized_probabilities = {
-            key: value / overround
-            for key, value in raw_implied.items()
-        }
-
-        rows.append(
-            {
-                "bookmakerKey": str(bookmaker.get("key") or ""),
-                "bookmaker": str(
-                    bookmaker.get("title") or "Не указан"
-                ),
-                "lastUpdate": str(update_value or ""),
-                "ageMinutes": age_minutes,
-                "allowedAgeMinutes": allowed_age,
-                "marketKey": market_key,
-                "prices": prices,
-                "probabilities": normalized_probabilities,
-                "overround": overround,
-            }
-        )
-
-    return rows
-
-def v9_build_global_market_consensus_pool(
-    odds_events: list[dict[str, Any]],
-    candidates_by_event: dict[str, dict[str, Any]],
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    minimum_books = max(
-        2,
-        int(config.get("minimumConsensusBookmakers") or 2),
-    )
-    preferred_books = max(
-        minimum_books,
-        int(config.get("preferredConsensusBookmakers") or 3),
-    )
-    maximum_dispersion = max(
-        0.01,
-        float(config.get("maximumConsensusDispersion") or 0.12),
-    )
-    haircut = max(
-        0.0,
-        float(config.get("consensusProbabilityHaircut") or 0.005),
-    )
-    minimum_probability = max(
-        0.0,
-        float(config.get("minimumPublishedProbability") or 0.47),
-    )
-    preferred_probability = max(
-        minimum_probability,
-        float(config.get("preferredPublishedProbability") or 0.52),
-    )
-    minimum_odds = float(
-        config.get("minimumBookmakerOdds") or 1.45
-    )
-    maximum_odds = float(
-        config.get("maximumBookmakerOdds") or 3.20
-    )
-    strict_minimum_ev = float(
-        config.get("strictMinimumExpectedValue") or 0.0
-    )
-    probability_first_minimum_probability = float(
-        config.get("probabilityFirstMinimumProbability") or 0.52
-    )
-    probability_first_minimum_ev = float(
-        config.get("probabilityFirstMinimumExpectedValue") or -0.12
-    )
-    safety_minimum_probability = float(
-        config.get("safetyMinimumProbability") or 0.56
-    )
-    safety_minimum_ev = float(
-        config.get("safetyMinimumExpectedValue") or -0.16
-    )
-    preferred_odds = float(
-        config.get("preferredBookmakerOdds") or 1.60
-    )
-
-    requested_markets = {
-        str(value)
-        for value in (
-            config.get("oddsMarkets")
-            or ["h2h", "totals"]
-        )
-    }
-
-    market_groups: list[tuple[str, tuple[str, ...]]] = []
-
-    if "h2h" in requested_markets:
-        market_groups.append(
-            (
-                "h2h",
-                ("HOME_WIN", "AWAY_WIN", "DRAW"),
-            )
-        )
-
-    if "totals" in requested_markets:
-        market_groups.append(
-            (
-                "totals",
-                ("OVER_2_5", "UNDER_2_5"),
-            )
-        )
-
-    pool: list[dict[str, Any]] = []
-    rejected = {
-        "insufficientBookmakers": 0,
-        "dispersion": 0,
-        "probability": 0,
-        "odds": 0,
-        "expectedValue": 0,
-    }
-    tier_counts = {
-        "STRICT_VALUE": 0,
-        "PROBABILITY_FIRST": 0,
-        "HIGH_PROBABILITY_FALLBACK": 0,
-    }
-    rows_by_market = {
-        "h2h": 0,
-        "totals": 0,
-    }
-
-    for event in odds_events:
-        event_id = str(event.get("id") or "")
-        candidate = candidates_by_event.get(event_id)
-
-        if candidate is None:
-            continue
-
-        for market_key, markets in market_groups:
-            rows = v9_market_rows_for_event(
-                event,
-                market_key,
-                config,
-                now,
-            )
-            rows_by_market[market_key] = (
-                rows_by_market.get(market_key, 0)
-                + len(rows)
-            )
-
-            if len(rows) < minimum_books:
-                rejected["insufficientBookmakers"] += 1
-                continue
-
-            for market in markets:
-                selected_row = max(
-                    rows,
-                    key=lambda row: float(
-                        row["prices"][market]
-                    ),
-                )
-                consensus_rows = [
-                    row
-                    for row in rows
-                    if row["bookmakerKey"]
-                    != selected_row["bookmakerKey"]
-                ]
-
-                if len(consensus_rows) < minimum_books:
-                    consensus_rows = rows
-
-                probabilities = [
-                    float(row["probabilities"][market])
-                    for row in consensus_rows
-                ]
-                consensus_probability = float(
-                    statistics.median(probabilities)
-                )
-                dispersion = (
-                    float(statistics.pstdev(probabilities))
-                    if len(probabilities) > 1
-                    else 0.0
-                )
-
-                if dispersion > maximum_dispersion:
-                    rejected["dispersion"] += 1
-                    continue
-
-                probability = clamp_number(
-                    consensus_probability - haircut,
-                    0.01,
-                    0.99,
-                )
-
-                if probability < minimum_probability:
-                    rejected["probability"] += 1
-                    continue
-
-                bookmaker_odds = float(
-                    selected_row["prices"][market]
-                )
-
-                if not minimum_odds <= bookmaker_odds <= maximum_odds:
-                    rejected["odds"] += 1
-                    continue
-
-                expected_value = (
-                    probability * bookmaker_odds - 1
-                )
-
-                if expected_value >= strict_minimum_ev:
-                    value_tier = "STRICT_VALUE"
-                    accepted_minimum_ev = strict_minimum_ev
-                elif (
-                    probability
-                    >= probability_first_minimum_probability
-                    and expected_value
-                    >= probability_first_minimum_ev
-                ):
-                    value_tier = "PROBABILITY_FIRST"
-                    accepted_minimum_ev = (
-                        probability_first_minimum_ev
-                    )
-                elif (
-                    probability >= safety_minimum_probability
-                    and expected_value >= safety_minimum_ev
-                ):
-                    value_tier = "HIGH_PROBABILITY_FALLBACK"
-                    accepted_minimum_ev = safety_minimum_ev
-                else:
-                    rejected["expectedValue"] += 1
-                    continue
-
-                tier_counts[value_tier] += 1
-
-                quote_prices = [
-                    float(row["prices"][market])
-                    for row in rows
-                ]
-                bookmaker_bonus = min(
-                    12.0,
-                    len(rows) * 2.5,
-                )
-                preferred_book_bonus = (
-                    4.0
-                    if len(rows) >= preferred_books
-                    else 0.0
-                )
-                probability_bonus = (
-                    5.0
-                    if probability >= preferred_probability
-                    else 0.0
-                )
-                odds_bonus = (
-                    4.0
-                    if bookmaker_odds >= preferred_odds
-                    else 0.0
-                )
-
-                confidence = int(
-                    clamp_number(
-                        42
-                        + bookmaker_bonus
-                        + preferred_book_bonus
-                        + max(
-                            0.0,
-                            (
-                                maximum_dispersion
-                                - dispersion
-                            )
-                            * 120,
-                        )
-                        + max(
-                            0.0,
-                            (
-                                probability
-                                - minimum_probability
-                            )
-                            * 45,
-                        ),
-                        38,
-                        88,
-                    )
-                )
-                data_quality = clamp_number(
-                    38
-                    + len(rows) * 7
-                    - dispersion * 100,
-                    35,
-                    94,
-                )
-                tier_bonus = {
-                    "STRICT_VALUE": 5.0,
-                    "PROBABILITY_FIRST": 2.0,
-                    "HIGH_PROBABILITY_FALLBACK": 0.0,
-                }[value_tier]
-                ranking_score = (
-                    probability * 58
-                    + confidence * 0.26
-                    + data_quality * 0.16
-                    + max(
-                        -0.16,
-                        expected_value,
-                    )
-                    * 100
-                    * 0.08
-                    + probability_bonus
-                    + preferred_book_bonus
-                    + odds_bonus
-                    + tier_bonus
-                    - dispersion * 100
-                )
-                risk = (
-                    "LOW"
-                    if (
-                        probability >= preferred_probability
-                        and len(rows) >= preferred_books
-                        and dispersion <= 0.05
-                    )
-                    else "MEDIUM"
-                )
-                point = (
-                    2.5
-                    if market_key == "totals"
-                    else None
-                )
-
-                pool.append(
-                    {
-                        "matchId": int(candidate["matchId"]),
-                        "market": market,
-                        "probability": round(
-                            probability,
-                            6,
-                        ),
-                        "fairOdds": round(
-                            1 / probability,
-                            4,
-                        ),
-                        "confidence": confidence,
-                        "risk": risk,
-                        "reason": (
-                            f"Глобальный консенсус "
-                            f"{len(rows)} букмекеров по рынку "
-                            f"{market_key}: безмаржинальная "
-                            f"вероятность "
-                            f"{probability * 100:.1f}%, "
-                            f"разброс "
-                            f"{dispersion * 100:.1f} п.п.; "
-                            f"режим отбора {value_tier}."
-                        ),
-                        "analysisMode": (
-                            "GLOBAL_MARKET_CONSENSUS"
-                        ),
-                        "analysisTier": (
-                            "MARKET_CONSENSUS"
-                        ),
-                        "selectionTier": (
-                            "GLOBAL_DISCOVERY"
-                        ),
-                        "valueTier": value_tier,
-                        "selectionPolicy": (
-                            "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
-                        ),
-                        "minimumAcceptedExpectedValue": round(
-                            accepted_minimum_ev,
-                            6,
-                        ),
-                        "rankingScore": round(
-                            ranking_score,
-                            4,
-                        ),
-                        "dataQuality": round(
-                            data_quality,
-                            2,
-                        ),
-                        "bookmakerOdds": round(
-                            bookmaker_odds,
-                            4,
-                        ),
-                        "bookmaker": selected_row[
-                            "bookmaker"
-                        ],
-                        "bookmakerKey": selected_row[
-                            "bookmakerKey"
-                        ],
-                        "oddsCapturedAt": (
-                            now.isoformat()
-                        ),
-                        "oddsLastUpdate": selected_row[
-                            "lastUpdate"
-                        ],
-                        "oddsAgeMinutes": selected_row[
-                            "ageMinutes"
-                        ],
-                        "oddsMaximumAgeMinutes": (
-                            selected_row[
-                                "allowedAgeMinutes"
-                            ]
-                        ),
-                        "oddsEventId": event_id,
-                        "oddsSportKey": str(
-                            event.get("sport_key") or ""
-                        ),
-                        "oddsSportTitle": str(
-                            event.get("sport_title") or ""
-                        ),
-                        "bookmakerMarket": market_key,
-                        "bookmakerPoint": point,
-                        "oddsQuoteCount": len(rows),
-                        "oddsMinimum": round(
-                            min(quote_prices),
-                            4,
-                        ),
-                        "oddsMedian": round(
-                            float(
-                                statistics.median(
-                                    quote_prices
-                                )
-                            ),
-                            4,
-                        ),
-                        "oddsMaximum": round(
-                            max(quote_prices),
-                            4,
-                        ),
-                        "oddsSelectionMode": (
-                            "BEST_AVAILABLE_VS_CONSENSUS"
-                        ),
-                        "oddsMatchScore": 1.0,
-                        "oddsSecondBestMatchScore": 0.0,
-                        "oddsMatchScoreGap": 1.0,
-                        "oddsKickoffDifferenceMinutes": 0.0,
-                        "expectedValue": round(
-                            expected_value,
-                            6,
-                        ),
-                        "expectedValuePercent": round(
-                            expected_value * 100,
-                            2,
-                        ),
-                        "marketOddsAvailable": True,
-                        "expectedValueAvailable": True,
-                        "coefficientType": (
-                            "BOOKMAKER_MARKET"
-                        ),
-                        "country": str(
-                            candidate.get("country") or ""
-                        ),
-                        "league": str(
-                            (
-                                candidate.get(
-                                    "competition"
-                                )
-                                or {}
-                            ).get("name")
-                            or ""
-                        ),
-                        "sourceProvider": str(
-                            candidate.get(
-                                "sourceProvider"
-                            )
-                            or "THE_ODDS_API"
-                        ),
-                        "consensusBookmakers": len(rows),
-                        "consensusDispersion": round(
-                            dispersion,
-                            6,
-                        ),
-                    }
-                )
-
-    diagnostics = {
-        "eventsEvaluated": len(odds_events),
-        "consensusOptions": len(pool),
-        "rowsByMarket": rows_by_market,
-        "tierCounts": tier_counts,
-        "thresholds": {
-            "strictMinimumExpectedValue": strict_minimum_ev,
-            "probabilityFirstMinimumProbability": (
-                probability_first_minimum_probability
-            ),
-            "probabilityFirstMinimumExpectedValue": (
-                probability_first_minimum_ev
-            ),
-            "safetyMinimumProbability": safety_minimum_probability,
-            "safetyMinimumExpectedValue": safety_minimum_ev,
-        },
-        "rejected": rejected,
-    }
-    return pool, diagnostics
-
-def v9_merge_prediction_pools(
-    model_pool: list[dict[str, Any]],
-    consensus_pool: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    by_key: dict[tuple[int, str], dict[str, Any]] = {}
-    for source in consensus_pool + model_pool:
+        params = {"apiKey": api_key, "daysFrom": "3", "dateFormat": "iso"}
+        url = f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/scores?" + urllib.parse.urlencode(params)
         try:
-            key = (int(source["matchId"]), str(source["market"]))
-        except (KeyError, TypeError, ValueError):
+            payload = client.request_json(url, label=f"SCORES:{sport_key}")
+        except Exception as exc:
+            errors.append(f"{sport_key}: {exc}")
             continue
-        item = dict(source)
-        if source in model_pool:
-            item["analysisTier"] = "STAT_MODEL"
-            item["sourceProvider"] = "FOOTBALL_DATA"
-            item["rankingScore"] = float(item.get("rankingScore") or 0) + 4
-        current = by_key.get(key)
-        if current is None or float(item.get("rankingScore") or 0) > float(
-            current.get("rankingScore") or 0
-        ):
-            by_key[key] = item
-    return list(by_key.values())
+        for event in payload if isinstance(payload, list) else []:
+            if not isinstance(event, dict) or not event.get("completed"):
+                continue
+            score_map = {
+                str(row.get("name") or ""): safe_int(row.get("score"))
+                for row in event.get("scores") or []
+                if isinstance(row, dict)
+            }
+            home = str(event.get("home_team") or "")
+            away = str(event.get("away_team") or "")
+            if home in score_map and away in score_map:
+                scores[str(event.get("id") or "")] = {
+                    "eventId": str(event.get("id") or ""),
+                    "home": home,
+                    "away": away,
+                    "homeScore": score_map[home],
+                    "awayScore": score_map[away],
+                    "completed": True,
+                    "source": "THE_ODDS_API_SCORES",
+                }
+    return scores, errors
 
 
-def v9_classify_value_tier(
-    probability: float,
-    expected_value: float,
-    config: dict[str, Any],
-) -> tuple[str, float] | None:
-    strict_minimum_ev = float(
-        config.get("strictMinimumExpectedValue") or 0.0
-    )
-    probability_first_minimum_probability = float(
-        config.get("probabilityFirstMinimumProbability") or 0.52
-    )
-    probability_first_minimum_ev = float(
-        config.get("probabilityFirstMinimumExpectedValue") or -0.12
-    )
-    safety_minimum_probability = float(
-        config.get("safetyMinimumProbability") or 0.56
-    )
-    safety_minimum_ev = float(
-        config.get("safetyMinimumExpectedValue") or -0.16
-    )
-
-    if expected_value >= strict_minimum_ev:
-        return "STRICT_VALUE", strict_minimum_ev
-
-    if (
-        probability >= probability_first_minimum_probability
-        and expected_value >= probability_first_minimum_ev
-    ):
-        return (
-            "PROBABILITY_FIRST",
-            probability_first_minimum_ev,
-        )
-
-    if (
-        probability >= safety_minimum_probability
-        and expected_value >= safety_minimum_ev
-    ):
-        return (
-            "HIGH_PROBABILITY_FALLBACK",
-            safety_minimum_ev,
-        )
-
+def match_football_result(record: dict[str, Any], context: dict[str, Any]) -> dict[str, Any] | None:
+    commence = parse_datetime(record.get("commenceTime") or record.get("utcDate"))
+    home = str(record.get("home") or "")
+    away = str(record.get("away") or "")
+    best: tuple[float, dict[str, Any] | None] = (0.0, None)
+    for item in context.get("completedLookup") or []:
+        item_time = item.get("utcDate")
+        if commence and item_time and abs((commence - item_time).total_seconds()) > 8 * 3600:
+            continue
+        home_score = token_similarity(home, item.get("home"))
+        away_score = token_similarity(away, item.get("away"))
+        score = (home_score + away_score) / 2
+        if score > best[0]:
+            best = (score, item)
+    if best[0] >= 0.78 and best[1]:
+        return {
+            "eventId": str(record.get("eventId") or ""),
+            "home": best[1]["home"],
+            "away": best[1]["away"],
+            "homeScore": best[1]["homeScore"],
+            "awayScore": best[1]["awayScore"],
+            "completed": True,
+            "source": "FOOTBALL_DATA_RESULT",
+        }
     return None
 
 
-def v9_select_predictions(
-    pool: list[dict[str, Any]],
-    target_count: int,
-    config: dict[str, Any],
-    excluded_match_ids: set[int] | None = None,
-) -> list[dict[str, Any]]:
-    excluded = {int(value) for value in (excluded_match_ids or set())}
-    min_odds = float(config.get("minimumBookmakerOdds") or 1.45)
-    max_odds = float(config.get("maximumBookmakerOdds") or 3.20)
-    min_probability = float(
-        config.get("minimumPublishedProbability") or 0.47
-    )
-    min_confidence = int(
-        config.get("bestAvailableMinimumConfidence") or 38
-    )
-    eligible: list[dict[str, Any]] = []
+def settle_market(record: dict[str, Any], home_score: int, away_score: int) -> str:
+    market = str(record.get("market") or "").upper()
+    selection = str(record.get("selectionCode") or "").upper()
+    point = safe_float(record.get("point"), 0.0)
 
-    for source in pool:
-        try:
-            match_id = int(source["matchId"])
-            odds = float(source["bookmakerOdds"])
-            probability = float(source["probability"])
-            expected_value = float(source["expectedValue"])
-            confidence = int(source.get("confidence") or 0)
-        except (KeyError, TypeError, ValueError):
-            continue
-
-        if match_id in excluded:
-            continue
-
-        if not min_odds <= odds <= max_odds:
-            continue
-
-        if probability < min_probability:
-            continue
-
-        if confidence < min_confidence:
-            continue
-
-        classification = v9_classify_value_tier(
-            probability,
-            expected_value,
-            config,
-        )
-
-        if classification is None:
-            continue
-
-        value_tier, accepted_minimum_ev = classification
-        item = dict(source)
-        item["valueTier"] = str(
-            item.get("valueTier") or value_tier
-        )
-        item["selectionPolicy"] = str(
-            item.get("selectionPolicy")
-            or "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
-        )
-        item["minimumAcceptedExpectedValue"] = float(
-            item.get("minimumAcceptedExpectedValue")
-            if item.get("minimumAcceptedExpectedValue") is not None
-            else accepted_minimum_ev
-        )
-        eligible.append(item)
-
-    tier_priority = {
-        "STRICT_VALUE": 0,
-        "PROBABILITY_FIRST": 1,
-        "HIGH_PROBABILITY_FALLBACK": 2,
-    }
-
-    eligible.sort(
-        key=lambda item: (
-            -float(item.get("probability") or 0),
-            tier_priority.get(
-                str(item.get("valueTier") or ""),
-                9,
-            ),
-            -int(item.get("confidence") or 0),
-            -float(item.get("rankingScore") or 0),
-            -int(item.get("oddsQuoteCount") or 0),
-            -float(item.get("expectedValue") or -1),
-        )
-    )
-
-    selected: list[dict[str, Any]] = []
-    used_matches = set(excluded)
-    country_counts: dict[str, int] = {}
-    league_counts: dict[str, int] = {}
-    market_counts: dict[str, int] = {}
-
-    def add_pass(
-        max_country: int,
-        max_league: int,
-        max_market: int,
-    ) -> None:
-        for source in eligible:
-            if len(selected) >= target_count:
-                return
-
-            match_id = int(source["matchId"])
-
-            if match_id in used_matches:
-                continue
-
-            country = str(
-                source.get("country")
-                or "Международный турнир"
-            )
-            league = str(
-                source.get("league")
-                or "Неизвестная лига"
-            )
-            market = str(source.get("market") or "")
-
-            if country_counts.get(country, 0) >= max_country:
-                continue
-
-            if league_counts.get(league, 0) >= max_league:
-                continue
-
-            if market_counts.get(market, 0) >= max_market:
-                continue
-
-            item = dict(source)
-            value_tier = str(
-                item.get("valueTier")
-                or "STRICT_VALUE"
-            )
-            item["selectionTier"] = (
-                f"GLOBAL_DIVERSE_{value_tier}"
-            )
-            selected.append(item)
-            used_matches.add(match_id)
-            country_counts[country] = (
-                country_counts.get(country, 0) + 1
-            )
-            league_counts[league] = (
-                league_counts.get(league, 0) + 1
-            )
-            market_counts[market] = (
-                market_counts.get(market, 0) + 1
-            )
-
-    add_pass(max_country=1, max_league=1, max_market=2)
-    add_pass(max_country=2, max_league=1, max_market=2)
-    add_pass(max_country=2, max_league=2, max_market=3)
-    add_pass(
-        max_country=target_count,
-        max_league=2,
-        max_market=target_count,
-    )
-    return selected[:target_count]
+    if market == "HOME_WIN" or (selection == "HOME" and record.get("marketKey") in {"h2h", "h2h_3_way"}):
+        return "won" if home_score > away_score else "lost"
+    if market == "AWAY_WIN" or (selection == "AWAY" and record.get("marketKey") in {"h2h", "h2h_3_way"}):
+        return "won" if away_score > home_score else "lost"
+    if market == "DRAW" or selection == "DRAW":
+        return "won" if home_score == away_score else "lost"
+    if market == "TOTAL_OVER" or selection == "OVER":
+        total = home_score + away_score
+        return "won" if total > point else "push" if total == point else "lost"
+    if market == "TOTAL_UNDER" or selection == "UNDER":
+        total = home_score + away_score
+        return "won" if total < point else "push" if total == point else "lost"
+    if market == "SPREAD_HOME":
+        adjusted = home_score + point - away_score
+        return "won" if adjusted > 0 else "push" if abs(adjusted) < 1e-9 else "lost"
+    if market == "SPREAD_AWAY":
+        adjusted = away_score + point - home_score
+        return "won" if adjusted > 0 else "push" if abs(adjusted) < 1e-9 else "lost"
+    if market == "BTTS_YES":
+        return "won" if home_score > 0 and away_score > 0 else "lost"
+    if market == "BTTS_NO":
+        return "won" if home_score == 0 or away_score == 0 else "lost"
+    if market == "DOUBLE_CHANCE_HOME_DRAW":
+        return "won" if home_score >= away_score else "lost"
+    if market == "DOUBLE_CHANCE_DRAW_AWAY":
+        return "won" if away_score >= home_score else "lost"
+    if market == "DOUBLE_CHANCE_HOME_AWAY":
+        return "won" if home_score != away_score else "lost"
+    if market == "DRAW_NO_BET_HOME":
+        return "won" if home_score > away_score else "push" if home_score == away_score else "lost"
+    if market == "DRAW_NO_BET_AWAY":
+        return "won" if away_score > home_score else "push" if home_score == away_score else "lost"
+    if market == "TEAM_TOTAL_HOME_OVER":
+        return "won" if home_score > point else "push" if home_score == point else "lost"
+    if market == "TEAM_TOTAL_HOME_UNDER":
+        return "won" if home_score < point else "push" if home_score == point else "lost"
+    if market == "TEAM_TOTAL_AWAY_OVER":
+        return "won" if away_score > point else "push" if away_score == point else "lost"
+    if market == "TEAM_TOTAL_AWAY_UNDER":
+        return "won" if away_score < point else "push" if away_score == point else "lost"
+    return "void"
 
 
-def v9_prediction_to_records(
-    prediction: dict[str, Any],
-    candidate: dict[str, Any],
-    config: dict[str, Any],
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    public, history = prediction_to_public_records(
-        prediction,
-        candidate,
-        stake=0.0,
-        config=config,
-    )
-    additions = {
-        "sourceProvider": str(
-            prediction.get("sourceProvider")
-            or candidate.get("sourceProvider")
-            or "THE_ODDS_API"
-        ),
-        "analysisTier": str(
-            prediction.get("analysisTier") or "MARKET_CONSENSUS"
-        ),
-        "globalDiscovery": True,
-        "consensusBookmakers": int(
-            prediction.get("consensusBookmakers")
-            or prediction.get("oddsQuoteCount")
-            or 0
-        ),
-        "consensusDispersion": float(
-            prediction.get("consensusDispersion") or 0
-        ),
-        "valueTier": str(
-            prediction.get("valueTier") or "STRICT_VALUE"
-        ),
-        "selectionPolicy": str(
-            prediction.get("selectionPolicy")
-            or "PROBABILITY_FIRST_WITH_CONTROLLED_PRICE_GAP"
-        ),
-        "minimumAcceptedExpectedValue": float(
-            prediction.get("minimumAcceptedExpectedValue")
-            if prediction.get("minimumAcceptedExpectedValue") is not None
-            else 0.0
-        ),
-        "oddsMaximumAgeMinutes": int(
-            prediction.get("oddsMaximumAgeMinutes")
-            or config.get("maximumOddsAgeMinutes")
-            or 180
-        ),
-    }
-    public.update(additions)
-    history.update(additions)
-    history["sourceExternalId"] = str(prediction.get("oddsEventId") or "")
-    return public, history
+def actual_binary_for_learning(status: str) -> float | None:
+    if status == "won":
+        return 1.0
+    if status == "lost":
+        return 0.0
+    if status == "push":
+        return 0.5
+    return None
 
 
-def v9_fetch_pending_scores(
-    history: list[dict[str, Any]],
-    odds_api_key: str,
-    config: dict[str, Any],
-    now: dt.datetime,
-) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-    sport_first_kickoff: dict[str, dt.datetime] = {}
-    for entry in history:
-        if not isinstance(entry, dict):
-            continue
-        if str(entry.get("status") or "").lower() != "pending":
-            continue
-        if str(entry.get("sourceProvider") or "") != "THE_ODDS_API":
-            continue
-        sport_key = str(entry.get("oddsSportKey") or "")
-        if not sport_key:
-            continue
-        kickoff = _parse_optional_utc(entry.get("utcDate"))
-        if kickoff is None or kickoff > now:
-            continue
-        previous = sport_first_kickoff.get(sport_key)
-        if previous is None or kickoff < previous:
-            sport_first_kickoff[sport_key] = kickoff
+def update_learning_from_record(state: dict[str, Any], record: dict[str, Any]) -> None:
+    actual = actual_binary_for_learning(str(record.get("status") or ""))
+    if actual is None:
+        return
+    learning = state.setdefault("learning", {})
+    segments = learning.setdefault("segments", {})
+    bins = learning.setdefault("calibrationBins", {})
+    probability = clamp(safe_float(record.get("modelProbability") or record.get("probability"), 0.5), 0.001, 0.999)
+    odds = safe_float(record.get("bookmakerOdds") or record.get("odds"), 0.0)
+    profit = safe_float(record.get("profit"), 0.0)
+    sport = str(record.get("sport") or "soccer")
+    league = str(record.get("league") or "")
+    family = str(record.get("marketFamily") or market_family(str(record.get("market") or "")))
+    brier = (probability - actual) ** 2
+    log_loss = -(actual * math.log(probability) + (1 - actual) * math.log(1 - probability))
 
-    maximum = max(
-        0,
-        int(config.get("maximumSettlementSportRequests") or 4),
-    )
-    selected_keys = [
-        key for key, _ in sorted(
-            sport_first_kickoff.items(),
-            key=lambda item: item[1],
-        )[:maximum]
-    ]
-    scores_by_id: dict[str, dict[str, Any]] = {}
-    errors: list[dict[str, str]] = []
-    remaining = None
-    for sport_key in selected_keys:
-        parameters = {
-            "apiKey": odds_api_key,
-            "daysFrom": "3",
-            "dateFormat": "iso",
-        }
-        url = (
-            f"{ODDS_API_BASE}/sports/{urllib.parse.quote(sport_key)}/scores/?"
-            f"{urllib.parse.urlencode(parameters)}"
-        )
-        try:
-            payload, headers = request_json_value(
-                url,
-                timeout_seconds=60,
-                retries=2,
-            )
-            remaining = headers.get("x-requests-remaining")
-            if not isinstance(payload, list):
-                raise RuntimeError("ответ /scores не является массивом")
-            for event in payload:
-                if isinstance(event, dict) and str(event.get("id") or ""):
-                    scores_by_id[str(event["id"])] = event
-        except Exception as error:
-            errors.append({"sportKey": sport_key, "error": str(error)})
-    return scores_by_id, {
-        "sportKeys": selected_keys,
-        "scoreEvents": len(scores_by_id),
-        "errors": errors,
-        "requestsRemaining": remaining,
-    }
-
-
-def v9_score_pair(
-    event: dict[str, Any],
-    home_name: str,
-    away_name: str,
-) -> tuple[int, int] | None:
-    values: dict[str, int] = {}
-    for row in event.get("scores", []) or []:
-        if not isinstance(row, dict):
-            continue
-        name = str(row.get("name") or "")
-        try:
-            score = int(row.get("score"))
-        except (TypeError, ValueError):
-            continue
-        values[name] = score
-    if not values:
-        return None
-    home_match = max(
-        values,
-        key=lambda name: _token_similarity(name, home_name),
-    )
-    away_candidates = [name for name in values if name != home_match]
-    if not away_candidates:
-        return None
-    away_match = max(
-        away_candidates,
-        key=lambda name: _token_similarity(name, away_name),
-    )
-    if _token_similarity(home_match, home_name) < 0.60:
-        return None
-    if _token_similarity(away_match, away_name) < 0.60:
-        return None
-    return values[home_match], values[away_match]
-
-
-def v9_resolve_global_history(
-    state: dict[str, Any],
-    scores_by_id: dict[str, dict[str, Any]],
-) -> int:
-    history = state.get("history") or []
-    bank = state.get("bank") or {}
-    current_bank = float(
-        bank.get("current") or bank.get("starting") or 10000
-    )
-    settled = 0
-    for entry in history:
-        if not isinstance(entry, dict):
-            continue
-        if str(entry.get("status") or "").lower() != "pending":
-            continue
-        if str(entry.get("sourceProvider") or "") != "THE_ODDS_API":
-            continue
-        event_id = str(entry.get("oddsEventId") or "")
-        event = scores_by_id.get(event_id)
-        if event is None or not bool(event.get("completed")):
-            continue
-        score = v9_score_pair(
-            event,
-            str(entry.get("home") or ""),
-            str(entry.get("away") or ""),
-        )
-        if score is None:
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = "COMPLETED_WITHOUT_RELIABLE_SCORE"
-            settled += 1
-            continue
-        home_goals, away_goals = score
-        try:
-            bookmaker_odds = float(entry.get("bookmakerOdds") or 0)
-            stake = float(entry.get("stake") or 0)
-            won = evaluate_market(
-                str(entry.get("market") or ""),
-                home_goals,
-                away_goals,
-            )
-        except (TypeError, ValueError, RuntimeError):
-            entry["status"] = "void"
-            entry["profit"] = 0.0
-            entry["settledAt"] = utc_now().isoformat()
-            entry["settlementReason"] = "INVALID_GLOBAL_SETTLEMENT_DATA"
-            settled += 1
-            continue
-        profit = stake * (bookmaker_odds - 1) if won else -stake
-        current_bank += profit
-        entry["status"] = "won" if won else "lost"
-        entry["profit"] = round(profit, 2)
-        entry["score"] = f"{home_goals}:{away_goals}"
-        entry["settledAt"] = utc_now().isoformat()
-        entry["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
-        bank.setdefault("history", []).append(
+    for key in learning_segment_keys(sport, league, family, odds):
+        segment = segments.setdefault(
+            key,
             {
-                "date": utc_now().date().isoformat(),
-                "value": round(current_bank, 2),
-                "event": "PREDICTION_WON" if won else "PREDICTION_LOST",
-                "matchId": int(entry.get("sourceMatchId") or 0),
-                "oddsEventId": event_id,
-                "bookmakerOdds": round(bookmaker_odds, 4),
+                "settled": 0,
+                "wins": 0,
+                "losses": 0,
+                "pushes": 0,
+                "predictedSum": 0.0,
+                "actualSum": 0.0,
+                "brierSum": 0.0,
+                "logLossSum": 0.0,
+                "profit": 0.0,
+            },
+        )
+        segment["settled"] = safe_int(segment.get("settled")) + 1
+        segment["wins"] = safe_int(segment.get("wins")) + (1 if record.get("status") == "won" else 0)
+        segment["losses"] = safe_int(segment.get("losses")) + (1 if record.get("status") == "lost" else 0)
+        segment["pushes"] = safe_int(segment.get("pushes")) + (1 if record.get("status") == "push" else 0)
+        segment["predictedSum"] = safe_float(segment.get("predictedSum")) + probability
+        segment["actualSum"] = safe_float(segment.get("actualSum")) + actual
+        segment["brierSum"] = safe_float(segment.get("brierSum")) + brier
+        segment["logLossSum"] = safe_float(segment.get("logLossSum")) + log_loss
+        segment["profit"] = safe_float(segment.get("profit")) + profit
+        count = segment["settled"]
+        segment["hitRate"] = round(segment["actualSum"] / count, 4)
+        segment["averagePredicted"] = round(segment["predictedSum"] / count, 4)
+        segment["probabilityBias"] = round(segment["actualSum"] / count - segment["predictedSum"] / count, 6)
+        segment["brierScore"] = round(segment["brierSum"] / count, 6)
+        segment["logLoss"] = round(segment["logLossSum"] / count, 6)
+        segment["profit"] = round(segment["profit"], 2)
+
+    bin_floor = int(probability * 10) * 10
+    bin_key = f"{bin_floor:02d}-{min(100, bin_floor + 9):02d}"
+    bucket = bins.setdefault(bin_key, {"count": 0, "predictedSum": 0.0, "actualSum": 0.0})
+    bucket["count"] = safe_int(bucket.get("count")) + 1
+    bucket["predictedSum"] = safe_float(bucket.get("predictedSum")) + probability
+    bucket["actualSum"] = safe_float(bucket.get("actualSum")) + actual
+    bucket["averagePredicted"] = round(bucket["predictedSum"] / bucket["count"], 4)
+    bucket["actualRate"] = round(bucket["actualSum"] / bucket["count"], 4)
+
+
+def settle_pending_records(
+    state: dict[str, Any],
+    results: dict[str, dict[str, Any]],
+    football_context: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, int]:
+    counters = {"analysisSettled": 0, "bestBetsSettled": 0, "unresolved": 0}
+    processed_ids: set[str] = set()
+
+    for collection_name in ("analysisHistory", "history"):
+        collection = state.get(collection_name) or []
+        for record in collection:
+            if not isinstance(record, dict) or str(record.get("status") or "pending") != "pending":
+                continue
+            event_id = str(record.get("eventId") or record.get("oddsEventId") or "")
+            result = results.get(event_id)
+            if result is None and str(record.get("sport") or "soccer") == "soccer":
+                result = match_football_result(record, football_context)
+            if result is None:
+                counters["unresolved"] += 1
+                continue
+            home_score = safe_int(result.get("homeScore"))
+            away_score = safe_int(result.get("awayScore"))
+            status = settle_market(record, home_score, away_score)
+            record["status"] = status
+            record["statusLabel"] = result_status_label(status)
+            record["score"] = f"{home_score}:{away_score}"
+            record["homeScore"] = home_score
+            record["awayScore"] = away_score
+            record["settledAt"] = iso_z(now)
+            record["settlementSource"] = result.get("source")
+
+            if collection_name == "history" and record.get("recordType") == "BEST_BET":
+                stake = safe_float(record.get("stake"), 0.0)
+                odds = safe_float(record.get("bookmakerOdds") or record.get("odds"), 0.0)
+                profit = round(stake * (odds - 1), 2) if status == "won" else round(-stake, 2) if status == "lost" else 0.0
+                record["profit"] = profit
+                if str(record.get("id") or "") not in processed_ids:
+                    apply_bank_profit(state, record, profit, now)
+                    processed_ids.add(str(record.get("id") or ""))
+                counters["bestBetsSettled"] += 1
+            else:
+                record["profit"] = 0.0
+                counters["analysisSettled"] += 1
+
+            if collection_name == "analysisHistory" or bool(record.get("analysisMarketDiffers")):
+                update_learning_from_record(state, record)
+
+    # Mirror settled status from history into currently visible records.
+    status_by_id = {
+        str(item.get("id") or ""): item
+        for collection in (state.get("analysisHistory") or [], state.get("history") or [])
+        for item in collection
+        if isinstance(item, dict)
+    }
+    for key in ("dailyAnalysis", "bestBets", "predictions"):
+        refreshed = []
+        for item in state.get(key) or []:
+            source = status_by_id.get(str(item.get("id") or ""))
+            refreshed.append(copy.deepcopy(source) if source else item)
+        state[key] = refreshed
+
+    state.setdefault("learning", {})["updatedAt"] = iso_z(now)
+    state["learning"]["totalSettledAnalyses"] = sum(
+        1
+        for item in state.get("analysisHistory") or []
+        if isinstance(item, dict) and item.get("status") in {"won", "lost", "push"}
+    )
+    state["learning"]["totalSettledBestBets"] = sum(
+        1
+        for item in state.get("history") or []
+        if isinstance(item, dict)
+        and item.get("recordType") == "BEST_BET"
+        and item.get("status") in {"won", "lost", "push"}
+    )
+    return counters
+
+
+def apply_bank_profit(state: dict[str, Any], record: dict[str, Any], profit: float, now: dt.datetime) -> None:
+    bank = state.setdefault("bank", {})
+    current = safe_float(bank.get("current"), bank.get("starting", 10000.0))
+    current = round(current + profit, 2)
+    bank["current"] = current
+    bank.setdefault("history", []).append(
+        {
+            "date": now.date().isoformat(),
+            "timestamp": iso_z(now),
+            "value": current,
+            "event": "PREDICTION_WON" if profit > 0 else "PREDICTION_LOST" if profit < 0 else "PREDICTION_PUSH",
+            "recordId": record.get("id"),
+            "eventId": record.get("eventId"),
+            "match": f"{record.get('home')} — {record.get('away')}",
+            "profit": round(profit, 2),
+        }
+    )
+
+
+def update_bank_metrics(state: dict[str, Any]) -> None:
+    bank = state.setdefault("bank", {})
+    starting = max(0.01, safe_float(bank.get("starting"), 10000.0))
+    current = safe_float(bank.get("current"), starting)
+    bank["roi"] = round((current / starting - 1) * 100, 2)
+    values = [safe_float(item.get("value"), starting) for item in bank.get("history") or [] if isinstance(item, dict)]
+    values = values or [starting, current]
+    peak = values[0]
+    max_drawdown = 0.0
+    for value in values:
+        peak = max(peak, value)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - value) / peak * 100)
+    bank["maxDrawdown"] = round(max_drawdown, 2)
+    bank["activeExposure"] = round(
+        sum(
+            safe_float(item.get("stake"))
+            for item in state.get("bestBets") or []
+            if str(item.get("status") or "pending") == "pending"
+        ),
+        2,
+    )
+
+
+def update_statistics(state: dict[str, Any]) -> None:
+    analysis_settled = [
+        item
+        for item in state.get("analysisHistory") or []
+        if isinstance(item, dict) and item.get("status") in {"won", "lost", "push"}
+    ]
+    bets_settled = [
+        item
+        for item in state.get("history") or []
+        if isinstance(item, dict)
+        and item.get("recordType") == "BEST_BET"
+        and item.get("status") in {"won", "lost", "push"}
+    ]
+
+    def accuracy(records: list[dict[str, Any]]) -> float:
+        wins = sum(1 for item in records if item.get("status") == "won")
+        losses = sum(1 for item in records if item.get("status") == "lost")
+        denominator = wins + losses
+        return round(wins / denominator * 100, 1) if denominator else 0.0
+
+    average_odds = mean(
+        [safe_float(item.get("bookmakerOdds") or item.get("odds")) for item in bets_settled if safe_float(item.get("bookmakerOdds") or item.get("odds")) > 1],
+        0.0,
+    )
+    streak = 0
+    streak_type = ""
+    for item in reversed(bets_settled):
+        status = str(item.get("status"))
+        if status == "push":
+            continue
+        if not streak_type:
+            streak_type = status
+        if status != streak_type:
+            break
+        streak += 1
+    streak_text = (
+        f"{streak} выигрышных подряд" if streak_type == "won" and streak else f"{streak} проигрышных подряд" if streak_type == "lost" and streak else "Нет серии"
+    )
+
+    segments = state.get("learning", {}).get("segments", {}) if isinstance(state.get("learning"), dict) else {}
+    eligible = [
+        (key, value)
+        for key, value in segments.items()
+        if isinstance(value, dict) and safe_int(value.get("settled")) >= 10 and key.startswith("MARKET|")
+    ]
+    best_segment = "Недостаточно данных"
+    if eligible:
+        key, value = max(eligible, key=lambda row: (safe_float(row[1].get("hitRate")), safe_int(row[1].get("settled"))))
+        best_segment = f"{key.split('|')[-1]} · {safe_float(value.get('hitRate')) * 100:.1f}%"
+
+    state["statistics"] = {
+        "analysisAccuracy": accuracy(analysis_settled),
+        "bestBetsAccuracy": accuracy(bets_settled),
+        "averageOdds": round(average_odds, 2),
+        "currentStreak": streak_text,
+        "bestSegment": best_segment,
+        "settledAnalyses": len(analysis_settled),
+        "settledBestBets": len(bets_settled),
+        "wonBestBets": sum(1 for item in bets_settled if item.get("status") == "won"),
+        "lostBestBets": sum(1 for item in bets_settled if item.get("status") == "lost"),
+        "pushBestBets": sum(1 for item in bets_settled if item.get("status") == "push"),
+        "pendingBestBets": sum(1 for item in state.get("history") or [] if isinstance(item, dict) and item.get("recordType") == "BEST_BET" and item.get("status") == "pending"),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Optional narrative enrichment
+# ---------------------------------------------------------------------------
+
+
+def enrich_narratives_with_openrouter(
+    records: list[dict[str, Any]],
+    api_key: str | None,
+    config: dict[str, Any],
+    client: ApiClient,
+) -> None:
+    if not api_key or not config.get("openRouterNarrativeEnabled", True) or not records:
+        return
+    model = os.getenv("OPENROUTER_MODEL") or str(config.get("openRouterModel") or "google/gemini-2.5-flash-lite")
+    compact = [
+        {
+            "id": item["id"],
+            "sport": item["sportLabel"],
+            "league": item["league"],
+            "match": f"{item['home']} — {item['away']}",
+            "expectedResult": item["expectedResult"],
+            "expectedScore": item["expectedScore"],
+            "pick": item["pick"],
+            "probability": item["probabilityPercent"],
+            "odds": item["bookmakerOdds"],
+            "edge": item["edgePercent"],
+            "dataTier": item["dataTier"],
+            "sourceNotes": item["sourceNotes"][:3],
+        }
+        for item in records
+    ]
+    prompt = (
+        "Ты редактор спортивной аналитики. На основании только переданных чисел и фактов "
+        "создай для каждого id одно краткое объяснение на русском, 1-2 предложения, без обещаний "
+        "выигрыша и без выдуманных травм, составов или новостей. Верни только JSON-объект "
+        '{"items":[{"id":"...","reason":"..."}]}. Данные: ' + json.dumps(compact, ensure_ascii=False)
+    )
+    payload = {
+        "model": model,
+        "temperature": 0.15,
+        "messages": [
+            {"role": "system", "content": "Используй только предоставленные данные. Не придумывай факты."},
+            {"role": "user", "content": prompt},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+    request = urllib.request.Request(
+        OPENROUTER_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://r1a156.github.io/ai-football-lab/",
+            "X-Title": "AI Football Lab V10",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            result = json.loads(response.read().decode("utf-8"))
+        content = result["choices"][0]["message"]["content"]
+        parsed = json.loads(content)
+        reasons = {
+            str(item.get("id")): str(item.get("reason"))
+            for item in parsed.get("items") or []
+            if isinstance(item, dict) and item.get("id") and item.get("reason")
+        }
+        for record in records:
+            if record["id"] in reasons:
+                record["reason"] = reasons[record["id"]]
+    except Exception as exc:
+        client.calls.append({"label": "OPENROUTER_NARRATIVE", "status": "ERROR", "error": str(exc)})
+        log(f"OpenRouter narrative fallback used: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Pipeline orchestration
+# ---------------------------------------------------------------------------
+
+
+def report_base(now: dt.datetime, mode: str) -> dict[str, Any]:
+    return {
+        "status": "RUNNING",
+        "version": STATE_VERSION,
+        "sourceMarker": PIPELINE_MARKER,
+        "mode": mode,
+        "startedAt": iso_z(now),
+        "finishedAt": None,
+        "diagnostics": {},
+        "warnings": [],
+        "errors": [],
+    }
+
+
+def run_pipeline(mode: str, force_generation: bool = False) -> int:
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    now = utc_now()
+    timezone = configured_timezone(config)
+    local_now = now.astimezone(timezone)
+    state = migrate_state(load_json(STATE_PATH, {}), config, now)
+    client = ApiClient()
+    report = report_base(now, mode)
+
+    odds_key = os.getenv("ODDS_API_KEY", "").strip()
+    if not odds_key:
+        raise RuntimeError("ODDS_API_KEY is required for production update")
+    football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip() or None
+
+    football_matches = fetch_football_data_matches(client, football_key, config, now)
+    football_context = build_football_context(football_matches)
+
+    due = due_pending_records(state, config, now)
+    settlement = {"analysisSettled": 0, "bestBetsSettled": 0, "unresolved": 0}
+    score_errors: list[str] = []
+    if due:
+        sport_keys = [str(item.get("sportKey") or item.get("oddsSportKey") or "") for item in due]
+        score_results, score_errors = fetch_scores_for_sport_keys(client, odds_key, sport_keys)
+        settlement = settle_pending_records(state, score_results, football_context, now)
+        log(f"Settlement: {settlement}")
+
+    analysis_date = str(state.get("meta", {}).get("analysisDateLocal") or "")
+    generation_hour = safe_int(config.get("dailyGenerationHourLocal"), 8)
+    generation_due = (
+        local_now.hour >= generation_hour
+        and (
+            analysis_date != local_now.date().isoformat()
+            or not state.get("dailyAnalysis")
+        )
+    )
+    generate = False if mode == "settle" else (
+        force_generation
+        or mode == "update"
+        or generation_due
+    )
+
+    discovery_diagnostics: dict[str, Any] = {}
+    analysis_diagnostics: dict[str, Any] = {}
+    odds_errors: list[str] = []
+    selected_keys: list[str] = []
+    new_best: list[dict[str, Any]] = []
+
+    if generate:
+        discovered, discovery_diagnostics = discover_events(client, odds_key, config, now)
+        selected_keys = choose_sport_keys_for_odds(discovered, config)
+        window_hours = safe_int(discovery_diagnostics.get("windowHours"), 48)
+        odds_events, odds_errors = fetch_featured_odds(
+            client, odds_key, selected_keys, config, now, window_hours
+        )
+        # Add sport type/country metadata if not present in the odds response.
+        for event in odds_events:
+            event["sport_type"] = infer_sport_from_key(event.get("sport_key"))
+            event["country"] = infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
+        advanced = maybe_fetch_advanced_markets(client, odds_key, odds_events, config)
+        need_nhl = any("nhl" in str(event.get("sport_key") or "").lower() for event in odds_events)
+        nhl_standings = fetch_nhl_standings(client, bool(config.get("nhlPublicDataEnabled", True) and need_nhl))
+        daily_analysis, analysis_diagnostics = build_daily_analysis(
+            odds_events,
+            advanced,
+            football_context,
+            nhl_standings,
+            state,
+            config,
+            now,
+        )
+        enrich_narratives_with_openrouter(daily_analysis, openrouter_key, config, client)
+        best_bets, new_best = select_best_bets(daily_analysis, state, config, now)
+
+        # Mark records chosen as best bets and copy the fixed stake into visible analysis.
+        best_by_event = {str(item.get("eventId")): item for item in best_bets}
+        for record in daily_analysis:
+            best = best_by_event.get(str(record.get("eventId") or ""))
+            if best:
+                record["isBestBet"] = True
+                record["stake"] = best["stake"]
+                record["stakePercent"] = best["stakePercent"]
+                record["bestBetSelection"] = {
+                    "id": best.get("id"),
+                    "pick": best.get("pick"),
+                    "market": best.get("market"),
+                    "marketFamily": best.get("marketFamily"),
+                    "point": best.get("point"),
+                    "odds": best.get("bookmakerOdds"),
+                    "probabilityPercent": round(safe_float(best.get("modelProbability")) * 100, 1),
+                    "edgePercent": round(safe_float(best.get("edge")) * 100, 2),
+                }
+
+        if daily_analysis:
+            append_new_records_to_history(state, daily_analysis, new_best, config)
+            state["dailyAnalysis"] = daily_analysis
+            state["bestBets"] = best_bets
+            state["predictions"] = copy.deepcopy(best_bets)
+        else:
+            report["warnings"].append(
+                "No new analysis was generated; the previous published state was preserved."
+            )
+            best_bets = state.get("bestBets") or []
+        state["meta"].update(
+            {
+                "analysisDateLocal": local_now.date().isoformat(),
+                "analysisGeneratedAt": iso_z(now),
+                "analysisTarget": safe_int(config.get("dailyAnalysisTarget"), 15),
+                "analysisPublished": len(daily_analysis),
+                "bestBetsTarget": safe_int(config.get("bestBetsTarget"), 4),
+                "bestBetsPublished": len(best_bets),
+                "newBestBets": len(new_best),
+                "sportsAnalyzed": sorted({str(item.get("sport")) for item in daily_analysis}),
+                "soccerAnalyses": sum(1 for item in daily_analysis if item.get("sport") == "soccer"),
+                "hockeyAnalyses": sum(1 for item in daily_analysis if item.get("sport") == "ice_hockey"),
+                "leaguesAnalyzed": len({str(item.get("league")) for item in daily_analysis}),
+                "countriesAnalyzed": len({str(item.get("country")) for item in daily_analysis}),
+                "status": (
+                    "GREEN"
+                    if len(daily_analysis) == safe_int(config.get("dailyAnalysisTarget"), 15)
+                    else "DEGRADED"
+                ),
+                "dataFreshness": "CURRENT",
+                "predictionObjective": config.get("predictionObjective"),
+                "publicationPolicy": config.get("publicationPolicy"),
+                "virtualBankPolicy": config.get("virtualBankPolicy"),
             }
         )
-        settled += 1
-    bank["current"] = round(current_bank, 2)
-    state["bank"] = bank
-    return settled
+    else:
+        published_count = len(state.get("dailyAnalysis") or [])
+        state["meta"]["status"] = (
+            "GREEN"
+            if published_count == safe_int(config.get("dailyAnalysisTarget"), 15)
+            else "DEGRADED"
+            if published_count > 0
+            else "INITIALIZED"
+        )
+        state["meta"]["dataFreshness"] = "SETTLEMENT_REFRESH"
 
-
-def v9_main() -> int:
-    log("Запуск AI Football Lab Data Pipeline v9 R6 Probability First")
-    config = load_json(CONFIG_PATH)
-    old_state = load_json(STATE_PATH)
-    _load_optional_dotenv(ROOT / ".env")
-
-    football_api_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip()
-    odds_api_key = os.getenv("ODDS_API_KEY", "").strip()
-    openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-    if not football_api_key:
-        raise RuntimeError("Не задан FOOTBALL_DATA_API_KEY")
-    if not odds_api_key:
-        raise RuntimeError("Не задан ODDS_API_KEY")
-
-    now = utc_now()
-    today = now.date()
-    lookback_days = max(10, int(config.get("lookbackDays") or 60))
-    lookahead_days = max(1, int(config.get("lookaheadDays") or 1))
-
-    recent_matches = fetch_matches_chunked(
-        football_api_key,
-        date_from=today - dt.timedelta(days=lookback_days),
-        date_to=today,
-        competitions=[],
-        maximum_days_per_request=10,
-        pause_seconds=7,
-    )
-    time.sleep(7)
-    upcoming_matches = fetch_matches(
-        football_api_key,
-        date_from=today,
-        date_to=today + dt.timedelta(days=lookahead_days + 1),
-        competitions=[],
-    )
-    all_matches_by_id: dict[int, dict[str, Any]] = {}
-    for match in recent_matches + upcoming_matches:
-        try:
-            all_matches_by_id[int(match["id"])] = match
-        except (KeyError, TypeError, ValueError):
-            continue
-    finished_matches = [
-        match for match in recent_matches
-        if final_score(match) is not None
-    ]
-    scheduled_matches = [
-        match for match in upcoming_matches
-        if str(match.get("status") or "").upper() in {"SCHEDULED", "TIMED"}
-    ]
-
-    state = ensure_real_state(old_state, config)
-    localize_existing_history(state)
-    legacy_voided = migrate_legacy_pending_predictions(state)
-    football_settled = resolve_existing_history(state, all_matches_by_id)
-    history = [
-        item for item in state.get("history", [])
-        if isinstance(item, dict)
-    ]
-    odds_scores, settlement_diagnostics = v9_fetch_pending_scores(
-        history,
-        odds_api_key,
-        config,
-        now,
-    )
-    global_settled = v9_resolve_global_history(state, odds_scores)
-
-    team_form = build_team_form(finished_matches)
-    football_candidates = build_candidates(
-        scheduled_matches,
-        team_form,
-        config,
-    )
-    history = [
-        item for item in state.get("history", [])
-        if isinstance(item, dict)
-    ]
-    active_public, active_history = build_active_pending_records(
-        history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    active_public, active_history = finalize_public_selection(
-        active_public,
-        active_history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    active_match_ids = {
-        int(item["sourceMatchId"])
-        for item in active_public
+    state["meta"]["version"] = STATE_VERSION
+    state["meta"]["sourceMarker"] = PIPELINE_MARKER
+    state["meta"]["updatedAt"] = iso_z(now)
+    state["meta"]["lastSuccessfulRefreshAt"] = iso_z(now)
+    state["quota"] = {
+        "provider": "THE_ODDS_API",
+        **client.odds_quota,
+        "calls": len([call for call in client.calls if str(call.get("label", "")).startswith(("ODDS", "EVENTS", "MARKETS", "ADVANCED", "SCORES"))]),
+        "updatedAt": iso_z(now),
     }
+    state["meta"]["apiHealth"] = summarize_api_health(client.calls)
 
-    pool_config = copy.deepcopy(config)
-    pool_config.update(
-        {
-            "allowedMarkets": [
-                "HOME_WIN",
-                "DRAW",
-                "AWAY_WIN",
-                "OVER_2_5",
-                "UNDER_2_5",
-            ],
-            "maximumPredictions": max(18, len(football_candidates) * 3),
-            "minimumConfidence": 0,
-            "winMarketMinimumConfidence": 0,
-            "minimumProbability": 0.05,
-            "maximumProbability": 0.95,
-            "minimumModelOdds": 1.01,
-            "maximumModelOdds": 20.0,
-            "minimumDataQuality": 0,
-            "onePredictionPerMatch": False,
-        }
-    )
-    statistical_predictions = build_deterministic_predictions(
-        football_candidates,
-        pool_config,
-    )
-    ai_predictions: list[dict[str, Any]] = []
-    model_name = "not-used"
-    ai_error = ""
-    if football_candidates and openrouter_api_key:
-        try:
-            ai_config = copy.deepcopy(pool_config)
-            ai_config["maximumPredictions"] = min(
-                12,
-                max(4, len(football_candidates)),
-            )
-            result, model_name = call_openrouter(
-                openrouter_api_key,
-                build_analysis_prompt(football_candidates, ai_config),
-            )
-            ai_predictions = normalize_model_predictions(
-                result,
-                football_candidates,
-                ai_config,
-            )
-        except Exception as error:
-            ai_error = str(error)
-            log(f"OpenRouter warning: {error}")
-    model_prediction_pool = merge_prediction_market_pool(
-        ai_predictions,
-        statistical_predictions,
-    )
-
-    soccer_sports, sports_headers = fetch_active_soccer_sports(odds_api_key)
-    discovered_events, league_summaries, discovery = (
-        v9_discover_global_soccer_events(
-            soccer_sports,
-            odds_api_key,
-            config,
-            now,
-        )
-    )
-    sport_keys = v9_select_global_sport_keys(
-        league_summaries,
-        football_candidates,
-        config,
-    )
-    odds_events, odds_quota = fetch_bookmaker_events(
-        odds_api_key,
-        sport_keys,
-        config,
-        now,
-    )
-
-    model_bookmaker_pool, model_diagnostics = build_bookmaker_prediction_pool(
-        model_prediction_pool,
-        football_candidates,
-        odds_events,
-        config,
-        now,
-    )
-    global_candidates, candidates_by_event, matched_global = (
-        v9_build_event_candidates(
-            odds_events,
-            football_candidates,
-            config,
-        )
-    )
-    consensus_pool, consensus_diagnostics = (
-        v9_build_global_market_consensus_pool(
-            odds_events,
-            candidates_by_event,
-            config,
-            now,
-        )
-    )
-    combined_pool = v9_merge_prediction_pools(
-        model_bookmaker_pool,
-        consensus_pool,
-    )
-
-    maximum_predictions = max(1, int(config.get("maximumPredictions") or 4))
-    available_slots = max(0, maximum_predictions - len(active_public))
-    selected = v9_select_predictions(
-        combined_pool,
-        available_slots,
-        config,
-        active_match_ids,
-    )
-    candidate_by_id = {
-        int(candidate["matchId"]): candidate
-        for candidate in global_candidates
-    }
-    for candidate in football_candidates:
-        candidate_by_id[int(candidate["matchId"])] = candidate
-
-    new_public: list[dict[str, Any]] = []
-    new_history: list[dict[str, Any]] = []
-    for prediction in selected:
-        candidate = candidate_by_id.get(int(prediction["matchId"]))
-        if candidate is None:
-            continue
-        public, history_record = v9_prediction_to_records(
-            prediction,
-            candidate,
-            config,
-        )
-        new_public.append(public)
-        new_history.append(history_record)
-
-    public_predictions, _ = finalize_public_selection(
-        active_public + new_public,
-        active_history + new_history,
-        all_matches_by_id,
-        config,
-        now,
-    )
-    daily_target = max(1, int(config.get("dailyPredictionCount") or 4))
-    if len(public_predictions) != daily_target:
-        raise RuntimeError(
-            "GLOBAL_DAILY_FOUR_NOT_MET: "
-            f"expected={daily_target}; actual={len(public_predictions)}; "
-            f"globalEvents={len(discovered_events)}; "
-            f"leaguesWithEvents={len(league_summaries)}; "
-            f"oddsLeagues={len(sport_keys)}; oddsEvents={len(odds_events)}; "
-            f"modelOptions={len(model_bookmaker_pool)}; "
-            f"consensusOptions={len(consensus_pool)}; "
-            f"eligibleOptions={len(combined_pool)}; "
-            f"consensusDiagnostics={consensus_diagnostics}"
-        )
-
-    published_countries = sorted({
-        str(item.get("country") or "")
-        for item in public_predictions
-        if str(item.get("country") or "")
-    })
-    published_leagues = sorted({
-        str(item.get("league") or "")
-        for item in public_predictions
-        if str(item.get("league") or "")
-    })
-    minimum_countries = min(
-        daily_target,
-        max(1, int(config.get("minimumPublishedCountries") or 3)),
-    )
-    if len(published_countries) < minimum_countries:
-        raise RuntimeError(
-            "GLOBAL_COUNTRY_DIVERSITY_NOT_MET: "
-            f"expected>={minimum_countries}; actual={len(published_countries)}; "
-            f"countries={published_countries}"
-        )
-    minimum_leagues = min(
-        daily_target,
-        max(
-            2,
-            int(config.get("minimumPublishedLeagues") or 3),
-        ),
-    )
-    if len(published_leagues) < minimum_leagues:
-        raise RuntimeError(
-            "GLOBAL_LEAGUE_DIVERSITY_NOT_MET: "
-            f"expected>={minimum_leagues}; "
-            f"actual={len(published_leagues)}; "
-            f"leagues={published_leagues}"
-        )
-
-    accepted_ids = {str(item.get("id") or "") for item in public_predictions}
-    accepted_new_history = [
-        item for item in new_history
-        if str(item.get("id") or "") in accepted_ids
-    ]
-    history_ids = {str(item.get("id") or "") for item in history}
-    for item in accepted_new_history:
-        item_id = str(item.get("id") or "")
-        if item_id and item_id not in history_ids:
-            history.append(item)
-            history_ids.add(item_id)
-
-    current_bank = float(
-        state.get("bank", {}).get("current")
-        or config.get("startingVirtualBank")
-        or 10000
-    )
-    stake_percent = float(config.get("stakePerPredictionPercent") or 20)
-    repaired = apply_stake_policy_to_selected_predictions(
-        public_predictions,
-        history,
-        current_bank,
-        stake_percent,
-        now,
-    )
-    history_by_id = {
-        str(item.get("id") or ""): item
-        for item in history
-    }
-    for index, prediction in enumerate(public_predictions, start=1):
-        prediction["rank"] = index
-        prediction["rankLabel"] = (
-            "Лучший прогноз дня" if index == 1 else f"Прогноз №{index}"
-        )
-        mode = str(prediction.get("analysisMode") or "")
-        value_tier = str(
-            prediction.get("valueTier") or "STRICT_VALUE"
-        )
-        if mode in {"AI", "AI_STAT_CONSENSUS", "DETERMINISTIC"}:
-            source_label = "Глобальная модель и статистика"
-        elif value_tier == "STRICT_VALUE":
-            source_label = (
-                "Глобальный консенсус: положительное преимущество"
-            )
-        elif value_tier == "PROBABILITY_FIRST":
-            source_label = (
-                "Глобальный прогноз: приоритет вероятности"
-            )
-        else:
-            source_label = (
-                "Глобальный прогноз: высокая вероятность, "
-                "контролируемая цена"
-            )
-        prediction["analysisSourceLabel"] = source_label
-        history_item = history_by_id.get(str(prediction.get("id") or ""))
-        if history_item:
-            history_item["rank"] = index
-            history_item["rankLabel"] = prediction["rankLabel"]
-            history_item["analysisSourceLabel"] = prediction["analysisSourceLabel"]
-
-    state["predictions"] = public_predictions
-    state["history"] = history
-    discovered_countries = sorted({
-        str(item.get("country") or "")
-        for item in league_summaries
-        if str(item.get("country") or "")
-    })
-    discovered_leagues = sorted({
-        str(item.get("sportTitle") or "")
-        for item in league_summaries
-        if str(item.get("sportTitle") or "")
-    })
-    state.setdefault("meta", {}).update(
-        {
-            "version": "9.6.0",
-            "mode": "real",
-            "updatedAt": now.isoformat(),
-            "source": "The Odds API global discovery + football-data.org",
-            "analysisProvider": (
-                "OpenRouter + статистика + глобальный рыночный консенсус"
-                if ai_predictions
-                else "Статистика + глобальный рыночный консенсус"
-            ),
-            "analysisModel": model_name,
-            "analysisStatus": "GLOBAL_FOUR_SELECTED",
-            "analysisError": ai_error,
-            "analysisMode": "GLOBAL_LEAGUE_DISCOVERY",
-            "globalDiscoveryEnabled": True,
-            "globalDiscoverySource": "THE_ODDS_API_EVENTS",
-            "globalSportsScanned": discovery["sportsScanned"],
-            "globalLeaguesWithEvents": discovery["sportsWithEvents"],
-            "globalEventsDiscovered": discovery["eventsDiscovered"],
-            "globalDiscoveryErrors": discovery["discoveryErrors"],
-            "globalDiscoveredCountries": discovered_countries,
-            "globalDiscoveredLeagues": discovered_leagues,
-            "oddsSportKeys": sport_keys,
-            "oddsEvents": len(odds_events),
-            "oddsQuota": odds_quota,
-            "oddsSportsHeaderRemaining": sports_headers.get("x-requests-remaining"),
-            "footballCandidateMatches": len(football_candidates),
-            "globalCandidateMatches": len(global_candidates),
-            "matchedFootballCandidates": matched_global,
-            "modelPredictionOptions": len(model_bookmaker_pool),
-            "consensusPredictionOptions": len(consensus_pool),
-            "combinedPredictionOptions": len(combined_pool),
-            "modelDiagnostics": model_diagnostics,
-            "consensusDiagnostics": consensus_diagnostics,
-            "settlementDiagnostics": settlement_diagnostics,
-            "footballSettledPredictions": football_settled,
-            "globalSettledPredictions": global_settled,
-            "settledPredictions": football_settled + global_settled,
-            "selectedPredictions": len(public_predictions),
-            "activePendingPredictions": len(active_public),
-            "newPredictions": len(accepted_new_history),
-            "stakeRecordsRepaired": repaired,
-            "legacyPendingVoided": legacy_voided,
-            "publishedCountries": published_countries,
-            "publishedLeagues": published_leagues,
-            "minimumPublishedCountries": minimum_countries,
-            "timezone": str(config.get("timezone") or "Europe/Moscow"),
-            "minimumLeadHours": float(config.get("minimumLeadHours") or 1),
-            "selectionWindowHours": float(config.get("selectionWindowHours") or 24),
-            "dailyPredictionTarget": daily_target,
-            "minimumBookmakerOdds": float(config.get("minimumBookmakerOdds") or 1.45),
-            "preferredBookmakerOdds": float(config.get("preferredBookmakerOdds") or 1.60),
-            "minimumPublishedProbability": float(config.get("minimumPublishedProbability") or 0.50),
-            "marketOddsAvailable": True,
-            "expectedValueAvailable": True,
-            "virtualBankOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
-            "stakePerPredictionPercent": stake_percent,
-            "maximumDailyExposurePercent": round(daily_target * stake_percent, 2),
-            "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-            "notice": (
-                "Четыре прогноза выбираются после глобального обнаружения "
-                "активных футбольных лиг. Для лиг без статистики football-data "
-                "вероятность является безмаржинальным консенсусом "
-                "нескольких букмекеров. Сначала выбираются варианты с "
-                "неотрицательным EV, затем — наиболее вероятные исходы с "
-                "контролируемым отклонением цены. Гарантия выигрыша отсутствует."
-            ),
-        }
-    )
-    state.setdefault("bank", {})["stakePercent"] = stake_percent
-    state["bank"]["stakePolicy"] = "PER_PREDICTION_PERCENT_OF_BANK"
+    update_bank_metrics(state)
     update_statistics(state)
+    state["bank"]["history"] = state["bank"].get("history", [])[-safe_int(config.get("bankHistoryLimit"), 1200) :]
+
+    report.update(
+        {
+            "status": "GREEN" if state["meta"].get("status") == "GREEN" else "DEGRADED",
+            "finishedAt": iso_z(utc_now()),
+            "diagnostics": {
+                "generated": generate,
+                "settlement": settlement,
+                "duePending": len(due),
+                "selectedSportKeys": selected_keys,
+                "discovery": discovery_diagnostics,
+                "analysis": analysis_diagnostics,
+                "dailyAnalysis": len(state.get("dailyAnalysis") or []),
+                "bestBets": len(state.get("bestBets") or []),
+                "newBestBets": len(new_best),
+                "footballDataMatches": len(football_matches),
+                "quota": state["quota"],
+                "apiCalls": client.calls,
+            },
+            "warnings": list(report.get("warnings") or []) + score_errors + odds_errors,
+        }
+    )
+
     write_json_atomic(STATE_PATH, state)
-    report = create_report(
-        status="GREEN",
-        message="Глобальный поиск завершён: опубликованы четыре прогноза из разных лиг.",
-        details={
-            "globalSportsScanned": discovery["sportsScanned"],
-            "globalLeaguesWithEvents": discovery["sportsWithEvents"],
-            "globalEventsDiscovered": discovery["eventsDiscovered"],
-            "oddsSportKeys": sport_keys,
-            "oddsEvents": len(odds_events),
-            "modelOptions": len(model_bookmaker_pool),
-            "consensusOptions": len(consensus_pool),
-            "selectedPredictions": len(public_predictions),
-            "publishedCountries": published_countries,
-            "publishedLeagues": published_leagues,
-            "settledPredictions": football_settled + global_settled,
-            "oddsQuota": odds_quota,
-            "settlementDiagnostics": settlement_diagnostics,
+    write_json_atomic(REPORT_PATH, report)
+    write_json_atomic(
+        DAILY_SNAPSHOT_PATH,
+        {
+            "version": STATE_VERSION,
+            "updatedAt": state["meta"]["updatedAt"],
+            "analysisDateLocal": state["meta"].get("analysisDateLocal"),
+            "dailyAnalysis": state.get("dailyAnalysis", []),
+            "bestBets": state.get("bestBets", []),
         },
     )
-    write_json_atomic(REPORT_PATH, report)
     log(
-        "V9 завершён. "
-        f"GLOBAL_EVENTS={discovery['eventsDiscovered']}; "
-        f"LEAGUES={discovery['sportsWithEvents']}; "
-        f"ODDS_LEAGUES={len(sport_keys)}; OPTIONS={len(combined_pool)}; "
-        f"COUNTRIES={len(published_countries)}; PRED={len(public_predictions)}"
+        "V10 GREEN: "
+        f"analysis={len(state.get('dailyAnalysis') or [])}; "
+        f"bestBets={len(state.get('bestBets') or [])}; "
+        f"bank={state.get('bank', {}).get('current')}"
     )
     return 0
 
 
-def main() -> int:
-    return v9_main()
+def summarize_api_health(calls: list[dict[str, Any]]) -> dict[str, Any]:
+    errors = [call for call in calls if call.get("status") == "ERROR" or safe_int(call.get("status"), 200) >= 400]
+    return {
+        "status": "GREEN" if not errors else "DEGRADED",
+        "calls": len(calls),
+        "errors": len(errors),
+        "lastErrors": errors[-5:],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Validation and self-test
+# ---------------------------------------------------------------------------
+
+
+def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: bool = True) -> None:
+    if not isinstance(state, dict):
+        raise RuntimeError("State must be a JSON object")
+    version = str((state.get("meta") or {}).get("version") or "")
+    if version != STATE_VERSION:
+        if allow_legacy:
+            return
+        raise RuntimeError(f"State version must be {STATE_VERSION}, got {version}")
+    daily = state.get("dailyAnalysis")
+    best = state.get("bestBets")
+    if not isinstance(daily, list) or not isinstance(best, list):
+        raise RuntimeError("V10 state requires dailyAnalysis and bestBets arrays")
+    if len(daily) > safe_int(config.get("dailyAnalysisTarget"), 15):
+        raise RuntimeError("dailyAnalysis exceeds target")
+    if len(best) > safe_int(config.get("bestBetsTarget"), 4):
+        raise RuntimeError("bestBets exceeds target")
+    event_ids = [str(item.get("eventId") or "") for item in daily]
+    if len([value for value in event_ids if value]) != len(set(value for value in event_ids if value)):
+        raise RuntimeError("dailyAnalysis contains duplicate events")
+    best_event_ids = [str(item.get("eventId") or "") for item in best]
+    if len([value for value in best_event_ids if value]) != len(set(value for value in best_event_ids if value)):
+        raise RuntimeError("bestBets contains duplicate events")
+    for item in best:
+        if safe_float(item.get("stakePercent")) != 20.0:
+            raise RuntimeError("Every best bet must have 20 percent stake")
+        if safe_float(item.get("stake")) <= 0:
+            raise RuntimeError("Best bet stake must be positive")
+        if safe_float(item.get("bookmakerOdds") or item.get("odds")) <= 1:
+            raise RuntimeError("Best bet must use real bookmaker odds")
+    for item in daily:
+        if not item.get("isBestBet") and safe_float(item.get("stake")) != 0.0:
+            raise RuntimeError("Non-best daily analysis must not affect bank")
 
 
 def validate_repository_files() -> int:
-    config = load_json(CONFIG_PATH)
-    state = load_json(STATE_PATH)
-    if int(config.get("version") or 0) < 10:
-        raise RuntimeError("Требуется конфигурация V9 Global Discovery")
-    if not bool(config.get("globalDiscoveryEnabled")):
-        raise RuntimeError("globalDiscoveryEnabled должен быть true")
-    if str(config.get("globalDiscoverySource") or "") != "THE_ODDS_API_EVENTS":
-        raise RuntimeError("Неверный источник глобального обнаружения")
-    if int(config.get("dailyPredictionCount") or 0) != 4:
-        raise RuntimeError("dailyPredictionCount должен быть равен 4")
-    if int(config.get("maximumPredictions") or 0) != 4:
-        raise RuntimeError("maximumPredictions должен быть равен 4")
-    if float(config.get("selectionWindowHours") or 0) != 24:
-        raise RuntimeError("selectionWindowHours должен быть равен 24")
-    if list(config.get("oddsMarkets") or []) != ["h2h", "totals"]:
-        raise RuntimeError(
-            "V9 R4 должен использовать рынки h2h и totals"
-        )
-    if int(config.get("maximumOddsSportRequests") or 0) > 12:
-        raise RuntimeError(
-            "maximumOddsSportRequests должен быть не больше 12"
-        )
-    if int(config.get("maximumSettlementSportRequests") or 0) > 4:
-        raise RuntimeError("maximumSettlementSportRequests должен быть не больше 4")
-    if float(config.get("minimumBookmakerOdds") or 0) < 1.45:
-        raise RuntimeError("minimumBookmakerOdds должен быть не ниже 1.45")
-    if float(config.get("minimumPublishedProbability") or 0) < 0.47:
-        raise RuntimeError(
-            "minimumPublishedProbability должен быть не ниже 0.47"
-        )
-    if int(config.get("minimumConsensusBookmakers") or 0) < 2:
-        raise RuntimeError(
-            "minimumConsensusBookmakers должен быть не меньше 2"
-        )
-    if int(config.get("minimumPublishedLeagues") or 0) < 3:
-        raise RuntimeError(
-            "minimumPublishedLeagues должен быть не меньше 3"
-        )
-    if float(
-        config.get("probabilityFirstMinimumProbability") or 0
-    ) < 0.52:
-        raise RuntimeError(
-            "probabilityFirstMinimumProbability должен быть не ниже 0.52"
-        )
-    if float(
-        config.get("probabilityFirstMinimumExpectedValue") or 0
-    ) < -0.12:
-        raise RuntimeError(
-            "probabilityFirstMinimumExpectedValue не должен быть ниже -0.12"
-        )
-    if float(
-        config.get("safetyMinimumProbability") or 0
-    ) < 0.56:
-        raise RuntimeError(
-            "safetyMinimumProbability должен быть не ниже 0.56"
-        )
-    if float(
-        config.get("safetyMinimumExpectedValue") or 0
-    ) < -0.16:
-        raise RuntimeError(
-            "safetyMinimumExpectedValue не должен быть ниже -0.16"
-        )
-    if float(config.get("stakePerPredictionPercent") or 0) != 20:
-        raise RuntimeError("stakePerPredictionPercent должен быть равен 20")
-    if not isinstance(state.get("predictions", []), list):
-        raise RuntimeError("state.predictions должен быть массивом")
-    if not isinstance(state.get("history", []), list):
-        raise RuntimeError("state.history должен быть массивом")
-    print("VALIDATION_GREEN_V9_GLOBAL_DISCOVERY")
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    required = [STATE_PATH, INDEX_PATH, APP_PATH, STYLE_PATH, WORKFLOW_PATH]
+    for path in required:
+        if not path.exists():
+            raise RuntimeError(f"Required file missing: {path.relative_to(ROOT)}")
+    if PIPELINE_MARKER not in pathlib.Path(__file__).read_text(encoding="utf-8"):
+        raise RuntimeError("Python marker missing")
+    if SITE_MARKER not in APP_PATH.read_text(encoding="utf-8"):
+        raise RuntimeError("Site marker missing")
+    if WORKFLOW_MARKER not in WORKFLOW_PATH.read_text(encoding="utf-8"):
+        raise RuntimeError("Workflow marker missing")
+    state = load_json(STATE_PATH, {})
+    validate_state(state, config, allow_legacy=True)
+    print("VALIDATION_GREEN_V10")
     return 0
+
+
+def synthetic_bookmaker_event(
+    event_id: str,
+    sport_key: str,
+    title: str,
+    home: str,
+    away: str,
+    commence: dt.datetime,
+    home_price: float,
+    away_price: float,
+    draw_price: float | None,
+    total_line: float,
+    over_price: float,
+    under_price: float,
+) -> dict[str, Any]:
+    bookmakers = []
+    for index, shift in enumerate((0.0, 0.02, -0.015, 0.01)):
+        h2h_outcomes = [
+            {"name": home, "price": round(home_price + shift, 3)},
+            {"name": away, "price": round(away_price - shift, 3)},
+        ]
+        if draw_price is not None:
+            h2h_outcomes.append({"name": "Draw", "price": round(draw_price + shift, 3)})
+        bookmakers.append(
+            {
+                "key": f"book{index}",
+                "title": f"Book {index}",
+                "last_update": iso_z(commence - dt.timedelta(hours=1)),
+                "markets": [
+                    {"key": "h2h", "last_update": iso_z(commence - dt.timedelta(hours=1)), "outcomes": h2h_outcomes},
+                    {
+                        "key": "totals",
+                        "last_update": iso_z(commence - dt.timedelta(hours=1)),
+                        "outcomes": [
+                            {"name": "Over", "point": total_line, "price": round(over_price + shift, 3)},
+                            {"name": "Under", "point": total_line, "price": round(under_price - shift, 3)},
+                        ],
+                    },
+                    {
+                        "key": "spreads",
+                        "last_update": iso_z(commence - dt.timedelta(hours=1)),
+                        "outcomes": [
+                            {"name": home, "point": -0.5, "price": round(home_price + 0.18 + shift, 3)},
+                            {"name": away, "point": 0.5, "price": round(away_price - 0.25 - shift, 3)},
+                        ],
+                    },
+                ],
+            }
+        )
+    return {
+        "id": event_id,
+        "sport_key": sport_key,
+        "sport_title": title,
+        "commence_time": iso_z(commence),
+        "home_team": home,
+        "away_team": away,
+        "bookmakers": bookmakers,
+    }
 
 
 def run_self_test() -> int:
-    utc_fallback = fallback_timezone("UTC")
-    utc_probe = dt.datetime(
-        2026,
-        7,
-        27,
-        0,
-        0,
-        tzinfo=dt.timezone.utc,
-    ).astimezone(utc_fallback)
-    if utc_probe.utcoffset() != dt.timedelta(0):
-        raise RuntimeError(
-            "SELF_TEST: встроенный UTC fallback имеет неверное смещение"
-        )
-
-    moscow_fallback = fallback_timezone("Europe/Moscow")
-    moscow_probe = dt.datetime(
-        2026,
-        7,
-        27,
-        0,
-        0,
-        tzinfo=dt.timezone.utc,
-    ).astimezone(moscow_fallback)
-    if moscow_probe.utcoffset() != dt.timedelta(hours=3):
-        raise RuntimeError(
-            "SELF_TEST: встроенный Europe/Moscow fallback должен быть UTC+3"
-        )
-
-    config = {
-        "minimumLeadHours": 1,
-        "selectionWindowHours": 24,
-        "maximumOddsSportRequests": 12,
-        "minimumConsensusBookmakers": 2,
-        "preferredConsensusBookmakers": 3,
-        "maximumConsensusDispersion": 0.12,
-        "consensusProbabilityHaircut": 0.005,
-        "minimumPublishedProbability": 0.47,
-        "preferredPublishedProbability": 0.52,
-        "minimumBookmakerOdds": 1.45,
-        "preferredBookmakerOdds": 1.60,
-        "maximumBookmakerOdds": 3.20,
-        "fallbackMinimumExpectedValue": 0.0,
-        "maximumOddsAgeMinutes": 180,
-        "requireOddsTimestamp": True,
-        "oddsMarkets": ["h2h", "totals"],
-        "minimumPublishedLeagues": 3,
-        "bestAvailableMinimumConfidence": 40,
-        "stakePerPredictionPercent": 20,
-        "timezone": "Europe/Moscow",
-        "maximumPredictions": 4,
-    }
-    now = utc_now().replace(microsecond=0)
-    summaries = []
-    events = []
-    countries = [
-        ("soccer_england_test", "England Test League", "Англия"),
-        ("soccer_spain_test", "Spain Test League", "Испания"),
-        ("soccer_germany_test", "Germany Test League", "Германия"),
-        ("soccer_italy_test", "Italy Test League", "Италия"),
-        ("soccer_brazil_test", "Brazil Test League", "Бразилия"),
-        ("soccer_chile_test", "Chile Test League", "Чили"),
-        ("soccer_poland_test", "Poland Test League", "Польша"),
-        ("soccer_argentina_test", "Argentina Test League", "Аргентина"),
-    ]
-    for index, (sport_key, title, country) in enumerate(countries, start=1):
-        kickoff = now + dt.timedelta(hours=3 + index)
-        summaries.append(
-            {
-                "sportKey": sport_key,
-                "sportTitle": title,
-                "country": country,
-                "eventCount": 2,
-                "firstKickoff": kickoff.isoformat(),
-            }
-        )
-        home = f"Home Team {index}"
-        away = f"Away Team {index}"
-        bookmakers = []
-        for bookmaker_index in range(4):
-            home_price = 1.72 + bookmaker_index * 0.035
-            bookmakers.append(
-                {
-                    "key": f"book-{bookmaker_index}",
-                    "title": f"Book {bookmaker_index}",
-                    "last_update": now.isoformat(),
-                    "markets": [
-                        {
-                            "key": "h2h",
-                            "last_update": now.isoformat(),
-                            "outcomes": [
-                                {"name": home, "price": home_price},
-                                {"name": "Draw", "price": 4.20},
-                                {"name": away, "price": 5.20},
-                            ],
-                        },
-                        {
-                            "key": "totals",
-                            "last_update": now.isoformat(),
-                            "outcomes": [
-                                {
-                                    "name": "Over",
-                                    "price": 1.88
-                                    + bookmaker_index * 0.025,
-                                    "point": 2.5,
-                                },
-                                {
-                                    "name": "Under",
-                                    "price": 2.02
-                                    + bookmaker_index * 0.020,
-                                    "point": 2.5,
-                                },
-                            ],
-                        },
-                    ],
-                }
-            )
-        events.append(
-            {
-                "id": f"global-event-{index}",
-                "sport_key": sport_key,
-                "sport_title": title,
-                "commence_time": kickoff.isoformat(),
-                "home_team": home,
-                "away_team": away,
-                "bookmakers": bookmakers,
-                "_globalCountry": country,
-            }
-        )
-
-    selected_sports = v9_select_global_sport_keys(summaries, [], config)
-    if len(selected_sports) != 8:
-        raise RuntimeError("SELF_TEST: глобальный выбор лиг неполон")
-    candidates, by_event, matched = v9_build_event_candidates(
-        events,
-        [],
-        config,
-    )
-    if matched != 0 or len(candidates) != 8:
-        raise RuntimeError("SELF_TEST: неверно построены глобальные кандидаты")
-    pool, diagnostics = v9_build_global_market_consensus_pool(
-        events,
-        by_event,
-        config,
-        now,
-    )
-    selected = v9_select_predictions(pool, 4, config)
-    if len(selected) != 4:
-        raise RuntimeError(
-            f"SELF_TEST: ожидалось 4 прогноза, получено {len(selected)}; "
-            f"diagnostics={diagnostics}"
-        )
-    if len({str(item.get("country")) for item in selected}) != 4:
-        raise RuntimeError("SELF_TEST: нет четырёх разных стран")
-    if len({str(item.get("league")) for item in selected}) != 4:
-        raise RuntimeError("SELF_TEST: нет четырёх разных лиг")
-    if len({int(item["matchId"]) for item in selected}) != 4:
-        raise RuntimeError("SELF_TEST: дубли матчей")
-
-    probability_first_pool = []
-    for index in range(4):
-        probability = 0.58 + index * 0.005
-        bookmaker_odds = 1.50
-        expected_value = probability * bookmaker_odds - 1
-        probability_first_pool.append(
-            {
-                "matchId": 9000 + index,
-                "market": (
-                    "HOME_WIN"
-                    if index % 2 == 0
-                    else "UNDER_2_5"
-                ),
-                "bookmakerOdds": bookmaker_odds,
-                "probability": probability,
-                "expectedValue": expected_value,
-                "confidence": 66,
-                "rankingScore": 70 - index,
-                "oddsQuoteCount": 4,
-                "country": f"Test Country {index}",
-                "league": f"Test League {index}",
-            }
-        )
-
-    probability_first_selected = v9_select_predictions(
-        probability_first_pool,
-        4,
-        config,
-    )
-
-    if len(probability_first_selected) != 4:
-        raise RuntimeError(
-            "SELF_TEST: probability-first не сформировал четвёрку"
-        )
-
-    fallback_tiers = {
-        str(item.get("valueTier") or "")
-        for item in probability_first_selected
-    }
-    if (
-        "STRICT_VALUE" in fallback_tiers
-        or not fallback_tiers.issubset({
-            "PROBABILITY_FIRST",
-            "HIGH_PROBABILITY_FALLBACK",
-        })
-    ):
-        raise RuntimeError(
-            "SELF_TEST: неверная классификация controlled price gap"
-        )
-
-    candidate_by_id = {int(item["matchId"]): item for item in candidates}
-    public = []
-    history = []
-    for prediction in selected:
-        pub, hist = v9_prediction_to_records(
-            prediction,
-            candidate_by_id[int(prediction["matchId"])],
-            config,
-        )
-        public.append(pub)
-        history.append(hist)
-    final_public, final_history = finalize_public_selection(
-        public,
-        history,
-        candidate_by_id,
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    # Synthetic tests are intentionally less strict on edge/data thresholds so
+    # the test exercises the complete 15 -> 4 structure, not live-market luck.
+    test_config = copy.deepcopy(config)
+    test_config.update(
         {
-            **config,
-            "minimumConfidence": 38,
-            "winMarketMinimumConfidence": 38,
-            "minimumModelOdds": 1.01,
-            "maximumModelOdds": 20.0,
-            "minimumLeadHours": 1,
-        },
-        now,
+            "bestBetMinimumProbability": 0.48,
+            "bestBetMinimumEdge": -0.08,
+            "bestBetMinimumExpectedValue": -0.08,
+            "bestBetMinimumDataQuality": 35,
+            "bestBetMinimumAgreement": 35,
+            "bestBetMaximumAnomaly": 80,
+            "lowOddsMinimumProbability": 0.50,
+            "lowOddsMinimumEdge": -0.08,
+            "maximumSameLeagueBestBets": 2,
+            "maximumSameMarketFamilyBestBets": 4,
+        }
     )
-    if len(final_public) != 4 or len(final_history) != 4:
-        raise RuntimeError(
-            "SELF_TEST: финальный guard потерял прогнозы"
+    now = dt.datetime(2026, 8, 1, 8, 0, tzinfo=UTC)
+    state = default_state(test_config, now)
+    events = []
+    for index in range(18):
+        sport = "soccer" if index < 13 else "ice_hockey"
+        key = f"soccer_test_{index % 6}" if sport == "soccer" else f"icehockey_test_{index % 3}"
+        title = f"Test League {index % 8}"
+        events.append(
+            synthetic_bookmaker_event(
+                f"event-{index}",
+                key,
+                title,
+                f"Home {index}",
+                f"Away {index}",
+                now + dt.timedelta(hours=2 + index),
+                1.72 + (index % 3) * 0.06,
+                2.4 + (index % 4) * 0.12,
+                3.3 if sport == "soccer" else None,
+                2.5 if sport == "soccer" else 5.5,
+                1.82 + (index % 2) * 0.08,
+                1.95 - (index % 2) * 0.05,
+            )
         )
-    if any(
-        item.get("coefficientType") != "BOOKMAKER_MARKET"
-        or not bool(item.get("marketOddsAvailable"))
-        or not bool(item.get("expectedValueAvailable"))
-        for item in final_public
-    ):
-        raise RuntimeError(
-            "SELF_TEST: финальный guard испортил букмекерские поля"
-        )
+    football_context = {"teamGames": {}, "leagueHomeAverage": 1.45, "leagueAwayAverage": 1.15, "completedLookup": []}
+    daily, diagnostics = build_daily_analysis(events, {}, football_context, {}, state, test_config, now)
+    if len(daily) != 15:
+        raise RuntimeError(f"SELF_TEST expected 15 analyses, got {len(daily)}")
+    best, new_best = select_best_bets(daily, state, test_config, now)
+    if len(best) != 4 or len(new_best) != 4:
+        raise RuntimeError(f"SELF_TEST expected 4 best bets, got {len(best)}")
+    append_new_records_to_history(state, daily, new_best, test_config)
+    state["dailyAnalysis"] = daily
+    state["bestBets"] = best
+    state["predictions"] = copy.deepcopy(best)
 
-    public = final_public
-    history = final_history
-
-    repaired = apply_stake_policy_to_selected_predictions(
-        public,
-        history,
-        10000.0,
-        20.0,
-        now,
-    )
-    if repaired != 4 or any(float(item.get("stake") or 0) != 2000.0 for item in public):
-        raise RuntimeError("SELF_TEST: ставка 20% назначена неверно")
-
-    first = history[0]
-    first["sourceProvider"] = "THE_ODDS_API"
-    settlement_scores = {
-        "HOME_WIN": (2, 0),
-        "AWAY_WIN": (0, 2),
-        "DRAW": (1, 1),
-        "OVER_2_5": (2, 1),
-        "UNDER_2_5": (1, 0),
+    # Settle three outcomes to exercise win/loss/push and bankroll learning.
+    results = {
+        str(best[0]["eventId"]): {"homeScore": 2, "awayScore": 1, "source": "SELF_TEST"},
+        str(best[1]["eventId"]): {"homeScore": 0, "awayScore": 2, "source": "SELF_TEST"},
+        str(best[2]["eventId"]): {"homeScore": 1, "awayScore": 1, "source": "SELF_TEST"},
+        str(best[3]["eventId"]): {"homeScore": 3, "awayScore": 2, "source": "SELF_TEST"},
     }
-    home_score, away_score = settlement_scores[
-        str(first.get("market") or "")
-    ]
-    score_event = {
-        "id": first["oddsEventId"],
-        "completed": True,
-        "scores": [
-            {
-                "name": first["home"],
-                "score": str(home_score),
-            },
-            {
-                "name": first["away"],
-                "score": str(away_score),
-            },
-        ],
-    }
-    bank_state = {
-        "bank": {"starting": 10000.0, "current": 10000.0, "history": []},
-        "history": [first],
-    }
-    settled = v9_resolve_global_history(
-        bank_state,
-        {first["oddsEventId"]: score_event},
-    )
-    if settled != 1 or float(bank_state["bank"]["current"]) <= 10000:
-        raise RuntimeError("SELF_TEST: глобальное завершение банка неверно")
+    settle_pending_records(state, results, football_context, now + dt.timedelta(days=1))
+    update_bank_metrics(state)
+    update_statistics(state)
+    validate_state(state, test_config, allow_legacy=False)
+    if not state.get("learning", {}).get("segments"):
+        raise RuntimeError("SELF_TEST learning segments were not updated")
     print(
-        "SELF_TEST_GREEN_V9 "
-        f"SPORTS={len(selected_sports)} EVENTS={len(events)} "
-        f"MARKETS=h2h,totals TIERS=STRICT,PROBABILITY_FIRST,SAFETY "
-        f"OPTIONS={len(pool)} PRED={len(selected)} COUNTRIES=4 "
-        f"BANK={bank_state['bank']['current']:.2f}"
+        "SELF_TEST_GREEN_V10 "
+        f"ANALYSIS={len(daily)} BEST={len(best)} "
+        f"SOCCER={sum(1 for item in daily if item['sport'] == 'soccer')} "
+        f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
+        f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f}"
     )
     return 0
 
+
+def migrate_state_file() -> int:
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    migrated = migrate_state(load_json(STATE_PATH, {}), config)
+    write_json_atomic(STATE_PATH, migrated)
+    validate_state(migrated, config, allow_legacy=False)
+    write_json_atomic(
+        DAILY_SNAPSHOT_PATH,
+        {
+            "version": STATE_VERSION,
+            "updatedAt": migrated.get("meta", {}).get("updatedAt"),
+            "analysisDateLocal": migrated.get("meta", {}).get("analysisDateLocal"),
+            "dailyAnalysis": migrated.get("dailyAnalysis", []),
+            "bestBets": migrated.get("bestBets", []),
+        },
+    )
+    write_json_atomic(
+        REPORT_PATH,
+        {
+            "status": "GREEN",
+            "version": STATE_VERSION,
+            "sourceMarker": PIPELINE_MARKER,
+            "mode": "MIGRATION",
+            "finishedAt": iso_z(utc_now()),
+            "diagnostics": {
+                "history": len(migrated.get("history") or []),
+                "analysisHistory": len(migrated.get("analysisHistory") or []),
+                "bank": migrated.get("bank", {}).get("current"),
+            },
+            "warnings": [],
+            "errors": [],
+        },
+    )
+    print("MIGRATION_GREEN_V10")
+    return 0
+
+
 def cli_main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="AI Football Lab data pipeline"
-    )
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument(
-        "--daily-ai",
-        action="store_true",
-        help="Сформировать дневной JSON из текущего state без API",
-    )
-    mode.add_argument(
-        "--validate",
-        action="store_true",
-        help="Проверить конфигурацию и state без API",
-    )
-    mode.add_argument(
-        "--self-test",
-        action="store_true",
-        help="Запустить встроенный офлайн-тест",
-    )
-    mode.add_argument(
-        "--update",
-        action="store_true",
-        help="Запустить полное обновление (режим по умолчанию)",
-    )
-    arguments = parser.parse_args(argv)
+    parser = argparse.ArgumentParser(description="AI Football Lab V10 pipeline")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--auto", action="store_true", help="Settle due events and generate once per local day")
+    group.add_argument("--update", action="store_true", help="Force daily generation")
+    group.add_argument("--settle", action="store_true", help="Settle due events without forced generation")
+    group.add_argument("--validate", action="store_true", help="Validate repository and state")
+    group.add_argument("--self-test", action="store_true", help="Run offline synthetic end-to-end test")
+    group.add_argument("--migrate-state", action="store_true", help="Migrate legacy state to V10")
+    args = parser.parse_args(argv)
 
-    if arguments.daily_ai:
-        return run_daily_ai_mode()
-
-    if arguments.validate:
+    if args.validate:
         return validate_repository_files()
-
-    if arguments.self_test:
+    if args.self_test:
         return run_self_test()
-
-    return main()
+    if args.migrate_state:
+        return migrate_state_file()
+    if args.update:
+        return run_pipeline("update", force_generation=True)
+    if args.settle:
+        return run_pipeline("settle", force_generation=False)
+    return run_pipeline("auto", force_generation=False)
 
 
 if __name__ == "__main__":
     try:
-        sys.exit(cli_main())
-    except Exception as error:
-        log(f"КРИТИЧЕСКАЯ ОШИБКА: {error}")
-
+        raise SystemExit(cli_main())
+    except KeyboardInterrupt:
+        raise
+    except Exception as exc:
+        log(f"FATAL: {type(exc).__name__}: {exc}")
         try:
             write_json_atomic(
                 REPORT_PATH,
-                create_report(
-                    status="FAILED",
-                    message=str(error),
-                ),
+                {
+                    "status": "RED",
+                    "version": STATE_VERSION,
+                    "sourceMarker": PIPELINE_MARKER,
+                    "finishedAt": iso_z(utc_now()),
+                    "errors": [f"{type(exc).__name__}: {exc}"],
+                },
             )
         except Exception:
             pass
-
         raise

@@ -1,976 +1,658 @@
-"use strict";
+/* V10_SITE_PREMIUM_DASHBOARD */
+(() => {
+    "use strict";
 
-const STATE_PATH = "data/state.json";
-const AUTO_REFRESH_INTERVAL_MS = 60_000;
-const MATCH_CLOCK_INTERVAL_MS = 30_000;
+    const STATE_URL = "data/state.json";
+    const REFRESH_INTERVAL_MS = 60_000;
+    const MOSCOW_TIME_ZONE = "Europe/Moscow";
 
-let applicationState = null;
-let currentHistoryFilter = "all";
-let lastStateSignature = "";
-let dataRefreshTimer = null;
-let matchClockTimer = null;
-let dataRequestController = null;
-let interfaceInitialized = false;
+    const runtime = {
+        state: null,
+        signature: "",
+        sportFilter: "all",
+        historyFilter: "all",
+        refreshTimer: null,
+        freshnessTimer: null,
+        chartFrame: null,
+    };
 
-document.addEventListener("DOMContentLoaded", initializeApplication);
+    document.addEventListener("DOMContentLoaded", initialize);
 
-async function initializeApplication() {
-    if (!interfaceInitialized) {
+    async function initialize() {
+        initializeRevealObserver();
         initializeFilters();
-        initializeRuntimeEvents();
-        interfaceInitialized = true;
+        initializeDialog();
+        window.addEventListener("resize", debounce(() => renderBankChart(runtime.state?.bank), 120));
+        window.addEventListener("online", () => loadState({ notify: true }));
+        window.addEventListener("offline", () => setConnectionState("offline"));
+
+        await loadState({ notify: false });
+        runtime.refreshTimer = window.setInterval(() => loadState({ notify: false }), REFRESH_INTERVAL_MS);
+        runtime.freshnessTimer = window.setInterval(updateFreshnessLabels, 30_000);
     }
 
-    await loadApplicationState({
-        showLoadingError: true
-    });
-
-    initializeScrollEffects();
-    startRuntimeTimers();
-}
-
-async function loadApplicationState(options = {}) {
-    const {
-        showLoadingError = false
-    } = options;
-
-    setRefreshState("loading");
-
-    if (dataRequestController) {
-        dataRequestController.abort();
-    }
-
-    dataRequestController = new AbortController();
-
-    try {
-        const stateUrl = `${STATE_PATH}?v=${Date.now()}`;
-
-        const response = await fetch(stateUrl, {
-            cache: "no-store",
-            signal: dataRequestController.signal,
-            headers: {
-                "Cache-Control": "no-cache"
+    async function loadState({ notify }) {
+        setConnectionState("loading", notify ? "Проверяем обновление" : "");
+        try {
+            const response = await fetch(`${STATE_URL}?v=${Date.now()}`, {
+                cache: "no-store",
+                headers: { Accept: "application/json" },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Ошибка загрузки данных: ${response.status}`);
+            const state = await response.json();
+            const signature = createStateSignature(state);
+            const changed = signature !== runtime.signature;
+            runtime.state = normalizeState(state);
+            runtime.signature = signature;
+            renderApplication(runtime.state);
+            setConnectionState("ready", notify || changed ? "Данные актуализированы" : "");
+        } catch (error) {
+            console.error("State loading failed", error);
+            setConnectionState(navigator.onLine ? "error" : "offline", "Сохранены последние доступные данные");
+            if (!runtime.state) {
+                renderLoadError();
+            }
         }
+    }
 
-        const nextState = await response.json();
-        const nextSignature = createStateSignature(nextState);
-        const stateChanged = nextSignature !== lastStateSignature;
+    function normalizeState(state) {
+        const normalized = state && typeof state === "object" ? state : {};
+        normalized.meta = normalized.meta && typeof normalized.meta === "object" ? normalized.meta : {};
+        normalized.bank = normalized.bank && typeof normalized.bank === "object" ? normalized.bank : {};
+        normalized.statistics = normalized.statistics && typeof normalized.statistics === "object" ? normalized.statistics : {};
+        normalized.learning = normalized.learning && typeof normalized.learning === "object" ? normalized.learning : {};
+        normalized.dailyAnalysis = Array.isArray(normalized.dailyAnalysis) ? normalized.dailyAnalysis : [];
+        normalized.bestBets = Array.isArray(normalized.bestBets)
+            ? normalized.bestBets
+            : Array.isArray(normalized.predictions)
+              ? normalized.predictions
+              : [];
+        normalized.history = Array.isArray(normalized.history) ? normalized.history : [];
+        return normalized;
+    }
 
-        applicationState = nextState;
-        lastStateSignature = nextSignature;
+    function createStateSignature(state) {
+        const meta = state?.meta || {};
+        const bank = state?.bank || {};
+        return [
+            meta.updatedAt || "",
+            meta.version || "",
+            state?.dailyAnalysis?.length || 0,
+            state?.bestBets?.length || state?.predictions?.length || 0,
+            bank.current || 0,
+            state?.history?.length || 0,
+        ].join("|");
+    }
 
-        if (stateChanged || showLoadingError) {
-            renderApplication(applicationState);
-        } else {
-            renderMeta(applicationState);
-            refreshDynamicMatchTimes();
-        }
+    function renderApplication(state) {
+        renderMeta(state);
+        renderBestBets(state.bestBets, state.meta, state.bank);
+        renderDailyAnalysis(state.dailyAnalysis);
+        renderBank(state.bank, state.statistics);
+        renderLearning(state.learning, state.statistics);
+        renderHistory(state.history);
+        updateFreshnessLabels();
+    }
 
-        setRefreshState("ready");
-    } catch (error) {
-        if (error.name === "AbortError") {
+    function renderMeta(state) {
+        const { meta = {}, bank = {}, statistics = {}, dailyAnalysis = [], bestBets = [] } = state;
+        const soccerCount = Number(meta.soccerAnalyses ?? dailyAnalysis.filter((item) => item.sport === "soccer").length);
+        const hockeyCount = Number(meta.hockeyAnalyses ?? dailyAnalysis.filter((item) => item.sport === "ice_hockey").length);
+        const leagueCount = Number(meta.leaguesAnalyzed ?? new Set(dailyAnalysis.map((item) => item.league).filter(Boolean)).size);
+
+        setText("heroAnalysisCount", dailyAnalysis.length || meta.analysisPublished || 0);
+        setText("heroBestCount", bestBets.length);
+        setText("heroLeagueCount", leagueCount);
+        setText("heroBank", formatCurrency(bank.current));
+        setText("heroUpdated", formatCompactDateTime(meta.updatedAt));
+        setText("stripSoccer", soccerCount);
+        setText("stripHockey", hockeyCount);
+        setText("stripAccuracy", formatPercent(statistics.bestBetsAccuracy));
+        setText("stripRoi", formatSignedPercent(bank.roi));
+        setText("footerUpdated", `Обновлено ${formatDateTime(meta.updatedAt)}`);
+
+        const status = String(meta.status || "DEGRADED").toUpperCase();
+        const statusNode = document.getElementById("topbarStatus");
+        statusNode?.classList.toggle("is-green", status === "GREEN");
+        statusNode?.classList.toggle("is-red", status === "RED");
+        setText("systemStatus", status === "GREEN" ? "Данные актуальны" : status === "RED" ? "Ошибка обновления" : "Ограниченные данные");
+    }
+
+    function renderBestBets(bestBets, meta, bank) {
+        const grid = document.getElementById("bestBetsGrid");
+        if (!grid) return;
+
+        setText("bestBetsUpdated", `Сформировано ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`);
+        const exposure = bestBets
+            .filter((item) => String(item.status || "pending") === "pending")
+            .reduce((sum, item) => sum + number(item.stake), 0);
+        const bankValue = Math.max(1, number(bank?.current));
+        setText("bestBetsExposure", `Экспозиция ${formatCurrency(exposure)} · ${formatNumber((exposure / bankValue) * 100, 0)}%`);
+
+        if (!bestBets.length) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <strong>Сегодня нет ставок, прошедших все фильтры</strong>
+                    <p>Система не заполняет четыре места искусственно. Аналитическая выборка остаётся доступной ниже, а виртуальный банк не подвергается необоснованному риску.</p>
+                </div>`;
             return;
         }
 
-        console.error(error);
-        setRefreshState("error");
-
-        if (showLoadingError && !applicationState) {
-            document.getElementById("predictionsGrid").innerHTML = `
-                <div class="loading-card">
-                    <p>
-                        Не удалось загрузить данные. Система повторит попытку
-                        автоматически.
-                    </p>
-                </div>
-            `;
-        }
-    }
-}
-
-function initializeRuntimeEvents() {
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) {
-            loadApplicationState();
-            refreshDynamicMatchTimes();
-        }
-    });
-
-    window.addEventListener("focus", () => {
-        loadApplicationState();
-    });
-
-    window.addEventListener("online", () => {
-        loadApplicationState();
-    });
-
-    window.addEventListener("offline", () => {
-        setRefreshState("offline");
-    });
-}
-
-function startRuntimeTimers() {
-    if (dataRefreshTimer) {
-        window.clearInterval(dataRefreshTimer);
-    }
-
-    if (matchClockTimer) {
-        window.clearInterval(matchClockTimer);
-    }
-
-    dataRefreshTimer = window.setInterval(() => {
-        if (!document.hidden && navigator.onLine) {
-            loadApplicationState();
-        }
-    }, AUTO_REFRESH_INTERVAL_MS);
-
-    matchClockTimer = window.setInterval(() => {
-        refreshDynamicMatchTimes();
-        updateDataFreshness();
-    }, MATCH_CLOCK_INTERVAL_MS);
-}
-
-function createStateSignature(state) {
-    return JSON.stringify({
-        updatedAt: state?.meta?.updatedAt || "",
-        selectedPredictions: state?.meta?.selectedPredictions || 0,
-        bankCurrent: state?.bank?.current || 0,
-        historyLength: state?.history?.length || 0,
-        predictions: (state?.predictions || []).map((item) => ({
-            id: item.id,
-            utcDate: item.utcDate,
-            confidence: item.confidence
-        }))
-    });
-}
-
-function setRefreshState(state) {
-    const indicator = document.getElementById("refreshIndicator");
-
-    if (!indicator) {
-        return;
-    }
-
-    indicator.classList.remove(
-        "is-loading",
-        "is-ready",
-        "is-error",
-        "is-offline"
-    );
-
-    indicator.classList.add(`is-${state}`);
-
-    if (state === "offline") {
-        setText("dataFreshness", "Нет подключения к интернету");
-        return;
-    }
-
-    if (state === "error") {
-        setText(
-            "dataFreshness",
-            "Не удалось проверить обновление — повторим автоматически"
-        );
-        return;
-    }
-
-    if (state === "loading") {
-        setText("dataFreshness", "Проверяем новые данные");
-        return;
-    }
-
-    updateDataFreshness();
-}
-
-function renderApplication(state) {
-    renderMeta(state);
-    renderPredictions(
-        state.predictions || [],
-        state.meta || {}
-    );
-    renderBank(state.bank || {});
-    renderStatistics(state.statistics || {}, state.history || []);
-    renderHistory(state.history || [], currentHistoryFilter);
-}
-
-function renderMeta(state) {
-    const updated = state.meta?.updatedAt
-        ? formatDateTime(state.meta.updatedAt)
-        : "Нет данных";
-
-    setText("lastUpdated", updated);
-    setText("appVersion", state.meta?.version || "1.0.0");
-    setText("radarCount", state.meta?.analyzedMatches || 0);
-
-    updateDataFreshness();
-}
-
-// V4_5_RANKED_PREDICTIONS
-
-function renderPredictions(predictions, meta = {}) {
-    const container = document.getElementById("predictionsGrid");
-
-    if (!predictions.length) {
-        const candidateCount = Number(
-            meta.candidateMatches || 0
-        );
-
-        const message = candidateCount > 0
-            ? (
-                "Подборка временно обновляется. " +
-                "Система повторит анализ автоматически."
-            )
-            : (
-                "В ближайшие сутки нет матчей, соответствующих " +
-                "текущим требованиям источника данных."
-            );
-
-        container.innerHTML = `
-            <div class="loading-card empty-prediction-state">
-                <strong>Новая подборка готовится</strong>
-                <p>${escapeHtml(message)}</p>
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML = predictions.map(
-        (prediction, index) => {
-        const riskClass = prediction.risk === "Средний"
-            ? "risk-medium"
-            : "risk-low";
-
-        const rank = Number(
-            prediction.rank || index + 1
-        );
-
-        const rankLabel = prediction.rankLabel
-            || (
-                rank === 1
-                    ? "Лучший прогноз дня"
-                    : `Прогноз №${rank}`
-            );
-
-        const sourceLabel = prediction.analysisSourceLabel
-            || (
-                prediction.analysisMode === "GLOBAL_MARKET_CONSENSUS"
-                    ? "Глобальный прогноз по вероятности и рынку"
-                    : prediction.analysisMode === "DETERMINISTIC_FALLBACK"
-                        ? "Резервный статистический расчёт"
-                        : "ИИ и статистика"
-            );
-
-        return `
-            <article
-                class="prediction-card ${
-                    rank === 1 ? "is-best-prediction" : ""
-                }"
-                data-match-id="${escapeHtml(prediction.id)}"
-                data-kickoff="${escapeHtml(prediction.utcDate || "")}"
-            >
-                <div class="prediction-rank-row">
-                    <span class="prediction-rank ${
-                        rank === 1 ? "is-best" : ""
-                    }">
-                        ${escapeHtml(rankLabel)}
-                    </span>
-
-                    <span class="analysis-source">
-                        ${escapeHtml(sourceLabel)}
-                    </span>
-                </div>
-
-                <div class="prediction-top">
-                    <div class="league-info">
-                        <strong>${escapeHtml(prediction.league)}</strong>
-                        <span>${escapeHtml(prediction.country)}</span>
-                    </div>
-
-                    <span class="risk-badge ${riskClass}">
-                        ${escapeHtml(prediction.risk)}
-                    </span>
-                </div>
-
-                <div class="match-time">
-                    <span>
-                        ${formatMatchDate(prediction.date, prediction.time)}
-                    </span>
-
-                    <div class="match-runtime">
-                        <strong class="match-countdown">
-                            ${formatMatchCountdown(prediction.utcDate)}
-                        </strong>
-
-                        ${renderMatchRuntimeStatus(prediction)}
-                    </div>
-                </div>
-
-                <div class="teams">
-                    <strong>${escapeHtml(prediction.home)}</strong>
-                    <span>—</span>
-                    <strong>${escapeHtml(prediction.away)}</strong>
-                </div>
-
-                <div class="pick-box">
-                    <div class="pick-copy">
-                        <span>Прогноз</span>
-                        <strong>${escapeHtml(prediction.pick)}</strong>
-                    </div>
-
-                    <div class="odds-box">
-                        <span>Коэффициент букмекера</span>
-                        <strong>${formatNumber(prediction.odds, 2)}</strong>
-                    </div>
-                </div>
-
-                <div class="confidence-row">
-                    <div class="confidence-label">
-                        <span>Уверенность</span>
-                        <strong>${prediction.confidence}%</strong>
-                    </div>
-
-                    <div class="confidence-track">
-                        <span style="width: ${clamp(prediction.confidence, 0, 100)}%"></span>
-                    </div>
-                </div>
-
-                <p class="reason">
-                    ${escapeHtml(prediction.reason)}
-                </p>
-            </article>
-        `;
-    }).join("");
-
-    refreshDynamicMatchTimes();
-}
-
-function renderBank(bank) {
-    const current = Number(bank.current || 0);
-    const starting = Number(bank.starting || 0);
-    const difference = current - starting;
-    const differencePercent = starting
-        ? (difference / starting) * 100
-        : 0;
-
-    setText("currentBank", formatCurrency(current));
-    setText("startingBank", formatCurrency(starting));
-    setText("stakePercent", `${bank.stakePercent || 20}%`);
-    setText("roiValue", formatSignedPercent(bank.roi || 0));
-    setText("drawdownValue", `${formatNumber(bank.maxDrawdown || 0, 1)}%`);
-
-    const changeElement = document.getElementById("bankChange");
-
-    changeElement.textContent = `${difference >= 0 ? "+" : ""}${formatCurrency(difference)} · ${formatSignedPercent(differencePercent)}`;
-    changeElement.classList.toggle("negative", difference < 0);
-
-    const history = Array.isArray(bank.history)
-        ? bank.history
-        : [];
-
-    setText(
-        "chartPeriod",
-        history.length
-            ? `${history.length} контрольных точек`
-            : "Нет данных"
-    );
-
-    drawBankChart(history);
-}
-
-function renderStatistics(statistics, history) {
-    const won = history.filter((item) => item.status === "won").length;
-    const lost = history.filter((item) => item.status === "lost").length;
-    const pending = history.filter((item) => item.status === "pending").length;
-    const completed = won + lost;
-
-    const accuracy = completed
-        ? (won / completed) * 100
-        : 0;
-
-    setText("accuracyValue", `${formatNumber(accuracy, 1)}%`);
-    setText("wonCount", won);
-    setText("lostCount", lost);
-    setText("pendingCount", pending);
-    setText("totalPredictions", history.length);
-
-    setText(
-        "averageOdds",
-        formatNumber(
-            statistics.averageOdds || calculateAverageOdds(history),
-            2
-        )
-    );
-
-    setText("currentStreak", statistics.currentStreak || "—");
-    setText("bestSegment", statistics.bestSegment || "Недостаточно данных");
-
-    const ring = document.getElementById("accuracyRing");
-    const degrees = clamp(accuracy, 0, 100) * 3.6;
-
-    ring.style.background = `
-        conic-gradient(
-            var(--accent) 0deg,
-            var(--accent) ${degrees}deg,
-            rgba(255, 255, 255, 0.055) ${degrees}deg
-        )
-    `;
-}
-
-function renderHistory(history, filter) {
-    const body = document.getElementById("historyBody");
-
-    const filtered = filter === "all"
-        ? history
-        : history.filter((item) => item.status === filter);
-
-    if (!filtered.length) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="6" class="table-loading">
-                    В выбранной категории пока нет прогнозов.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    body.innerHTML = filtered.map((item) => {
-        const status = getStatusDisplay(item.status);
-
-        return `
-            <tr>
-                <td>${formatShortDate(item.date)}</td>
-
-                <td>
-                    <div class="match-cell">
-                        <strong>
-                            ${escapeHtml(item.home)} — ${escapeHtml(item.away)}
-                        </strong>
-                        <span>${escapeHtml(item.league)}</span>
-                    </div>
-                </td>
-
-                <td>${escapeHtml(item.pick)}</td>
-                <td>${formatNumber(item.odds, 2)}</td>
-                <td>${escapeHtml(item.score || "—")}</td>
-
-                <td>
-                    <span class="status-badge ${status.className}">
-                        ${status.label}
-                    </span>
-                </td>
-            </tr>
-        `;
-    }).join("");
-}
-
-function initializeFilters() {
-    const buttons = document.querySelectorAll(".filter-button");
-
-    buttons.forEach((button) => {
-        button.addEventListener("click", () => {
-            currentHistoryFilter = button.dataset.filter || "all";
-
-            buttons.forEach((item) => {
-                item.classList.toggle(
-                    "active",
-                    item === button
-                );
-            });
-
-            renderHistory(
-                applicationState?.history || [],
-                currentHistoryFilter
-            );
+        grid.innerHTML = bestBets.map((bet, index) => bestBetTemplate(bet, index)).join("");
+        grid.querySelectorAll("[data-analysis-id]").forEach((node) => {
+            node.addEventListener("click", () => openAnalysisDialog(findRecord(node.dataset.analysisId)));
         });
-    });
-}
-
-function initializeScrollEffects() {
-    const elements = document.querySelectorAll(
-        ".prediction-card, .stat-card, .metric-card, .method-grid article"
-    );
-
-    if (!("IntersectionObserver" in window)) {
-        return;
     }
 
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (!entry.isIntersecting) {
-                    return;
+    function bestBetTemplate(bet, index) {
+        const probability = number(bet.modelProbability || bet.probability) * 100;
+        const edge = number(bet.edge) * 100;
+        const ev = number(bet.expectedValue) * 100;
+        const dataQuality = number(bet.dataQuality);
+        const status = String(bet.status || "pending");
+        const rankLabel = bet.rankLabel || (index === 0 ? "Лучшая ставка" : `Ставка №${index + 1}`);
+        return `
+            <article class="best-bet-card" data-sport="${escapeHtml(bet.sport || "soccer")}" data-analysis-id="${escapeHtml(bet.id)}" tabindex="0" role="button">
+                <div class="bet-card-top">
+                    <span class="bet-rank">${escapeHtml(rankLabel)}</span>
+                    <span class="sport-chip">${escapeHtml(bet.sportLabel || sportName(bet.sport))}</span>
+                </div>
+                <div class="bet-card-match">
+                    <small>${escapeHtml([bet.country, bet.league].filter(Boolean).join(" · "))}</small>
+                    <h3>${escapeHtml(bet.home)} — ${escapeHtml(bet.away)}</h3>
+                    <time>${formatMatchTime(bet.commenceTime || bet.utcDate)} · ${escapeHtml(runtimeStatus(bet))}</time>
+                </div>
+                <div class="bet-selection">
+                    <div>
+                        <span>Выбранный рынок</span>
+                        <strong>${escapeHtml(bet.pick || "—")}</strong>
+                    </div>
+                    <div class="bet-odds">
+                        <span>Коэффициент</span>
+                        <strong>${formatNumber(bet.bookmakerOdds || bet.odds, 2)}</strong>
+                    </div>
+                </div>
+                <div class="bet-metrics">
+                    <div class="metric-block"><span>Вероятность</span><strong>${formatNumber(probability, 1)}%</strong></div>
+                    <div class="metric-block"><span>Преимущество</span><strong class="${edge >= 0 ? "is-positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                    <div class="metric-block"><span>EV</span><strong class="${ev >= 0 ? "is-positive" : ""}">${formatSignedNumber(ev, 1)}%</strong></div>
+                    <div class="metric-block"><span>Данные</span><strong>${formatNumber(dataQuality, 0)}/100</strong></div>
+                </div>
+                <div class="bet-card-footer">
+                    <span>Виртуальная ставка</span>
+                    <strong>${formatCurrency(bet.stake)} · ${formatNumber(bet.stakePercent, 0)}%</strong>
+                    <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
+                </div>
+            </article>`;
+    }
+
+    function renderDailyAnalysis(records) {
+        const list = document.getElementById("analysisList");
+        if (!list) return;
+        const filtered = records.filter((item) => runtime.sportFilter === "all" || item.sport === runtime.sportFilter);
+
+        setText("analysisCount", records.length);
+        setText("countryCount", new Set(records.map((item) => item.country).filter(Boolean)).size);
+        setText("marketFamilyCount", new Set(records.map((item) => item.marketFamily).filter(Boolean)).size);
+        setText("averageDataQuality", records.length ? `${formatNumber(average(records.map((item) => number(item.dataQuality))), 0)}/100` : "—");
+
+        if (!filtered.length) {
+            list.innerHTML = `<div class="analysis-loading">Для выбранного вида спорта прогнозов нет.</div>`;
+            return;
+        }
+
+        list.innerHTML = filtered.map((item) => analysisRowTemplate(item)).join("");
+        list.querySelectorAll("[data-analysis-id]").forEach((node) => {
+            node.addEventListener("click", () => openAnalysisDialog(findRecord(node.dataset.analysisId)));
+            node.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openAnalysisDialog(findRecord(node.dataset.analysisId));
                 }
-
-                entry.target.animate(
-                    [
-                        {
-                            opacity: 0,
-                            transform: "translateY(18px)"
-                        },
-                        {
-                            opacity: 1,
-                            transform: "translateY(0)"
-                        }
-                    ],
-                    {
-                        duration: 550,
-                        easing: "cubic-bezier(.2,.8,.2,1)",
-                        fill: "both"
-                    }
-                );
-
-                observer.unobserve(entry.target);
             });
-        },
-        {
-            threshold: 0.08
-        }
-    );
-
-    elements.forEach((element) => observer.observe(element));
-}
-
-function drawBankChart(history) {
-    const canvas = document.getElementById("bankChart");
-    const context = canvas.getContext("2d");
-
-    const ratio = window.devicePixelRatio || 1;
-    const rectangle = canvas.getBoundingClientRect();
-
-    canvas.width = Math.max(1, Math.round(rectangle.width * ratio));
-    canvas.height = Math.max(1, Math.round(rectangle.height * ratio));
-
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-    const width = rectangle.width;
-    const height = rectangle.height;
-
-    context.clearRect(0, 0, width, height);
-
-    if (!history.length) {
-        return;
+        });
     }
 
-    const values = history.map((item) => Number(item.value));
-    const minimum = Math.min(...values);
-    const maximum = Math.max(...values);
-    const range = maximum - minimum || 1;
-
-    const padding = {
-        top: 22,
-        right: 12,
-        bottom: 28,
-        left: 10
-    };
-
-    const drawableWidth = width - padding.left - padding.right;
-    const drawableHeight = height - padding.top - padding.bottom;
-
-    context.lineWidth = 1;
-    context.strokeStyle = "rgba(143, 255, 201, 0.075)";
-
-    for (let index = 0; index <= 4; index += 1) {
-        const y = padding.top + (drawableHeight / 4) * index;
-
-        context.beginPath();
-        context.moveTo(padding.left, y);
-        context.lineTo(width - padding.right, y);
-        context.stroke();
+    function analysisRowTemplate(item) {
+        const probability = number(item.modelProbability || item.probability) * 100;
+        const edge = number(item.edge) * 100;
+        const bestSelection = item.bestBetSelection;
+        const pick = bestSelection?.pick || item.pick;
+        const odds = bestSelection?.odds || item.bookmakerOdds || item.odds;
+        return `
+            <div class="analysis-row ${item.isBestBet ? "is-best" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
+                <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
+                <div class="analysis-match">
+                    <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(item.country || "")}</small>
+                    <strong>${escapeHtml(item.home)} — ${escapeHtml(item.away)}</strong>
+                    <span>${escapeHtml(item.league || "")} · ${formatMatchTime(item.commenceTime || item.utcDate)}</span>
+                </div>
+                <div class="analysis-pick">
+                    <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
+                    <strong>${escapeHtml(pick || "—")}</strong>
+                </div>
+                <div class="analysis-stat"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
+                <div class="analysis-stat"><small>Коэфф.</small><strong>${formatNumber(odds, 2)}</strong></div>
+                <div class="analysis-stat"><small>Edge</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)}</strong></div>
+                <span class="analysis-chevron">›</span>
+            </div>`;
     }
 
-    const points = values.map((value, index) => {
-        const x = padding.left +
-            (index / Math.max(values.length - 1, 1)) * drawableWidth;
-
-        const y = padding.top +
-            (1 - (value - minimum) / range) * drawableHeight;
-
-        return {
-            x,
-            y
-        };
-    });
-
-    const gradient = context.createLinearGradient(0, padding.top, 0, height);
-
-    gradient.addColorStop(0, "rgba(83, 243, 166, 0.24)");
-    gradient.addColorStop(1, "rgba(83, 243, 166, 0)");
-
-    context.beginPath();
-    context.moveTo(points[0].x, height - padding.bottom);
-
-    points.forEach((point) => {
-        context.lineTo(point.x, point.y);
-    });
-
-    context.lineTo(points[points.length - 1].x, height - padding.bottom);
-    context.closePath();
-
-    context.fillStyle = gradient;
-    context.fill();
-
-    context.beginPath();
-
-    points.forEach((point, index) => {
-        if (index === 0) {
-            context.moveTo(point.x, point.y);
-        } else {
-            context.lineTo(point.x, point.y);
-        }
-    });
-
-    context.lineWidth = 2.5;
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.strokeStyle = "#64f6ad";
-    context.shadowColor = "rgba(83, 243, 166, 0.5)";
-    context.shadowBlur = 13;
-    context.stroke();
-    context.shadowBlur = 0;
-
-    points.forEach((point, index) => {
-        if (
-            index !== 0 &&
-            index !== points.length - 1 &&
-            index % 2 !== 0
-        ) {
-            return;
-        }
-
-        context.beginPath();
-        context.arc(point.x, point.y, 3.3, 0, Math.PI * 2);
-        context.fillStyle = "#9affc9";
-        context.fill();
-    });
-}
-
-function calculateAverageOdds(history) {
-    if (!history.length) {
-        return 0;
+    function renderBank(bank = {}, statistics = {}) {
+        const starting = number(bank.starting);
+        const current = number(bank.current);
+        const active = number(bank.activeExposure);
+        const roi = number(bank.roi);
+        setText("currentBank", formatCurrency(current));
+        setText("startingBank", formatCurrency(starting));
+        setText("activeExposure", formatCurrency(active));
+        setText("activeExposurePercent", current > 0 ? `${formatNumber((active / current) * 100, 0)}% текущего банка` : "—");
+        setText("maxDrawdown", `${formatNumber(bank.maxDrawdown, 2)}%`);
+        setText("averageOdds", number(statistics.averageOdds) > 0 ? formatNumber(statistics.averageOdds, 2) : "—");
+        setText("bankRoi", formatSignedPercent(roi));
+        document.getElementById("bankRoi")?.classList.toggle("is-negative", roi < 0);
+        const history = Array.isArray(bank.history) ? bank.history : [];
+        setText("bankHistoryCaption", history.length ? `${history.length} зафиксированных точек` : "История накапливается");
+        renderBankChart(bank);
     }
 
-    const values = history
-        .map((item) => Number(item.odds))
-        .filter(Number.isFinite);
+    function renderBankChart(bank = {}) {
+        const canvas = document.getElementById("bankChart");
+        if (!(canvas instanceof HTMLCanvasElement)) return;
+        const history = Array.isArray(bank.history) ? bank.history : [];
+        const values = history.map((item) => number(item.value)).filter((value) => Number.isFinite(value));
+        if (!values.length) values.push(number(bank.starting || bank.current || 10000));
 
-    if (!values.length) {
-        return 0;
-    }
+        if (runtime.chartFrame) cancelAnimationFrame(runtime.chartFrame);
+        runtime.chartFrame = requestAnimationFrame(() => {
+            const rect = canvas.getBoundingClientRect();
+            const ratio = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+            canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+            const ctx = canvas.getContext("2d");
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            const width = rect.width;
+            const height = rect.height;
+            const padding = { top: 24, right: 10, bottom: 25, left: 10 };
+            const innerWidth = width - padding.left - padding.right;
+            const innerHeight = height - padding.top - padding.bottom;
+            const minimum = Math.min(...values);
+            const maximum = Math.max(...values);
+            const range = Math.max(1, maximum - minimum);
 
-    return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function getStatusDisplay(status) {
-    const map = {
-        won: {
-            label: "Успешный",
-            className: "status-won"
-        },
-        lost: {
-            label: "Неуспешный",
-            className: "status-lost"
-        },
-        pending: {
-            label: "Ожидается",
-            className: "status-pending"
-        }
-    };
-
-    return map[status] || map.pending;
-}
-
-function setText(id, value) {
-    const element = document.getElementById(id);
-
-    if (element) {
-        element.textContent = value;
-    }
-}
-
-function formatCurrency(value) {
-    return new Intl.NumberFormat("ru-RU", {
-        maximumFractionDigits: 0
-    }).format(Number(value || 0)) + " ед.";
-}
-
-function formatNumber(value, fractionDigits = 0) {
-    return new Intl.NumberFormat("ru-RU", {
-        minimumFractionDigits: fractionDigits,
-        maximumFractionDigits: fractionDigits
-    }).format(Number(value || 0));
-}
-
-function formatSignedPercent(value) {
-    const number = Number(value || 0);
-
-    return `${number >= 0 ? "+" : ""}${formatNumber(number, 1)}%`;
-}
-
-function formatDateTime(value) {
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return new Intl.DateTimeFormat("ru-RU", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    }).format(date);
-}
-
-function formatShortDate(value) {
-    const date = new Date(`${value}T12:00:00`);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return new Intl.DateTimeFormat("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-    }).format(date);
-}
-
-function formatMatchDate(dateValue, timeValue) {
-    const date = new Date(`${dateValue}T${timeValue || "00:00"}:00`);
-
-    if (Number.isNaN(date.getTime())) {
-        return `${dateValue} · ${timeValue || ""}`;
-    }
-
-    return new Intl.DateTimeFormat("ru-RU", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit"
-    }).format(date);
-}
-
-
-// V4_4_MATCH_STATUS_PRESENTATION
-
-function renderMatchRuntimeStatus(prediction) {
-    const rawStatus = String(
-        prediction.matchStatus || ""
-    ).toUpperCase();
-
-    const label = prediction.matchStatusLabel
-        || getMatchStatusLabel(rawStatus);
-
-    const score = prediction.liveScore || "";
-    const minute = Number(prediction.minute);
-
-    const minuteText = Number.isFinite(minute) && minute > 0
-        ? `${minute}-я минута`
-        : "";
-
-    const detail = [score, minuteText]
-        .filter(Boolean)
-        .join(" · ");
-
-    const statusClass = getMatchStatusClass(rawStatus);
-
-    return `
-        <span class="match-runtime-status ${statusClass}">
-            <span>${escapeHtml(label)}</span>
-            ${detail
-                ? `<strong>${escapeHtml(detail)}</strong>`
-                : ""
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = "rgba(255,255,255,.055)";
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i += 1) {
+                const y = padding.top + (innerHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
             }
-        </span>
-    `;
-}
 
+            const points = values.map((value, index) => ({
+                x: padding.left + (values.length === 1 ? innerWidth / 2 : (innerWidth * index) / (values.length - 1)),
+                y: padding.top + innerHeight - ((value - minimum) / range) * innerHeight,
+            }));
 
-function getMatchStatusLabel(status) {
-    const labels = {
-        SCHEDULED: "Запланирован",
-        TIMED: "Ожидается начало",
-        IN_PLAY: "Матч идёт",
-        PAUSED: "Перерыв",
-        FINISHED: "Завершён",
-        POSTPONED: "Перенесён",
-        SUSPENDED: "Приостановлен",
-        CANCELLED: "Отменён",
-        AWARDED: "Результат присуждён",
-        UNKNOWN: "Статус уточняется"
-    };
+            const gradient = ctx.createLinearGradient(0, padding.top, 0, height);
+            gradient.addColorStop(0, "rgba(184,255,74,.24)");
+            gradient.addColorStop(1, "rgba(184,255,74,0)");
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, height - padding.bottom);
+            points.forEach((point) => ctx.lineTo(point.x, point.y));
+            ctx.lineTo(points[points.length - 1].x, height - padding.bottom);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
 
-    return labels[status] || labels.UNKNOWN;
-}
+            ctx.beginPath();
+            points.forEach((point, index) => {
+                if (index === 0) ctx.moveTo(point.x, point.y);
+                else ctx.lineTo(point.x, point.y);
+            });
+            ctx.strokeStyle = "#b8ff4a";
+            ctx.lineWidth = 2.2;
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.shadowColor = "rgba(184,255,74,.38)";
+            ctx.shadowBlur = 12;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
 
-
-function getMatchStatusClass(status) {
-    if (status === "IN_PLAY") {
-        return "is-live";
+            const last = points[points.length - 1];
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = "#b8ff4a";
+            ctx.fill();
+        });
     }
 
-    if (status === "PAUSED") {
-        return "is-paused";
+    function renderLearning(learning = {}, statistics = {}) {
+        const analysisAccuracy = number(statistics.analysisAccuracy);
+        const bestAccuracy = number(statistics.bestBetsAccuracy);
+        setText("analysisAccuracy", formatPercent(analysisAccuracy));
+        setText("bestAccuracy", formatPercent(bestAccuracy));
+        setText("settledAnalysisCount", `${number(statistics.settledAnalyses)} завершено`);
+        setText("settledBestCount", `${number(statistics.settledBestBets)} завершено`);
+        setText("currentStreak", statistics.currentStreak || "Нет завершённой серии");
+        setOrbit("analysisAccuracyOrbit", analysisAccuracy);
+        setOrbit("bestAccuracyOrbit", bestAccuracy);
+        renderCalibration(learning.calibrationBins || {});
+        renderSegments(learning.segments || {});
     }
 
-    if (status === "FINISHED") {
-        return "is-finished";
+    function setOrbit(id, value) {
+        const node = document.getElementById(id);
+        node?.style.setProperty("--score", `${Math.max(0, Math.min(100, number(value))) * 3.6}deg`);
     }
 
-    if (
-        status === "POSTPONED"
-        || status === "SUSPENDED"
-        || status === "CANCELLED"
-    ) {
-        return "is-warning";
+    function renderCalibration(bins) {
+        const container = document.getElementById("calibrationChart");
+        if (!container) return;
+        const entries = Object.entries(bins)
+            .filter(([, value]) => number(value?.count) > 0)
+            .sort(([left], [right]) => left.localeCompare(right));
+        if (!entries.length) {
+            container.innerHTML = `<div class="empty-mini">Недостаточно завершённых прогнозов</div>`;
+            return;
+        }
+        container.innerHTML = entries.map(([label, value]) => {
+            const predicted = Math.max(2, number(value.averagePredicted) * 100);
+            const actual = Math.max(2, number(value.actualRate) * 100);
+            return `
+                <div class="calibration-bin" title="${escapeHtml(label)}% · ${number(value.count)} прогнозов">
+                    <div class="calibration-bars">
+                        <i style="height:${predicted}%"></i>
+                        <i style="height:${actual}%"></i>
+                    </div>
+                    <span>${escapeHtml(label)}</span>
+                </div>`;
+        }).join("");
     }
 
-    return "is-upcoming";
-}
-
-
-
-function updateDataFreshness() {
-    const updatedAt = applicationState?.meta?.updatedAt;
-
-    if (!updatedAt) {
-        setText("dataFreshness", "Время обновления неизвестно");
-        return;
+    function renderSegments(segments) {
+        const container = document.getElementById("segmentList");
+        if (!container) return;
+        const entries = Object.entries(segments)
+            .filter(([key, value]) => key.startsWith("MARKET|") && number(value?.settled) >= 10)
+            .sort(([, left], [, right]) => number(right.hitRate) - number(left.hitRate))
+            .slice(0, 5);
+        if (!entries.length) {
+            container.innerHTML = `<div class="empty-mini">Данные накапливаются</div>`;
+            return;
+        }
+        container.innerHTML = entries.map(([key, value]) => {
+            const parts = key.split("|");
+            return `
+                <div class="segment-item">
+                    <div><strong>${escapeHtml(segmentName(parts[2]))}</strong><span>${escapeHtml(sportName(parts[1]))} · ${number(value.settled)} результатов</span></div>
+                    <b>${formatPercent(number(value.hitRate) * 100)}</b>
+                </div>`;
+        }).join("");
     }
 
-    const updatedDate = new Date(updatedAt);
+    function renderHistory(history) {
+        const container = document.getElementById("historyTable");
+        if (!container) return;
+        const records = history
+            .filter((item) => item && (item.recordType === "BEST_BET" || !item.recordType))
+            .filter((item) => runtime.historyFilter === "all" || String(item.status || "pending") === runtime.historyFilter)
+            .slice()
+            .sort((left, right) => String(right.publishedAt || right.commenceTime || "").localeCompare(String(left.publishedAt || left.commenceTime || "")))
+            .slice(0, 30);
 
-    if (Number.isNaN(updatedDate.getTime())) {
-        setText("dataFreshness", "Данные загружены");
-        return;
-    }
-
-    const ageMinutes = Math.max(
-        0,
-        Math.floor((Date.now() - updatedDate.getTime()) / 60_000)
-    );
-
-    if (ageMinutes < 1) {
-        setText("dataFreshness", "Получены только что");
-        return;
-    }
-
-    if (ageMinutes < 60) {
-        setText(
-            "dataFreshness",
-            `Актуальность: ${formatMinutesPhrase(ageMinutes)} назад`
-        );
-        return;
-    }
-
-    const hours = Math.floor(ageMinutes / 60);
-    const minutes = ageMinutes % 60;
-
-    setText(
-        "dataFreshness",
-        `Актуальность: ${hours} ч. ${minutes} мин. назад`
-    );
-}
-
-function refreshDynamicMatchTimes() {
-    document.querySelectorAll("[data-kickoff]").forEach((card) => {
-        const countdown = card.querySelector(".match-countdown");
-
-        if (!countdown) {
+        if (!records.length) {
+            container.innerHTML = `<div class="analysis-loading">Для выбранного фильтра записей нет.</div>`;
             return;
         }
 
-        countdown.textContent = formatMatchCountdown(
-            card.dataset.kickoff
-        );
-    });
-}
-
-function formatMatchCountdown(value) {
-    if (!value) {
-        return "Время уточняется";
+        container.innerHTML = records.map((item) => {
+            const status = String(item.status || "pending");
+            const profit = number(item.profit);
+            return `
+                <div class="history-row">
+                    <div class="history-match"><strong>${escapeHtml(item.home || "")} — ${escapeHtml(item.away || "")}</strong><span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(item.league || "")} · ${formatShortDate(item.commenceTime || item.utcDate)}</span></div>
+                    <div class="history-pick"><strong>${escapeHtml(item.pick || "—")}</strong><span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(item.bookmaker || "коэффициент зафиксирован")}</span></div>
+                    <div class="history-cell"><span>Ставка</span><strong>${formatCurrency(item.stake)}</strong></div>
+                    <div class="history-cell"><span>Счёт</span><strong>${escapeHtml(item.score || "—")}</strong></div>
+                    <div class="history-cell"><span>Результат</span><strong class="${profit > 0 ? "positive" : ""}">${profit ? formatSignedCurrency(profit) : "—"}</strong></div>
+                    <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
+                </div>`;
+        }).join("");
     }
 
-    const kickoff = new Date(value);
-
-    if (Number.isNaN(kickoff.getTime())) {
-        return "Время уточняется";
+    function initializeFilters() {
+        document.querySelectorAll("[data-sport-filter]").forEach((button) => {
+            button.addEventListener("click", () => {
+                runtime.sportFilter = button.dataset.sportFilter || "all";
+                document.querySelectorAll("[data-sport-filter]").forEach((node) => node.classList.toggle("is-active", node === button));
+                renderDailyAnalysis(runtime.state?.dailyAnalysis || []);
+            });
+        });
+        document.querySelectorAll("[data-history-filter]").forEach((button) => {
+            button.addEventListener("click", () => {
+                runtime.historyFilter = button.dataset.historyFilter || "all";
+                document.querySelectorAll("[data-history-filter]").forEach((node) => node.classList.toggle("is-active", node === button));
+                renderHistory(runtime.state?.history || []);
+            });
+        });
     }
 
-    const differenceMs = kickoff.getTime() - Date.now();
-    const differenceMinutes = Math.ceil(differenceMs / 60_000);
-
-    if (differenceMinutes > 2_880) {
-        const days = Math.floor(differenceMinutes / 1_440);
-        const hours = Math.floor(
-            (differenceMinutes % 1_440) / 60
-        );
-
-        return `До начала: ${days} д. ${hours} ч.`;
+    function initializeDialog() {
+        const dialog = document.getElementById("analysisDialog");
+        document.getElementById("dialogClose")?.addEventListener("click", () => dialog?.close());
+        dialog?.addEventListener("click", (event) => {
+            if (event.target === dialog) dialog.close();
+        });
     }
 
-    if (differenceMinutes > 60) {
-        const hours = Math.floor(differenceMinutes / 60);
-        const minutes = differenceMinutes % 60;
-
-        return `До начала: ${hours} ч. ${minutes} мин.`;
+    function findRecord(id) {
+        if (!runtime.state) return null;
+        return [...runtime.state.dailyAnalysis, ...runtime.state.bestBets].find((item) => String(item.id) === String(id)) || null;
     }
 
-    if (differenceMinutes > 0) {
-        return `До начала: ${formatMinutesPhrase(differenceMinutes)}`;
+    function openAnalysisDialog(record) {
+        if (!record) return;
+        const dialog = document.getElementById("analysisDialog");
+        const content = document.getElementById("dialogContent");
+        if (!dialog || !content) return;
+        const probability = number(record.modelProbability || record.probability) * 100;
+        const marketProbability = number(record.marketProbability) * 100;
+        const edge = number(record.edge) * 100;
+        const ev = number(record.expectedValue) * 100;
+        const alternatives = Array.isArray(record.alternatives) ? record.alternatives : [];
+        const scores = Array.isArray(record.mostLikelyScores) ? record.mostLikelyScores : [];
+        const qualificationFailures = record.qualification?.failures || [];
+
+        content.innerHTML = `
+            <div class="dialog-content">
+                <div class="dialog-eyebrow">${escapeHtml(record.sportLabel || sportName(record.sport))} · ${escapeHtml(record.country || "")} · ${escapeHtml(record.league || "")}</div>
+                <h3>${escapeHtml(record.home || "")} — ${escapeHtml(record.away || "")}</h3>
+                <div class="dialog-subline">${formatMatchTime(record.commenceTime || record.utcDate)} · ${escapeHtml(record.expectedResult || "")}</div>
+
+                <div class="dialog-hero-grid">
+                    <div class="dialog-pick"><span>Лучший рынок</span><strong>${escapeHtml(record.pick || "—")}</strong><b>${formatNumber(record.bookmakerOdds || record.odds, 2)}</b></div>
+                    <div class="dialog-score"><span>Ожидаемый счёт</span><strong>${escapeHtml(record.expectedScore || "—")}</strong></div>
+                </div>
+
+                <div class="dialog-metrics">
+                    <div class="dialog-metric"><span>Модель</span><strong>${formatNumber(probability, 1)}%</strong></div>
+                    <div class="dialog-metric"><span>Рынок</span><strong>${formatNumber(marketProbability, 1)}%</strong></div>
+                    <div class="dialog-metric"><span>Edge</span><strong>${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                    <div class="dialog-metric"><span>EV</span><strong>${formatSignedNumber(ev, 1)}%</strong></div>
+                    <div class="dialog-metric"><span>Данные</span><strong>${formatNumber(record.dataQuality, 0)}/100</strong></div>
+                    <div class="dialog-metric"><span>Согласие</span><strong>${formatNumber(record.agreement, 0)}/100</strong></div>
+                    <div class="dialog-metric"><span>Аномальность</span><strong>${formatNumber(record.anomaly, 0)}/100</strong></div>
+                    <div class="dialog-metric"><span>Букмекеры</span><strong>${formatNumber(record.quoteCount, 0)}</strong></div>
+                </div>
+
+                <div class="dialog-section"><h4>Почему выбран этот прогноз</h4><p>${escapeHtml(record.reason || "Аналитическое объяснение отсутствует.")}</p></div>
+                <div class="dialog-section"><h4>Наиболее вероятные счета</h4><div class="score-probabilities">${scores.length ? scores.map((item) => `<span>${escapeHtml(item.score)} · ${formatNumber(number(item.probability) * 100, 1)}%</span>`).join("") : "<span>Недостаточно данных</span>"}</div></div>
+                <div class="dialog-section"><h4>Альтернативные рынки</h4><div class="alternative-grid">${alternatives.length ? alternatives.map((item) => `<div class="alternative-card"><strong>${escapeHtml(item.pick || "—")}</strong><span>${formatNumber(item.probabilityPercent || number(item.probability) * 100, 1)}% · коэффициент ${formatNumber(item.odds || item.bookmakerOdds, 2)}</span></div>`).join("") : '<div class="empty-mini">Альтернативы не опубликованы</div>'}</div></div>
+                <div class="dialog-section"><h4>Статус квалификации</h4><p>${record.qualification?.qualified ? "Прогноз прошёл пороги вероятности, преимущества, качества данных и аномальности." : qualificationFailures.length ? escapeHtml(qualificationFailures.join("; ")) : "Используется в аналитической выборке, но не включён в виртуальный банк."}</p></div>
+            </div>`;
+        if (typeof dialog.showModal === "function") dialog.showModal();
+        else dialog.setAttribute("open", "");
     }
 
-    if (differenceMinutes > -180) {
-        return "Матч начался";
+    function initializeRevealObserver() {
+        document.body.classList.add("has-motion");
+        const nodes = document.querySelectorAll(".reveal");
+        if (!("IntersectionObserver" in window)) {
+            nodes.forEach((node) => node.classList.add("is-visible"));
+            return;
+        }
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.08 });
+        nodes.forEach((node) => observer.observe(node));
     }
 
-    return "Ожидается результат";
-}
-
-function formatMinutesPhrase(value) {
-    const number = Math.abs(Number(value || 0));
-    const lastTwo = number % 100;
-    const last = number % 10;
-
-    if (lastTwo >= 11 && lastTwo <= 14) {
-        return `${number} минут`;
+    function updateFreshnessLabels() {
+        if (!runtime.state) return;
+        const updated = new Date(runtime.state.meta?.updatedAt || 0);
+        if (!Number.isFinite(updated.getTime())) return;
+        const minutes = Math.max(0, Math.round((Date.now() - updated.getTime()) / 60_000));
+        const text = minutes < 2 ? "только что" : minutes < 60 ? `${minutes} мин назад` : minutes < 1440 ? `${Math.floor(minutes / 60)} ч назад` : formatShortDate(updated);
+        setText("heroUpdated", text);
     }
 
-    if (last === 1) {
-        return `${number} минуту`;
+    function setConnectionState(state, message = "") {
+        const toast = document.getElementById("connectionToast");
+        if (!toast) return;
+        toast.className = `connection-toast ${message ? "is-visible" : ""}`;
+        const label = toast.querySelector("strong");
+        if (label) label.textContent = message || "";
+        toast.dataset.state = state;
+        if (message && state === "ready") {
+            window.setTimeout(() => toast.classList.remove("is-visible"), 2200);
+        }
     }
 
-    if (last >= 2 && last <= 4) {
-        return `${number} минуты`;
+    function renderLoadError() {
+        const best = document.getElementById("bestBetsGrid");
+        const analysis = document.getElementById("analysisList");
+        if (best) best.innerHTML = `<div class="empty-state"><strong>Данные временно недоступны</strong><p>Сайт повторит загрузку автоматически. Последнее сохранённое состояние не удаляется.</p></div>`;
+        if (analysis) analysis.innerHTML = `<div class="analysis-loading">Ожидаем восстановление соединения…</div>`;
     }
 
-    return `${number} минут`;
-}
-
-function clamp(value, minimum, maximum) {
-    return Math.min(maximum, Math.max(minimum, Number(value || 0)));
-}
-
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-window.addEventListener("resize", () => {
-    if (applicationState?.bank?.history) {
-        drawBankChart(applicationState.bank.history);
+    function runtimeStatus(item) {
+        const status = String(item.status || "pending");
+        if (status !== "pending") return statusLabel(status);
+        const kickoff = new Date(item.commenceTime || item.utcDate || 0);
+        if (!Number.isFinite(kickoff.getTime())) return "ожидается";
+        const diff = kickoff.getTime() - Date.now();
+        if (diff <= 0) return "матч начался";
+        const minutes = Math.ceil(diff / 60_000);
+        if (minutes < 60) return `через ${minutes} мин`;
+        if (minutes < 1440) return `через ${Math.floor(minutes / 60)} ч`;
+        return `через ${Math.floor(minutes / 1440)} дн`;
     }
-});
+
+    function statusLabel(status) {
+        return ({ pending: "Ожидается", won: "Выигрыш", lost: "Проигрыш", push: "Возврат", void: "Отмена" })[status] || status;
+    }
+
+    function statusClass(status) {
+        return ({ won: "is-won", lost: "is-lost", push: "is-push" })[status] || "";
+    }
+
+    function sportName(value) {
+        return value === "ice_hockey" ? "Хоккей" : value === "soccer" ? "Футбол" : value || "Спорт";
+    }
+
+    function segmentName(value) {
+        return ({ OUTCOME: "Исходы", TOTAL: "Тоталы", HANDICAP: "Форы", BTTS: "Обе забьют", DOUBLE_CHANCE: "Двойной шанс", DRAW_NO_BET: "Фора 0" })[value] || value || "Другой рынок";
+    }
+
+    function setText(id, value) {
+        const node = document.getElementById(id);
+        if (node) node.textContent = String(value ?? "—");
+    }
+
+    function number(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function average(values) {
+        const valid = values.filter(Number.isFinite);
+        return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : 0;
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat("ru-RU", { style: "currency", currency: "RUB", maximumFractionDigits: 2 }).format(number(value));
+    }
+
+    function formatSignedCurrency(value) {
+        const amount = number(value);
+        return `${amount > 0 ? "+" : ""}${formatCurrency(amount)}`;
+    }
+
+    function formatNumber(value, digits = 0) {
+        return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(number(value));
+    }
+
+    function formatSignedNumber(value, digits = 1) {
+        const amount = number(value);
+        return `${amount > 0 ? "+" : ""}${formatNumber(amount, digits)}`;
+    }
+
+    function formatPercent(value) {
+        return `${formatNumber(value, 1)}%`;
+    }
+
+    function formatSignedPercent(value) {
+        return `${number(value) > 0 ? "+" : ""}${formatNumber(value, 2)}%`;
+    }
+
+    function formatDateTime(value) {
+        const date = value instanceof Date ? value : new Date(value || 0);
+        if (!Number.isFinite(date.getTime())) return "—";
+        return new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW_TIME_ZONE, day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+    }
+
+    function formatCompactDateTime(value) {
+        const date = new Date(value || 0);
+        if (!Number.isFinite(date.getTime())) return "—";
+        return new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW_TIME_ZONE, hour: "2-digit", minute: "2-digit" }).format(date);
+    }
+
+    function formatShortDate(value) {
+        const date = value instanceof Date ? value : new Date(value || 0);
+        if (!Number.isFinite(date.getTime())) return "—";
+        return new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW_TIME_ZONE, day: "2-digit", month: "short", year: "numeric" }).format(date);
+    }
+
+    function formatMatchTime(value) {
+        const date = new Date(value || 0);
+        if (!Number.isFinite(date.getTime())) return "Время уточняется";
+        return new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW_TIME_ZONE, weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function debounce(callback, delay) {
+        let timeout;
+        return (...args) => {
+            window.clearTimeout(timeout);
+            timeout = window.setTimeout(() => callback(...args), delay);
+        };
+    }
+})();
