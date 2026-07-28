@@ -2,11 +2,11 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-07-28T07:49:29Z",
+    "updatedAt": "2026-07-28T09:08:54Z",
     "analysisDateLocal": "2026-07-28",
     "status": "GREEN",
     "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-    "dataFreshness": "CURRENT",
+    "dataFreshness": "SETTLEMENT_REFRESH",
     "notice": "Каждый опубликованный прогноз получает виртуальную ставку 20% от текущего банка. Расчёт выигрыша выполняется по реальному коэффициенту букмекера, зафиксированному при публикации.",
     "analyzedMatches": 5,
     "source": "football-data.org + The Odds API",
@@ -86,7 +86,7 @@
     "stakePerPredictionPercent": 20.0,
     "maximumDailyExposurePercent": 80.0,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-    "migrationAt": "2026-07-28T07:49:29Z",
+    "migrationAt": "2026-07-28T09:08:54Z",
     "analysisGeneratedAt": "2026-07-28T07:49:29Z",
     "analysisTarget": 15,
     "analysisPublished": 15,
@@ -103,36 +103,26 @@
     "predictionObjective": "PREDICT_MATCH_RESULT_FIRST_THEN_EVALUATE_BOOKMAKER_PRICE",
     "publicationPolicy": "FIFTEEN_ANALYSES_EXACTLY_FOUR_RESULT_FIRST_BEST_BETS",
     "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-    "lastSuccessfulRefreshAt": "2026-07-28T07:49:29Z",
+    "lastSuccessfulRefreshAt": "2026-07-28T09:08:54Z",
     "apiHealth": {
       "status": "DEGRADED",
-      "calls": 64,
-      "errors": 12,
+      "calls": 3,
+      "errors": 3,
       "lastErrors": [
         {
-          "label": "EVENTS:soccer_italy_serie_b",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+          "label": "FOOTBALL_DATA_MATCHES",
+          "status": 400,
+          "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
         },
         {
-          "label": "EVENTS:soccer_netherlands_eredivisie",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+          "label": "FOOTBALL_DATA_MATCHES",
+          "status": 400,
+          "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
         },
         {
-          "label": "EVENTS:soccer_norway_eliteserien",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "ODDS:soccer_brazil_serie_b",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "ODDS:soccer_argentina_primera_division",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
+          "label": "FOOTBALL_DATA_MATCHES",
+          "status": 400,
+          "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
         }
       ]
     }
@@ -13085,11 +13075,11 @@
   },
   "quota": {
     "provider": "THE_ODDS_API",
-    "requestsRemaining": "339",
-    "requestsUsed": "161",
-    "requestsLast": "3",
-    "estimatedCreditsThisRun": 23,
-    "calls": 61,
-    "updatedAt": "2026-07-28T07:49:29Z"
+    "requestsRemaining": null,
+    "requestsUsed": null,
+    "requestsLast": null,
+    "estimatedCreditsThisRun": 0,
+    "calls": 0,
+    "updatedAt": "2026-07-28T09:08:54Z"
   }
 }
