@@ -49,7 +49,7 @@
             renderApplication(runtime.state);
             setConnectionState("ready", notify || changed ? "Данные актуализированы" : "");
         } catch (error) {
-            console.error("State loading failed", error);
+            console.error("Не удалось загрузить состояние", error);
             setConnectionState(navigator.onLine ? "error" : "offline", "Сохранены последние доступные данные");
             if (!runtime.state) {
                 renderLoadError();
@@ -160,14 +160,14 @@
                     <span class="sport-chip">${escapeHtml(bet.sportLabel || sportName(bet.sport))}</span>
                 </div>
                 <div class="bet-card-match">
-                    <small>${escapeHtml([bet.country, bet.league].filter(Boolean).join(" · "))}</small>
-                    <h3>${escapeHtml(bet.home)} — ${escapeHtml(bet.away)}</h3>
+                    <small>${escapeHtml([displayCountry(bet), displayLeague(bet)].filter(Boolean).join(" · "))}</small>
+                    <h3>${escapeHtml(displayTeam(bet, "home"))} — ${escapeHtml(displayTeam(bet, "away"))}</h3>
                     <time>${formatMatchTime(bet.commenceTime || bet.utcDate)} · ${escapeHtml(runtimeStatus(bet))}</time>
                 </div>
                 <div class="bet-selection">
                     <div>
                         <span>Выбранный рынок</span>
-                        <strong>${escapeHtml(bet.pick || "—")}</strong>
+                        <strong>${escapeHtml(displayPick(bet))}</strong>
                     </div>
                     <div class="bet-odds">
                         <span>Коэффициент</span>
@@ -177,7 +177,7 @@
                 <div class="bet-metrics">
                     <div class="metric-block"><span>Вероятность</span><strong>${formatNumber(probability, 1)}%</strong></div>
                     <div class="metric-block"><span>Преимущество</span><strong class="${edge >= 0 ? "is-positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
-                    <div class="metric-block"><span>EV</span><strong class="${ev >= 0 ? "is-positive" : ""}">${formatSignedNumber(ev, 1)}%</strong></div>
+                    <div class="metric-block"><span>Ожидаемая доходность</span><strong class="${ev >= 0 ? "is-positive" : ""}">${formatSignedNumber(ev, 1)}%</strong></div>
                     <div class="metric-block"><span>Данные</span><strong>${formatNumber(dataQuality, 0)}/100</strong></div>
                 </div>
                 <div class="bet-card-footer">
@@ -225,17 +225,17 @@
             <div class="analysis-row ${item.isBestBet ? "is-best" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
                 <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
                 <div class="analysis-match">
-                    <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(item.country || "")}</small>
-                    <strong>${escapeHtml(item.home)} — ${escapeHtml(item.away)}</strong>
-                    <span>${escapeHtml(item.league || "")} · ${formatMatchTime(item.commenceTime || item.utcDate)}</span>
+                    <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
+                    <strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong>
+                    <span>${escapeHtml(displayLeague(item))} · ${formatMatchTime(item.commenceTime || item.utcDate)}</span>
                 </div>
                 <div class="analysis-pick">
                     <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
-                    <strong>${escapeHtml(pick || "—")}</strong>
+                    <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
                 </div>
                 <div class="analysis-stat"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
                 <div class="analysis-stat"><small>Коэфф.</small><strong>${formatNumber(odds, 2)}</strong></div>
-                <div class="analysis-stat"><small>Edge</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)}</strong></div>
+                <div class="analysis-stat"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)}</strong></div>
                 <span class="analysis-chevron">›</span>
             </div>`;
     }
@@ -415,8 +415,8 @@
             const profit = number(item.profit);
             return `
                 <div class="history-row">
-                    <div class="history-match"><strong>${escapeHtml(item.home || "")} — ${escapeHtml(item.away || "")}</strong><span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(item.league || "")} · ${formatShortDate(item.commenceTime || item.utcDate)}</span></div>
-                    <div class="history-pick"><strong>${escapeHtml(item.pick || "—")}</strong><span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(item.bookmaker || "коэффициент зафиксирован")}</span></div>
+                    <div class="history-match"><strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong><span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayLeague(item))} · ${formatShortDate(item.commenceTime || item.utcDate)}</span></div>
+                    <div class="history-pick"><strong>${escapeHtml(displayPick(item))}</strong><span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(displayBookmaker(item))}</span></div>
                     <div class="history-cell"><span>Ставка</span><strong>${formatCurrency(item.stake)}</strong></div>
                     <div class="history-cell"><span>Счёт</span><strong>${escapeHtml(item.score || "—")}</strong></div>
                     <div class="history-cell"><span>Результат</span><strong class="${profit > 0 ? "positive" : ""}">${profit ? formatSignedCurrency(profit) : "—"}</strong></div>
@@ -470,29 +470,29 @@
 
         content.innerHTML = `
             <div class="dialog-content">
-                <div class="dialog-eyebrow">${escapeHtml(record.sportLabel || sportName(record.sport))} · ${escapeHtml(record.country || "")} · ${escapeHtml(record.league || "")}</div>
-                <h3>${escapeHtml(record.home || "")} — ${escapeHtml(record.away || "")}</h3>
-                <div class="dialog-subline">${formatMatchTime(record.commenceTime || record.utcDate)} · ${escapeHtml(record.expectedResult || "")}</div>
+                <div class="dialog-eyebrow">${escapeHtml(record.sportLabel || sportName(record.sport))} · ${escapeHtml(displayCountry(record))} · ${escapeHtml(displayLeague(record))}</div>
+                <h3>${escapeHtml(displayTeam(record, "home"))} — ${escapeHtml(displayTeam(record, "away"))}</h3>
+                <div class="dialog-subline">${formatMatchTime(record.commenceTime || record.utcDate)} · ${escapeHtml(displayNarrative(record.expectedResultRu || record.expectedResult || ""))}</div>
 
                 <div class="dialog-hero-grid">
-                    <div class="dialog-pick"><span>Лучший рынок</span><strong>${escapeHtml(record.pick || "—")}</strong><b>${formatNumber(record.bookmakerOdds || record.odds, 2)}</b></div>
+                    <div class="dialog-pick"><span>Лучший рынок</span><strong>${escapeHtml(displayPick(record))}</strong><b>${formatNumber(record.bookmakerOdds || record.odds, 2)}</b></div>
                     <div class="dialog-score"><span>Ожидаемый счёт</span><strong>${escapeHtml(record.expectedScore || "—")}</strong></div>
                 </div>
 
                 <div class="dialog-metrics">
                     <div class="dialog-metric"><span>Модель</span><strong>${formatNumber(probability, 1)}%</strong></div>
                     <div class="dialog-metric"><span>Рынок</span><strong>${formatNumber(marketProbability, 1)}%</strong></div>
-                    <div class="dialog-metric"><span>Edge</span><strong>${formatSignedNumber(edge, 1)} п.п.</strong></div>
-                    <div class="dialog-metric"><span>EV</span><strong>${formatSignedNumber(ev, 1)}%</strong></div>
+                    <div class="dialog-metric"><span>Преимущество</span><strong>${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                    <div class="dialog-metric"><span>Ожидаемая доходность</span><strong>${formatSignedNumber(ev, 1)}%</strong></div>
                     <div class="dialog-metric"><span>Данные</span><strong>${formatNumber(record.dataQuality, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Согласие</span><strong>${formatNumber(record.agreement, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Аномальность</span><strong>${formatNumber(record.anomaly, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Букмекеры</span><strong>${formatNumber(record.quoteCount, 0)}</strong></div>
                 </div>
 
-                <div class="dialog-section"><h4>Почему выбран этот прогноз</h4><p>${escapeHtml(record.reason || "Аналитическое объяснение отсутствует.")}</p></div>
+                <div class="dialog-section"><h4>Почему выбран этот прогноз</h4><p>${escapeHtml(displayNarrative(record.reasonRu || record.reason || "Аналитическое объяснение отсутствует."))}</p></div>
                 <div class="dialog-section"><h4>Наиболее вероятные счета</h4><div class="score-probabilities">${scores.length ? scores.map((item) => `<span>${escapeHtml(item.score)} · ${formatNumber(number(item.probability) * 100, 1)}%</span>`).join("") : "<span>Недостаточно данных</span>"}</div></div>
-                <div class="dialog-section"><h4>Альтернативные рынки</h4><div class="alternative-grid">${alternatives.length ? alternatives.map((item) => `<div class="alternative-card"><strong>${escapeHtml(item.pick || "—")}</strong><span>${formatNumber(item.probabilityPercent || number(item.probability) * 100, 1)}% · коэффициент ${formatNumber(item.odds || item.bookmakerOdds, 2)}</span></div>`).join("") : '<div class="empty-mini">Альтернативы не опубликованы</div>'}</div></div>
+                <div class="dialog-section"><h4>Альтернативные рынки</h4><div class="alternative-grid">${alternatives.length ? alternatives.map((item) => `<div class="alternative-card"><strong>${escapeHtml(displayPick(item))}</strong><span>${formatNumber(item.probabilityPercent || number(item.probability) * 100, 1)}% · коэффициент ${formatNumber(item.odds || item.bookmakerOdds, 2)}</span></div>`).join("") : '<div class="empty-mini">Альтернативы не опубликованы</div>'}</div></div>
                 <div class="dialog-section"><h4>Статус квалификации</h4><p>${record.qualification?.qualified ? "Прогноз прошёл пороги вероятности, преимущества, качества данных и аномальности." : qualificationFailures.length ? escapeHtml(qualificationFailures.join("; ")) : "Используется в аналитической выборке, но не включён в виртуальный банк."}</p></div>
             </div>`;
         if (typeof dialog.showModal === "function") dialog.showModal();
@@ -559,7 +559,7 @@
     }
 
     function statusLabel(status) {
-        return ({ pending: "Ожидается", won: "Выигрыш", lost: "Проигрыш", push: "Возврат", void: "Отмена" })[status] || status;
+        return ({ pending: "Ожидается", won: "Выигрыш", lost: "Проигрыш", push: "Возврат", void: "Отмена", cancelled: "Отмена", postponed: "Перенесён" })[String(status).toLowerCase()] || "Неизвестный статус";
     }
 
     function statusClass(status) {
@@ -567,11 +567,157 @@
     }
 
     function sportName(value) {
-        return value === "ice_hockey" ? "Хоккей" : value === "soccer" ? "Футбол" : value || "Спорт";
+        return value === "ice_hockey" ? "Хоккей" : value === "soccer" ? "Футбол" : "Другой вид спорта";
     }
 
     function segmentName(value) {
-        return ({ OUTCOME: "Исходы", TOTAL: "Тоталы", HANDICAP: "Форы", BTTS: "Обе забьют", DOUBLE_CHANCE: "Двойной шанс", DRAW_NO_BET: "Фора 0" })[value] || value || "Другой рынок";
+        return ({ OUTCOME: "Исходы", TOTAL: "Тоталы", HANDICAP: "Форы", BTTS: "Обе забьют", DOUBLE_CHANCE: "Двойной шанс", DRAW_NO_BET: "Фора 0" })[value] || "Другой рынок";
+    }
+
+    const RUSSIAN_EXACT_NAMES = Object.freeze({
+        "english premier league": "Английская Премьер-лига",
+        "premier league": "Премьер-лига",
+        "uefa champions league": "Лига чемпионов УЕФА",
+        "uefa europa league": "Лига Европы УЕФА",
+        "uefa conference league": "Лига конференций УЕФА",
+        "copa libertadores": "Кубок Либертадорес",
+        "copa sudamericana": "Южноамериканский кубок",
+        "major league soccer": "Высшая футбольная лига США",
+        "national hockey league": "Национальная хоккейная лига",
+        "nhl": "НХЛ",
+        "ahl": "АХЛ",
+        "serie a": "Серия А",
+        "serie b": "Серия Б",
+        "la liga": "Ла Лига",
+        "bundesliga": "Бундеслига",
+        "ligue 1": "Лига 1",
+        "ligue one": "Лига 1",
+        "championship": "Чемпионшип",
+        "world cup": "Чемпионат мира",
+        "england": "Англия",
+        "germany": "Германия",
+        "spain": "Испания",
+        "italy": "Италия",
+        "france": "Франция",
+        "brazil": "Бразилия",
+        "argentina": "Аргентина",
+        "united states": "США",
+        "usa": "США",
+        "canada": "Канада",
+        "mexico": "Мексика",
+        "netherlands": "Нидерланды",
+        "portugal": "Португалия",
+        "turkey": "Турция",
+        "belgium": "Бельгия",
+        "scotland": "Шотландия",
+        "sweden": "Швеция",
+        "finland": "Финляндия",
+        "norway": "Норвегия",
+        "denmark": "Дания",
+        "australia": "Австралия",
+        "japan": "Япония",
+        "south korea": "Южная Корея",
+        "china": "Китай",
+        "chile": "Чили",
+        "colombia": "Колумбия"
+    });
+
+    const RUSSIAN_WORDS = Object.freeze({
+        "fc": "ФК", "cf": "ФК", "sc": "СК", "ac": "АК", "hc": "ХК",
+        "united": "Юнайтед", "city": "Сити", "town": "Таун", "county": "Каунти",
+        "athletic": "Атлетик", "athletics": "Атлетик", "sporting": "Спортинг",
+        "club": "Клуб", "football": "Футбол", "hockey": "Хоккей",
+        "women": "Женщины", "woman": "Женщины", "reserve": "Резерв",
+        "reserves": "Резерв", "youth": "Молодёжная команда", "academy": "Академия",
+        "under": "Младше", "over": "Больше", "draw": "Ничья", "home": "Хозяева",
+        "away": "Гости", "total": "Тотал", "totals": "Тоталы", "spread": "Фора",
+        "spreads": "Форы", "cup": "Кубок", "league": "Лига", "premier": "Премьер",
+        "national": "Национальная", "international": "Международный",
+        "conference": "Конференция", "division": "Дивизион", "championship": "Чемпионшип",
+        "north": "Север", "south": "Юг", "east": "Восток", "west": "Запад",
+        "central": "Центр", "regional": "Региональная", "state": "Штат",
+        "university": "Университет", "college": "Колледж", "real": "Реал"
+    });
+
+    const TRANSLIT_PAIRS = Object.freeze([
+        ["shch", "щ"], ["sch", "щ"], ["yo", "ё"], ["zh", "ж"],
+        ["kh", "х"], ["ts", "ц"], ["ch", "ч"], ["sh", "ш"],
+        ["yu", "ю"], ["ya", "я"], ["ye", "е"], ["ph", "ф"],
+        ["th", "т"], ["ck", "к"], ["qu", "кв"]
+    ]);
+
+    function transliterateLatinWord(word) {
+        const lower = String(word || "").toLowerCase();
+        if (RUSSIAN_WORDS[lower]) return RUSSIAN_WORDS[lower];
+        let source = lower;
+        let result = "";
+        const singles = {
+            a: "а", b: "б", c: "к", d: "д", e: "е", f: "ф", g: "г",
+            h: "х", i: "и", j: "дж", k: "к", l: "л", m: "м", n: "н",
+            o: "о", p: "п", q: "к", r: "р", s: "с", t: "т", u: "у",
+            v: "в", w: "в", x: "кс", y: "й", z: "з"
+        };
+        while (source.length) {
+            let matched = false;
+            for (const [latin, russian] of TRANSLIT_PAIRS) {
+                if (source.startsWith(latin)) {
+                    result += russian;
+                    source = source.slice(latin.length);
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                const char = source[0];
+                result += singles[char] || char;
+                source = source.slice(1);
+            }
+        }
+        if (/^[A-Z]/.test(word)) {
+            result = result.charAt(0).toUpperCase() + result.slice(1);
+        }
+        return result;
+    }
+
+    function russianDisplayText(value) {
+        const original = String(value ?? "").trim();
+        if (!original) return "";
+        const exact = RUSSIAN_EXACT_NAMES[original.toLowerCase()];
+        if (exact) return exact;
+        return original
+            .replace(/\b1X\b/gi, "1Х")
+            .replace(/\bX2\b/gi, "Х2")
+            .replace(/\bBTTS\b/gi, "Обе забьют")
+            .replace(/\bDNB\b/gi, "Фора 0")
+            .replace(/[A-Za-z]+/g, transliterateLatinWord)
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function displayTeam(record, side) {
+        const field = side === "home" ? "homeRu" : "awayRu";
+        return russianDisplayText(record?.[field] || record?.[side] || "");
+    }
+
+    function displayCountry(record) {
+        return russianDisplayText(record?.countryRu || record?.country || "");
+    }
+
+    function displayLeague(record) {
+        return russianDisplayText(record?.leagueRu || record?.league || "");
+    }
+
+    function displayPick(record) {
+        return russianDisplayText(record?.pickRu || record?.pick || "—");
+    }
+
+    function displayBookmaker(record) {
+        const source = record?.bookmakerRu || record?.bookmaker || "";
+        return source ? russianDisplayText(source) : "коэффициент зафиксирован";
+    }
+
+    function displayNarrative(value) {
+        return russianDisplayText(value || "");
     }
 
     function setText(id, value) {

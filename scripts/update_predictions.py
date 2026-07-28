@@ -501,7 +501,7 @@ def migrate_public_prediction(item: dict[str, Any]) -> dict[str, Any]:
     migrated.setdefault("dataQuality", safe_float(item.get("dataQuality"), 40.0))
     migrated.setdefault("agreement", safe_float(item.get("agreement"), 50.0))
     migrated.setdefault("anomaly", safe_float(item.get("anomaly"), 30.0))
-    return migrated
+    return apply_russian_display_fields(migrated)
 
 
 # ---------------------------------------------------------------------------
@@ -528,6 +528,133 @@ def classify_sport(sport: dict[str, Any]) -> str | None:
 
 def sport_label(sport: str) -> str:
     return "Футбол" if sport == "soccer" else "Хоккей"
+
+
+RUSSIAN_EXACT_NAMES = {
+    "english premier league": "Английская Премьер-лига",
+    "premier league": "Премьер-лига",
+    "uefa champions league": "Лига чемпионов УЕФА",
+    "uefa europa league": "Лига Европы УЕФА",
+    "uefa conference league": "Лига конференций УЕФА",
+    "copa libertadores": "Кубок Либертадорес",
+    "copa sudamericana": "Южноамериканский кубок",
+    "major league soccer": "Высшая футбольная лига США",
+    "national hockey league": "Национальная хоккейная лига",
+    "nhl": "НХЛ",
+    "ahl": "АХЛ",
+    "serie a": "Серия А",
+    "serie b": "Серия Б",
+    "la liga": "Ла Лига",
+    "bundesliga": "Бундеслига",
+    "ligue 1": "Лига 1",
+    "ligue one": "Лига 1",
+    "championship": "Чемпионшип",
+    "world cup": "Чемпионат мира",
+}
+
+RUSSIAN_WORDS = {
+    "fc": "ФК", "cf": "ФК", "sc": "СК", "ac": "АК", "hc": "ХК",
+    "united": "Юнайтед", "city": "Сити", "town": "Таун", "county": "Каунти",
+    "athletic": "Атлетик", "athletics": "Атлетик", "sporting": "Спортинг",
+    "club": "Клуб", "football": "Футбол", "hockey": "Хоккей",
+    "women": "Женщины", "reserve": "Резерв", "reserves": "Резерв",
+    "youth": "Молодёжная команда", "academy": "Академия",
+    "over": "Больше", "under": "Меньше", "draw": "Ничья",
+    "home": "Хозяева", "away": "Гости", "total": "Тотал", "totals": "Тоталы",
+    "spread": "Фора", "spreads": "Форы", "cup": "Кубок", "league": "Лига",
+    "premier": "Премьер", "national": "Национальная", "conference": "Конференция",
+    "division": "Дивизион", "north": "Север", "south": "Юг", "east": "Восток",
+    "west": "Запад", "central": "Центр", "regional": "Региональная",
+    "university": "Университет", "college": "Колледж", "real": "Реал",
+}
+
+TRANSLIT_PAIRS = (
+    ("shch", "щ"), ("sch", "щ"), ("yo", "ё"), ("zh", "ж"),
+    ("kh", "х"), ("ts", "ц"), ("ch", "ч"), ("sh", "ш"),
+    ("yu", "ю"), ("ya", "я"), ("ye", "е"), ("ph", "ф"),
+    ("th", "т"), ("ck", "к"), ("qu", "кв"),
+)
+
+TRANSLIT_SINGLE = {
+    "a": "а", "b": "б", "c": "к", "d": "д", "e": "е", "f": "ф",
+    "g": "г", "h": "х", "i": "и", "j": "дж", "k": "к", "l": "л",
+    "m": "м", "n": "н", "o": "о", "p": "п", "q": "к", "r": "р",
+    "s": "с", "t": "т", "u": "у", "v": "в", "w": "в", "x": "кс",
+    "y": "й", "z": "з",
+}
+
+
+def transliterate_latin_word_ru(word: str) -> str:
+    lower = word.lower()
+    if lower in RUSSIAN_WORDS:
+        return RUSSIAN_WORDS[lower]
+    source = lower
+    result: list[str] = []
+    while source:
+        matched = False
+        for latin, russian in TRANSLIT_PAIRS:
+            if source.startswith(latin):
+                result.append(russian)
+                source = source[len(latin):]
+                matched = True
+                break
+        if not matched:
+            char = source[0]
+            result.append(TRANSLIT_SINGLE.get(char, char))
+            source = source[1:]
+    text = "".join(result)
+    if word[:1].isupper():
+        text = text[:1].upper() + text[1:]
+    return text
+
+
+def russian_display_text(value: Any) -> str:
+    original = str(value or "").strip()
+    if not original:
+        return ""
+    exact = RUSSIAN_EXACT_NAMES.get(original.lower())
+    if exact:
+        return exact
+    text = re.sub(r"\b1X\b", "1Х", original, flags=re.IGNORECASE)
+    text = re.sub(r"\bX2\b", "Х2", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bBTTS\b", "Обе забьют", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bDNB\b", "Фора 0", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"[A-Za-z]+",
+        lambda match: transliterate_latin_word_ru(match.group(0)),
+        text,
+    )
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def apply_russian_display_fields(record: dict[str, Any]) -> dict[str, Any]:
+    record["countryRu"] = russian_display_text(
+        record.get("countryRu") or record.get("country")
+    )
+    record["leagueRu"] = russian_display_text(
+        record.get("leagueRu") or record.get("league")
+    )
+    record["homeRu"] = russian_display_text(
+        record.get("homeRu") or record.get("home")
+    )
+    record["awayRu"] = russian_display_text(
+        record.get("awayRu") or record.get("away")
+    )
+    record["pickRu"] = russian_display_text(
+        record.get("pickRu") or record.get("pick")
+    )
+    record["bookmakerRu"] = russian_display_text(
+        record.get("bookmakerRu") or record.get("bookmaker")
+    )
+    if record.get("expectedResult"):
+        record["expectedResultRu"] = russian_display_text(
+            record.get("expectedResultRu") or record.get("expectedResult")
+        )
+    if record.get("reason"):
+        record["reasonRu"] = russian_display_text(
+            record.get("reasonRu") or record.get("reason")
+        )
+    return record
 
 
 def infer_country(sport_key: str, sport_title: str) -> str:
@@ -1708,8 +1835,14 @@ def evaluate_event_markets(
             "sportLabel": sport_label(sport),
             "league": league,
             "country": str(event.get("country") or infer_country(str(event.get("sport_key") or ""), league)),
+            "leagueRu": russian_display_text(league),
+            "countryRu": russian_display_text(str(event.get("country") or infer_country(str(event.get("sport_key") or ""), league))),
             "home": str(event.get("home_team") or ""),
             "away": str(event.get("away_team") or ""),
+            "homeRu": russian_display_text(str(event.get("home_team") or "")),
+            "awayRu": russian_display_text(str(event.get("away_team") or "")),
+            "pickRu": russian_display_text(str(quote.get("pick") or "")),
+            "bookmakerRu": russian_display_text(str(quote.get("bookmaker") or "")),
             "commenceTime": str(event.get("commence_time") or ""),
             "modelProbability": round(model_probability, 6),
             "statisticalProbability": round(statistical_probability, 6),
@@ -1771,8 +1904,8 @@ def best_bet_qualification(candidate: dict[str, Any], config: dict[str, Any]) ->
 
 
 def expected_result_text(candidate: dict[str, Any]) -> str:
-    home = str(candidate.get("home") or "Хозяева")
-    away = str(candidate.get("away") or "Гости")
+    home = str(candidate.get("homeRu") or russian_display_text(candidate.get("home")) or "Хозяева")
+    away = str(candidate.get("awayRu") or russian_display_text(candidate.get("away")) or "Гости")
     home_p = safe_float(candidate.get("homeWinProbability"))
     draw_p = safe_float(candidate.get("drawProbability"))
     away_p = safe_float(candidate.get("awayWinProbability"))
@@ -1793,7 +1926,7 @@ def deterministic_reason(candidate: dict[str, Any]) -> str:
         "MARKET": "безмаржинальный рыночный консенсус",
     }.get(data_tier, "комбинированные данные")
     return (
-        f"{expected_result_text(candidate)}. Для рынка «{candidate.get('pick')}» "
+        f"{expected_result_text(candidate)}. Для рынка «{candidate.get('pickRu') or russian_display_text(candidate.get('pick'))}» "
         f"модель оценивает вероятность в {probability:.1f}%. "
         f"Расчёт опирается на {tier_label}; преимущество над рынком {edge:+.1f} п.п."
     )
@@ -1819,14 +1952,20 @@ def event_to_analysis_record(
         "sportKey": selected.get("sportKey"),
         "league": selected.get("league"),
         "country": selected.get("country"),
+        "countryRu": selected.get("countryRu") or russian_display_text(selected.get("country")),
+        "leagueRu": selected.get("leagueRu") or russian_display_text(selected.get("league")),
         "home": selected.get("home"),
         "away": selected.get("away"),
+        "homeRu": selected.get("homeRu") or russian_display_text(selected.get("home")),
+        "awayRu": selected.get("awayRu") or russian_display_text(selected.get("away")),
         "commenceTime": selected.get("commenceTime"),
         "marketKey": selected.get("marketKey"),
         "market": selected.get("market"),
         "marketFamily": selected.get("marketFamily"),
         "selectionCode": selected.get("selectionCode"),
         "pick": selected.get("pick"),
+        "pickRu": selected.get("pickRu") or russian_display_text(selected.get("pick")),
+        "bookmakerRu": selected.get("bookmakerRu") or russian_display_text(selected.get("bookmaker")),
         "point": selected.get("point"),
         "bookmakerOdds": selected.get("bookmakerOdds"),
         "odds": selected.get("bookmakerOdds"),
@@ -1860,7 +1999,9 @@ def event_to_analysis_record(
         "drawProbability": selected.get("drawProbability"),
         "awayWinProbability": selected.get("awayWinProbability"),
         "expectedResult": expected_result_text(selected),
+        "expectedResultRu": russian_display_text(expected_result_text(selected)),
         "reason": deterministic_reason(selected),
+        "reasonRu": russian_display_text(deterministic_reason(selected)),
         "sourceNotes": selected.get("sourceNotes"),
         "learningAdjustment": selected.get("learningAdjustment"),
         "learningEvidence": selected.get("learningEvidence"),
@@ -1872,6 +2013,8 @@ def event_to_analysis_record(
                 "marketFamily": item.get("marketFamily"),
                 "selectionCode": item.get("selectionCode"),
                 "pick": item.get("pick"),
+                "pickRu": item.get("pickRu") or russian_display_text(item.get("pick")),
+                "bookmakerRu": item.get("bookmakerRu") or russian_display_text(item.get("bookmaker")),
                 "point": item.get("point"),
                 "bookmakerOdds": item.get("bookmakerOdds"),
                 "odds": item.get("bookmakerOdds"),
@@ -2998,11 +3141,11 @@ def enrich_narratives_with_openrouter(
         {
             "id": item["id"],
             "sport": item["sportLabel"],
-            "league": item["league"],
-            "match": f"{item['home']} — {item['away']}",
+            "league": item.get("leagueRu") or russian_display_text(item["league"]),
+            "match": f"{item.get('homeRu') or russian_display_text(item['home'])} — {item.get('awayRu') or russian_display_text(item['away'])}",
             "expectedResult": item["expectedResult"],
             "expectedScore": item["expectedScore"],
-            "pick": item["pick"],
+            "pick": item.get("pickRu") or russian_display_text(item["pick"]),
             "probability": item["probabilityPercent"],
             "odds": item["bookmakerOdds"],
             "edge": item["edgePercent"],
@@ -3050,6 +3193,7 @@ def enrich_narratives_with_openrouter(
         for record in records:
             if record["id"] in reasons:
                 record["reason"] = reasons[record["id"]]
+                record["reasonRu"] = russian_display_text(reasons[record["id"]])
     except Exception as exc:
         client.calls.append({"label": "OPENROUTER_NARRATIVE", "status": "ERROR", "error": str(exc)})
         log(f"OpenRouter narrative fallback used: {exc}")
@@ -3518,9 +3662,31 @@ def run_self_test() -> int:
     validate_state(state, test_config, allow_legacy=False)
     if not state.get("learning", {}).get("segments"):
         raise RuntimeError("SELF_TEST learning segments were not updated")
+    localization_probe = apply_russian_display_fields({
+        "country": "England",
+        "league": "English Premier League",
+        "home": "Manchester United",
+        "away": "Liverpool FC",
+        "pick": "Manchester United draw no bet",
+        "bookmaker": "Example Sports",
+        "expectedResult": "Manchester United expected to win",
+        "reason": "Market and model agree",
+    })
+    visible_probe = " ".join(
+        str(localization_probe.get(key) or "")
+        for key in (
+            "countryRu", "leagueRu", "homeRu", "awayRu",
+            "pickRu", "bookmakerRu", "expectedResultRu", "reasonRu",
+        )
+    )
+    if re.search(r"[A-Za-z]", visible_probe):
+        raise RuntimeError(
+            f"SELF_TEST visible Latin text remains: {visible_probe}"
+        )
+
     print(
         "SELF_TEST_GREEN_V10 "
-        f"ANALYSIS={len(daily)} BEST={len(best)} EXACT_FOUR=YES "
+        f"ANALYSIS={len(daily)} BEST={len(best)} EXACT_FOUR=YES RUSSIAN_UI=YES "
         f"SOCCER={sum(1 for item in daily if item['sport'] == 'soccer')} "
         f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
         f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f}"
