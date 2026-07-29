@@ -2,65 +2,37 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "auto",
-  "startedAt": "2026-07-29T03:44:43Z",
-  "finishedAt": "2026-07-29T03:44:50Z",
+  "mode": "settle-live",
+  "startedAt": "2026-07-29T04:14:30Z",
+  "finishedAt": "2026-07-29T04:14:30Z",
   "diagnostics": {
-    "generated": false,
+    "liveFinalResults": 0,
+    "dueRecords": 0,
     "settlement": {
-      "analysisSettled": 10,
-      "bestBetsSettled": 2,
-      "unresolved": 8
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
+      "unresolved": 0
     },
-    "duePending": 9,
-    "selectedSportKeys": [],
-    "discovery": {},
-    "analysis": {},
-    "dailyAnalysis": 15,
-    "bestBets": 4,
-    "newBestBets": 0,
-    "footballDataMatches": 0,
-    "quota": {
-      "provider": "THE_ODDS_API",
-      "requestsRemaining": "298",
-      "requestsUsed": "202",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 6,
-      "calls": 3,
-      "updatedAt": "2026-07-29T03:44:43Z"
-    },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES",
-        "status": 400,
-        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+    "historyMaintenance": {
+      "version": 1,
+      "updatedAt": "2026-07-29T04:14:30Z",
+      "analysisHistory": {
+        "input": 25,
+        "output": 25,
+        "invalidRemoved": 0,
+        "duplicatesRemoved": 0,
+        "unresolvedMarked": 0
       },
-      {
-        "label": "FOOTBALL_DATA_MATCHES",
-        "status": 400,
-        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES",
-        "status": 400,
-        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
-      },
-      {
-        "label": "SCORES:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.114
-      },
-      {
-        "label": "SCORES:soccer_brazil_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.235
-      },
-      {
-        "label": "SCORES:soccer_conmebol_copa_sudamericana",
-        "status": 200,
-        "elapsedSeconds": 0.149
+      "bestBetHistory": {
+        "input": 24,
+        "output": 24,
+        "invalidRemoved": 0,
+        "duplicatesRemoved": 0,
+        "unresolvedMarked": 0
       }
-    ]
+    },
+    "bankBefore": 17291.33,
+    "bankAfter": 17291.33
   },
   "warnings": [],
   "errors": []
