@@ -1,8 +1,9 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R10
+name: V10 Финальная спортивная аналитика R11
 
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
+# V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
 on:
   workflow_dispatch:
     inputs:
@@ -43,7 +44,7 @@ env:
 
 jobs:
   validate:
-    name: V10 R10 статическая и офлайн-проверка
+    name: V10 R11 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -203,6 +204,22 @@ jobs:
           bank = state.get("bank") or {}
           batch = state.get("batch") or {}
 
+          operational_day_id = str(meta.get("operationalDayId") or "")
+          operational_start = str(meta.get("operationalWindowStart") or "")
+          operational_end = str(meta.get("operationalWindowEnd") or "")
+          operational_policy = str(meta.get("operationalWindowPolicy") or "")
+          if daily and operational_policy == "IMMEDIATE_ROLLOVER_MOSCOW_08_TO_08":
+              if not operational_day_id.endswith("-MSK-0800"):
+                  raise SystemExit("Operational day ID is missing or invalid")
+              if not operational_start or not operational_end:
+                  raise SystemExit("Operational 08:00-08:00 window is missing")
+              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in daily):
+                  raise SystemExit("Current fifteen spans multiple operational days")
+              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in best):
+                  raise SystemExit("Current four does not match current operational day")
+          elif daily:
+              print("R11_CURRENT_BATCH_LEGACY_UNTIL_NEXT_ROLLOVER=YES")
+
           if meta.get("version") != "10.0.0":
               raise SystemExit("State version is not 10.0.0")
           if meta.get("cleanStart") and meta.get("resetMarker") != "V10_CLEAN_MODEL_RESET":
@@ -342,6 +359,6 @@ jobs:
             exit 0
           fi
 
-          git commit -m "V10 R10 refresh current 15 and synchronized 4 [skip ci]"
+          git commit -m "V10 R11 refresh current 15 and synchronized 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

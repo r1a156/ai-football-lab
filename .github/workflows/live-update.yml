@@ -3,7 +3,8 @@
 # V10_R8_ATOMIC_BATCH_ROLLOVER
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
-name: V10 R10 Живой цикл и синхронные 15 + 4
+# V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
+name: V10 R11 Живой цикл, сутки 08:00 МСК и синхронные 15 + 4
 
 on:
   workflow_dispatch:
@@ -121,6 +122,17 @@ jobs:
           best = state.get("bestBets") or []
           daily = state.get("dailyAnalysis") or []
           meta = state.get("meta") or {}
+          operational_day_id = str(meta.get("operationalDayId") or "")
+          operational_policy = str(meta.get("operationalWindowPolicy") or "")
+          if daily and operational_policy == "IMMEDIATE_ROLLOVER_MOSCOW_08_TO_08":
+              if not operational_day_id.endswith("-MSK-0800"):
+                  raise SystemExit("Live cycle operational day is invalid")
+              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in daily):
+                  raise SystemExit("Live cycle current fifteen mixes operational days")
+              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in best):
+                  raise SystemExit("Live cycle current four is outside operational day")
+          elif daily:
+              print("R11_CURRENT_BATCH_LEGACY_UNTIL_NEXT_ROLLOVER=YES")
           if len(daily) == 15:
               daily_events = {str(item.get("eventId") or "") for item in daily}
               best_events = {str(item.get("eventId") or "") for item in best}
@@ -165,6 +177,6 @@ jobs:
             echo "No live data changes to commit."
             exit 0
           fi
-          git commit -m "V10 R10 settle and synchronize current 15 with current 4 [skip ci]"
+          git commit -m "V10 R11 settle, learn and publish Moscow operational day [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

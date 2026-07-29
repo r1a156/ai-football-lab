@@ -5,6 +5,7 @@
 # V10_R8_ATOMIC_BATCH_ROLLOVER
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
+# V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -143,6 +144,81 @@ def configured_timezone(config: dict[str, Any]) -> dt.tzinfo:
             "etc/utc": 0,
         }
         return dt.timezone(dt.timedelta(hours=offsets.get(name.lower(), 0)))
+
+
+def operational_selection_windows(
+    now: dt.datetime,
+    config: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Return non-overlapping Moscow operational days anchored at 08:00.
+
+    Generation never waits for 08:00. When the current batch becomes terminal,
+    rollover runs immediately. The 08:00 boundary only defines which future
+    fixtures may enter one batch. If the current operational day has too few
+    fixtures, the next complete 08:00-08:00 day is evaluated separately; days
+    are never mixed into one published batch.
+    """
+    timezone = configured_timezone(config)
+    local_now = now.astimezone(timezone)
+    start_hour = safe_int(
+        config.get("operationalDayStartHourLocal"),
+        8,
+    )
+    duration_hours = safe_int(
+        config.get("operationalDayDurationHours"),
+        24,
+    )
+    search_days = safe_int(
+        config.get("operationalWindowSearchDays"),
+        3,
+    )
+    minimum_lead = dt.timedelta(
+        minutes=safe_int(config.get("minimumLeadMinutes"), 45)
+    )
+    earliest_utc = now + minimum_lead
+
+    base_local = local_now.replace(
+        hour=start_hour,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+
+    result: list[dict[str, Any]] = []
+    for offset in range(max(1, search_days)):
+        local_start = base_local + dt.timedelta(days=offset)
+        local_end = local_start + dt.timedelta(hours=duration_hours)
+        day_start_utc = local_start.astimezone(UTC)
+        day_end_utc = local_end.astimezone(UTC)
+        query_start_utc = max(earliest_utc, day_start_utc)
+        if query_start_utc >= day_end_utc:
+            continue
+
+        day_id = (
+            f"{local_start.date().isoformat()}-MSK-"
+            f"{start_hour:02d}00"
+        )
+        result.append(
+            {
+                "index": offset,
+                "operationalDayId": day_id,
+                "operationalDateLocal": local_start.date().isoformat(),
+                "operationalWindowStart": iso_z(day_start_utc),
+                "operationalWindowEnd": iso_z(day_end_utc),
+                "queryWindowStart": iso_z(query_start_utc),
+                "queryWindowEnd": iso_z(day_end_utc),
+                "windowStartLocal": local_start.isoformat(),
+                "windowEndLocal": local_end.isoformat(),
+                "queryStartLocal": query_start_utc.astimezone(timezone).isoformat(),
+                "durationHours": duration_hours,
+            }
+        )
+
+    if not result:
+        raise RuntimeError(
+            "No valid 08:00 Moscow operational window is available"
+        )
+    return result
 
 
 def clamp(value: float, minimum: float, maximum: float) -> float:
@@ -380,6 +456,18 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("batchHistoryLimit must be positive")
     if safe_int(config.get("liveRefreshMinutes"), 5) != 5:
         raise RuntimeError("R8 liveRefreshMinutes must be 5")
+    if str(config.get("timezone") or "") != "Europe/Moscow":
+        raise RuntimeError("R11 timezone must be Europe/Moscow")
+    if safe_int(config.get("operationalDayStartHourLocal"), -1) != 8:
+        raise RuntimeError("R11 operational day must start at 08:00 Moscow")
+    if safe_int(config.get("operationalDayDurationHours"), 0) != 24:
+        raise RuntimeError("R11 operational day duration must be 24 hours")
+    if safe_int(config.get("operationalWindowSearchDays"), 0) < 1:
+        raise RuntimeError("R11 operationalWindowSearchDays must be positive")
+    if config.get("operationalWindowRolloverPolicy") != (
+        "IMMEDIATE_AFTER_CURRENT_BATCH_TERMINAL_NO_WAIT_FOR_08"
+    ):
+        raise RuntimeError("R11 immediate rollover policy mismatch")
 
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
@@ -850,25 +938,42 @@ def discover_events(
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    sports = [sport for sport in fetch_active_sports(client, api_key) if league_allowed(sport, config)]
-    sports = sports[: safe_int(config.get("maximumDiscoverySports"), 120)]
-    minimum_lead = dt.timedelta(minutes=safe_int(config.get("minimumLeadMinutes"), 45))
-    start = now + minimum_lead
-
-    windows = [safe_int(config.get("primaryWindowHours"), 24)] + [
-        safe_int(value) for value in config.get("expandedWindowHours", [36, 48])
+    sports = [
+        sport
+        for sport in fetch_active_sports(client, api_key)
+        if league_allowed(sport, config)
     ]
-    windows = sorted(set(window for window in windows if window > 0))
+    sports = sports[: safe_int(config.get("maximumDiscoverySports"), 120)]
+    windows = operational_selection_windows(now, config)
 
+    target = safe_int(config.get("dailyAnalysisTarget"), 15)
+    minimum_events = safe_int(
+        config.get("operationalWindowMinimumEvents"),
+        24,
+    )
     best_events: list[dict[str, Any]] = []
-    used_window = windows[-1]
+    selected_window = windows[0]
+    best_score: tuple[int, int, int, int] | None = None
     errors: list[str] = []
+    attempts: list[dict[str, Any]] = []
+
     for window in windows:
-        end = now + dt.timedelta(hours=window)
+        query_start = parse_datetime(window["queryWindowStart"])
+        query_end = parse_datetime(window["queryWindowEnd"])
+        if not query_start or not query_end:
+            raise RuntimeError("Operational window contains invalid timestamps")
+
         events: list[dict[str, Any]] = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
             future_map = {
-                executor.submit(fetch_sport_events, client, api_key, sport, start, end): sport
+                executor.submit(
+                    fetch_sport_events,
+                    client,
+                    api_key,
+                    sport,
+                    query_start,
+                    query_end,
+                ): sport
                 for sport in sports
             }
             for future in concurrent.futures.as_completed(future_map):
@@ -877,23 +982,104 @@ def discover_events(
                     events.extend(future.result())
                 except Exception as exc:  # keep other leagues alive
                     errors.append(f"{sport.get('key')}: {exc}")
+
         events.sort(key=lambda item: str(item.get("commence_time") or ""))
-        best_events = events
-        used_window = window
-        soccer_count = sum(1 for event in events if event.get("sport_type") == "soccer")
+        soccer_count = sum(
+            1 for event in events if event.get("sport_type") == "soccer"
+        )
+        hockey_count = sum(
+            1
+            for event in events
+            if event.get("sport_type") == "ice_hockey"
+        )
         total_count = len(events)
-        if soccer_count >= safe_int(config.get("minimumFootballAnalysisBeforeHockey"), 15) or total_count >= 24:
+        enough = soccer_count >= target or total_count >= minimum_events
+        score = (
+            1 if enough else 0,
+            min(total_count, 999),
+            min(soccer_count, 999),
+            -safe_int(window.get("index"), 0),
+        )
+        attempts.append(
+            {
+                "operationalDayId": window["operationalDayId"],
+                "queryWindowStart": window["queryWindowStart"],
+                "queryWindowEnd": window["queryWindowEnd"],
+                "events": total_count,
+                "soccerEvents": soccer_count,
+                "hockeyEvents": hockey_count,
+                "enough": enough,
+            }
+        )
+
+        if best_score is None or score > best_score:
+            best_score = score
+            best_events = events
+            selected_window = window
+
+        # The first sufficient aligned operational day wins. This preserves
+        # the nearest available 08:00-08:00 day and never mixes days.
+        if enough:
             break
+
+    query_start = parse_datetime(selected_window["queryWindowStart"])
+    query_end = parse_datetime(selected_window["queryWindowEnd"])
+    window_hours = 0.0
+    if query_start and query_end:
+        window_hours = round(
+            (query_end - query_start).total_seconds() / 3600.0,
+            3,
+        )
 
     diagnostics = {
         "activeSports": len(sports),
         "events": len(best_events),
-        "soccerEvents": sum(1 for event in best_events if event.get("sport_type") == "soccer"),
-        "hockeyEvents": sum(1 for event in best_events if event.get("sport_type") == "ice_hockey"),
-        "windowHours": used_window,
+        "soccerEvents": sum(
+            1 for event in best_events if event.get("sport_type") == "soccer"
+        ),
+        "hockeyEvents": sum(
+            1
+            for event in best_events
+            if event.get("sport_type") == "ice_hockey"
+        ),
+        "windowHours": window_hours,
+        "operationalWindowPolicy": (
+            "IMMEDIATE_ROLLOVER_ALIGNED_MOSCOW_08_TO_08_NO_DAY_MIXING"
+        ),
+        **selected_window,
+        "attempts": attempts,
         "errors": errors[:20],
     }
     return best_events, diagnostics
+
+
+def apply_operational_window_metadata(
+    records: list[dict[str, Any]],
+    diagnostics: dict[str, Any],
+    now: dt.datetime,
+) -> None:
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        record["operationalDayId"] = str(
+            diagnostics.get("operationalDayId") or ""
+        )
+        record["operationalWindowStart"] = str(
+            diagnostics.get("operationalWindowStart") or ""
+        )
+        record["operationalWindowEnd"] = str(
+            diagnostics.get("operationalWindowEnd") or ""
+        )
+        record["selectionWindowStart"] = str(
+            diagnostics.get("queryWindowStart") or ""
+        )
+        record["selectionWindowEnd"] = str(
+            diagnostics.get("queryWindowEnd") or ""
+        )
+        record["selectionWindowPolicy"] = (
+            "MOSCOW_OPERATIONAL_DAY_08_TO_08_IMMEDIATE_ROLLOVER"
+        )
+        record["selectionGeneratedAt"] = iso_z(now)
 
 
 def choose_sport_keys_for_odds(
@@ -987,26 +1173,39 @@ def fetch_featured_odds(
     api_key: str,
     sport_keys: list[str],
     config: dict[str, Any],
-    now: dt.datetime,
-    window_hours: int,
+    window_start: dt.datetime,
+    window_end: dt.datetime,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     params_base = odds_query_parameters(config, api_key)
-    params_base["commenceTimeFrom"] = iso_z(now)
-    params_base["commenceTimeTo"] = iso_z(now + dt.timedelta(hours=window_hours))
+    params_base["commenceTimeFrom"] = iso_z(window_start)
+    params_base["commenceTimeTo"] = iso_z(window_end)
     events: list[dict[str, Any]] = []
     errors: list[str] = []
 
     def fetch(key: str) -> list[dict[str, Any]]:
-        url = f"{ODDS_API_BASE}/sports/{urllib.parse.quote(key)}/odds?" + urllib.parse.urlencode(params_base)
+        url = (
+            f"{ODDS_API_BASE}/sports/{urllib.parse.quote(key)}/odds?"
+            + urllib.parse.urlencode(params_base)
+        )
         payload = client.request_json(url, label=f"ODDS:{key}")
         return payload if isinstance(payload, list) else []
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(6, max(1, len(sport_keys)))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(6, max(1, len(sport_keys)))
+    ) as executor:
         future_map = {executor.submit(fetch, key): key for key in sport_keys}
         for future in concurrent.futures.as_completed(future_map):
             key = future_map[future]
             try:
-                events.extend(item for item in future.result() if isinstance(item, dict))
+                for item in future.result():
+                    if not isinstance(item, dict):
+                        continue
+                    commence = parse_datetime(item.get("commence_time"))
+                    if not commence:
+                        continue
+                    if commence < window_start or commence >= window_end:
+                        continue
+                    events.append(item)
             except Exception as exc:
                 errors.append(f"{key}: {exc}")
     return events, errors
@@ -3578,6 +3777,11 @@ def publish_new_batch(
         for item in best_bets
         if normalize_history_status(item.get("status")) == "pending"
     ), 2)
+    first_analysis = (
+        daily_analysis[0]
+        if daily_analysis and isinstance(daily_analysis[0], dict)
+        else {}
+    )
     batch = {
         "version": 1,
         "id": batch_id,
@@ -3601,6 +3805,24 @@ def publish_new_batch(
         "currentBank": round(current_bank, 2),
         "placedAmount": placed,
         "availableAmount": round(max(0.0, current_bank - placed), 2),
+        "operationalDayId": str(
+            first_analysis.get("operationalDayId") or ""
+        ),
+        "operationalWindowStart": str(
+            first_analysis.get("operationalWindowStart") or ""
+        ),
+        "operationalWindowEnd": str(
+            first_analysis.get("operationalWindowEnd") or ""
+        ),
+        "selectionWindowStart": str(
+            first_analysis.get("selectionWindowStart") or ""
+        ),
+        "selectionWindowEnd": str(
+            first_analysis.get("selectionWindowEnd") or ""
+        ),
+        "rolloverExecutionPolicy": (
+            "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
+        ),
     }
     state["batch"] = batch
     state.setdefault("meta", {}).update(
@@ -4741,11 +4963,27 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
     }
 
     if generate:
-        discovered, discovery_diagnostics = discover_events(client, odds_key, config, now)
+        discovered, discovery_diagnostics = discover_events(
+            client, odds_key, config, now
+        )
         selected_keys = choose_sport_keys_for_odds(discovered, config)
-        window_hours = safe_int(discovery_diagnostics.get("windowHours"), 48)
+        query_window_start = parse_datetime(
+            discovery_diagnostics.get("queryWindowStart")
+        )
+        query_window_end = parse_datetime(
+            discovery_diagnostics.get("queryWindowEnd")
+        )
+        if not query_window_start or not query_window_end:
+            raise RuntimeError(
+                "Operational discovery window was not resolved"
+            )
         odds_events, odds_errors = fetch_featured_odds(
-            client, odds_key, selected_keys, config, now, window_hours
+            client,
+            odds_key,
+            selected_keys,
+            config,
+            query_window_start,
+            query_window_end,
         )
         # Add sport type/country metadata if not present in the odds response.
         for event in odds_events:
@@ -4763,7 +5001,14 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             config,
             now,
         )
-        enrich_narratives_with_openrouter(daily_analysis, openrouter_key, config, client)
+        apply_operational_window_metadata(
+            daily_analysis,
+            discovery_diagnostics,
+            now,
+        )
+        enrich_narratives_with_openrouter(
+            daily_analysis, openrouter_key, config, client
+        )
         best_bets, new_best = select_best_bets(daily_analysis, state, config, now)
 
         # V10 R10: the visible four and the fifteen are published as one
@@ -4809,8 +5054,29 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             best_bets = state.get("bestBets") or []
         state["meta"].update(
             {
-                "analysisDateLocal": local_now.date().isoformat(),
+                "analysisDateLocal": str(
+                    discovery_diagnostics.get("operationalDateLocal")
+                    or local_now.date().isoformat()
+                ),
                 "analysisGeneratedAt": iso_z(now),
+                "operationalDayId": str(
+                    discovery_diagnostics.get("operationalDayId") or ""
+                ),
+                "operationalWindowStart": str(
+                    discovery_diagnostics.get("operationalWindowStart") or ""
+                ),
+                "operationalWindowEnd": str(
+                    discovery_diagnostics.get("operationalWindowEnd") or ""
+                ),
+                "selectionWindowStart": str(
+                    discovery_diagnostics.get("queryWindowStart") or ""
+                ),
+                "selectionWindowEnd": str(
+                    discovery_diagnostics.get("queryWindowEnd") or ""
+                ),
+                "operationalWindowPolicy": (
+                    "IMMEDIATE_ROLLOVER_MOSCOW_08_TO_08"
+                ),
                 "analysisTarget": safe_int(config.get("dailyAnalysisTarget"), 15),
                 "analysisPublished": len(daily_analysis),
                 "bestBetsTarget": safe_int(config.get("bestBetsTarget"), 4),
@@ -5017,6 +5283,8 @@ def validate_repository_files() -> int:
         raise RuntimeError("R8 batch rollover marker missing")
     if "V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER" not in source_text:
         raise RuntimeError("R9 immediate settlement marker missing")
+    if "V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER" not in source_text:
+        raise RuntimeError("R11 Moscow operational-day marker missing")
     if "LIVE_CYCLE_DIRECT_SETTLEMENT=START" not in source_text:
         raise RuntimeError("R9 direct live-cycle settlement bridge missing")
     if "V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY" not in app_source:
@@ -5393,6 +5661,36 @@ def run_self_test() -> int:
             f"SELF_TEST visible Latin text remains: {visible_probe}"
         )
 
+    # R11 operational-day tests: rollover executes immediately, while the
+    # selected fixtures remain inside one Moscow 08:00-08:00 day.
+    before_eight_utc = dt.datetime(2026, 7, 29, 0, 20, tzinfo=UTC)
+    before_windows = operational_selection_windows(
+        before_eight_utc, test_config
+    )
+    first_before = before_windows[0]
+    if first_before.get("operationalDayId") != "2026-07-29-MSK-0800":
+        raise RuntimeError("SELF_TEST R11 pre-08 operational day mismatch")
+    if first_before.get("queryWindowStart") != "2026-07-29T05:00:00Z":
+        raise RuntimeError("SELF_TEST R11 pre-08 query start mismatch")
+    if first_before.get("queryWindowEnd") != "2026-07-30T05:00:00Z":
+        raise RuntimeError("SELF_TEST R11 pre-08 query end mismatch")
+
+    after_eight_utc = dt.datetime(2026, 7, 29, 11, 30, tzinfo=UTC)
+    after_windows = operational_selection_windows(
+        after_eight_utc, test_config
+    )
+    first_after = after_windows[0]
+    if first_after.get("operationalDayId") != "2026-07-29-MSK-0800":
+        raise RuntimeError("SELF_TEST R11 current operational day mismatch")
+    if first_after.get("queryWindowStart") != "2026-07-29T12:15:00Z":
+        raise RuntimeError("SELF_TEST R11 lead-time start mismatch")
+    if first_after.get("queryWindowEnd") != "2026-07-30T05:00:00Z":
+        raise RuntimeError("SELF_TEST R11 current-day end mismatch")
+
+    print("R11_OPERATIONAL_DAY=GREEN")
+    print("R11_ROLLOVER_WAIT_FOR_08=NO")
+    print("R11_WINDOW_MOSCOW=08:00_TO_08:00")
+
     print(
         "SELF_TEST_GREEN_V10 "
         f"ANALYSIS={len(daily)} BEST={len(best)} EXACT_FOUR=YES RUSSIAN_UI=YES "
@@ -5402,7 +5700,7 @@ def run_self_test() -> int:
         f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE "
         f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES "
         f"ATOMIC_BATCH_ROLLOVER=YES LINKED_BANK_METRICS=YES "
-        f"ATOMIC_BEST_FOUR_SYNC=YES"
+        f"ATOMIC_BEST_FOUR_SYNC=YES OPERATIONAL_DAY_08_MSK=YES IMMEDIATE_ROLLOVER=YES"
     )
     return 0
 
