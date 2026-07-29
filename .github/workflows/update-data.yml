@@ -1,6 +1,7 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R8
+name: V10 Финальная спортивная аналитика R9
 
+# V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 on:
   workflow_dispatch:
     inputs:
@@ -41,7 +42,7 @@ env:
 
 jobs:
   validate:
-    name: V10 R8 статическая и офлайн-проверка
+    name: V10 R9 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

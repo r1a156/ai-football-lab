@@ -2,6 +2,7 @@
 # V10_R6_LIVE_MATCH_INTELLIGENCE
 # V10_R7_HISTORY_LIVE_CLEANUP
 # V10_R8_ATOMIC_BATCH_ROLLOVER
+# V10_R9_BEST_FOUR_LIVE_COVERAGE
 """Safe live-score and live-calibration layer for AI Football Lab V10.
 
 This module writes live score and calibration only. The core R8 live-cycle command
@@ -203,11 +204,27 @@ def fetch_odds_scores(
         sport_key = str(record.get("sportKey") or record.get("oddsSportKey") or "")
         if sport_key:
             grouped[sport_key].append(record)
-    maximum_calls = max(0, core.safe_int(config.get("liveMaximumOddsScoreCallsPerRun"), 3))
-    ordered_groups = sorted(
+    configured_calls = max(0, core.safe_int(config.get("liveMaximumOddsScoreCallsPerRun"), 4))
+    ranked_groups = sorted(
         grouped.items(),
         key=lambda row: min(priority_key(item, now) for item in row[1]),
-    )[:maximum_calls]
+    )
+    best_groups = [
+        row for row in ranked_groups
+        if any(bool(item.get("isBestBet")) for item in row[1])
+    ]
+    other_groups = [row for row in ranked_groups if row not in best_groups]
+    # All distinct sport keys used by the current four best bets receive live
+    # coverage first. Remaining analysis groups rotate by five-minute slot so
+    # the same first groups cannot starve the rest of the 15-match batch.
+    maximum_calls = max(configured_calls, len(best_groups))
+    remaining_slots = max(0, maximum_calls - len(best_groups))
+    rotated_other_groups = other_groups
+    if other_groups and remaining_slots:
+        slot_seconds = max(60, core.safe_int(config.get("liveRefreshMinutes"), 5) * 60)
+        offset = int(now.timestamp() // slot_seconds) % len(other_groups)
+        rotated_other_groups = other_groups[offset:] + other_groups[:offset]
+    ordered_groups = (best_groups + rotated_other_groups[:remaining_slots])[:maximum_calls]
     results: list[dict[str, Any]] = []
     errors: list[str] = []
     for sport_key, sport_records in ordered_groups:

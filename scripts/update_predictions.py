@@ -3,6 +3,7 @@
 # V10_R6_FINAL_LIVE_LEARNING_STATISTICS
 # V10_R7_HISTORY_LIVE_CLEANUP
 # V10_R8_ATOMIC_BATCH_ROLLOVER
+# V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -370,6 +371,10 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("historyPendingExpiryHoursHockey must be positive")
     if not bool(config.get("batchRolloverEnabled", True)):
         raise RuntimeError("batchRolloverEnabled must be true")
+    if safe_int(config.get("batchUnresolvedReleaseMinutesSoccer"), 360) < 240:
+        raise RuntimeError("batchUnresolvedReleaseMinutesSoccer must be at least 240")
+    if safe_int(config.get("batchUnresolvedReleaseMinutesHockey"), 420) < 300:
+        raise RuntimeError("batchUnresolvedReleaseMinutesHockey must be at least 300")
     if safe_int(config.get("batchHistoryLimit"), 120) < 1:
         raise RuntimeError("batchHistoryLimit must be positive")
     if safe_int(config.get("liveRefreshMinutes"), 5) != 5:
@@ -3481,6 +3486,81 @@ def due_pending_records(
     return list(unique.values())
 
 
+def release_overdue_batch_records(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, int]:
+    """Release a batch that cannot be settled because a provider never returned
+    a final result.
+
+    This is not counted as a loss and does not train the model. The record is
+    marked unresolved only after a conservative post-start window, the virtual
+    stake is released, and the next batch may be generated instead of waiting
+    for days.
+    """
+    counters = {"analysis": 0, "bestBets": 0}
+    collection_specs = (
+        ("analysisHistory", "analysis"),
+        ("history", "bestBets"),
+    )
+
+    for collection_name, counter_name in collection_specs:
+        for record in state.get(collection_name) or []:
+            if not isinstance(record, dict):
+                continue
+            if normalize_history_status(record.get("status")) not in {"pending", "unresolved"}:
+                continue
+            commence = parse_datetime(record.get("commenceTime") or record.get("utcDate"))
+            if not commence:
+                continue
+            sport = str(
+                record.get("sport")
+                or infer_sport_from_key(record.get("sportKey") or record.get("oddsSportKey"))
+                or "soccer"
+            )
+            release_minutes = safe_int(
+                config.get(
+                    "batchUnresolvedReleaseMinutesHockey"
+                    if sport == "ice_hockey"
+                    else "batchUnresolvedReleaseMinutesSoccer"
+                ),
+                420 if sport == "ice_hockey" else 360,
+            )
+            if now < commence + dt.timedelta(minutes=max(240, release_minutes)):
+                continue
+            if normalize_history_status(record.get("status")) == "unresolved" and record.get("batchReleaseReason"):
+                continue
+
+            record["status"] = "unresolved"
+            record["statusLabel"] = result_status_label("unresolved")
+            record["settledAt"] = iso_z(now)
+            record["settlementSource"] = "BATCH_TIMEOUT_NO_CONFIRMED_FINAL"
+            record["batchReleaseReason"] = "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
+            record["profit"] = 0.0
+            counters[counter_name] += 1
+
+    status_by_id = {
+        str(item.get("id") or ""): item
+        for collection in (state.get("analysisHistory") or [], state.get("history") or [])
+        for item in collection
+        if isinstance(item, dict) and str(item.get("id") or "")
+    }
+    for key in ("dailyAnalysis", "bestBets", "predictions"):
+        refreshed: list[dict[str, Any]] = []
+        for item in state.get(key) or []:
+            if not isinstance(item, dict):
+                continue
+            source = status_by_id.get(str(item.get("id") or ""))
+            refreshed.append(copy.deepcopy(source) if source else item)
+        state[key] = refreshed
+
+    if counters["analysis"] or counters["bestBets"]:
+        state.setdefault("meta", {})["batchUnresolvedReleaseAt"] = iso_z(now)
+        state["meta"]["batchUnresolvedRelease"] = counters
+    return counters
+
+
 def fetch_scores_for_sport_keys(
     client: ApiClient,
     api_key: str,
@@ -3814,7 +3894,7 @@ def update_statistics(state: dict[str, Any]) -> None:
         if isinstance(item, dict) and item.get("recordType") == "BEST_BET"
     ]
 
-    terminal = {"won", "lost", "push", "void", "cancelled", "postponed"}
+    terminal = {"won", "lost", "push", "void", "cancelled", "postponed", "unresolved"}
 
     def record_time(item: dict[str, Any]) -> dt.datetime | None:
         return parse_datetime(
@@ -3830,7 +3910,8 @@ def update_statistics(state: dict[str, Any]) -> None:
         lost = statuses.count("lost")
         pushes = statuses.count("push")
         voids = sum(status in {"void", "cancelled", "postponed"} for status in statuses)
-        pending = sum(status not in terminal for status in statuses)
+        unresolved = statuses.count("unresolved")
+        pending = sum(status not in terminal and status != "unresolved" for status in statuses)
         decided = won + lost
         settled = won + lost + pushes
         profit = round(sum(safe_float(item.get("profit")) for item in records), 2)
@@ -3842,6 +3923,7 @@ def update_statistics(state: dict[str, Any]) -> None:
             "lost": lost,
             "push": pushes,
             "void": voids,
+            "unresolved": unresolved,
             "pending": pending,
             "accuracy": round(won / decided * 100, 1) if decided else 0.0,
             "profit": profit,
@@ -4275,7 +4357,9 @@ def run_live_settlement() -> int:
 
 
 def run_live_cycle() -> int:
+    # First consume provider-confirmed finals already captured by the live layer.
     run_live_settlement()
+
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     now = utc_now()
@@ -4283,6 +4367,40 @@ def run_live_cycle() -> int:
     update_bank_metrics(state)
     update_statistics(state)
     batch = ensure_current_batch(state, config, now)
+
+    # R8 only read live-learning here. If one provider did not create a live
+    # snapshot, the batch could remain active forever and the four best bets
+    # never changed. R9 performs the full direct score settlement in the same
+    # five-minute workflow before deciding whether the batch is complete.
+    if state.get("dailyAnalysis") and not batch.get("completed"):
+        print("LIVE_CYCLE_DIRECT_SETTLEMENT=START")
+        run_pipeline("settle", force_generation=False)
+        now = utc_now()
+        state = migrate_state(load_json(STATE_PATH, {}), config, now)
+        update_bank_metrics(state)
+        update_statistics(state)
+        batch = ensure_current_batch(state, config, now)
+        print("LIVE_CYCLE_DIRECT_SETTLEMENT=GREEN")
+
+    released = release_overdue_batch_records(state, config, now)
+    if released.get("analysis") or released.get("bestBets"):
+        maintain_prediction_history(state, config, now)
+        update_bank_metrics(state)
+        update_statistics(state)
+        batch = ensure_current_batch(state, config, now)
+        state.setdefault("meta", {})["updatedAt"] = iso_z(now)
+        write_json_atomic(STATE_PATH, state)
+        print(
+            "BATCH_OVERDUE_RELEASED="
+            f"analysis:{released.get('analysis', 0)},"
+            f"bestBets:{released.get('bestBets', 0)}"
+        )
+
+    # An empty production state must immediately attempt a new 15+4 selection;
+    # otherwise a failed previous rollover would leave the site empty forever.
+    if not state.get("dailyAnalysis"):
+        print("EMPTY_BATCH_GENERATION_TRIGGERED=YES")
+        return run_pipeline("rollover", force_generation=True)
 
     if batch.get("completed"):
         state.setdefault("meta", {})["batchStatus"] = "GENERATING_NEXT"
@@ -4296,7 +4414,7 @@ def run_live_cycle() -> int:
     print(f"BATCH_STATUS={batch.get('status')}")
     print(f"BATCH_PENDING_ANALYSES={batch.get('pendingAnalysisCount')}")
     print(f"BATCH_PENDING_BEST_BETS={batch.get('pendingBestBetsCount')}")
-    print("FINAL_STATUS=GREEN_V10_R8_LIVE_CYCLE_WAITING")
+    print("FINAL_STATUS=GREEN_V10_R9_LIVE_CYCLE_WAITING")
     return 0
 
 
@@ -4669,6 +4787,10 @@ def validate_repository_files() -> int:
         raise RuntimeError("R8 live cycle CLI missing")
     if "V10_R8_ATOMIC_BATCH_ROLLOVER" not in source_text:
         raise RuntimeError("R8 batch rollover marker missing")
+    if "V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER" not in source_text:
+        raise RuntimeError("R9 immediate settlement marker missing")
+    if "LIVE_CYCLE_DIRECT_SETTLEMENT=START" not in source_text:
+        raise RuntimeError("R9 direct live-cycle settlement bridge missing")
     if "V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY" not in app_source:
         raise RuntimeError("R7 clean history UI marker missing")
     if config.get("historyDefaultFilter") != "settled":

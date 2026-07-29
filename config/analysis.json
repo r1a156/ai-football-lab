@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 16,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -118,7 +118,7 @@
   "livePastHoursSoccer": 12,
   "livePastHoursHockey": 12,
   "liveCompletedRetentionHours": 0,
-  "liveMaximumOddsScoreCallsPerRun": 3,
+  "liveMaximumOddsScoreCallsPerRun": 4,
   "liveSnapshotsPerEventLimit": 72,
   "liveLearningSessionLimit": 500,
   "liveLearningMinimumSamples": 15,
@@ -142,12 +142,16 @@
   "historyDefaultFilter": "settled",
   "historyMaintenancePolicy": "DEDUPLICATE_INVALID_REMOVE_STALE_PENDING_TO_UNRESOLVED_PRESERVE_BANK_AND_LEARNING",
   "livePublicListPolicy": "ONLY_PROVIDER_CONFIRMED_LIVE_AND_FUTURE_SCHEDULED_NO_FINISHED",
-  "liveSettlementPolicy": "CONFIRMED_FINALS_SETTLE_AND_ROLLOVER_EVERY_5_MINUTES",
+  "liveSettlementPolicy": "DIRECT_FINAL_LOOKUP_PLUS_LIVE_CONFIRMED_FINALS_AND_ATOMIC_ROLLOVER_EVERY_5_MINUTES",
   "batchRolloverEnabled": true,
   "batchRolloverTrigger": "ALL_CURRENT_ANALYSES_AND_BEST_BETS_TERMINAL",
   "batchRolloverMaximumDelayMinutes": 5,
   "batchHistoryLimit": 120,
   "batchOverlapPolicy": "FORBID_OVERLAPPING_PUBLISHED_BATCHES",
   "batchPublicationPolicy": "ATOMIC_RESULTS_BANK_STATISTICS_LEARNING_NEXT_FIFTEEN_NEXT_FOUR",
-  "bankMetricsPolicy": "CURRENT_PLACED_AVAILABLE_ACTIVE_COUNT_UPDATED_TOGETHER"
+  "bankMetricsPolicy": "CURRENT_PLACED_AVAILABLE_ACTIVE_COUNT_UPDATED_TOGETHER",
+  "batchUnresolvedReleaseMinutesSoccer": 360,
+  "batchUnresolvedReleaseMinutesHockey": 420,
+  "bestFourStatisticsPolicy": "DEDICATED_VISIBLE_STATISTICS_NEXT_TO_CURRENT_FOUR_BEST_BETS",
+  "mobileNavigationPolicy": "FIXED_COMPACT_SINGLE_LINE_FOUR_ITEMS_NO_EXPANSION"
 }

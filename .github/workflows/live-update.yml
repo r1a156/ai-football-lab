@@ -1,7 +1,8 @@
 # V10_R6_LIVE_AUTO_REFRESH
 # V10_R7_HISTORY_LIVE_CLEANUP
 # V10_R8_ATOMIC_BATCH_ROLLOVER
-name: V10 R8 Живой цикл и следующая подборка
+# V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
+name: V10 R9 Живой цикл, новые 15 и новые 4
 
 on:
   workflow_dispatch:
@@ -154,6 +155,6 @@ jobs:
             echo "No live data changes to commit."
             exit 0
           fi
-          git commit -m "V10 R8 atomic live settlement learning and next batch [skip ci]"
+          git commit -m "V10 R9 settle metrics learning next 15 and next 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

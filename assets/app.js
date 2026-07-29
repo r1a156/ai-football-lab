@@ -2,6 +2,7 @@
 /* V10_R6_LIVE_STATISTICS_RUSSIAN_UI */
 /* V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY */
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
+/* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
 (() => {
     "use strict";
 
@@ -111,6 +112,10 @@
             meta.version || "",
             state?.dailyAnalysis?.length || 0,
             state?.bestBets?.length || state?.predictions?.length || 0,
+            (state?.bestBets || state?.predictions || []).map((item) => item?.id || item?.eventId || "").join(","),
+            (state?.dailyAnalysis || []).map((item) => item?.id || item?.eventId || "").join(","),
+            state?.statistics?.bestBets?.settled || 0,
+            state?.statistics?.bestBets?.profit || 0,
             bank.current || 0,
             bank.placedAmount ?? bank.activeExposure ?? 0,
             bank.available ?? 0,
@@ -127,7 +132,7 @@
     function renderApplication(state, liveState) {
         renderMeta(state, liveState);
         renderLiveMatches(liveState);
-        renderBestBets(state.bestBets, state.meta, state.bank);
+        renderBestBets(state.bestBets, state.meta, state.bank, state.statistics);
         renderDailyAnalysis(state.dailyAnalysis);
         renderBank(state.bank, state.statistics);
         renderStatistics(state.statistics, state.learning);
@@ -236,7 +241,7 @@
         return `<div class="inline-live"><span>Матч идёт · ${escapeHtml(live.clockLabel || "сейчас")}</span><strong>${escapeHtml(live.score || "— : —")}</strong><b>${formatNumber(number(live.liveProbability) * 100, 1)}%</b></div>`;
     }
 
-    function renderBestBets(bestBets, meta, bank) {
+    function renderBestBets(bestBets, meta, bank, statistics = {}) {
         const grid = document.getElementById("bestBetsGrid");
         if (!grid) return;
 
@@ -255,6 +260,19 @@
         setText(
             "bestBetsExposure",
             `${formatCount(activeCount, "активная ставка", "активные ставки", "активных ставок")} · поставлено ${formatCurrency(exposure)} · ${formatNumber((exposure / bankValue) * 100, 0)}%`,
+        );
+        const bestStatistics = statistics?.bestBets && typeof statistics.bestBets === "object"
+            ? statistics.bestBets
+            : {};
+        setText("bestFourStatsAccuracy", formatPercent(bestStatistics.accuracy));
+        setText("bestFourStatsSettled", number(bestStatistics.settled));
+        setText("bestFourStatsWon", number(bestStatistics.won));
+        setText("bestFourStatsLost", number(bestStatistics.lost));
+        setText("bestFourStatsPush", number(bestStatistics.push));
+        setText("bestFourStatsProfit", formatSignedCurrency(bestStatistics.profit));
+        document.getElementById("bestFourStatsProfit")?.classList.toggle(
+            "is-negative",
+            number(bestStatistics.profit) < 0,
         );
 
         if (!bestBets.length) {
@@ -1123,6 +1141,20 @@
     function average(values) {
         const valid = values.filter(Number.isFinite);
         return valid.length ? valid.reduce((sum, value) => sum + value, 0) / valid.length : 0;
+    }
+
+    function formatCount(value, one, few, many) {
+        const count = Math.max(0, Math.trunc(number(value)));
+        const mod100 = count % 100;
+        const mod10 = count % 10;
+        const word = mod100 >= 11 && mod100 <= 14
+            ? many
+            : mod10 === 1
+              ? one
+              : mod10 >= 2 && mod10 <= 4
+                ? few
+                : many;
+        return `${count} ${word}`;
     }
 
     function formatCurrency(value) {
