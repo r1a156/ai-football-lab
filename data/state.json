@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-07-29T05:25:51Z",
+    "updatedAt": "2026-07-29T06:19:16Z",
     "analysisDateLocal": "2026-07-28",
     "status": "GREEN",
     "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
@@ -86,7 +86,7 @@
     "stakePerPredictionPercent": 20.0,
     "maximumDailyExposurePercent": 80.0,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-    "migrationAt": "2026-07-29T05:25:51Z",
+    "migrationAt": "2026-07-29T06:19:16Z",
     "analysisGeneratedAt": "2026-07-28T19:04:08Z",
     "analysisTarget": 15,
     "analysisPublished": 15,
@@ -103,10 +103,10 @@
     "predictionObjective": "PREDICT_MATCH_RESULT_FIRST_THEN_EVALUATE_BOOKMAKER_PRICE",
     "publicationPolicy": "FIFTEEN_ANALYSES_EXACTLY_FOUR_RESULT_FIRST_BEST_BETS",
     "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-    "lastSuccessfulRefreshAt": "2026-07-29T03:44:43Z",
+    "lastSuccessfulRefreshAt": "2026-07-29T06:19:16Z",
     "apiHealth": {
       "status": "DEGRADED",
-      "calls": 6,
+      "calls": 3,
       "errors": 3,
       "lastErrors": [
         {
@@ -126,13 +126,15 @@
         }
       ]
     },
-    "historyUpdatedAt": "2026-07-29T05:25:51Z",
-    "liveSettlementAt": "2026-07-29T05:25:51Z",
+    "historyUpdatedAt": "2026-07-29T06:19:16Z",
+    "liveSettlementAt": "2026-07-29T06:19:16Z",
     "currentBatchId": "batch-b6927f8c3345700966a3",
     "batchSequence": 1,
     "batchStatus": "SETTLING",
     "batchStatusLabel": "Рассчитываются результаты",
-    "batchUpdatedAt": "2026-07-29T05:25:51Z"
+    "batchUpdatedAt": "2026-07-29T06:19:16Z",
+    "batchGenerationBlockedAt": "2026-07-29T06:19:16Z",
+    "batchGenerationBlockedReason": "CURRENT_BATCH_NOT_TERMINAL"
   },
   "dailyAnalysis": [
     {
@@ -5101,7 +5103,9 @@
       "pickRu": "Нордик Юнайтед ФК с форой +0.25",
       "bookmakerRu": "Пиннакле",
       "expectedResultRu": "Наиболее вероятна победа: Хелсингборгс Иф",
-      "reasonRu": "Наиболее вероятна победа: Хелсингборгс Иф. Для рынка «Нордик Юнайтед ФК с форой +0.25» модель оценивает вероятность в 57.4%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +5.9 п.п."
+      "reasonRu": "Наиболее вероятна победа: Хелсингборгс Иф. Для рынка «Нордик Юнайтед ФК с форой +0.25» модель оценивает вероятность в 57.4%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +5.9 п.п.",
+      "batchId": "batch-b6927f8c3345700966a3",
+      "batchSequence": 1
     },
     {
       "id": "analysis-4f65e7b27ccb4106f4ef",
@@ -5336,7 +5340,9 @@
       "pickRu": "Тотал меньше 3.5",
       "bookmakerRu": "1ксбет",
       "expectedResultRu": "Наиболее вероятна победа: Хеарц",
-      "reasonRu": "Наиболее вероятна победа: Хеарц. Для рынка «Тотал меньше 3.5» модель оценивает вероятность в 66.9%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +7.2 п.п."
+      "reasonRu": "Наиболее вероятна победа: Хеарц. Для рынка «Тотал меньше 3.5» модель оценивает вероятность в 66.9%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +7.2 п.п.",
+      "batchId": "batch-b6927f8c3345700966a3",
+      "batchSequence": 1
     },
     {
       "id": "analysis-b4c6761c07a745d1183a",
@@ -5653,7 +5659,9 @@
       "pickRu": "Тотал больше 1.5",
       "bookmakerRu": "1ксбет",
       "expectedResultRu": "Наиболее вероятна победа: Банфиелд",
-      "reasonRu": "Наиболее вероятна победа: Банфиелд. Для рынка «Тотал больше 1.5» модель оценивает вероятность в 62.8%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +1.6 п.п."
+      "reasonRu": "Наиболее вероятна победа: Банфиелд. Для рынка «Тотал больше 1.5» модель оценивает вероятность в 62.8%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +1.6 п.п.",
+      "batchId": "batch-b6927f8c3345700966a3",
+      "batchSequence": 1
     },
     {
       "id": "bet-634d1548e80a0d8cbef0",
@@ -5889,7 +5897,9 @@
       "pickRu": "Понте Прета с форой +0.5",
       "bookmakerRu": "Бетонлине.аг",
       "expectedResultRu": "Наиболее вероятна победа: Атлетик Клуб (Мг)",
-      "reasonRu": "Наиболее вероятна победа: Атлетик Клуб (Мг). Для рынка «Понте Прета с форой +0.5» модель оценивает вероятность в 53.4%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +3.9 п.п."
+      "reasonRu": "Наиболее вероятна победа: Атлетик Клуб (Мг). Для рынка «Понте Прета с форой +0.5» модель оценивает вероятность в 53.4%. Расчёт опирается на безмаржинальный рыночный консенсус; преимущество над рынком +3.9 п.п.",
+      "batchId": "batch-b6927f8c3345700966a3",
+      "batchSequence": 1
     }
   ],
   "analysisHistory": [
@@ -14650,6 +14660,7 @@
       "lost": 6,
       "push": 0,
       "void": 0,
+      "unresolved": 0,
       "pending": 8,
       "accuracy": 64.7,
       "profit": 0.0
@@ -14662,6 +14673,7 @@
       "lost": 1,
       "push": 0,
       "void": 16,
+      "unresolved": 0,
       "pending": 0,
       "accuracy": 87.5,
       "profit": 7291.33
@@ -14676,6 +14688,7 @@
           "lost": 6,
           "push": 0,
           "void": 0,
+          "unresolved": 0,
           "pending": 8,
           "accuracy": 64.7,
           "profit": 0.0
@@ -14688,6 +14701,7 @@
           "lost": 1,
           "push": 0,
           "void": 16,
+          "unresolved": 0,
           "pending": 0,
           "accuracy": 87.5,
           "profit": 7291.33
@@ -14702,6 +14716,7 @@
           "lost": 6,
           "push": 0,
           "void": 0,
+          "unresolved": 0,
           "pending": 8,
           "accuracy": 64.7,
           "profit": 0.0
@@ -14714,6 +14729,7 @@
           "lost": 1,
           "push": 0,
           "void": 16,
+          "unresolved": 0,
           "pending": 0,
           "accuracy": 87.5,
           "profit": 7291.33
@@ -14728,6 +14744,7 @@
           "lost": 6,
           "push": 0,
           "void": 0,
+          "unresolved": 0,
           "pending": 8,
           "accuracy": 64.7,
           "profit": 0.0
@@ -14740,6 +14757,7 @@
           "lost": 1,
           "push": 0,
           "void": 16,
+          "unresolved": 0,
           "pending": 0,
           "accuracy": 87.5,
           "profit": 7291.33
@@ -14754,6 +14772,7 @@
           "lost": 6,
           "push": 0,
           "void": 0,
+          "unresolved": 0,
           "pending": 8,
           "accuracy": 64.7,
           "profit": 0.0
@@ -14766,6 +14785,7 @@
           "lost": 1,
           "push": 0,
           "void": 16,
+          "unresolved": 0,
           "pending": 0,
           "accuracy": 87.5,
           "profit": 7291.33
@@ -14782,6 +14802,7 @@
         "lost": 6,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 8,
         "accuracy": 64.7,
         "profit": 0.0
@@ -14797,6 +14818,7 @@
         "lost": 5,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 4,
         "accuracy": 54.5,
         "profit": 0.0
@@ -14810,6 +14832,7 @@
         "lost": 1,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 4,
         "accuracy": 83.3,
         "profit": 0.0
@@ -14825,6 +14848,7 @@
         "lost": 1,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 7,
         "accuracy": 83.3,
         "profit": 0.0
@@ -14838,6 +14862,7 @@
         "lost": 2,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 1,
         "accuracy": 50.0,
         "profit": 0.0
@@ -14851,6 +14876,7 @@
         "lost": 0,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 0,
         "accuracy": 100.0,
         "profit": 0.0
@@ -14866,6 +14892,7 @@
         "lost": 2,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 2,
         "accuracy": 80.0,
         "profit": 0.0
@@ -14879,6 +14906,7 @@
         "lost": 4,
         "push": 0,
         "void": 0,
+        "unresolved": 0,
         "pending": 6,
         "accuracy": 42.9,
         "profit": 0.0
@@ -15210,7 +15238,7 @@
       "minimumSamples": 20,
       "fullWeightSamples": 120,
       "maximumProbabilityAdjustment": 0.08,
-      "updatedAt": "2026-07-29T05:25:51Z"
+      "updatedAt": "2026-07-29T06:19:23Z"
     }
   },
   "batch": {
@@ -15219,7 +15247,7 @@
     "sequence": 1,
     "status": "SETTLING",
     "createdAt": "2026-07-28T19:04:08Z",
-    "updatedAt": "2026-07-29T05:25:51Z",
+    "updatedAt": "2026-07-29T06:19:16Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
     "terminalAnalysisCount": 7,
@@ -15259,10 +15287,18 @@
     "currentBank": 17291.33
   },
   "batchHistory": [],
-  "quota": {},
+  "quota": {
+    "provider": "THE_ODDS_API",
+    "requestsRemaining": null,
+    "requestsUsed": null,
+    "requestsLast": null,
+    "estimatedCreditsThisRun": 0,
+    "calls": 0,
+    "updatedAt": "2026-07-29T06:19:16Z"
+  },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-07-29T05:25:51Z",
+    "updatedAt": "2026-07-29T06:19:16Z",
     "analysisHistory": {
       "input": 25,
       "output": 25,

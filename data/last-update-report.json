@@ -2,44 +2,30 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "settle-live",
-  "startedAt": "2026-07-29T05:25:51Z",
-  "finishedAt": "2026-07-29T05:25:51Z",
+  "mode": "settle",
+  "startedAt": "2026-07-29T06:19:16Z",
+  "finishedAt": "2026-07-29T06:19:23Z",
   "diagnostics": {
-    "liveFinalResults": 0,
-    "dueRecords": 0,
+    "generated": false,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
       "unresolved": 0
     },
-    "historyMaintenance": {
-      "version": 1,
-      "updatedAt": "2026-07-29T05:25:51Z",
-      "analysisHistory": {
-        "input": 25,
-        "output": 25,
-        "invalidRemoved": 0,
-        "duplicatesRemoved": 0,
-        "unresolvedMarked": 0
-      },
-      "bestBetHistory": {
-        "input": 24,
-        "output": 24,
-        "invalidRemoved": 0,
-        "duplicatesRemoved": 0,
-        "unresolvedMarked": 0
-      }
-    },
-    "bankBefore": 17291.33,
-    "bankAfter": 17291.33,
+    "duePending": 0,
+    "selectedSportKeys": [],
+    "discovery": {},
+    "analysis": {},
+    "dailyAnalysis": 15,
+    "bestBets": 4,
+    "newBestBets": 0,
     "batch": {
       "version": 1,
       "id": "batch-b6927f8c3345700966a3",
       "sequence": 1,
       "status": "SETTLING",
       "createdAt": "2026-07-28T19:04:08Z",
-      "updatedAt": "2026-07-29T05:25:51Z",
+      "updatedAt": "2026-07-29T06:19:16Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 7,
@@ -78,8 +64,37 @@
       ],
       "currentBank": 17291.33
     },
-    "batchCompleted": false
+    "batchRollover": false,
+    "footballDataMatches": 0,
+    "quota": {
+      "provider": "THE_ODDS_API",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-07-29T06:19:16Z"
+    },
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "FOOTBALL_DATA_MATCHES",
+        "status": 400,
+        "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      }
+    ]
   },
-  "warnings": [],
+  "warnings": [
+    "The current prediction batch is still active; overlapping generation was blocked."
+  ],
   "errors": []
 }
