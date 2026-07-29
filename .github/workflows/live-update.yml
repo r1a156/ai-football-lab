@@ -1,5 +1,6 @@
 # V10_R6_LIVE_AUTO_REFRESH
-name: V10 R6 Живой счёт и онлайн-калибровка
+# V10_R7_HISTORY_LIVE_CLEANUP
+name: V10 R7 Живой счёт, завершение и чистая история
 
 on:
   workflow_dispatch:
@@ -18,8 +19,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: v10-r6-live-match-intelligence
-  cancel-in-progress: true
+  group: v10-production-state-writer
+  cancel-in-progress: false
 
 env:
   PYTHONDONTWRITEBYTECODE: "1"
@@ -51,7 +52,10 @@ jobs:
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/live-state.json > /dev/null
           python -m json.tool data/live-learning.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/last-update-report.json > /dev/null
           python scripts/update_live.py --validate
+          python scripts/update_predictions.py --validate
 
       - name: Обновить отслеживаемые матчи
         shell: bash
@@ -61,6 +65,12 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/update_live.py --update
+
+      - name: Закрыть прогнозы по подтверждённым финальным счетам
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/update_predictions.py --settle-live
 
       - name: Проверить обновлённые данные
         shell: bash
@@ -75,6 +85,7 @@ jobs:
 
           live = json.loads(Path("data/live-state.json").read_text(encoding="utf-8"))
           learning = json.loads(Path("data/live-learning.json").read_text(encoding="utf-8"))
+          state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
 
           if live.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
               raise SystemExit("Live state marker mismatch")
@@ -85,7 +96,21 @@ jobs:
                   raise SystemExit("Live event without eventId")
               if not event.get("originalPredictionImmutable"):
                   raise SystemExit("Live event lost original-prediction immutability guard")
+              if event.get("status") in {"FINISHED", "CANCELLED", "POSTPONED", "UNCONFIRMED"}:
+                  raise SystemExit("Non-current event leaked into public live list")
+          active_ids = {
+              str(item.get("eventId"))
+              for item in live.get("events") or []
+              if item.get("status") == "LIVE"
+          }
+          if active_ids != set(map(str, live.get("activeEventIds") or [])):
+              raise SystemExit("Active live IDs do not match public live events")
+          maintenance = state.get("historyMaintenance") or {}
+          if maintenance.get("version") != 1:
+              raise SystemExit("History maintenance metadata is missing")
           print("LIVE_STATE_ACCEPTANCE=GREEN")
+          print("LIVE_FINISHED_PUBLIC=0")
+          print("HISTORY_MAINTENANCE_ACCEPTANCE=GREEN")
           print("LIVE_TRACKED=", len(live.get("events") or []))
           print("LIVE_ACTIVE=", len(live.get("activeEventIds") or []))
           print("LIVE_LEARNING=", learning.get("statistics"))
@@ -97,11 +122,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/live-state.json data/live-learning.json
+          git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json
           if git diff --cached --quiet; then
             echo "No live data changes to commit."
             exit 0
           fi
-          git commit -m "V10 R6 refresh live score and online calibration [skip ci]"
+          git commit -m "V10 R7 refresh live score settle results and clean history [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

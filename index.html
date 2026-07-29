@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-version="V10_R6_FINAL_LIVE_LEARNING">
+<html lang="ru" data-version="V10_R7_HISTORY_LIVE_CLEANUP">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -417,20 +417,23 @@
                 </div>
                 <div class="history-filter-stack">
                     <div class="history-filters" role="group" aria-label="Тип истории">
-                        <button class="filter-chip is-active" data-history-scope="best" type="button">Лучшие ставки</button>
-                        <button class="filter-chip" data-history-scope="all" type="button">Все прогнозы</button>
+                        <button class="filter-chip" data-history-scope="best" type="button">Лучшие ставки</button>
+                        <button class="filter-chip is-active" data-history-scope="all" type="button">Все прогнозы</button>
                     </div>
                     <div class="history-filters" role="group" aria-label="Статус прогноза">
-                        <button class="filter-chip is-active" data-history-filter="all" type="button">Все</button>
+                        <button class="filter-chip" data-history-filter="all" type="button">Все</button>
+                        <button class="filter-chip is-active" data-history-filter="settled" type="button">Завершённые</button>
                         <button class="filter-chip" data-history-filter="won" type="button">Прошло</button>
                         <button class="filter-chip" data-history-filter="lost" type="button">Не прошло</button>
                         <button class="filter-chip" data-history-filter="push" type="button">Возврат</button>
                         <button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button>
+                        <button class="filter-chip" data-history-filter="unresolved" type="button">Не подтверждено</button>
                     </div>
                 </div>
             </div>
 
             <div class="history-panel reveal">
+                <div class="history-summary" id="historySummary">История очищается и обновляется автоматически</div>
                 <div class="history-table" id="historyTable">
                     <div class="analysis-loading">Загрузка истории…</div>
                 </div>

@@ -1,5 +1,5 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R6
+name: V10 Финальная спортивная аналитика R7
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: v10-global-sports-intelligence
+  group: v10-production-state-writer
   cancel-in-progress: false
 
 env:
@@ -265,8 +265,22 @@ jobs:
           learning = state.get("learning") or {}
           if not isinstance(learning.get("modelReadiness"), dict):
               raise SystemExit("Learning readiness status is missing")
+          maintenance = state.get("historyMaintenance") or {}
+          if maintenance.get("version") != 1:
+              raise SystemExit("History maintenance metadata is missing")
+          if any(
+              not str(item.get("eventId") or "").strip()
+              for item in state.get("analysisHistory") or []
+          ):
+              raise SystemExit("Invalid analysis history entry remains")
+          if any(
+              not str(item.get("eventId") or "").strip()
+              for item in state.get("history") or []
+          ):
+              raise SystemExit("Invalid best-bet history entry remains")
 
           print("V10_STATE_VALIDATION=GREEN")
+          print("HISTORY_MAINTENANCE=", maintenance)
           print("RESET_MARKER=", meta.get("resetMarker"))
           print("MODEL_EPOCH=", meta.get("modelEpoch"))
           print("STATE_STATUS=", meta.get("status"))

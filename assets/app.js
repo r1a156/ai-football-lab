@@ -1,5 +1,6 @@
 /* V10_SITE_PREMIUM_DASHBOARD */
 /* V10_R6_LIVE_STATISTICS_RUSSIAN_UI */
+/* V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY */
 (() => {
     "use strict";
 
@@ -13,8 +14,8 @@
         liveState: null,
         signature: "",
         sportFilter: "all",
-        historyFilter: "all",
-        historyScope: "best",
+        historyFilter: "settled",
+        historyScope: "all",
         statisticsTab: "market",
         refreshTimer: null,
         freshnessTimer: null,
@@ -161,15 +162,39 @@
     function renderLiveMatches(liveState = {}) {
         const grid = document.getElementById("liveMatchGrid");
         if (!grid) return;
-        const events = Array.isArray(liveState.events) ? liveState.events : [];
+
+        const events = (Array.isArray(liveState.events) ? liveState.events : [])
+            .filter((item) => item && ["LIVE", "SCHEDULED"].includes(String(item.status || "")));
         const active = events.filter((item) => item.status === "LIVE");
-        const relevant = (active.length ? active : events.filter((item) => item.status === "SCHEDULED").slice(0, 4)).slice(0, 6);
-        setText("liveUpdated", liveState.updatedAt ? `Обновлено ${formatDateTime(liveState.updatedAt)}` : "Ожидание обновления");
-        setText("liveStatus", active.length ? `Сейчас идут: ${active.length}` : events.length ? "Отслеживание расписания" : "Нет активных матчей");
+        const scheduled = events
+            .filter((item) => item.status === "SCHEDULED")
+            .sort((left, right) => String(left.commenceTime || "").localeCompare(String(right.commenceTime || "")));
+        const relevant = (active.length ? active : scheduled.slice(0, 4)).slice(0, 6);
+
+        setText(
+            "liveUpdated",
+            liveState.updatedAt
+                ? `Обновлено ${formatDateTime(liveState.updatedAt)}`
+                : "Ожидание обновления",
+        );
+        setText(
+            "liveStatus",
+            active.length
+                ? `Сейчас идут: ${active.length}`
+                : scheduled.length
+                    ? `Ближайших матчей: ${Math.min(scheduled.length, 4)}`
+                    : "Нет активных матчей",
+        );
+
         if (!relevant.length) {
-            grid.innerHTML = `<div class="analysis-loading">Система автоматически покажет счёт, когда начнётся один из 15 отслеживаемых матчей.</div>`;
+            grid.innerHTML = `
+                <div class="analysis-loading">
+                    Сейчас ни один из отслеживаемых матчей не идёт.
+                    Завершённые матчи автоматически перенесены в историю.
+                </div>`;
             return;
         }
+
         grid.innerHTML = relevant.map((item) => liveMatchTemplate(item)).join("");
     }
 
@@ -588,32 +613,123 @@
         }).join("");
     }
 
+    function historyRecordIsValid(item) {
+        if (!item || typeof item !== "object") return false;
+        const eventId = String(item.eventId || item.oddsEventId || item.sourceMatchId || "").trim();
+        const home = String(item.homeRu || item.home || "").trim();
+        const away = String(item.awayRu || item.away || "").trim();
+        const market = String(item.market || item.pickRu || item.pick || "").trim();
+        const commence = new Date(item.commenceTime || item.utcDate || 0);
+        return Boolean(eventId && home && away && market && Number.isFinite(commence.getTime()));
+    }
+
+    function historyCanonicalKey(item, scope) {
+        const eventId = String(item.eventId || item.oddsEventId || item.sourceMatchId || "");
+        const published = new Date(item.publishedAt || item.createdAt || item.commenceTime || item.utcDate || 0);
+        const day = Number.isFinite(published.getTime())
+            ? published.toISOString().slice(0, 10)
+            : "";
+        return `${scope}|${eventId}|${day}`;
+    }
+
+    function historyRecordPriority(item) {
+        const status = String(item.status || "pending").toLowerCase();
+        const statusWeight = ({ won: 100, lost: 100, push: 100, void: 70, cancelled: 70, unresolved: 20, pending: 10 })[status] || 0;
+        const scoreWeight = String(item.score || "").trim() ? 30 : 0;
+        const settledWeight = item.settledAt ? 20 : 0;
+        const stamp = new Date(item.settledAt || item.publishedAt || item.commenceTime || item.utcDate || 0).getTime();
+        return statusWeight + scoreWeight + settledWeight + (Number.isFinite(stamp) ? stamp / 1e15 : 0);
+    }
+
+    function canonicalHistoryRecords(sourceRecords, scope) {
+        const selected = new Map();
+        for (const source of Array.isArray(sourceRecords) ? sourceRecords : []) {
+            if (!historyRecordIsValid(source)) continue;
+            if (scope === "best" && String(source.recordType || "") !== "BEST_BET") continue;
+            const key = historyCanonicalKey(source, scope);
+            const existing = selected.get(key);
+            if (!existing || historyRecordPriority(source) > historyRecordPriority(existing)) {
+                selected.set(key, source);
+            }
+        }
+        return [...selected.values()];
+    }
+
+    function historyFilterMatches(item, filter) {
+        const status = String(item.status || "pending").toLowerCase();
+        if (filter === "settled") return ["won", "lost", "push"].includes(status);
+        if (filter === "all") return true;
+        return status === filter;
+    }
+
     function renderHistory(history, analysisHistory) {
         const container = document.getElementById("historyTable");
         if (!container) return;
+
         const sourceRecords = runtime.historyScope === "all" ? analysisHistory : history;
-        const records = (Array.isArray(sourceRecords) ? sourceRecords : [])
-            .filter((item) => item && (runtime.historyScope === "all" || item.recordType === "BEST_BET" || !item.recordType))
-            .filter((item) => runtime.historyFilter === "all" || String(item.status || "pending") === runtime.historyFilter)
+        const canonical = canonicalHistoryRecords(sourceRecords, runtime.historyScope);
+        const records = canonical
+            .filter((item) => historyFilterMatches(item, runtime.historyFilter))
             .slice()
-            .sort((left, right) => String(right.publishedAt || right.commenceTime || "").localeCompare(String(left.publishedAt || left.commenceTime || "")))
-            .slice(0, 30);
+            .sort((left, right) => String(
+                right.settledAt ||
+                right.commenceTime ||
+                right.utcDate ||
+                right.publishedAt ||
+                "",
+            ).localeCompare(String(
+                left.settledAt ||
+                left.commenceTime ||
+                left.utcDate ||
+                left.publishedAt ||
+                "",
+            )))
+            .slice(0, 100);
+
+        const summary = document.getElementById("historySummary");
+        if (summary) {
+            const settled = canonical.filter((item) => ["won", "lost", "push"].includes(String(item.status || "").toLowerCase())).length;
+            const pending = canonical.filter((item) => String(item.status || "").toLowerCase() === "pending").length;
+            const unresolved = canonical.filter((item) => String(item.status || "").toLowerCase() === "unresolved").length;
+            summary.textContent = `Записей: ${canonical.length} · завершено: ${settled} · ожидается: ${pending}${unresolved ? ` · не подтверждено: ${unresolved}` : ""}`;
+        }
 
         if (!records.length) {
-            container.innerHTML = `<div class="analysis-loading">Для выбранного фильтра записей нет.</div>`;
+            container.innerHTML = `<div class="analysis-loading">Для выбранного фильтра чистых записей нет.</div>`;
             return;
         }
 
         container.innerHTML = records.map((item) => {
-            const status = String(item.status || "pending");
+            const status = String(item.status || "pending").toLowerCase();
             const profit = number(item.profit);
+            const score = String(item.score || "").trim() || (status === "pending" ? "Ожидается" : "—");
+            const resultText = runtime.historyScope === "all"
+                ? statusLabel(status)
+                : profit
+                    ? formatSignedCurrency(profit)
+                    : statusLabel(status);
             return `
                 <div class="history-row">
-                    <div class="history-match"><strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong><span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayLeague(item))} · ${formatShortDate(item.commenceTime || item.utcDate)}</span></div>
-                    <div class="history-pick"><strong>${escapeHtml(displayPick(item))}</strong><span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(displayBookmaker(item))}</span></div>
-                    <div class="history-cell"><span>${runtime.historyScope === "all" ? "Вероятность" : "Ставка"}</span><strong>${runtime.historyScope === "all" ? formatPercent(number(item.modelProbability || item.probability) * 100) : formatCurrency(item.stake)}</strong></div>
-                    <div class="history-cell"><span>Счёт</span><strong>${escapeHtml(item.score || "—")}</strong></div>
-                    <div class="history-cell"><span>Результат</span><strong class="${profit > 0 ? "positive" : ""}">${runtime.historyScope === "all" ? statusLabel(status) : profit ? formatSignedCurrency(profit) : statusLabel(status)}</strong></div>
+                    <div class="history-match">
+                        <strong>${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}</strong>
+                        <span>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayLeague(item))} · ${formatShortDate(item.commenceTime || item.utcDate)}</span>
+                    </div>
+                    <div class="history-pick">
+                        <strong>${escapeHtml(displayPick(item))}</strong>
+                        <span>${formatNumber(item.bookmakerOdds || item.odds, 2)} · ${escapeHtml(displayBookmaker(item))}</span>
+                    </div>
+                    <div class="history-cell">
+                        <span>${runtime.historyScope === "all" ? "Вероятность" : "Ставка"}</span>
+                        <strong>${runtime.historyScope === "all" ? formatPercent(number(item.modelProbability || item.probability) * 100) : formatCurrency(item.stake)}</strong>
+                    </div>
+                    <div class="history-cell">
+                        <span>Счёт</span>
+                        <strong>${escapeHtml(score)}</strong>
+                    </div>
+                    <div class="history-cell">
+                        <span>Результат</span>
+                        <strong class="${profit > 0 ? "positive" : ""}">${escapeHtml(resultText)}</strong>
+                    </div>
                     <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
                 </div>`;
         }).join("");
@@ -810,11 +926,11 @@
     }
 
     function statusLabel(status) {
-        return ({ pending: "Ожидается", won: "Выигрыш", lost: "Проигрыш", push: "Возврат", void: "Отмена", cancelled: "Отмена", postponed: "Перенесён" })[String(status).toLowerCase()] || "Неизвестный статус";
+        return ({ pending: "Ожидается", won: "Выигрыш", lost: "Проигрыш", push: "Возврат", void: "Отмена", cancelled: "Отмена", postponed: "Перенесён", unresolved: "Результат не подтверждён" })[String(status).toLowerCase()] || "Неизвестный статус";
     }
 
     function statusClass(status) {
-        return ({ won: "is-won", lost: "is-lost", push: "is-push" })[status] || "";
+        return ({ won: "is-won", lost: "is-lost", push: "is-push", unresolved: "is-unresolved" })[String(status).toLowerCase()] || "";
     }
 
     function sportName(value) {

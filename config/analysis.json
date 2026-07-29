@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 14,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -117,7 +117,7 @@
   "liveLookaheadMinutes": 90,
   "livePastHoursSoccer": 5,
   "livePastHoursHockey": 6,
-  "liveCompletedRetentionHours": 12,
+  "liveCompletedRetentionHours": 0,
   "liveMaximumOddsScoreCallsPerRun": 3,
   "liveSnapshotsPerEventLimit": 72,
   "liveLearningSessionLimit": 500,
@@ -133,5 +133,14 @@
   "statisticsPolicy": "ALL_FIFTEEN_AND_BEST_FOUR_SEPARATE_WITH_WINDOWS_AND_SEGMENTS",
   "learningPolicy": "PREMATCH_CALIBRATION_FROM_SETTLED_RESULTS_AND_SEPARATE_LIVE_CALIBRATION",
   "liveOddsQueryBeforeStartMinutes": 10,
-  "liveOddsQuotaReserve": 50
+  "liveOddsQuotaReserve": 50,
+  "liveProviderGraceMinutes": 20,
+  "historyPendingExpiryHoursSoccer": 48,
+  "historyPendingExpiryHoursHockey": 72,
+  "historyVisibleLimit": 100,
+  "historyDefaultScope": "all",
+  "historyDefaultFilter": "settled",
+  "historyMaintenancePolicy": "DEDUPLICATE_INVALID_REMOVE_STALE_PENDING_TO_UNRESOLVED_PRESERVE_BANK_AND_LEARNING",
+  "livePublicListPolicy": "ONLY_PROVIDER_CONFIRMED_LIVE_AND_FUTURE_SCHEDULED_NO_FINISHED",
+  "liveSettlementPolicy": "CORE_SETTLEMENT_FROM_CONFIRMED_LIVE_FINAL_RESULTS_EVERY_10_MINUTES"
 }

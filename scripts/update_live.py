@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # V10_R6_LIVE_MATCH_INTELLIGENCE
+# V10_R7_HISTORY_LIVE_CLEANUP
 """Safe live-score and live-calibration layer for AI Football Lab V10.
 
 This module never changes the virtual bank, published picks, fixed odds, stakes,
@@ -33,7 +34,7 @@ LIVE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "live-update.yml"
 
 LIVE_MARKER = "V10_R6_LIVE_MATCH_INTELLIGENCE"
 LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
-LIVE_VERSION = "1.0.0"
+LIVE_VERSION = "1.1.0"
 UTC = dt.timezone.utc
 
 
@@ -136,7 +137,7 @@ def record_relevant(
         return False
     status = str(record.get("status") or "pending").lower()
     if status in {"won", "lost", "push", "void", "cancelled"}:
-        return now <= commence + dt.timedelta(hours=core.safe_int(config.get("liveCompletedRetentionHours"), 12))
+        return False
     lookahead = dt.timedelta(minutes=core.safe_int(config.get("liveLookaheadMinutes"), 90))
     past_hours = core.safe_int(
         config.get(
@@ -538,9 +539,19 @@ def elapsed_information(
     return fraction, f"ориентировочно {elapsed_minutes}-я минута", elapsed_minutes, None
 
 
-def public_status(result: dict[str, Any] | None, record: dict[str, Any], now: dt.datetime) -> str:
+def public_status(
+    result: dict[str, Any] | None,
+    record: dict[str, Any],
+    now: dt.datetime,
+    previous: dict[str, Any] | None = None,
+    config: dict[str, Any] | None = None,
+) -> str:
     source_status = str((result or {}).get("status") or "").upper()
-    if source_status in {"FINISHED", "AWARDED", "FINAL", "OFF"} or bool((result or {}).get("completed")):
+
+    if (
+        source_status in {"FINISHED", "AWARDED", "FINAL", "OFF"}
+        or bool((result or {}).get("completed"))
+    ):
         return "FINISHED"
     if source_status in {"LIVE", "IN_PLAY", "PAUSED", "CRIT"}:
         return "LIVE"
@@ -548,9 +559,56 @@ def public_status(result: dict[str, Any] | None, record: dict[str, Any], now: dt
         return "POSTPONED"
     if source_status in {"CANCELLED", "CANCELED"}:
         return "CANCELLED"
-    commence = core.parse_datetime(record.get("commenceTime") or record.get("utcDate"))
-    return "LIVE" if commence and commence <= now else "SCHEDULED"
 
+    commence = core.parse_datetime(
+        record.get("commenceTime")
+        or record.get("utcDate")
+    )
+    if commence and now < commence:
+        return "SCHEDULED"
+
+    # Never declare a match live from the clock alone. A provider must have
+    # confirmed LIVE/IN_PLAY. A recent provider-confirmed live event may be
+    # retained briefly while one polling response is temporarily missing.
+    if previous and str(previous.get("status") or "") == "LIVE":
+        previous_updated = core.parse_datetime(previous.get("updatedAt"))
+        grace_minutes = max(
+            0,
+            core.safe_int(
+                (config or {}).get("liveProviderGraceMinutes"),
+                20,
+            ),
+        )
+        if (
+            previous_updated
+            and now - previous_updated
+            <= dt.timedelta(minutes=grace_minutes)
+        ):
+            return "LIVE"
+
+    return "UNCONFIRMED"
+
+
+def partition_public_events(
+    events: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    active = [
+        item
+        for item in events
+        if str(item.get("status") or "") == "LIVE"
+    ]
+    scheduled = [
+        item
+        for item in events
+        if str(item.get("status") or "") == "SCHEDULED"
+    ]
+    hidden = [
+        item
+        for item in events
+        if str(item.get("status") or "")
+        not in {"LIVE", "SCHEDULED"}
+    ]
+    return active, scheduled, hidden
 
 def make_live_event(
     record: dict[str, Any],
@@ -560,12 +618,18 @@ def make_live_event(
     config: dict[str, Any],
     now: dt.datetime,
 ) -> dict[str, Any]:
-    status = public_status(result, record, now)
+    status = public_status(result, record, now, previous, config)
     home_score = (result or {}).get("homeScore")
     away_score = (result or {}).get("awayScore")
-    if home_score is None and previous:
+    keep_previous_score = (
+        result is None
+        and status == "LIVE"
+        and previous
+        and str(previous.get("status") or "") == "LIVE"
+    )
+    if home_score is None and keep_previous_score:
         home_score = previous.get("homeScore")
-    if away_score is None and previous:
+    if away_score is None and keep_previous_score:
         away_score = previous.get("awayScore")
     has_score = home_score is not None and away_score is not None
     fraction, clock_label, minute, period = elapsed_information(record, result, now)
@@ -615,6 +679,7 @@ def make_live_event(
             "FINISHED": "Матч завершён",
             "POSTPONED": "Матч перенесён",
             "CANCELLED": "Матч отменён",
+            "UNCONFIRMED": "Ожидается подтверждение источника",
         }.get(status, "Статус уточняется"),
         "homeScore": core.safe_int(home_score) if home_score is not None else None,
         "awayScore": core.safe_int(away_score) if away_score is not None else None,
@@ -775,13 +840,34 @@ def canonical_content(value: dict[str, Any]) -> str:
     return json.dumps(copy_value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def canonical_learning_content(value: dict[str, Any]) -> str:
+    copy_value = copy.deepcopy(value)
+    copy_value.pop("updatedAt", None)
+    return json.dumps(
+        copy_value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
 def run_update() -> int:
     config = core.load_json(CONFIG_PATH, {})
     core.validate_config(config)
     now = core.utc_now()
     state = core.migrate_state(core.load_json(STATE_PATH, {}), config, now)
-    previous_live = core.load_json(LIVE_STATE_PATH, default_live_state(config, now))
-    learning = normalize_live_learning(core.load_json(LIVE_LEARNING_PATH, {}), now)
+    previous_live = core.load_json(
+        LIVE_STATE_PATH,
+        default_live_state(config, now),
+    )
+    previous_learning = core.load_json(
+        LIVE_LEARNING_PATH,
+        {},
+    )
+    learning = normalize_live_learning(
+        previous_learning,
+        now,
+    )
     records = sorted(
         [item for item in unique_records(state) if record_relevant(item, now, config)],
         key=lambda item: priority_key(item, now),
@@ -821,7 +907,7 @@ def run_update() -> int:
         for item in previous_live.get("events") or []
         if isinstance(item, dict)
     }
-    events: list[dict[str, Any]] = []
+    observed_events: list[dict[str, Any]] = []
     for record in records:
         event_id = str(record.get("eventId") or "")
         result = best_result(record, all_results)
@@ -833,16 +919,21 @@ def run_update() -> int:
             config,
             now,
         )
-        events.append(event)
+        observed_events.append(event)
+
+        # Finished events are recorded for calibration and immediate core
+        # settlement, but are not kept in the public "Матчи сейчас" list.
         append_snapshot(learning, event, config, now)
+
     update_completed_calibration(learning, config)
     learning["updatedAt"] = core.iso_z(now)
 
-    active = [item for item in events if item.get("status") == "LIVE"]
+    active, scheduled, hidden = partition_public_events(observed_events)
+    events = active + scheduled
     live_state = {
         "version": LIVE_VERSION,
         "sourceMarker": LIVE_MARKER,
-        "status": "LIVE" if active else "TRACKING",
+        "status": "LIVE" if active else "TRACKING" if scheduled else "IDLE",
         "updatedAt": core.iso_z(now),
         "refreshMinutes": core.safe_int(config.get("liveRefreshMinutes"), 10),
         "events": events,
@@ -854,9 +945,31 @@ def run_update() -> int:
             "oddsQuota": client.odds_quota,
             "errors": odds_errors + football_errors + nhl_errors,
         },
+        "cleanup": {
+            "finishedRemoved": sum(
+                1
+                for item in hidden
+                if item.get("status") == "FINISHED"
+            ),
+            "cancelledRemoved": sum(
+                1
+                for item in hidden
+                if item.get("status") == "CANCELLED"
+            ),
+            "postponedRemoved": sum(
+                1
+                for item in hidden
+                if item.get("status") == "POSTPONED"
+            ),
+            "unconfirmedRemoved": sum(
+                1
+                for item in hidden
+                if item.get("status") == "UNCONFIRMED"
+            ),
+        },
         "notice": (
             "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. "
-            "Текущая вероятность является отдельным пересчётом по текущему счёту."
+            "Завершённые матчи автоматически удаляются из раздела текущих матчей."
         ),
     }
 
@@ -865,9 +978,23 @@ def run_update() -> int:
         print("LIVE_STATE_CHANGED=YES")
     else:
         print("LIVE_STATE_CHANGED=NO")
-    write_json_atomic(LIVE_LEARNING_PATH, learning)
+    if canonical_learning_content(learning) != canonical_learning_content(
+        previous_learning if isinstance(previous_learning, dict) else {}
+    ):
+        write_json_atomic(LIVE_LEARNING_PATH, learning)
+        print("LIVE_LEARNING_CHANGED=YES")
+    else:
+        print("LIVE_LEARNING_CHANGED=NO")
     print(f"LIVE_TRACKED={len(events)}")
     print(f"LIVE_ACTIVE={len(active)}")
+    print(
+        "LIVE_FINISHED_REMOVED="
+        f"{live_state.get('cleanup', {}).get('finishedRemoved', 0)}"
+    )
+    print(
+        "LIVE_UNCONFIRMED_REMOVED="
+        f"{live_state.get('cleanup', {}).get('unconfirmedRemoved', 0)}"
+    )
     print(f"LIVE_PROVIDER_RESULTS={len(all_results)}")
     print(f"LIVE_PROVIDER_ERRORS={len(odds_errors + football_errors + nhl_errors)}")
     print("LIVE_BANK_MUTATION=NO")
@@ -952,14 +1079,78 @@ def run_self_test() -> int:
         raise RuntimeError("Live self-test session missing")
     if learning.get("sourceMarker") != LIVE_MARKER:
         raise RuntimeError("Live self-test marker mismatch")
-    print("SELF_TEST_GREEN_V10_R6_LIVE SCORE=2:1 LIVE_PROBABILITY=100.0 SNAPSHOTS=2")
+
+    unconfirmed = public_status(
+        None,
+        record,
+        now,
+        None,
+        config,
+    )
+    if unconfirmed != "UNCONFIRMED":
+        raise RuntimeError(
+            "Live self-test clock-only event was falsely marked LIVE"
+        )
+
+    fresh_previous = copy.deepcopy(event)
+    fresh_previous["updatedAt"] = core.iso_z(
+        now - dt.timedelta(minutes=5)
+    )
+    if public_status(
+        None,
+        record,
+        now,
+        fresh_previous,
+        config,
+    ) != "LIVE":
+        raise RuntimeError(
+            "Live self-test provider grace window failed"
+        )
+
+    stale_previous = copy.deepcopy(event)
+    stale_previous["updatedAt"] = core.iso_z(
+        now - dt.timedelta(minutes=90)
+    )
+    if public_status(
+        None,
+        record,
+        now,
+        stale_previous,
+        config,
+    ) != "UNCONFIRMED":
+        raise RuntimeError(
+            "Live self-test stale event did not expire"
+        )
+
+    active, scheduled, hidden = partition_public_events(
+        [
+            event,
+            finished,
+            {
+                **record,
+                "status": "SCHEDULED",
+            },
+        ]
+    )
+    if len(active) != 1 or len(scheduled) != 1:
+        raise RuntimeError(
+            "Live self-test public partition mismatch"
+        )
+    if not hidden or hidden[0].get("status") != "FINISHED":
+        raise RuntimeError(
+            "Live self-test finished event was not removed"
+        )
+
+    print("SELF_TEST_GREEN_V10_R7_LIVE SCORE=2:1 LIVE_PROBABILITY=100.0 SNAPSHOTS=2")
+    print("FINISHED_PUBLIC_EVENTS=0")
+    print("CLOCK_ONLY_FALSE_LIVE=0")
     print("BANK_MUTATION=NO")
     print("PREDICTION_MUTATION=NO")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="V10 R6 live score updater")
+    parser = argparse.ArgumentParser(description="V10 R7 live score updater")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--update", action="store_true")
     group.add_argument("--validate", action="store_true")

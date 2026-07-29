@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # V10_GLOBAL_MULTISPORT_INTELLIGENCE
 # V10_R6_FINAL_LIVE_LEARNING_STATISTICS
+# V10_R7_HISTORY_LIVE_CLEANUP
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -222,6 +223,8 @@ def result_status_label(status: str) -> str:
         "lost": "Проигрыш",
         "push": "Возврат",
         "void": "Отмена",
+        "cancelled": "Отмена",
+        "unresolved": "Результат не подтверждён",
     }.get(status, status)
 
 
@@ -358,6 +361,12 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("liveRefreshMinutes must be in 5..60")
     if safe_int(config.get("liveMaximumOddsScoreCallsPerRun"), 3) < 0:
         raise RuntimeError("liveMaximumOddsScoreCallsPerRun must not be negative")
+    if safe_int(config.get("liveProviderGraceMinutes"), 20) < 0:
+        raise RuntimeError("liveProviderGraceMinutes must not be negative")
+    if safe_int(config.get("historyPendingExpiryHoursSoccer"), 48) < 1:
+        raise RuntimeError("historyPendingExpiryHoursSoccer must be positive")
+    if safe_int(config.get("historyPendingExpiryHoursHockey"), 72) < 1:
+        raise RuntimeError("historyPendingExpiryHoursHockey must be positive")
 
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
@@ -506,6 +515,7 @@ def migrate_state(
     state["predictions"] = copy.deepcopy(state["bestBets"])
 
     state.setdefault("quota", {})
+    maintain_prediction_history(state, config, now)
     update_bank_metrics(state)
     update_statistics(state)
     return state
@@ -2737,6 +2747,360 @@ def select_best_bets(
 
     return selected, newly_selected
 
+
+HISTORY_TERMINAL_STATUSES = {
+    "won",
+    "lost",
+    "push",
+    "void",
+    "cancelled",
+}
+HISTORY_SETTLED_STATUSES = {
+    "won",
+    "lost",
+    "push",
+}
+
+
+def normalize_history_status(value: Any) -> str:
+    status = str(value or "pending").strip().lower()
+    if status in {"canceled", "cancelled"}:
+        return "cancelled"
+    if status in {
+        "pending",
+        "won",
+        "lost",
+        "push",
+        "void",
+        "cancelled",
+        "unresolved",
+    }:
+        return status
+    return "pending"
+
+
+def history_publication_day(record: dict[str, Any]) -> str:
+    published = parse_datetime(
+        record.get("publishedAt")
+        or record.get("createdAt")
+    )
+    if published:
+        return published.date().isoformat()
+    commence = parse_datetime(
+        record.get("commenceTime")
+        or record.get("utcDate")
+    )
+    return commence.date().isoformat() if commence else ""
+
+
+def history_record_key(
+    record: dict[str, Any],
+    collection_name: str,
+) -> str:
+    event_id = str(
+        record.get("eventId")
+        or record.get("oddsEventId")
+        or record.get("sourceMatchId")
+        or ""
+    )
+    record_type = (
+        "BEST_BET"
+        if collection_name == "history"
+        else "ANALYSIS"
+    )
+    return "|".join(
+        [
+            record_type,
+            event_id,
+            history_publication_day(record),
+        ]
+    )
+
+
+def history_record_valid(record: dict[str, Any]) -> bool:
+    event_id = str(
+        record.get("eventId")
+        or record.get("oddsEventId")
+        or record.get("sourceMatchId")
+        or ""
+    ).strip()
+    home = str(
+        record.get("home")
+        or record.get("homeRu")
+        or ""
+    ).strip()
+    away = str(
+        record.get("away")
+        or record.get("awayRu")
+        or ""
+    ).strip()
+    commence = parse_datetime(
+        record.get("commenceTime")
+        or record.get("utcDate")
+    )
+    market = str(
+        record.get("market")
+        or record.get("pick")
+        or record.get("pickRu")
+        or ""
+    ).strip()
+    return bool(
+        event_id
+        and home
+        and away
+        and commence
+        and market
+    )
+
+
+def history_record_quality(record: dict[str, Any]) -> tuple[int, float]:
+    status = normalize_history_status(record.get("status"))
+    score = 0
+    if status in HISTORY_SETTLED_STATUSES:
+        score += 100
+    elif status in {"void", "cancelled"}:
+        score += 70
+    elif status == "unresolved":
+        score += 20
+    if str(record.get("score") or "").strip():
+        score += 30
+    if record.get("settledAt"):
+        score += 20
+    if safe_float(
+        record.get("bookmakerOdds")
+        or record.get("odds"),
+        0.0,
+    ) > 1:
+        score += 10
+    if safe_float(
+        record.get("modelProbability")
+        or record.get("probability"),
+        0.0,
+    ) > 0:
+        score += 5
+    if str(record.get("bookmaker") or "").strip():
+        score += 3
+    timestamp = (
+        parse_datetime(record.get("settledAt"))
+        or parse_datetime(record.get("publishedAt"))
+        or parse_datetime(
+            record.get("commenceTime")
+            or record.get("utcDate")
+        )
+    )
+    return (
+        score,
+        timestamp.timestamp() if timestamp else 0.0,
+    )
+
+
+def merge_history_records(
+    preferred: dict[str, Any],
+    alternate: dict[str, Any],
+) -> dict[str, Any]:
+    result = copy.deepcopy(preferred)
+    for key, value in alternate.items():
+        current = result.get(key)
+        if current in (None, "", [], {}):
+            result[key] = copy.deepcopy(value)
+    return result
+
+
+def clean_history_collection(
+    records: Any,
+    collection_name: str,
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    counters = {
+        "input": 0,
+        "output": 0,
+        "invalidRemoved": 0,
+        "duplicatesRemoved": 0,
+        "unresolvedMarked": 0,
+    }
+    selected: dict[str, dict[str, Any]] = {}
+
+    for source in records if isinstance(records, list) else []:
+        if not isinstance(source, dict):
+            counters["invalidRemoved"] += 1
+            continue
+        counters["input"] += 1
+
+        record = migrate_public_prediction(source)
+        record["status"] = normalize_history_status(
+            record.get("status")
+        )
+        record["statusLabel"] = result_status_label(
+            record["status"]
+        )
+
+        if collection_name == "history":
+            record["recordType"] = "BEST_BET"
+        else:
+            record["recordType"] = "ANALYSIS"
+
+        if not history_record_valid(record):
+            counters["invalidRemoved"] += 1
+            continue
+
+        commence = parse_datetime(
+            record.get("commenceTime")
+            or record.get("utcDate")
+        )
+        sport = str(
+            record.get("sport")
+            or infer_sport_from_key(
+                record.get("sportKey")
+                or record.get("oddsSportKey")
+            )
+        )
+        expiry_hours = safe_int(
+            config.get(
+                "historyPendingExpiryHoursHockey"
+                if sport == "ice_hockey"
+                else "historyPendingExpiryHoursSoccer"
+            ),
+            72 if sport == "ice_hockey" else 48,
+        )
+        if (
+            record["status"] == "pending"
+            and commence
+            and now
+            > commence + dt.timedelta(hours=expiry_hours)
+        ):
+            record["status"] = "unresolved"
+            record["statusLabel"] = (
+                "Результат не подтверждён"
+            )
+            record["unresolvedAt"] = iso_z(now)
+            record["settlementReason"] = (
+                "RESULT_NOT_CONFIRMED_WITHIN_WINDOW"
+            )
+            counters["unresolvedMarked"] += 1
+
+        key = history_record_key(record, collection_name)
+        if not key.strip("|"):
+            counters["invalidRemoved"] += 1
+            continue
+
+        existing = selected.get(key)
+        if existing is None:
+            selected[key] = record
+            continue
+
+        counters["duplicatesRemoved"] += 1
+        if history_record_quality(record) > history_record_quality(
+            existing
+        ):
+            selected[key] = merge_history_records(
+                record,
+                existing,
+            )
+        else:
+            selected[key] = merge_history_records(
+                existing,
+                record,
+            )
+
+    cleaned = list(selected.values())
+    cleaned.sort(
+        key=lambda item: (
+            parse_datetime(
+                item.get("publishedAt")
+                or item.get("commenceTime")
+                or item.get("utcDate")
+            )
+            or dt.datetime.min.replace(tzinfo=UTC)
+        )
+    )
+    limit_key = (
+        "historyLimit"
+        if collection_name == "history"
+        else "analysisHistoryLimit"
+    )
+    default_limit = 1200 if collection_name == "history" else 4000
+    cleaned = cleaned[
+        -safe_int(config.get(limit_key), default_limit):
+    ]
+    counters["output"] = len(cleaned)
+    return cleaned, counters
+
+
+def maintain_prediction_history(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    analysis, analysis_counters = clean_history_collection(
+        state.get("analysisHistory"),
+        "analysisHistory",
+        config,
+        now,
+    )
+    best, best_counters = clean_history_collection(
+        state.get("history"),
+        "history",
+        config,
+        now,
+    )
+    state["analysisHistory"] = analysis
+    state["history"] = best
+    maintenance = {
+        "version": 1,
+        "updatedAt": iso_z(now),
+        "analysisHistory": analysis_counters,
+        "bestBetHistory": best_counters,
+    }
+    state["historyMaintenance"] = maintenance
+    return maintenance
+
+
+def load_live_final_results() -> dict[str, dict[str, Any]]:
+    source = load_json(LIVE_LEARNING_PATH, {})
+    sessions = (
+        source.get("sessions")
+        if isinstance(source, dict)
+        and isinstance(source.get("sessions"), dict)
+        else {}
+    )
+    results: dict[str, dict[str, Any]] = {}
+
+    for event_id, session in sessions.items():
+        if (
+            not isinstance(session, dict)
+            or not session.get("completed")
+        ):
+            continue
+        snapshots = [
+            item
+            for item in session.get("snapshots") or []
+            if isinstance(item, dict)
+            and str(item.get("status") or "")
+            == "FINISHED"
+            and str(item.get("score") or "").strip()
+        ]
+        if not snapshots:
+            continue
+        snapshot = snapshots[-1]
+        match = re.fullmatch(
+            r"\s*(\d+)\s*:\s*(\d+)\s*",
+            str(snapshot.get("score") or ""),
+        )
+        if not match:
+            continue
+        results[str(event_id)] = {
+            "eventId": str(event_id),
+            "homeScore": int(match.group(1)),
+            "awayScore": int(match.group(2)),
+            "completed": True,
+            "source": "LIVE_CONFIRMED_FINAL",
+            "completedAt": session.get("completedAt"),
+        }
+
+    return results
+
+
 def append_new_records_to_history(
     state: dict[str, Any],
     daily_analysis: list[dict[str, Any]],
@@ -2757,6 +3121,11 @@ def append_new_records_to_history(
 
     state["analysisHistory"] = analysis_history[-safe_int(config.get("analysisHistoryLimit"), 4000) :]
     state["history"] = history[-safe_int(config.get("historyLimit"), 1200) :]
+    maintain_prediction_history(
+        state,
+        config,
+        utc_now(),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -2764,11 +3133,23 @@ def append_new_records_to_history(
 # ---------------------------------------------------------------------------
 
 
-def due_pending_records(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> list[dict[str, Any]]:
+def due_pending_records(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    immediate_event_ids: set[str] | None = None,
+) -> list[dict[str, Any]]:
     pending: list[dict[str, Any]] = []
+    immediate_event_ids = immediate_event_ids or set()
     for collection in (state.get("analysisHistory") or [], state.get("history") or []):
         for item in collection:
-            if not isinstance(item, dict) or str(item.get("status") or "pending") != "pending":
+            if (
+                not isinstance(item, dict)
+                or normalize_history_status(
+                    item.get("status")
+                )
+                not in {"pending", "unresolved"}
+            ):
                 continue
             commence = parse_datetime(item.get("commenceTime") or item.get("utcDate"))
             if not commence:
@@ -2778,7 +3159,17 @@ def due_pending_records(state: dict[str, Any], config: dict[str, Any], now: dt.d
                 config.get("settlementDelayMinutesHockey" if sport == "ice_hockey" else "settlementDelayMinutesSoccer"),
                 210 if sport == "ice_hockey" else 150,
             )
-            if now >= commence + dt.timedelta(minutes=delay):
+            event_id = str(
+                item.get("eventId")
+                or item.get("oddsEventId")
+                or item.get("sourceMatchId")
+                or ""
+            )
+            if (
+                event_id in immediate_event_ids
+                or now
+                >= commence + dt.timedelta(minutes=delay)
+            ):
                 pending.append(item)
     unique: dict[str, dict[str, Any]] = {}
     for item in pending:
@@ -2983,7 +3374,13 @@ def settle_pending_records(
     for collection_name in ("analysisHistory", "history"):
         collection = state.get(collection_name) or []
         for record in collection:
-            if not isinstance(record, dict) or str(record.get("status") or "pending") != "pending":
+            if (
+                not isinstance(record, dict)
+                or normalize_history_status(
+                    record.get("status")
+                )
+                not in {"pending", "unresolved"}
+            ):
                 continue
             event_id = str(record.get("eventId") or record.get("oddsEventId") or "")
             result = results.get(event_id)
@@ -3045,6 +3442,13 @@ def settle_pending_records(
         if isinstance(item, dict)
         and item.get("recordType") == "BEST_BET"
         and item.get("status") in {"won", "lost", "push"}
+    )
+    maintain_prediction_history(
+        state,
+        {
+            **load_json(CONFIG_PATH, {}),
+        },
+        now,
     )
     return counters
 
@@ -3388,6 +3792,157 @@ def enrich_narratives_with_openrouter(
 # ---------------------------------------------------------------------------
 
 
+def run_live_settlement() -> int:
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    now = utc_now()
+    raw_state = load_json(STATE_PATH, {})
+    state = migrate_state(
+        raw_state,
+        config,
+        now,
+    )
+    bank_before = safe_float(
+        state.get("bank", {}).get("current"),
+        0.0,
+    )
+    learning_segments_before = json.dumps(
+        (state.get("learning") or {}).get("segments") or {},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    learning_bins_before = json.dumps(
+        (state.get("learning") or {}).get("calibrationBins") or {},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+    live_results = load_live_final_results()
+    due = due_pending_records(
+        state,
+        config,
+        now,
+        set(live_results),
+    )
+    counters = {
+        "analysisSettled": 0,
+        "bestBetsSettled": 0,
+        "unresolved": 0,
+    }
+    if due and live_results:
+        counters = settle_pending_records(
+            state,
+            live_results,
+            {"completedLookup": []},
+            now,
+        )
+
+    maintenance = maintain_prediction_history(
+        state,
+        config,
+        now,
+    )
+    update_bank_metrics(state)
+    update_statistics(state)
+
+    settlement_changed = bool(
+        safe_int(counters.get("analysisSettled"))
+        or safe_int(counters.get("bestBetsSettled"))
+    )
+    maintenance_changed = any(
+        safe_int(group.get(key))
+        for group in (
+            maintenance.get("analysisHistory") or {},
+            maintenance.get("bestBetHistory") or {},
+        )
+        for key in (
+            "invalidRemoved",
+            "duplicatesRemoved",
+            "unresolvedMarked",
+        )
+    )
+    maintenance_missing_before = not isinstance(
+        raw_state.get("historyMaintenance"),
+        dict,
+    )
+    state_changed = bool(
+        settlement_changed
+        or maintenance_changed
+        or maintenance_missing_before
+    )
+
+    bank_after = safe_float(
+        state.get("bank", {}).get("current"),
+        0.0,
+    )
+    learning_segments_after = json.dumps(
+        (state.get("learning") or {}).get("segments") or {},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    learning_bins_after = json.dumps(
+        (state.get("learning") or {}).get("calibrationBins") or {},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+    if not settlement_changed:
+        if abs(bank_before - bank_after) > 0.001:
+            raise RuntimeError(
+                "LIVE_SETTLEMENT_CHANGED_BANK_WITHOUT_RESULT"
+            )
+        if (
+            learning_segments_before
+            != learning_segments_after
+            or learning_bins_before
+            != learning_bins_after
+        ):
+            raise RuntimeError(
+                "LIVE_SETTLEMENT_CHANGED_LEARNING_WITHOUT_RESULT"
+            )
+
+    if state_changed:
+        state.setdefault("meta", {})["updatedAt"] = iso_z(now)
+        state["meta"]["historyUpdatedAt"] = iso_z(now)
+        state["meta"]["liveSettlementAt"] = iso_z(now)
+        write_json_atomic(STATE_PATH, state)
+
+        report = report_base(now, "settle-live")
+        report["status"] = "GREEN"
+        report["finishedAt"] = iso_z(now)
+        report["diagnostics"] = {
+            "liveFinalResults": len(live_results),
+            "dueRecords": len(due),
+            "settlement": counters,
+            "historyMaintenance": maintenance,
+            "bankBefore": round(bank_before, 2),
+            "bankAfter": round(bank_after, 2),
+        }
+        write_json_atomic(REPORT_PATH, report)
+        print("LIVE_SETTLEMENT_STATE_CHANGED=YES")
+    else:
+        print("LIVE_SETTLEMENT_STATE_CHANGED=NO")
+
+    print(
+        "LIVE_SETTLEMENT_FINAL_RESULTS="
+        f"{len(live_results)}"
+    )
+    print(
+        "LIVE_SETTLEMENT_ANALYSIS="
+        f"{counters.get('analysisSettled', 0)}"
+    )
+    print(
+        "LIVE_SETTLEMENT_BEST_BETS="
+        f"{counters.get('bestBetsSettled', 0)}"
+    )
+    print(
+        "HISTORY_MAINTENANCE="
+        f"{json.dumps(maintenance, ensure_ascii=False)}"
+    )
+    print("FINAL_STATUS=GREEN_V10_R7_LIVE_SETTLEMENT")
+    return 0
+
+
 def report_base(now: dt.datetime, mode: str) -> dict[str, Any]:
     return {
         "status": "RUNNING",
@@ -3421,14 +3976,48 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
     football_matches = fetch_football_data_matches(client, football_key, config, now)
     football_context = build_football_context(football_matches)
 
-    due = due_pending_records(state, config, now)
-    settlement = {"analysisSettled": 0, "bestBetsSettled": 0, "unresolved": 0}
+    live_final_results = load_live_final_results()
+    due = due_pending_records(
+        state,
+        config,
+        now,
+        set(live_final_results),
+    )
+    settlement = {
+        "analysisSettled": 0,
+        "bestBetsSettled": 0,
+        "unresolved": 0,
+    }
     score_errors: list[str] = []
     if due:
-        sport_keys = [str(item.get("sportKey") or item.get("oddsSportKey") or "") for item in due]
-        score_results, score_errors = fetch_scores_for_sport_keys(client, odds_key, sport_keys)
-        settlement = settle_pending_records(state, score_results, football_context, now)
-        log(f"Settlement: {settlement}")
+        sport_keys = [
+            str(
+                item.get("sportKey")
+                or item.get("oddsSportKey")
+                or ""
+            )
+            for item in due
+        ]
+        api_score_results, score_errors = (
+            fetch_scores_for_sport_keys(
+                client,
+                odds_key,
+                sport_keys,
+            )
+        )
+        score_results = dict(live_final_results)
+        score_results.update(api_score_results)
+        settlement = settle_pending_records(
+            state,
+            score_results,
+            football_context,
+            now,
+        )
+        log(
+            "Settlement: "
+            f"{settlement}; "
+            f"liveFinalResults={len(live_final_results)}"
+        )
 
     analysis_date = str(state.get("meta", {}).get("analysisDateLocal") or "")
     generation_hour = safe_int(config.get("dailyGenerationHourLocal"), 8)
@@ -3675,8 +4264,18 @@ def validate_repository_files() -> int:
         raise RuntimeError("Workflow marker missing")
     if LIVE_WORKFLOW_MARKER not in LIVE_WORKFLOW_PATH.read_text(encoding="utf-8"):
         raise RuntimeError("Live workflow marker missing")
-    if LIVE_MARKER not in LIVE_SCRIPT_PATH.read_text(encoding="utf-8"):
+    live_source = LIVE_SCRIPT_PATH.read_text(encoding="utf-8")
+    app_source = APP_PATH.read_text(encoding="utf-8")
+    if LIVE_MARKER not in live_source:
         raise RuntimeError("Live script marker missing")
+    if "V10_R7_HISTORY_LIVE_CLEANUP" not in live_source:
+        raise RuntimeError("R7 live cleanup marker missing")
+    if "--settle-live" not in pathlib.Path(__file__).read_text(encoding="utf-8"):
+        raise RuntimeError("R7 live settlement CLI missing")
+    if "V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY" not in app_source:
+        raise RuntimeError("R7 clean history UI marker missing")
+    if config.get("historyDefaultFilter") != "settled":
+        raise RuntimeError("R7 history default filter mismatch")
     if load_json(LIVE_STATE_PATH, {}).get("sourceMarker") != LIVE_MARKER:
         raise RuntimeError("Live state marker missing")
     if load_json(LIVE_LEARNING_PATH, {}).get("sourceMarker") != LIVE_MARKER:
@@ -3873,6 +4472,56 @@ def run_self_test() -> int:
         raise RuntimeError("SELF_TEST statistics windows missing")
     if safe_int(statistics_probe.get("allPredictions", {}).get("settled")) < 1:
         raise RuntimeError("SELF_TEST settled analysis statistics missing")
+
+    history_probe = copy.deepcopy(daily[0])
+    history_probe["status"] = "pending"
+    history_probe["publishedAt"] = iso_z(now)
+    duplicate_probe = copy.deepcopy(history_probe)
+    duplicate_probe["id"] = "duplicate-id"
+    invalid_probe = {"id": "invalid-only"}
+    cleaned_probe, cleanup_counters = clean_history_collection(
+        [
+            history_probe,
+            duplicate_probe,
+            invalid_probe,
+        ],
+        "analysisHistory",
+        test_config,
+        now,
+    )
+    if len(cleaned_probe) != 1:
+        raise RuntimeError(
+            "SELF_TEST history duplicate cleanup failed"
+        )
+    if cleanup_counters["duplicatesRemoved"] != 1:
+        raise RuntimeError(
+            "SELF_TEST history duplicate counter failed"
+        )
+    if cleanup_counters["invalidRemoved"] != 1:
+        raise RuntimeError(
+            "SELF_TEST history invalid counter failed"
+        )
+
+    unresolved_probe = copy.deepcopy(daily[1])
+    unresolved_probe["status"] = "pending"
+    unresolved_probe["commenceTime"] = iso_z(
+        now - dt.timedelta(days=4)
+    )
+    unresolved_cleaned, _ = clean_history_collection(
+        [unresolved_probe],
+        "analysisHistory",
+        test_config,
+        now,
+    )
+    if (
+        not unresolved_cleaned
+        or unresolved_cleaned[0].get("status")
+        != "unresolved"
+    ):
+        raise RuntimeError(
+            "SELF_TEST stale pending history was not marked unresolved"
+        )
+
     localization_probe = apply_russian_display_fields({
         "country": "England",
         "league": "English Premier League",
@@ -3901,7 +4550,8 @@ def run_self_test() -> int:
         f"SOCCER={sum(1 for item in daily if item['sport'] == 'soccer')} "
         f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
         f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f} "
-        f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE"
+        f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE "
+        f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES"
     )
     return 0
 
@@ -4069,6 +4719,7 @@ def cli_main(argv: list[str] | None = None) -> int:
     group.add_argument("--auto", action="store_true", help="Settle due events and generate once per local day")
     group.add_argument("--update", action="store_true", help="Force daily generation")
     group.add_argument("--settle", action="store_true", help="Settle due events without forced generation")
+    group.add_argument("--settle-live", action="store_true", help="Settle confirmed live finals and clean prediction history")
     group.add_argument("--validate", action="store_true", help="Validate repository and state")
     group.add_argument("--self-test", action="store_true", help="Run offline synthetic end-to-end test")
     group.add_argument("--migrate-state", action="store_true", help="Migrate legacy state to V10")
@@ -4083,6 +4734,8 @@ def cli_main(argv: list[str] | None = None) -> int:
         return migrate_state_file()
     if args.reset_state:
         return reset_state_file()
+    if args.settle_live:
+        return run_live_settlement()
     if args.update:
         return run_pipeline("update", force_generation=True)
     if args.settle:
