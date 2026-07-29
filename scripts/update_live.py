@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # V10_R6_LIVE_MATCH_INTELLIGENCE
 # V10_R7_HISTORY_LIVE_CLEANUP
+# V10_R8_ATOMIC_BATCH_ROLLOVER
 """Safe live-score and live-calibration layer for AI Football Lab V10.
 
-This module never changes the virtual bank, published picks, fixed odds, stakes,
-or prediction history. It writes only data/live-state.json and
- data/live-learning.json.
+This module writes live score and calibration only. The core R8 live-cycle command
+settles bank/history and publishes the next batch atomically after all current
+records are terminal.
 """
 
 from __future__ import annotations
@@ -34,7 +35,7 @@ LIVE_WORKFLOW_PATH = ROOT / ".github" / "workflows" / "live-update.yml"
 
 LIVE_MARKER = "V10_R6_LIVE_MATCH_INTELLIGENCE"
 LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
-LIVE_VERSION = "1.1.0"
+LIVE_VERSION = "1.2.0"
 UTC = dt.timezone.utc
 
 

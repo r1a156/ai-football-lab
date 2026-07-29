@@ -1,6 +1,7 @@
 /* V10_SITE_PREMIUM_DASHBOARD */
 /* V10_R6_LIVE_STATISTICS_RUSSIAN_UI */
 /* V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY */
+/* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 (() => {
     "use strict";
 
@@ -82,6 +83,7 @@
         normalized.bank = normalized.bank && typeof normalized.bank === "object" ? normalized.bank : {};
         normalized.statistics = normalized.statistics && typeof normalized.statistics === "object" ? normalized.statistics : {};
         normalized.learning = normalized.learning && typeof normalized.learning === "object" ? normalized.learning : {};
+        normalized.batch = normalized.batch && typeof normalized.batch === "object" ? normalized.batch : {};
         normalized.dailyAnalysis = Array.isArray(normalized.dailyAnalysis) ? normalized.dailyAnalysis : [];
         normalized.bestBets = Array.isArray(normalized.bestBets)
             ? normalized.bestBets
@@ -110,6 +112,11 @@
             state?.dailyAnalysis?.length || 0,
             state?.bestBets?.length || state?.predictions?.length || 0,
             bank.current || 0,
+            bank.placedAmount ?? bank.activeExposure ?? 0,
+            bank.available ?? 0,
+            state?.batch?.id || "",
+            state?.batch?.status || "",
+            state?.batch?.terminalAnalysisCount || 0,
             state?.history?.length || 0,
             liveState?.updatedAt || "",
             liveState?.events?.length || 0,
@@ -233,12 +240,22 @@
         const grid = document.getElementById("bestBetsGrid");
         if (!grid) return;
 
-        setText("bestBetsUpdated", `Сформировано ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`);
-        const exposure = bestBets
+        const batch = runtime.state?.batch || {};
+        const sequence = number(batch.sequence);
+        const batchLabel = String(batch.statusLabel || meta?.batchStatusLabel || "Подборка активна");
+        setText(
+            "bestBetsUpdated",
+            `${sequence ? `Подборка №${sequence} · ` : ""}${batchLabel} · ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`,
+        );
+        const exposure = number(bank?.placedAmount ?? bank?.activeExposure ?? bestBets
             .filter((item) => String(item.status || "pending") === "pending")
-            .reduce((sum, item) => sum + number(item.stake), 0);
+            .reduce((sum, item) => sum + number(item.stake), 0));
+        const activeCount = number(bank?.activeBetsCount ?? bestBets.filter((item) => String(item.status || "pending") === "pending").length);
         const bankValue = Math.max(1, number(bank?.current));
-        setText("bestBetsExposure", `Экспозиция ${formatCurrency(exposure)} · ${formatNumber((exposure / bankValue) * 100, 0)}%`);
+        setText(
+            "bestBetsExposure",
+            `${formatCount(activeCount, "активная ставка", "активные ставки", "активных ставок")} · поставлено ${formatCurrency(exposure)} · ${formatNumber((exposure / bankValue) * 100, 0)}%`,
+        );
 
         if (!bestBets.length) {
             grid.innerHTML = `
@@ -356,8 +373,9 @@
     function renderBank(bank = {}, statistics = {}) {
         const starting = number(bank.starting);
         const current = number(bank.current);
-        const active = Math.max(0, number(bank.activeExposure));
-        const available = Math.max(0, current - active);
+        const active = Math.max(0, number(bank.placedAmount ?? bank.activeExposure));
+        const available = Math.max(0, number(bank.available ?? (current - active)));
+        const activeCount = Math.max(0, number(bank.activeBetsCount));
         const profit = current - starting;
         const roi = number(bank.roi);
         setText("currentBank", formatCurrency(current));
@@ -367,7 +385,12 @@
         setText("availableBank", formatCurrency(available));
         setText("availableBankCard", formatCurrency(available));
         setText("bankProfit", formatSignedCurrency(profit));
-        setText("activeExposurePercent", current > 0 ? `${formatNumber((active / current) * 100, 0)}% текущего банка` : "—");
+        setText(
+            "activeExposurePercent",
+            current > 0
+                ? `${formatCount(activeCount, "ставка", "ставки", "ставок")} · ${formatNumber((active / current) * 100, 0)}% текущего банка`
+                : "—",
+        );
         setText("maxDrawdown", `${formatNumber(bank.maxDrawdown, 2)}%`);
         setText("bankRoi", formatSignedPercent(roi));
         document.getElementById("bankRoi")?.classList.toggle("is-negative", roi < 0);

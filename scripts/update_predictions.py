@@ -2,6 +2,7 @@
 # V10_GLOBAL_MULTISPORT_INTELLIGENCE
 # V10_R6_FINAL_LIVE_LEARNING_STATISTICS
 # V10_R7_HISTORY_LIVE_CLEANUP
+# V10_R8_ATOMIC_BATCH_ROLLOVER
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -367,6 +368,12 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("historyPendingExpiryHoursSoccer must be positive")
     if safe_int(config.get("historyPendingExpiryHoursHockey"), 72) < 1:
         raise RuntimeError("historyPendingExpiryHoursHockey must be positive")
+    if not bool(config.get("batchRolloverEnabled", True)):
+        raise RuntimeError("batchRolloverEnabled must be true")
+    if safe_int(config.get("batchHistoryLimit"), 120) < 1:
+        raise RuntimeError("batchHistoryLimit must be positive")
+    if safe_int(config.get("liveRefreshMinutes"), 5) != 5:
+        raise RuntimeError("R8 liveRefreshMinutes must be 5")
 
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
@@ -438,6 +445,25 @@ def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dic
                 "maximumProbabilityAdjustment": safe_float(config.get("learningMaximumProbabilityAdjustment"), 0.08),
             },
         },
+        "batch": {
+            "version": 1,
+            "id": "",
+            "sequence": 0,
+            "status": "INITIALIZED",
+            "createdAt": None,
+            "updatedAt": iso_z(now),
+            "analysisCount": 0,
+            "bestBetsCount": 0,
+            "terminalAnalysisCount": 0,
+            "terminalBestBetsCount": 0,
+            "pendingAnalysisCount": 0,
+            "pendingBestBetsCount": 0,
+            "completed": False,
+            "placedAmount": 0.0,
+            "availableAmount": round(starting, 2),
+            "startingBank": round(starting, 2),
+        },
+        "batchHistory": [],
         "quota": {},
     }
 
@@ -514,10 +540,22 @@ def migrate_state(
     state["bestBets"] = [migrate_public_prediction(item) for item in old_best if isinstance(item, dict)]
     state["predictions"] = copy.deepcopy(state["bestBets"])
 
+    old_batch = source.get("batch") if isinstance(source.get("batch"), dict) else {}
+    state["batch"].update(old_batch)
+    old_batch_history = (
+        source.get("batchHistory")
+        if isinstance(source.get("batchHistory"), list)
+        else []
+    )
+    state["batchHistory"] = [
+        dict(item) for item in old_batch_history if isinstance(item, dict)
+    ][-safe_int(config.get("batchHistoryLimit"), 120):]
+
     state.setdefault("quota", {})
     maintain_prediction_history(state, config, now)
     update_bank_metrics(state)
     update_statistics(state)
+    ensure_current_batch(state, config, now)
     return state
 
 
@@ -3101,6 +3139,270 @@ def load_live_final_results() -> dict[str, dict[str, Any]]:
     return results
 
 
+
+BATCH_TERMINAL_STATUSES = {
+    "won",
+    "lost",
+    "push",
+    "void",
+    "cancelled",
+    "unresolved",
+}
+
+
+def batch_record_terminal(record: dict[str, Any]) -> bool:
+    return normalize_history_status(record.get("status")) in BATCH_TERMINAL_STATUSES
+
+
+def batch_status_label(status: str) -> str:
+    return {
+        "INITIALIZED": "Ожидание первой подборки",
+        "ACTIVE": "Подборка активна",
+        "SETTLING": "Рассчитываются результаты",
+        "COMPLETED": "Подборка завершена",
+        "GENERATING_NEXT": "Формируется следующая подборка",
+        "WAITING_FOR_NEXT_SELECTION": "Ожидается следующая подборка",
+    }.get(str(status or "").upper(), "Подборка активна")
+
+
+def ensure_current_batch(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    daily = [
+        item for item in state.get("dailyAnalysis") or []
+        if isinstance(item, dict)
+    ]
+    best = [
+        item for item in state.get("bestBets") or []
+        if isinstance(item, dict)
+    ]
+    batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
+    batch = copy.deepcopy(batch)
+
+    if not daily:
+        batch.update(
+            {
+                "version": 1,
+                "id": str(batch.get("id") or ""),
+                "sequence": safe_int(batch.get("sequence"), 0),
+                "status": "INITIALIZED",
+                "statusLabel": batch_status_label("INITIALIZED"),
+                "updatedAt": iso_z(now),
+                "analysisCount": 0,
+                "bestBetsCount": 0,
+                "terminalAnalysisCount": 0,
+                "terminalBestBetsCount": 0,
+                "pendingAnalysisCount": 0,
+                "pendingBestBetsCount": 0,
+                "completed": False,
+                "placedAmount": 0.0,
+                "availableAmount": round(
+                    safe_float(state.get("bank", {}).get("current"), 0.0),
+                    2,
+                ),
+            }
+        )
+        state["batch"] = batch
+        return batch
+
+    existing_ids = {
+        str(item.get("batchId") or "")
+        for item in daily + best
+        if str(item.get("batchId") or "")
+    }
+    batch_id = str(batch.get("id") or "")
+    if not batch_id:
+        batch_id = next(iter(existing_ids), "")
+    if not batch_id:
+        seed = (
+            state.get("meta", {}).get("analysisGeneratedAt")
+            or state.get("meta", {}).get("updatedAt")
+            or iso_z(now)
+        )
+        batch_id = "batch-" + stable_id(seed, *(str(item.get("eventId") or "") for item in daily))
+
+    sequence = max(
+        1,
+        safe_int(
+            batch.get("sequence"),
+            state.get("meta", {}).get("batchSequence") or 1,
+        ),
+    )
+    for item in daily + best:
+        item["batchId"] = batch_id
+        item["batchSequence"] = sequence
+
+    daily_ids = {str(item.get("id") or "") for item in daily}
+    best_ids = {str(item.get("id") or "") for item in best}
+    for item in state.get("analysisHistory") or []:
+        if isinstance(item, dict) and str(item.get("id") or "") in daily_ids:
+            item["batchId"] = batch_id
+            item["batchSequence"] = sequence
+    for item in state.get("history") or []:
+        if isinstance(item, dict) and str(item.get("id") or "") in best_ids:
+            item["batchId"] = batch_id
+            item["batchSequence"] = sequence
+
+    terminal_daily = sum(batch_record_terminal(item) for item in daily)
+    terminal_best = sum(batch_record_terminal(item) for item in best)
+    completed = bool(
+        daily
+        and terminal_daily == len(daily)
+        and (not best or terminal_best == len(best))
+    )
+    partially_settled = bool(terminal_daily or terminal_best)
+    status = "COMPLETED" if completed else "SETTLING" if partially_settled else "ACTIVE"
+
+    bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
+    current_bank = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000))
+    placed = safe_float(bank.get("activeExposure"), 0.0)
+    active_count = sum(
+        normalize_history_status(item.get("status")) == "pending"
+        for item in best
+    )
+
+    batch.update(
+        {
+            "version": 1,
+            "id": batch_id,
+            "sequence": sequence,
+            "status": status,
+            "statusLabel": batch_status_label(status),
+            "createdAt": batch.get("createdAt") or state.get("meta", {}).get("analysisGeneratedAt") or iso_z(now),
+            "updatedAt": iso_z(now),
+            "analysisCount": len(daily),
+            "bestBetsCount": len(best),
+            "terminalAnalysisCount": terminal_daily,
+            "terminalBestBetsCount": terminal_best,
+            "pendingAnalysisCount": len(daily) - terminal_daily,
+            "pendingBestBetsCount": len(best) - terminal_best,
+            "activeBestBetsCount": active_count,
+            "completed": completed,
+            "completedAt": (
+                batch.get("completedAt") or iso_z(now)
+                if completed
+                else None
+            ),
+            "eventIds": [str(item.get("eventId") or "") for item in daily],
+            "bestBetEventIds": [str(item.get("eventId") or "") for item in best],
+            "startingBank": round(
+                safe_float(batch.get("startingBank"), current_bank),
+                2,
+            ),
+            "currentBank": round(current_bank, 2),
+            "placedAmount": round(placed, 2),
+            "availableAmount": round(max(0.0, current_bank - placed), 2),
+        }
+    )
+    state["batch"] = batch
+    state.setdefault("meta", {}).update(
+        {
+            "currentBatchId": batch_id,
+            "batchSequence": sequence,
+            "batchStatus": status,
+            "batchStatusLabel": batch["statusLabel"],
+            "batchUpdatedAt": iso_z(now),
+        }
+    )
+    return batch
+
+
+def archive_completed_batch(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> None:
+    batch = ensure_current_batch(state, config, now)
+    if not batch.get("completed") or not batch.get("id"):
+        return
+    history = state.setdefault("batchHistory", [])
+    if any(str(item.get("id") or "") == str(batch.get("id")) for item in history if isinstance(item, dict)):
+        return
+    starting = safe_float(batch.get("startingBank"), state.get("bank", {}).get("starting", 10000))
+    ending = safe_float(state.get("bank", {}).get("current"), starting)
+    history.append(
+        {
+            **copy.deepcopy(batch),
+            "archivedAt": iso_z(now),
+            "endingBank": round(ending, 2),
+            "bankResult": round(ending - starting, 2),
+        }
+    )
+    state["batchHistory"] = history[-safe_int(config.get("batchHistoryLimit"), 120):]
+
+
+def publish_new_batch(
+    state: dict[str, Any],
+    daily_analysis: list[dict[str, Any]],
+    best_bets: list[dict[str, Any]],
+    newly_selected: list[dict[str, Any]],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    previous = ensure_current_batch(state, config, now)
+    if previous.get("completed"):
+        archive_completed_batch(state, config, now)
+    sequence = max(
+        safe_int(previous.get("sequence"), 0),
+        safe_int(state.get("meta", {}).get("batchSequence"), 0),
+    ) + 1
+    batch_id = "batch-" + stable_id(
+        sequence,
+        iso_z(now),
+        *(str(item.get("eventId") or "") for item in daily_analysis),
+    )
+    for item in daily_analysis + best_bets + newly_selected:
+        item["batchId"] = batch_id
+        item["batchSequence"] = sequence
+        item["batchStatus"] = "ACTIVE"
+    current_bank = safe_float(
+        state.get("bank", {}).get("current"),
+        config.get("startingVirtualBank", 10000),
+    )
+    placed = round(sum(
+        safe_float(item.get("stake"))
+        for item in best_bets
+        if normalize_history_status(item.get("status")) == "pending"
+    ), 2)
+    batch = {
+        "version": 1,
+        "id": batch_id,
+        "sequence": sequence,
+        "status": "ACTIVE",
+        "statusLabel": batch_status_label("ACTIVE"),
+        "createdAt": iso_z(now),
+        "updatedAt": iso_z(now),
+        "analysisCount": len(daily_analysis),
+        "bestBetsCount": len(best_bets),
+        "terminalAnalysisCount": 0,
+        "terminalBestBetsCount": 0,
+        "pendingAnalysisCount": len(daily_analysis),
+        "pendingBestBetsCount": len(best_bets),
+        "activeBestBetsCount": len(best_bets),
+        "completed": False,
+        "completedAt": None,
+        "eventIds": [str(item.get("eventId") or "") for item in daily_analysis],
+        "bestBetEventIds": [str(item.get("eventId") or "") for item in best_bets],
+        "startingBank": round(current_bank, 2),
+        "currentBank": round(current_bank, 2),
+        "placedAmount": placed,
+        "availableAmount": round(max(0.0, current_bank - placed), 2),
+    }
+    state["batch"] = batch
+    state.setdefault("meta", {}).update(
+        {
+            "currentBatchId": batch_id,
+            "batchSequence": sequence,
+            "batchStatus": "ACTIVE",
+            "batchStatusLabel": batch["statusLabel"],
+            "batchUpdatedAt": iso_z(now),
+            "lastBatchPublishedAt": iso_z(now),
+        }
+    )
+    return batch
+
 def append_new_records_to_history(
     state: dict[str, Any],
     daily_analysis: list[dict[str, Any]],
@@ -3486,14 +3788,20 @@ def update_bank_metrics(state: dict[str, Any]) -> None:
         if peak > 0:
             max_drawdown = max(max_drawdown, (peak - value) / peak * 100)
     bank["maxDrawdown"] = round(max_drawdown, 2)
-    bank["activeExposure"] = round(
-        sum(
-            safe_float(item.get("stake"))
-            for item in state.get("bestBets") or []
-            if str(item.get("status") or "pending") == "pending"
-        ),
+    active_bets = [
+        item for item in state.get("bestBets") or []
+        if isinstance(item, dict)
+        and normalize_history_status(item.get("status")) == "pending"
+    ]
+    active_exposure = round(
+        sum(safe_float(item.get("stake")) for item in active_bets),
         2,
     )
+    bank["activeExposure"] = active_exposure
+    bank["placedAmount"] = active_exposure
+    bank["activeBetsCount"] = len(active_bets)
+    bank["available"] = round(max(0.0, current - active_exposure), 2)
+    bank["closedBalance"] = round(current, 2)
 
 
 def update_statistics(state: dict[str, Any]) -> None:
@@ -3842,8 +4150,20 @@ def run_live_settlement() -> int:
         config,
         now,
     )
+    batch_before_serialized = json.dumps(
+        raw_state.get("batch") or {},
+        ensure_ascii=False,
+        sort_keys=True,
+    )
     update_bank_metrics(state)
     update_statistics(state)
+    current_batch = ensure_current_batch(state, config, now)
+    batch_after_serialized = json.dumps(
+        current_batch,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    batch_changed = batch_before_serialized != batch_after_serialized
 
     settlement_changed = bool(
         safe_int(counters.get("analysisSettled"))
@@ -3869,6 +4189,7 @@ def run_live_settlement() -> int:
         settlement_changed
         or maintenance_changed
         or maintenance_missing_before
+        or batch_changed
     )
 
     bank_after = safe_float(
@@ -3917,6 +4238,8 @@ def run_live_settlement() -> int:
             "historyMaintenance": maintenance,
             "bankBefore": round(bank_before, 2),
             "bankAfter": round(bank_after, 2),
+            "batch": current_batch,
+            "batchCompleted": bool(current_batch.get("completed")),
         }
         write_json_atomic(REPORT_PATH, report)
         print("LIVE_SETTLEMENT_STATE_CHANGED=YES")
@@ -3939,7 +4262,41 @@ def run_live_settlement() -> int:
         "HISTORY_MAINTENANCE="
         f"{json.dumps(maintenance, ensure_ascii=False)}"
     )
-    print("FINAL_STATUS=GREEN_V10_R7_LIVE_SETTLEMENT")
+    print(
+        "CURRENT_BATCH_STATUS="
+        f"{current_batch.get('status')}"
+    )
+    print(
+        "CURRENT_BATCH_PENDING_ANALYSES="
+        f"{current_batch.get('pendingAnalysisCount')}"
+    )
+    print("FINAL_STATUS=GREEN_V10_R8_LIVE_SETTLEMENT")
+    return 0
+
+
+def run_live_cycle() -> int:
+    run_live_settlement()
+    config = load_json(CONFIG_PATH, {})
+    validate_config(config)
+    now = utc_now()
+    state = migrate_state(load_json(STATE_PATH, {}), config, now)
+    update_bank_metrics(state)
+    update_statistics(state)
+    batch = ensure_current_batch(state, config, now)
+
+    if batch.get("completed"):
+        state.setdefault("meta", {})["batchStatus"] = "GENERATING_NEXT"
+        state["meta"]["batchStatusLabel"] = batch_status_label("GENERATING_NEXT")
+        state["meta"]["batchRolloverTriggeredAt"] = iso_z(now)
+        write_json_atomic(STATE_PATH, state)
+        print("BATCH_ROLLOVER_TRIGGERED=YES")
+        return run_pipeline("rollover", force_generation=True)
+
+    print("BATCH_ROLLOVER_TRIGGERED=NO")
+    print(f"BATCH_STATUS={batch.get('status')}")
+    print(f"BATCH_PENDING_ANALYSES={batch.get('pendingAnalysisCount')}")
+    print(f"BATCH_PENDING_BEST_BETS={batch.get('pendingBestBetsCount')}")
+    print("FINAL_STATUS=GREEN_V10_R8_LIVE_CYCLE_WAITING")
     return 0
 
 
@@ -4019,6 +4376,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             f"liveFinalResults={len(live_final_results)}"
         )
 
+    current_batch = ensure_current_batch(state, config, now)
     analysis_date = str(state.get("meta", {}).get("analysisDateLocal") or "")
     generation_hour = safe_int(config.get("dailyGenerationHourLocal"), 8)
     generation_due = (
@@ -4028,11 +4386,24 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             or not state.get("dailyAnalysis")
         )
     )
-    generate = False if mode == "settle" else (
+    generation_requested = bool(
         force_generation
-        or mode == "update"
+        or mode in {"update", "rollover"}
         or generation_due
     )
+    batch_has_records = safe_int(current_batch.get("analysisCount")) > 0
+    batch_is_open = batch_has_records and not bool(current_batch.get("completed"))
+    generate = bool(
+        mode != "settle"
+        and generation_requested
+        and not batch_is_open
+    )
+    if generation_requested and batch_is_open:
+        report["warnings"].append(
+            "The current prediction batch is still active; overlapping generation was blocked."
+        )
+        state.setdefault("meta", {})["batchGenerationBlockedAt"] = iso_z(now)
+        state["meta"]["batchGenerationBlockedReason"] = "CURRENT_BATCH_NOT_TERMINAL"
 
     discovery_diagnostics: dict[str, Any] = {}
     analysis_diagnostics: dict[str, Any] = {}
@@ -4086,10 +4457,21 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
                 }
 
         if daily_analysis:
+            publish_new_batch(
+                state,
+                daily_analysis,
+                best_bets,
+                new_best,
+                config,
+                now,
+            )
             append_new_records_to_history(state, daily_analysis, new_best, config)
             state["dailyAnalysis"] = daily_analysis
             state["bestBets"] = best_bets
             state["predictions"] = copy.deepcopy(best_bets)
+            state["meta"]["lastBatchRolloverAt"] = (
+                iso_z(now) if mode == "rollover" else state["meta"].get("lastBatchRolloverAt")
+            )
         else:
             report["warnings"].append(
                 "No new analysis was generated; the previous published state was preserved."
@@ -4145,6 +4527,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
 
     update_bank_metrics(state)
     update_statistics(state)
+    ensure_current_batch(state, config, now)
     state["bank"]["history"] = state["bank"].get("history", [])[-safe_int(config.get("bankHistoryLimit"), 1200) :]
 
     report.update(
@@ -4161,6 +4544,8 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
                 "dailyAnalysis": len(state.get("dailyAnalysis") or []),
                 "bestBets": len(state.get("bestBets") or []),
                 "newBestBets": len(new_best),
+                "batch": state.get("batch"),
+                "batchRollover": mode == "rollover" and generate,
                 "footballDataMatches": len(football_matches),
                 "quota": state["quota"],
                 "apiCalls": client.calls,
@@ -4177,6 +4562,13 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             "version": STATE_VERSION,
             "updatedAt": state["meta"]["updatedAt"],
             "analysisDateLocal": state["meta"].get("analysisDateLocal"),
+            "batch": state.get("batch", {}),
+            "bank": {
+                "current": state.get("bank", {}).get("current"),
+                "placedAmount": state.get("bank", {}).get("placedAmount"),
+                "available": state.get("bank", {}).get("available"),
+                "activeBetsCount": state.get("bank", {}).get("activeBetsCount"),
+            },
             "dailyAnalysis": state.get("dailyAnalysis", []),
             "bestBets": state.get("bestBets", []),
         },
@@ -4270,8 +4662,13 @@ def validate_repository_files() -> int:
         raise RuntimeError("Live script marker missing")
     if "V10_R7_HISTORY_LIVE_CLEANUP" not in live_source:
         raise RuntimeError("R7 live cleanup marker missing")
-    if "--settle-live" not in pathlib.Path(__file__).read_text(encoding="utf-8"):
+    source_text = pathlib.Path(__file__).read_text(encoding="utf-8")
+    if "--settle-live" not in source_text:
         raise RuntimeError("R7 live settlement CLI missing")
+    if "--live-cycle" not in source_text:
+        raise RuntimeError("R8 live cycle CLI missing")
+    if "V10_R8_ATOMIC_BATCH_ROLLOVER" not in source_text:
+        raise RuntimeError("R8 batch rollover marker missing")
     if "V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY" not in app_source:
         raise RuntimeError("R7 clean history UI marker missing")
     if config.get("historyDefaultFilter") != "settled":
@@ -4440,15 +4837,31 @@ def run_self_test() -> int:
             "SELF_TEST exact-four tier is missing"
         )
 
-    append_new_records_to_history(
-        state,
-        daily,
-        new_best,
-        test_config,
-    )
     state["dailyAnalysis"] = daily
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
+    publish_new_batch(
+        state, daily, best, new_best, test_config, now
+    )
+    append_new_records_to_history(
+        state, daily, new_best, test_config
+    )
+    update_bank_metrics(state)
+    active_batch = ensure_current_batch(state, test_config, now)
+    if active_batch.get("status") != "ACTIVE":
+        raise RuntimeError("SELF_TEST active batch status missing")
+    if safe_int(state.get("bank", {}).get("activeBetsCount")) != 4:
+        raise RuntimeError("SELF_TEST active bank count mismatch")
+    expected_available = round(
+        safe_float(state.get("bank", {}).get("current"))
+        - safe_float(state.get("bank", {}).get("placedAmount")),
+        2,
+    )
+    if abs(
+        safe_float(state.get("bank", {}).get("available"))
+        - expected_available
+    ) > 0.01:
+        raise RuntimeError("SELF_TEST available bank mismatch")
 
     # Settle three outcomes to exercise win/loss/push and bankroll learning.
     results = {
@@ -4522,6 +4935,36 @@ def run_self_test() -> int:
             "SELF_TEST stale pending history was not marked unresolved"
         )
 
+    rollover_probe = copy.deepcopy(state)
+    for collection_name in ("dailyAnalysis", "bestBets", "predictions"):
+        for item in rollover_probe.get(collection_name) or []:
+            if isinstance(item, dict):
+                item["status"] = "won"
+                item["settledAt"] = iso_z(now + dt.timedelta(days=2))
+    for collection_name in ("analysisHistory", "history"):
+        current_ids = {
+            str(item.get("id") or "")
+            for item in rollover_probe.get(
+                "dailyAnalysis" if collection_name == "analysisHistory" else "bestBets"
+            ) or []
+            if isinstance(item, dict)
+        }
+        for item in rollover_probe.get(collection_name) or []:
+            if isinstance(item, dict) and str(item.get("id") or "") in current_ids:
+                item["status"] = "won"
+                item["settledAt"] = iso_z(now + dt.timedelta(days=2))
+    update_bank_metrics(rollover_probe)
+    completed_batch = ensure_current_batch(
+        rollover_probe, test_config, now + dt.timedelta(days=2)
+    )
+    if not completed_batch.get("completed"):
+        raise RuntimeError("SELF_TEST completed batch was not detected")
+    archive_completed_batch(
+        rollover_probe, test_config, now + dt.timedelta(days=2)
+    )
+    if len(rollover_probe.get("batchHistory") or []) != 1:
+        raise RuntimeError("SELF_TEST completed batch archive missing")
+
     localization_probe = apply_russian_display_fields({
         "country": "England",
         "league": "English Premier League",
@@ -4551,7 +4994,8 @@ def run_self_test() -> int:
         f"HOCKEY={sum(1 for item in daily if item['sport'] == 'ice_hockey')} "
         f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f} "
         f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE "
-        f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES"
+        f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES "
+        f"ATOMIC_BATCH_ROLLOVER=YES LINKED_BANK_METRICS=YES"
     )
     return 0
 
@@ -4720,6 +5164,7 @@ def cli_main(argv: list[str] | None = None) -> int:
     group.add_argument("--update", action="store_true", help="Force daily generation")
     group.add_argument("--settle", action="store_true", help="Settle due events without forced generation")
     group.add_argument("--settle-live", action="store_true", help="Settle confirmed live finals and clean prediction history")
+    group.add_argument("--live-cycle", action="store_true", help="Settle the current batch and immediately publish the next 15 plus 4 when complete")
     group.add_argument("--validate", action="store_true", help="Validate repository and state")
     group.add_argument("--self-test", action="store_true", help="Run offline synthetic end-to-end test")
     group.add_argument("--migrate-state", action="store_true", help="Migrate legacy state to V10")
@@ -4736,6 +5181,8 @@ def cli_main(argv: list[str] | None = None) -> int:
         return reset_state_file()
     if args.settle_live:
         return run_live_settlement()
+    if args.live_cycle:
+        return run_live_cycle()
     if args.update:
         return run_pipeline("update", force_generation=True)
     if args.settle:

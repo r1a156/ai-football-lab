@@ -1,5 +1,5 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R7
+name: V10 Финальная спортивная аналитика R8
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ env:
 
 jobs:
   validate:
-    name: V10 static and offline validation
+    name: V10 R8 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -199,6 +199,7 @@ jobs:
           daily = state.get("dailyAnalysis") or []
           best = state.get("bestBets") or []
           bank = state.get("bank") or {}
+          batch = state.get("batch") or {}
 
           if meta.get("version") != "10.0.0":
               raise SystemExit("State version is not 10.0.0")
@@ -254,6 +255,21 @@ jobs:
           )
           if abs(float(bank.get("activeExposure") or 0) - expected_exposure) > 0.02:
               raise SystemExit("Virtual bank exposure does not match pending best bets")
+          if abs(float(bank.get("placedAmount") or 0) - expected_exposure) > 0.02:
+              raise SystemExit("Placed amount does not match pending best bets")
+          expected_available = max(0.0, float(bank.get("current") or 0) - expected_exposure)
+          if abs(float(bank.get("available") or 0) - expected_available) > 0.02:
+              raise SystemExit("Available bank does not match current minus placed")
+          if int(bank.get("activeBetsCount") or 0) != sum(
+              str(item.get("status") or "pending") == "pending" for item in best
+          ):
+              raise SystemExit("Active best-bet count is inconsistent")
+          if daily and not str(batch.get("id") or ""):
+              raise SystemExit("Current prediction batch ID is missing")
+          if daily and int(batch.get("analysisCount") or 0) != len(daily):
+              raise SystemExit("Batch analysis count mismatch")
+          if best and int(batch.get("bestBetsCount") or 0) != len(best):
+              raise SystemExit("Batch best-bet count mismatch")
 
           statistics = state.get("statistics") or {}
           if not isinstance(statistics.get("allPredictions"), dict):
@@ -290,6 +306,10 @@ jobs:
           print("HOCKEY=", sum(item.get("sport") == "ice_hockey" for item in daily))
           print("BANK=", bank.get("current"))
           print("ACTIVE_EXPOSURE=", bank.get("activeExposure"))
+          print("PLACED_AMOUNT=", bank.get("placedAmount"))
+          print("AVAILABLE_BANK=", bank.get("available"))
+          print("ACTIVE_BETS_COUNT=", bank.get("activeBetsCount"))
+          print("BATCH=", batch)
           print("ODDS_QUOTA=", state.get("quota"))
           print("ALL_PREDICTIONS_STATISTICS=", statistics.get("allPredictions"))
           print("BEST_BETS_STATISTICS=", statistics.get("bestBets"))

@@ -1,11 +1,12 @@
 # V10_R6_LIVE_AUTO_REFRESH
 # V10_R7_HISTORY_LIVE_CLEANUP
-name: V10 R7 Живой счёт, завершение и чистая история
+# V10_R8_ATOMIC_BATCH_ROLLOVER
+name: V10 R8 Живой цикл и следующая подборка
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   push:
     branches:
       - main
@@ -28,7 +29,7 @@ env:
 
 jobs:
   live:
-    name: Обновить текущий счёт и вероятности
+    name: Счёт, расчёт, обучение и новая подборка
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
@@ -66,11 +67,16 @@ jobs:
           set -euo pipefail
           python scripts/update_live.py --update
 
-      - name: Закрыть прогнозы по подтверждённым финальным счетам
+      - name: Рассчитать текущую подборку и сразу сформировать следующую
         shell: bash
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
         run: |
           set -euo pipefail
-          python scripts/update_predictions.py --settle-live
+          python scripts/update_predictions.py --live-cycle
 
       - name: Проверить обновлённые данные
         shell: bash
@@ -86,6 +92,8 @@ jobs:
           live = json.loads(Path("data/live-state.json").read_text(encoding="utf-8"))
           learning = json.loads(Path("data/live-learning.json").read_text(encoding="utf-8"))
           state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          bank = state.get("bank") or {}
+          batch = state.get("batch") or {}
 
           if live.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
               raise SystemExit("Live state marker mismatch")
@@ -108,12 +116,31 @@ jobs:
           maintenance = state.get("historyMaintenance") or {}
           if maintenance.get("version") != 1:
               raise SystemExit("History maintenance metadata is missing")
+          best = state.get("bestBets") or []
+          expected_placed = sum(
+              float(item.get("stake") or 0)
+              for item in best
+              if str(item.get("status") or "pending") == "pending"
+          )
+          if abs(float(bank.get("placedAmount") or 0) - expected_placed) > 0.02:
+              raise SystemExit("Placed bank amount is not linked to pending best bets")
+          expected_available = max(0.0, float(bank.get("current") or 0) - expected_placed)
+          if abs(float(bank.get("available") or 0) - expected_available) > 0.02:
+              raise SystemExit("Available bank is not linked to current and placed amounts")
+          if state.get("dailyAnalysis") and not batch.get("id"):
+              raise SystemExit("Current batch metadata is missing")
+          if batch.get("completed"):
+              raise SystemExit("Completed batch was not rolled over in the same live cycle")
           print("LIVE_STATE_ACCEPTANCE=GREEN")
           print("LIVE_FINISHED_PUBLIC=0")
           print("HISTORY_MAINTENANCE_ACCEPTANCE=GREEN")
           print("LIVE_TRACKED=", len(live.get("events") or []))
           print("LIVE_ACTIVE=", len(live.get("activeEventIds") or []))
           print("LIVE_LEARNING=", learning.get("statistics"))
+          print("CURRENT_BATCH=", batch)
+          print("BANK_CURRENT=", bank.get("current"))
+          print("BANK_PLACED=", bank.get("placedAmount"))
+          print("BANK_AVAILABLE=", bank.get("available"))
           PY
 
       - name: Сохранить изменившиеся данные
@@ -122,11 +149,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json
+          git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
             echo "No live data changes to commit."
             exit 0
           fi
-          git commit -m "V10 R7 refresh live score settle results and clean history [skip ci]"
+          git commit -m "V10 R8 atomic live settlement learning and next batch [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

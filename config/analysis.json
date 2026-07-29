@@ -1,5 +1,5 @@
 {
-  "version": 14,
+  "version": 15,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -113,10 +113,10 @@
   "localizationPolicy": "ALL_VISIBLE_TEXT_AND_TEAM_NAMES_RUSSIAN",
   "teamNamePolicy": "DETERMINISTIC_RUSSIAN_TRANSLITERATION_WITH_DICTIONARY",
   "liveEnabled": true,
-  "liveRefreshMinutes": 10,
+  "liveRefreshMinutes": 5,
   "liveLookaheadMinutes": 90,
-  "livePastHoursSoccer": 5,
-  "livePastHoursHockey": 6,
+  "livePastHoursSoccer": 12,
+  "livePastHoursHockey": 12,
   "liveCompletedRetentionHours": 0,
   "liveMaximumOddsScoreCallsPerRun": 3,
   "liveSnapshotsPerEventLimit": 72,
@@ -142,5 +142,12 @@
   "historyDefaultFilter": "settled",
   "historyMaintenancePolicy": "DEDUPLICATE_INVALID_REMOVE_STALE_PENDING_TO_UNRESOLVED_PRESERVE_BANK_AND_LEARNING",
   "livePublicListPolicy": "ONLY_PROVIDER_CONFIRMED_LIVE_AND_FUTURE_SCHEDULED_NO_FINISHED",
-  "liveSettlementPolicy": "CORE_SETTLEMENT_FROM_CONFIRMED_LIVE_FINAL_RESULTS_EVERY_10_MINUTES"
+  "liveSettlementPolicy": "CONFIRMED_FINALS_SETTLE_AND_ROLLOVER_EVERY_5_MINUTES",
+  "batchRolloverEnabled": true,
+  "batchRolloverTrigger": "ALL_CURRENT_ANALYSES_AND_BEST_BETS_TERMINAL",
+  "batchRolloverMaximumDelayMinutes": 5,
+  "batchHistoryLimit": 120,
+  "batchOverlapPolicy": "FORBID_OVERLAPPING_PUBLISHED_BATCHES",
+  "batchPublicationPolicy": "ATOMIC_RESULTS_BANK_STATISTICS_LEARNING_NEXT_FIFTEEN_NEXT_FOUR",
+  "bankMetricsPolicy": "CURRENT_PLACED_AVAILABLE_ACTIVE_COUNT_UPDATED_TOGETHER"
 }
