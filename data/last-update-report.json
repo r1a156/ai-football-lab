@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "auto",
-  "startedAt": "2026-07-29T16:40:11Z",
-  "finishedAt": "2026-07-29T16:40:17Z",
+  "mode": "settle",
+  "startedAt": "2026-07-29T17:53:29Z",
+  "finishedAt": "2026-07-29T17:53:35Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 2,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 7
     },
-    "duePending": 0,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -31,12 +31,12 @@
       "sequence": 1,
       "status": "SETTLING",
       "createdAt": "2026-07-28T19:04:08Z",
-      "updatedAt": "2026-07-29T16:40:11Z",
+      "updatedAt": "2026-07-29T17:53:29Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 7,
+      "terminalAnalysisCount": 9,
       "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 8,
+      "pendingAnalysisCount": 6,
       "pendingBestBetsCount": 1,
       "completed": false,
       "placedAmount": 3458.27,
@@ -74,12 +74,12 @@
     "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-07-29T16:40:11Z"
+      "requestsRemaining": "292",
+      "requestsUsed": "208",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-07-29T17:53:29Z"
     },
     "apiCalls": [
       {
@@ -96,6 +96,11 @@
         "label": "FOOTBALL_DATA_MATCHES",
         "status": 400,
         "error": "{\"message\":\"Specified period must not exceed 10 days.\",\"errorCode\":400}"
+      },
+      {
+        "label": "SCORES:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.341
       }
     ]
   },
