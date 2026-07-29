@@ -4,6 +4,7 @@
 # V10_R7_HISTORY_LIVE_CLEANUP
 # V10_R8_ATOMIC_BATCH_ROLLOVER
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
+# V10_R10_ATOMIC_BEST_FOUR_SYNC
 """AI Football Lab V10: global football-first, hockey-fallback analytics.
 
 The pipeline predicts match scenarios first, then evaluates bookmaker prices.
@@ -2490,13 +2491,13 @@ def select_best_bets(
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     target = safe_int(config.get("bestBetsTarget"), 4)
-    active = active_pending_best_bets(state, now)[:target]
-    used_events = {
-        str(item.get("eventId") or "")
-        for item in active
-    }
 
-    selected = [copy.deepcopy(item) for item in active]
+    # V10_R10_ATOMIC_BEST_FOUR_SYNC
+    # The visible four are always a fresh ranking of the currently published
+    # fifteen analyses. Pending records from older batches remain only in
+    # history for settlement and must never be carried into a new selection.
+    used_events: set[str] = set()
+    selected: list[dict[str, Any]] = []
     newly_selected: list[dict[str, Any]] = []
 
     family_counts: dict[str, int] = defaultdict(int)
@@ -2789,6 +2790,212 @@ def select_best_bets(
         )
 
     return selected, newly_selected
+
+
+def apply_best_bets_to_daily_analysis(
+    daily_analysis: list[dict[str, Any]],
+    best_bets: list[dict[str, Any]],
+) -> None:
+    """Make the fifteen-analysis view and current four an atomic projection."""
+    best_by_event = {
+        str(item.get("eventId") or ""): item
+        for item in best_bets
+        if isinstance(item, dict) and str(item.get("eventId") or "")
+    }
+    for record in daily_analysis:
+        if not isinstance(record, dict):
+            continue
+        record["isBestBet"] = False
+        record["stake"] = 0.0
+        record.pop("stakePercent", None)
+        record.pop("bestBetSelection", None)
+
+        best = best_by_event.get(str(record.get("eventId") or ""))
+        if not best:
+            continue
+
+        record["isBestBet"] = True
+        record["stake"] = safe_float(best.get("stake"))
+        record["stakePercent"] = safe_float(best.get("stakePercent"))
+        record["bestBetSelection"] = {
+            "id": best.get("id"),
+            "pick": best.get("pick"),
+            "market": best.get("market"),
+            "marketFamily": best.get("marketFamily"),
+            "point": best.get("point"),
+            "odds": best.get("bookmakerOdds"),
+            "probabilityPercent": round(
+                safe_float(best.get("modelProbability")) * 100,
+                1,
+            ),
+            "edgePercent": round(
+                safe_float(best.get("edge")) * 100,
+                2,
+            ),
+        }
+
+
+def current_best_bets_are_synchronized(
+    state: dict[str, Any],
+    config: dict[str, Any],
+) -> bool:
+    daily = [
+        item for item in state.get("dailyAnalysis") or []
+        if isinstance(item, dict)
+    ]
+    best = [
+        item for item in state.get("bestBets") or []
+        if isinstance(item, dict)
+    ]
+    target = safe_int(config.get("bestBetsTarget"), 4)
+    if len(daily) < target or len(best) != target:
+        return False
+
+    daily_events = {str(item.get("eventId") or "") for item in daily}
+    best_events = [str(item.get("eventId") or "") for item in best]
+    if any(not event_id for event_id in best_events):
+        return False
+    if len(best_events) != len(set(best_events)):
+        return False
+    if not set(best_events).issubset(daily_events):
+        return False
+
+    meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    analysis_generated_at = str(meta.get("analysisGeneratedAt") or "")
+    source_generated_at = str(
+        meta.get("bestBetsSourceAnalysisGeneratedAt") or ""
+    )
+    if not analysis_generated_at or source_generated_at != analysis_generated_at:
+        return False
+
+    daily_batch_ids = {
+        str(item.get("batchId") or "") for item in daily
+        if str(item.get("batchId") or "")
+    }
+    best_batch_ids = {
+        str(item.get("batchId") or "") for item in best
+        if str(item.get("batchId") or "")
+    }
+    if daily_batch_ids and best_batch_ids != daily_batch_ids:
+        return False
+
+    return True
+
+
+def synchronize_best_bets_with_current_analysis(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    *,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Repair or refresh the four immediately from the current fifteen."""
+    daily = [
+        item for item in state.get("dailyAnalysis") or []
+        if isinstance(item, dict)
+    ]
+    target = safe_int(config.get("bestBetsTarget"), 4)
+    if len(daily) < target:
+        return {
+            "changed": False,
+            "reason": "INSUFFICIENT_CURRENT_ANALYSES",
+            "dailyAnalysis": len(daily),
+            "bestBets": len(state.get("bestBets") or []),
+        }
+
+    if not force and current_best_bets_are_synchronized(state, config):
+        return {
+            "changed": False,
+            "reason": "ALREADY_SYNCHRONIZED",
+            "dailyAnalysis": len(daily),
+            "bestBets": len(state.get("bestBets") or []),
+        }
+
+    previous_ids = [
+        str(item.get("id") or "")
+        for item in state.get("bestBets") or []
+        if isinstance(item, dict)
+    ]
+    best_bets, newly_selected = select_best_bets(
+        daily,
+        state,
+        config,
+        now,
+    )
+    if len(best_bets) != target:
+        raise RuntimeError(
+            "CURRENT_ANALYSIS_BEST_FOUR_SYNC_FAILED: "
+            f"daily={len(daily)}; best={len(best_bets)}"
+        )
+
+    batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
+    batch_id = str(
+        next(
+            (item.get("batchId") for item in daily if item.get("batchId")),
+            batch.get("id") or "",
+        )
+        or ""
+    )
+    batch_sequence = safe_int(
+        next(
+            (
+                item.get("batchSequence")
+                for item in daily
+                if item.get("batchSequence") is not None
+            ),
+            batch.get("sequence") or 0,
+        ),
+        0,
+    )
+    for item in best_bets + newly_selected:
+        if batch_id:
+            item["batchId"] = batch_id
+        if batch_sequence:
+            item["batchSequence"] = batch_sequence
+        item["batchStatus"] = "ACTIVE"
+
+    apply_best_bets_to_daily_analysis(daily, best_bets)
+    state["dailyAnalysis"] = daily
+    state["bestBets"] = best_bets
+    state["predictions"] = copy.deepcopy(best_bets)
+    append_new_records_to_history(
+        state,
+        [],
+        newly_selected,
+        config,
+    )
+
+    meta = state.setdefault("meta", {})
+    analysis_generated_at = str(
+        meta.get("analysisGeneratedAt") or iso_z(now)
+    )
+    meta.update(
+        {
+            "bestBetsSourceAnalysisGeneratedAt": analysis_generated_at,
+            "bestBetsSourceBatchId": batch_id,
+            "bestBetsGeneratedAt": iso_z(now),
+            "bestBetsSynchronizedAt": iso_z(now),
+            "bestBetsPublished": len(best_bets),
+            "newBestBets": len(newly_selected),
+            "bestBetsSynchronizationPolicy": (
+                "CURRENT_FIFTEEN_IMMEDIATELY_REANALYZED_TO_EXACT_FOUR"
+            ),
+        }
+    )
+
+    return {
+        "changed": True,
+        "reason": "CURRENT_ANALYSIS_REANALYZED",
+        "dailyAnalysis": len(daily),
+        "bestBets": len(best_bets),
+        "previousBestBetIds": previous_ids,
+        "currentBestBetIds": [
+            str(item.get("id") or "") for item in best_bets
+        ],
+        "currentBestBetEventIds": [
+            str(item.get("eventId") or "") for item in best_bets
+        ],
+    }
 
 
 HISTORY_TERMINAL_STATUSES = {
@@ -4528,6 +4735,10 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
     odds_errors: list[str] = []
     selected_keys: list[str] = []
     new_best: list[dict[str, Any]] = []
+    best_sync: dict[str, Any] = {
+        "changed": False,
+        "reason": "NOT_EVALUATED",
+    }
 
     if generate:
         discovered, discovery_diagnostics = discover_events(client, odds_key, config, now)
@@ -4555,24 +4766,12 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
         enrich_narratives_with_openrouter(daily_analysis, openrouter_key, config, client)
         best_bets, new_best = select_best_bets(daily_analysis, state, config, now)
 
-        # Mark records chosen as best bets and copy the fixed stake into visible analysis.
-        best_by_event = {str(item.get("eventId")): item for item in best_bets}
-        for record in daily_analysis:
-            best = best_by_event.get(str(record.get("eventId") or ""))
-            if best:
-                record["isBestBet"] = True
-                record["stake"] = best["stake"]
-                record["stakePercent"] = best["stakePercent"]
-                record["bestBetSelection"] = {
-                    "id": best.get("id"),
-                    "pick": best.get("pick"),
-                    "market": best.get("market"),
-                    "marketFamily": best.get("marketFamily"),
-                    "point": best.get("point"),
-                    "odds": best.get("bookmakerOdds"),
-                    "probabilityPercent": round(safe_float(best.get("modelProbability")) * 100, 1),
-                    "edgePercent": round(safe_float(best.get("edge")) * 100, 2),
-                }
+        # V10 R10: the visible four and the fifteen are published as one
+        # projection from the same freshly generated analysis collection.
+        apply_best_bets_to_daily_analysis(
+            daily_analysis,
+            best_bets,
+        )
 
         if daily_analysis:
             publish_new_batch(
@@ -4589,6 +4788,19 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             state["predictions"] = copy.deepcopy(best_bets)
             state["meta"]["lastBatchRolloverAt"] = (
                 iso_z(now) if mode == "rollover" else state["meta"].get("lastBatchRolloverAt")
+            )
+            state["meta"].update(
+                {
+                    "bestBetsSourceAnalysisGeneratedAt": iso_z(now),
+                    "bestBetsSourceBatchId": str(
+                        state.get("batch", {}).get("id") or ""
+                    ),
+                    "bestBetsGeneratedAt": iso_z(now),
+                    "bestBetsSynchronizedAt": iso_z(now),
+                    "bestBetsSynchronizationPolicy": (
+                        "CURRENT_FIFTEEN_IMMEDIATELY_REANALYZED_TO_EXACT_FOUR"
+                    ),
+                }
             )
         else:
             report["warnings"].append(
@@ -4631,6 +4843,21 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
         )
         state["meta"]["dataFreshness"] = "SETTLEMENT_REFRESH"
 
+    # Self-heal a state where the fifteen are current but the visible four
+    # still belong to an older analysis run.
+    if state.get("dailyAnalysis"):
+        best_sync = synchronize_best_bets_with_current_analysis(
+            state,
+            config,
+            now,
+            force=False,
+        )
+        if best_sync.get("changed"):
+            log(
+                "Best four synchronized with current fifteen: "
+                + json.dumps(best_sync, ensure_ascii=False)
+            )
+
     state["meta"]["version"] = STATE_VERSION
     state["meta"]["sourceMarker"] = PIPELINE_MARKER
     state["meta"]["updatedAt"] = iso_z(now)
@@ -4662,6 +4889,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
                 "dailyAnalysis": len(state.get("dailyAnalysis") or []),
                 "bestBets": len(state.get("bestBets") or []),
                 "newBestBets": len(new_best),
+                "bestBetsSynchronization": best_sync,
                 "batch": state.get("batch"),
                 "batchRollover": mode == "rollover" and generate,
                 "footballDataMatches": len(football_matches),
@@ -4959,6 +5187,57 @@ def run_self_test() -> int:
             "SELF_TEST exact-four tier is missing"
         )
 
+    # R10 regression: stale pending bets in history must never be carried into
+    # a newly generated four, and a mismatched current state must self-heal.
+    stale_state = default_state(test_config, now)
+    stale_state["meta"]["analysisGeneratedAt"] = iso_z(now)
+    stale_state["dailyAnalysis"] = copy.deepcopy(daily)
+    stale_history = []
+    stale_visible = []
+    for index in range(4):
+        stale = copy.deepcopy(best[index])
+        stale["id"] = f"stale-best-{index}"
+        stale["eventId"] = f"stale-event-{index}"
+        stale["sourceAnalysisId"] = f"stale-analysis-{index}"
+        stale["publishedAt"] = iso_z(now - dt.timedelta(days=1))
+        stale["status"] = "pending"
+        stale_history.append(copy.deepcopy(stale))
+        stale_visible.append(copy.deepcopy(stale))
+    stale_state["history"] = stale_history
+    stale_state["bestBets"] = stale_visible
+    stale_state["predictions"] = copy.deepcopy(stale_visible)
+    sync_probe = synchronize_best_bets_with_current_analysis(
+        stale_state,
+        test_config,
+        now,
+    )
+    if not sync_probe.get("changed"):
+        raise RuntimeError("SELF_TEST stale best four did not self-heal")
+    synced_events = {
+        str(item.get("eventId") or "")
+        for item in stale_state.get("bestBets") or []
+    }
+    current_events = {
+        str(item.get("eventId") or "")
+        for item in stale_state.get("dailyAnalysis") or []
+    }
+    if len(synced_events) != 4 or not synced_events.issubset(current_events):
+        raise RuntimeError(
+            "SELF_TEST synchronized best four is not from current fifteen"
+        )
+    if any(event.startswith("stale-event-") for event in synced_events):
+        raise RuntimeError("SELF_TEST stale event leaked into current four")
+    history_size = len(stale_state.get("history") or [])
+    second_sync = synchronize_best_bets_with_current_analysis(
+        stale_state,
+        test_config,
+        now + dt.timedelta(minutes=1),
+    )
+    if second_sync.get("changed"):
+        raise RuntimeError("SELF_TEST synchronized selection was rebuilt twice")
+    if len(stale_state.get("history") or []) != history_size:
+        raise RuntimeError("SELF_TEST synchronized history duplicated")
+
     state["dailyAnalysis"] = daily
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
@@ -4967,6 +5246,11 @@ def run_self_test() -> int:
     )
     append_new_records_to_history(
         state, daily, new_best, test_config
+    )
+    state["meta"]["analysisGeneratedAt"] = iso_z(now)
+    state["meta"]["bestBetsSourceAnalysisGeneratedAt"] = iso_z(now)
+    state["meta"]["bestBetsSourceBatchId"] = str(
+        state.get("batch", {}).get("id") or ""
     )
     update_bank_metrics(state)
     active_batch = ensure_current_batch(state, test_config, now)
@@ -5117,7 +5401,8 @@ def run_self_test() -> int:
         f"MARKETS={diagnostics['marketCandidates']} BANK={state['bank']['current']:.2f} "
         f"FULL_STATISTICS=YES LEARNING=ACTIVE LIVE_LAYER=SEPARATE "
         f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES "
-        f"ATOMIC_BATCH_ROLLOVER=YES LINKED_BANK_METRICS=YES"
+        f"ATOMIC_BATCH_ROLLOVER=YES LINKED_BANK_METRICS=YES "
+        f"ATOMIC_BEST_FOUR_SYNC=YES"
     )
     return 0
 

@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -153,5 +153,8 @@
   "batchUnresolvedReleaseMinutesSoccer": 360,
   "batchUnresolvedReleaseMinutesHockey": 420,
   "bestFourStatisticsPolicy": "DEDICATED_VISIBLE_STATISTICS_NEXT_TO_CURRENT_FOUR_BEST_BETS",
-  "mobileNavigationPolicy": "FIXED_COMPACT_SINGLE_LINE_FOUR_ITEMS_NO_EXPANSION"
+  "mobileNavigationPolicy": "FIXED_COMPACT_SINGLE_LINE_FOUR_ITEMS_NO_EXPANSION",
+  "bestFourRefreshPolicy": "RECOMPUTE_EXACT_FOUR_IMMEDIATELY_FROM_EACH_CURRENT_FIFTEEN_PUBLICATION",
+  "bestFourCarryOverPolicy": "FORBID_PENDING_HISTORY_CARRY_OVER_INTO_CURRENT_VISIBLE_FOUR",
+  "bestFourSynchronizationPolicy": "ATOMIC_WITH_DAILY_ANALYSIS_TIMESTAMP_BATCH_AND_BANK_METRICS"
 }

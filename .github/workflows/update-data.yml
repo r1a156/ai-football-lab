@@ -1,7 +1,8 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R9
+name: V10 Финальная спортивная аналитика R10
 
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
+# V10_R10_ATOMIC_BEST_FOUR_SYNC
 on:
   workflow_dispatch:
     inputs:
@@ -42,7 +43,7 @@ env:
 
 jobs:
   validate:
-    name: V10 R9 статическая и офлайн-проверка
+    name: V10 R10 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -230,6 +231,13 @@ jobs:
               raise SystemExit("A best bet has no eventId")
           if len(best_events) != len(set(best_events)):
               raise SystemExit("Duplicate events exist in bestBets")
+          if len(daily) == int(config["dailyAnalysisTarget"]):
+              if not set(best_events).issubset(set(daily_events)):
+                  raise SystemExit("Current best four is not selected from current fifteen")
+              if meta.get("bestBetsSourceAnalysisGeneratedAt") != meta.get("analysisGeneratedAt"):
+                  raise SystemExit("Current best four timestamp does not match current fifteen")
+              if meta.get("bestBetsSynchronizationPolicy") != "CURRENT_FIFTEEN_IMMEDIATELY_REANALYZED_TO_EXACT_FOUR":
+                  raise SystemExit("Best-four synchronization policy marker is missing")
 
           for item in daily:
               if float(item.get("bookmakerOdds") or item.get("odds") or 0) <= 1:
@@ -334,6 +342,6 @@ jobs:
             exit 0
           fi
 
-          git commit -m "V10 refresh sports analysis, results and virtual bank"
+          git commit -m "V10 R10 refresh current 15 and synchronized 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
