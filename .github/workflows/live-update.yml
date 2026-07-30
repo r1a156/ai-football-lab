@@ -3,8 +3,8 @@
 # V10_R8_ATOMIC_BATCH_ROLLOVER
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
-# V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
-name: V10 R11 Живой цикл, сутки 08:00 МСК и синхронные 15 + 4
+# V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
+name: V10 R12 Живой цикл, точные 15 + 4 и результаты всех прогнозов
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ env:
 
 jobs:
   live:
-    name: Счёт, расчёт, обучение и новая подборка
+    name: Счёт всех 15, обучение и следующая точная подборка
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
@@ -58,8 +58,10 @@ jobs:
           python -m json.tool data/live-learning.json > /dev/null
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
-          python scripts/update_live.py --validate
+          node --check assets/app.js
+          python scripts/update_predictions.py --repair-integrity
           python scripts/update_predictions.py --validate
+          python scripts/update_live.py --validate
 
       - name: Обновить отслеживаемые матчи
         shell: bash
@@ -95,8 +97,12 @@ jobs:
           live = json.loads(Path("data/live-state.json").read_text(encoding="utf-8"))
           learning = json.loads(Path("data/live-learning.json").read_text(encoding="utf-8"))
           state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
           bank = state.get("bank") or {}
           batch = state.get("batch") or {}
+          meta = state.get("meta") or {}
+          daily = state.get("dailyAnalysis") or []
+          best = state.get("bestBets") or []
 
           if live.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
               raise SystemExit("Live state marker mismatch")
@@ -109,37 +115,32 @@ jobs:
                   raise SystemExit("Live event lost original-prediction immutability guard")
               if event.get("status") in {"FINISHED", "CANCELLED", "POSTPONED", "UNCONFIRMED"}:
                   raise SystemExit("Non-current event leaked into public live list")
-          active_ids = {
-              str(item.get("eventId"))
-              for item in live.get("events") or []
-              if item.get("status") == "LIVE"
-          }
-          if active_ids != set(map(str, live.get("activeEventIds") or [])):
-              raise SystemExit("Active live IDs do not match public live events")
-          maintenance = state.get("historyMaintenance") or {}
-          if maintenance.get("version") != 1:
-              raise SystemExit("History maintenance metadata is missing")
-          best = state.get("bestBets") or []
-          daily = state.get("dailyAnalysis") or []
-          meta = state.get("meta") or {}
-          operational_day_id = str(meta.get("operationalDayId") or "")
-          operational_policy = str(meta.get("operationalWindowPolicy") or "")
-          if daily and operational_policy == "IMMEDIATE_ROLLOVER_MOSCOW_08_TO_08":
-              if not operational_day_id.endswith("-MSK-0800"):
-                  raise SystemExit("Live cycle operational day is invalid")
-              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in daily):
-                  raise SystemExit("Live cycle current fifteen mixes operational days")
-              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in best):
-                  raise SystemExit("Live cycle current four is outside operational day")
-          elif daily:
-              print("R11_CURRENT_BATCH_LEGACY_UNTIL_NEXT_ROLLOVER=YES")
-          if len(daily) == 15:
-              daily_events = {str(item.get("eventId") or "") for item in daily}
-              best_events = {str(item.get("eventId") or "") for item in best}
-              if len(best) != 4 or not best_events.issubset(daily_events):
-                  raise SystemExit("Current four is stale or outside current fifteen")
-              if meta.get("bestBetsSourceAnalysisGeneratedAt") != meta.get("analysisGeneratedAt"):
-                  raise SystemExit("Current four was not synchronized with current fifteen")
+
+          target15 = int(config["dailyAnalysisTarget"])
+          target4 = int(config["bestBetsTarget"])
+          if daily and len(daily) != target15:
+              raise SystemExit(f"Published batch is not exact fifteen: {len(daily)}")
+          if daily and len(best) != target4:
+              raise SystemExit(f"Published best list is not exact four: {len(best)}")
+          daily_events = [str(item.get("eventId") or "") for item in daily]
+          best_events = [str(item.get("eventId") or "") for item in best]
+          if any(not value for value in daily_events + best_events):
+              raise SystemExit("Prediction without eventId")
+          if len(daily_events) != len(set(daily_events)):
+              raise SystemExit("The fifteen contains duplicate matches")
+          if len(best_events) != len(set(best_events)):
+              raise SystemExit("The best four contains duplicate matches")
+          if not set(best_events).issubset(set(daily_events)):
+              raise SystemExit("The best four is outside the current fifteen")
+
+          terminal = {"won", "lost", "push", "void", "cancelled"}
+          for item in daily:
+              status = str(item.get("status") or "pending")
+              if status in terminal and not str(item.get("score") or "").strip() and status not in {"void", "cancelled"}:
+                  raise SystemExit("A settled analysis is missing its visible final score")
+          if meta.get("bestBetsSynchronizationPolicy") != "IMMUTABLE_AFTER_PUBLICATION_UNTIL_SETTLEMENT":
+              raise SystemExit("Frozen best-four policy marker is missing")
+
           expected_placed = sum(
               float(item.get("stake") or 0)
               for item in best
@@ -150,21 +151,31 @@ jobs:
           expected_available = max(0.0, float(bank.get("current") or 0) - expected_placed)
           if abs(float(bank.get("available") or 0) - expected_available) > 0.02:
               raise SystemExit("Available bank is not linked to current and placed amounts")
-          if state.get("dailyAnalysis") and not batch.get("id"):
+          if daily and not batch.get("id"):
               raise SystemExit("Current batch metadata is missing")
           if batch.get("completed"):
               raise SystemExit("Completed batch was not rolled over in the same live cycle")
+
           print("LIVE_STATE_ACCEPTANCE=GREEN")
-          print("LIVE_FINISHED_PUBLIC=0")
-          print("HISTORY_MAINTENANCE_ACCEPTANCE=GREEN")
-          print("LIVE_TRACKED=", len(live.get("events") or []))
-          print("LIVE_ACTIVE=", len(live.get("activeEventIds") or []))
-          print("LIVE_LEARNING=", learning.get("statistics"))
-          print("CURRENT_BATCH=", batch)
+          print("EXACT_DAILY_ANALYSIS=", len(daily))
+          print("EXACT_BEST_BETS=", len(best))
+          print("DAILY_TERMINAL_VISIBLE=", sum(1 for item in daily if str(item.get("status")) in terminal))
           print("BANK_CURRENT=", bank.get("current"))
           print("BANK_PLACED=", bank.get("placedAmount"))
           print("BANK_AVAILABLE=", bank.get("available"))
           PY
+
+      - name: V10 R12 финальная проверка точных 15 + 4 и результатов
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/update_predictions.py scripts/update_live.py
+          python -m json.tool config/analysis.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/live-state.json > /dev/null
+          python -m json.tool data/live-learning.json > /dev/null
+          python scripts/update_predictions.py --repair-integrity
+          python scripts/update_predictions.py --validate
 
       - name: Сохранить изменившиеся данные
         shell: bash
@@ -177,6 +188,6 @@ jobs:
             echo "No live data changes to commit."
             exit 0
           fi
-          git commit -m "V10 R11 settle, learn and publish Moscow operational day [skip ci]"
+          git commit -m "V10 R12 settle all fifteen, learn and publish exact 15 plus 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

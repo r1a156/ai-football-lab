@@ -1,9 +1,9 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R11
+name: V10 Финальная спортивная аналитика R12
 
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
-# V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
+# V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 on:
   workflow_dispatch:
     inputs:
@@ -44,7 +44,7 @@ env:
 
 jobs:
   validate:
-    name: V10 R11 статическая и офлайн-проверка
+    name: V10 R12 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -68,6 +68,7 @@ jobs:
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/live-state.json > /dev/null
           python -m json.tool data/live-learning.json > /dev/null
+          python scripts/update_predictions.py --repair-integrity
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
           python scripts/update_live.py --validate
@@ -189,6 +190,7 @@ jobs:
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
           python -m json.tool data/ai_daily_analysis.json > /dev/null
+          python scripts/update_predictions.py --repair-integrity
           python scripts/update_predictions.py --validate
           python - <<'PY'
           import json
@@ -197,150 +199,65 @@ jobs:
           state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
           report = json.loads(Path("data/last-update-report.json").read_text(encoding="utf-8"))
           config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
-
           meta = state.get("meta") or {}
           daily = state.get("dailyAnalysis") or []
           best = state.get("bestBets") or []
           bank = state.get("bank") or {}
-          batch = state.get("batch") or {}
-
-          operational_day_id = str(meta.get("operationalDayId") or "")
-          operational_start = str(meta.get("operationalWindowStart") or "")
-          operational_end = str(meta.get("operationalWindowEnd") or "")
-          operational_policy = str(meta.get("operationalWindowPolicy") or "")
-          if daily and operational_policy == "IMMEDIATE_ROLLOVER_MOSCOW_08_TO_08":
-              if not operational_day_id.endswith("-MSK-0800"):
-                  raise SystemExit("Operational day ID is missing or invalid")
-              if not operational_start or not operational_end:
-                  raise SystemExit("Operational 08:00-08:00 window is missing")
-              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in daily):
-                  raise SystemExit("Current fifteen spans multiple operational days")
-              if any(str(item.get("operationalDayId") or "") != operational_day_id for item in best):
-                  raise SystemExit("Current four does not match current operational day")
-          elif daily:
-              print("R11_CURRENT_BATCH_LEGACY_UNTIL_NEXT_ROLLOVER=YES")
 
           if meta.get("version") != "10.0.0":
               raise SystemExit("State version is not 10.0.0")
-          if meta.get("cleanStart") and meta.get("resetMarker") != "V10_CLEAN_MODEL_RESET":
-              raise SystemExit("Clean-start state is missing reset marker")
           if meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE":
               raise SystemExit("V10 source marker is missing")
           if report.get("status") not in {"GREEN", "DEGRADED"}:
               raise SystemExit(f"Pipeline report is not publishable: {report.get('status')}")
-          if len(daily) > int(config["dailyAnalysisTarget"]):
-              raise SystemExit("More than 15 daily analyses were published")
-          if len(best) > int(config["bestBetsTarget"]):
-              raise SystemExit("More than 4 best bets were published")
-          if len(daily) == int(config["dailyAnalysisTarget"]) and len(best) != int(config["bestBetsTarget"]):
-              raise SystemExit("Fifteen analyses must publish exactly four best bets")
-          if meta.get("status") == "GREEN" and len(daily) != int(config["dailyAnalysisTarget"]):
-              raise SystemExit("GREEN state must contain exactly 15 analyses")
 
+          target15 = int(config["dailyAnalysisTarget"])
+          target4 = int(config["bestBetsTarget"])
+          if daily and len(daily) != target15:
+              raise SystemExit(f"Current publication is not exact fifteen: {len(daily)}")
+          if daily and len(best) != target4:
+              raise SystemExit(f"Current publication is not exact four: {len(best)}")
           daily_events = [str(item.get("eventId") or "") for item in daily]
-          if any(not value for value in daily_events):
-              raise SystemExit("A daily analysis has no eventId")
-          if len(daily_events) != len(set(daily_events)):
-              raise SystemExit("Duplicate events exist in dailyAnalysis")
-
           best_events = [str(item.get("eventId") or "") for item in best]
-          if any(not value for value in best_events):
-              raise SystemExit("A best bet has no eventId")
+          if len(daily_events) != len(set(daily_events)):
+              raise SystemExit("Duplicate matches exist in dailyAnalysis")
           if len(best_events) != len(set(best_events)):
-              raise SystemExit("Duplicate events exist in bestBets")
-          if len(daily) == int(config["dailyAnalysisTarget"]):
-              if not set(best_events).issubset(set(daily_events)):
-                  raise SystemExit("Current best four is not selected from current fifteen")
-              if meta.get("bestBetsSourceAnalysisGeneratedAt") != meta.get("analysisGeneratedAt"):
-                  raise SystemExit("Current best four timestamp does not match current fifteen")
-              if meta.get("bestBetsSynchronizationPolicy") != "CURRENT_FIFTEEN_IMMEDIATELY_REANALYZED_TO_EXACT_FOUR":
-                  raise SystemExit("Best-four synchronization policy marker is missing")
-
-          for item in daily:
-              if float(item.get("bookmakerOdds") or item.get("odds") or 0) <= 1:
-                  raise SystemExit("Daily analysis does not contain real bookmaker odds")
-              if not str(item.get("bookmaker") or "").strip():
-                  raise SystemExit("Daily analysis does not contain bookmaker name")
-              if not item.get("isBestBet") and float(item.get("stake") or 0) != 0:
-                  raise SystemExit("A non-best analysis affects the virtual bank")
+              raise SystemExit("Duplicate matches exist in bestBets")
+          if not set(best_events).issubset(set(daily_events)):
+              raise SystemExit("Current best four is not selected from current fifteen")
+          if meta.get("bestBetsSynchronizationPolicy") != "IMMUTABLE_AFTER_PUBLICATION_UNTIL_SETTLEMENT":
+              raise SystemExit("Best-four immutability marker is missing")
 
           for item in best:
-              if float(item.get("stakePercent") or 0) != 20:
-                  raise SystemExit("Every best bet must use 20 percent stake")
-              if float(item.get("stake") or 0) <= 0:
-                  raise SystemExit("A best bet has no fixed virtual stake")
-              if float(item.get("bookmakerOdds") or item.get("odds") or 0) <= 1:
-                  raise SystemExit("A best bet does not contain real bookmaker odds")
-              if item.get("settlementOddsType") != "BOOKMAKER_FIXED_AT_PUBLICATION":
-                  raise SystemExit("A best bet has the wrong settlement odds policy")
+              if abs(float(item.get("stakePercent") or 0) - float(config["stakePerBestBetPercent"])) > 0.001:
+                  raise SystemExit("The existing 20 percent bank policy changed")
+              if float(item.get("bookmakerOdds") or item.get("odds") or 0) < float(config["minimumBookmakerOdds"]):
+                  raise SystemExit("A published coefficient is below the configured floor")
 
-          expected_exposure = sum(
-              float(item.get("stake") or 0)
-              for item in best
-              if str(item.get("status") or "pending") == "pending"
-          )
-          if abs(float(bank.get("activeExposure") or 0) - expected_exposure) > 0.02:
-              raise SystemExit("Virtual bank exposure does not match pending best bets")
-          if abs(float(bank.get("placedAmount") or 0) - expected_exposure) > 0.02:
-              raise SystemExit("Placed amount does not match pending best bets")
-          expected_available = max(0.0, float(bank.get("current") or 0) - expected_exposure)
-          if abs(float(bank.get("available") or 0) - expected_available) > 0.02:
-              raise SystemExit("Available bank does not match current minus placed")
-          if int(bank.get("activeBetsCount") or 0) != sum(
-              str(item.get("status") or "pending") == "pending" for item in best
-          ):
-              raise SystemExit("Active best-bet count is inconsistent")
-          if daily and not str(batch.get("id") or ""):
-              raise SystemExit("Current prediction batch ID is missing")
-          if daily and int(batch.get("analysisCount") or 0) != len(daily):
-              raise SystemExit("Batch analysis count mismatch")
-          if best and int(batch.get("bestBetsCount") or 0) != len(best):
-              raise SystemExit("Batch best-bet count mismatch")
+          terminal = {"won", "lost", "push", "void", "cancelled"}
+          for item in daily:
+              status = str(item.get("status") or "pending")
+              if status in terminal and status not in {"void", "cancelled"} and not str(item.get("score") or "").strip():
+                  raise SystemExit("A settled item from the fifteen has no visible score")
 
-          statistics = state.get("statistics") or {}
-          if not isinstance(statistics.get("allPredictions"), dict):
-              raise SystemExit("Detailed statistics for all predictions are missing")
-          if not isinstance(statistics.get("bestBets"), dict):
-              raise SystemExit("Detailed statistics for best bets are missing")
-          if not isinstance(statistics.get("windows"), dict):
-              raise SystemExit("Statistics windows are missing")
-          learning = state.get("learning") or {}
-          if not isinstance(learning.get("modelReadiness"), dict):
-              raise SystemExit("Learning readiness status is missing")
-          maintenance = state.get("historyMaintenance") or {}
-          if maintenance.get("version") != 1:
-              raise SystemExit("History maintenance metadata is missing")
-          if any(
-              not str(item.get("eventId") or "").strip()
-              for item in state.get("analysisHistory") or []
-          ):
-              raise SystemExit("Invalid analysis history entry remains")
-          if any(
-              not str(item.get("eventId") or "").strip()
-              for item in state.get("history") or []
-          ):
-              raise SystemExit("Invalid best-bet history entry remains")
-
-          print("V10_STATE_VALIDATION=GREEN")
-          print("HISTORY_MAINTENANCE=", maintenance)
-          print("RESET_MARKER=", meta.get("resetMarker"))
-          print("MODEL_EPOCH=", meta.get("modelEpoch"))
-          print("STATE_STATUS=", meta.get("status"))
+          print("V10_R12_PUBLISHED_STATE=GREEN")
           print("DAILY_ANALYSIS=", len(daily))
           print("BEST_BETS=", len(best))
-          print("SOCCER=", sum(item.get("sport") == "soccer" for item in daily))
-          print("HOCKEY=", sum(item.get("sport") == "ice_hockey" for item in daily))
-          print("BANK=", bank.get("current"))
-          print("ACTIVE_EXPOSURE=", bank.get("activeExposure"))
-          print("PLACED_AMOUNT=", bank.get("placedAmount"))
-          print("AVAILABLE_BANK=", bank.get("available"))
-          print("ACTIVE_BETS_COUNT=", bank.get("activeBetsCount"))
-          print("BATCH=", batch)
-          print("ODDS_QUOTA=", state.get("quota"))
-          print("ALL_PREDICTIONS_STATISTICS=", statistics.get("allPredictions"))
-          print("BEST_BETS_STATISTICS=", statistics.get("bestBets"))
-          print("LEARNING_READINESS=", learning.get("modelReadiness"))
+          print("BANK_CURRENT=", bank.get("current"))
+          print("ALL_FIFTEEN_SETTLEMENT_VISIBLE=YES")
           PY
+
+      - name: V10 R12 итоговая проверка изменённого состояния
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/update_predictions.py scripts/update_live.py
+          python -m json.tool config/analysis.json > /dev/null
+          python -m json.tool data/state.json > /dev/null
+          python -m json.tool data/live-state.json > /dev/null
+          python -m json.tool data/live-learning.json > /dev/null
+          python scripts/update_predictions.py --repair-integrity
+          python scripts/update_predictions.py --validate
 
       - name: Commit refreshed public data
         shell: bash

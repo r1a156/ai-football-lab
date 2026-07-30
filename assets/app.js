@@ -366,8 +366,13 @@
         const bestSelection = item.bestBetSelection;
         const pick = bestSelection?.pick || item.pick;
         const odds = bestSelection?.odds || item.bookmakerOdds || item.odds;
+        const status = String(item.status || "pending").toLowerCase();
+        const isTerminal = ["won", "lost", "push", "void", "cancelled"].includes(status);
+        const resultText = isTerminal
+            ? `${statusLabel(status)}${item.score ? ` · ${item.score}` : ""}`
+            : statusLabel(status);
         return `
-            <div class="analysis-row ${item.isBestBet ? "is-best" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
+            <div class="analysis-row ${item.isBestBet ? "is-best" : ""} ${isTerminal ? `is-${status}` : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
                 <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
                 <div class="analysis-match">
                     <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
@@ -378,6 +383,10 @@
                 <div class="analysis-pick">
                     <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
                     <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
+                </div>
+                <div class="analysis-result">
+                    <small>Результат</small>
+                    <strong class="status-chip ${statusClass(status)}">${escapeHtml(resultText)}</strong>
                 </div>
                 <div class="analysis-stats">
                     <div class="analysis-stat analysis-probability"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>

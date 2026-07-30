@@ -3271,3 +3271,62 @@ section[id] {
         justify-content: center;
     }
 }
+
+
+/* V10 R12: visible settlement result for every one of the fifteen forecasts. */
+.analysis-row {
+    grid-template-columns: 42px minmax(210px, 1.35fr) minmax(170px, .95fr) minmax(118px, .62fr) 92px 88px 88px 32px;
+}
+
+.analysis-result {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.analysis-result small {
+    color: var(--muted);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.analysis-result .status-chip {
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.analysis-row.is-won {
+    border-color: rgba(184, 255, 74, .28);
+}
+
+.analysis-row.is-lost {
+    border-color: rgba(255, 103, 122, .28);
+}
+
+@media (max-width: 1120px) {
+    .analysis-row {
+        grid-template-columns: 38px minmax(190px, 1.35fr) minmax(150px, .9fr) minmax(108px, .62fr) 80px 80px 28px;
+    }
+    .analysis-row .analysis-stat:nth-of-type(3) { display: none; }
+}
+
+@media (max-width: 760px) {
+    .analysis-row {
+        grid-template-columns: 30px minmax(0, 1fr) 22px;
+        grid-template-rows: auto auto auto auto;
+    }
+    .analysis-result {
+        grid-column: 2 / 4;
+        grid-row: 3;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+    }
+    .analysis-stats {
+        grid-column: 1 / -1;
+        grid-row: 4;
+    }
+}
