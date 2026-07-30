@@ -2,98 +2,23 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "rollover",
-  "startedAt": "2026-07-30T18:13:33Z",
-  "finishedAt": "2026-07-30T18:14:21Z",
+  "mode": "settle",
+  "startedAt": "2026-07-30T19:18:11Z",
+  "finishedAt": "2026-07-30T19:18:11Z",
   "diagnostics": {
-    "generated": true,
+    "generated": false,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
       "unresolved": 0
     },
     "duePending": 0,
-    "selectedSportKeys": [
-      "soccer_sweden_superettan",
-      "soccer_china_superleague",
-      "soccer_russia_premier_league",
-      "soccer_argentina_primera_division",
-      "soccer_poland_ekstraklasa",
-      "soccer_norway_eliteserien",
-      "soccer_conmebol_copa_sudamericana",
-      "soccer_austria_bundesliga",
-      "soccer_spl",
-      "soccer_mexico_ligamx",
-      "soccer_korea_kleague1",
-      "soccer_finland_veikkausliiga",
-      "soccer_brazil_campeonato",
-      "soccer_league_of_ireland",
-      "soccer_chile_campeonato",
-      "soccer_switzerland_superleague"
-    ],
-    "discovery": {
-      "activeSports": 42,
-      "events": 58,
-      "soccerEvents": 58,
-      "hockeyEvents": 0,
-      "windowHours": 48,
-      "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
-      "operationalDateLocal": "2026-07-30",
-      "operationalWindowStart": "2026-07-30T18:58:33Z",
-      "operationalWindowEnd": "2026-08-01T18:13:33Z",
-      "queryWindowStart": "2026-07-30T18:58:33Z",
-      "queryWindowEnd": "2026-08-01T18:13:33Z",
-      "windowStartLocal": "2026-07-30T21:58:33.391497+03:00",
-      "windowEndLocal": "2026-08-01T21:13:33.391497+03:00",
-      "durationHours": 48,
-      "operationalWindowPolicy": "PROGRESSIVE_FUTURE_SEARCH_UNTIL_EXACT_FIFTEEN",
-      "attempts": [
-        {
-          "windowHours": 24,
-          "events": 15,
-          "soccerEvents": 15,
-          "hockeyEvents": 0,
-          "enough": false
-        },
-        {
-          "windowHours": 36,
-          "events": 25,
-          "soccerEvents": 25,
-          "hockeyEvents": 0,
-          "enough": false
-        },
-        {
-          "windowHours": 48,
-          "events": 58,
-          "soccerEvents": 58,
-          "hockeyEvents": 0,
-          "enough": true
-        }
-      ],
-      "errors": []
-    },
-    "analysis": {
-      "oddsEvents": 54,
-      "eventsWithQuotes": 54,
-      "eventsWithAnalysis": 54,
-      "marketCandidates": 337,
-      "bySport": {
-        "soccer": 54
-      },
-      "byMarketFamily": {
-        "TOTAL": 179,
-        "HANDICAP": 119,
-        "OUTCOME": 33,
-        "BTTS": 6
-      },
-      "publishedAnalysis": 15,
-      "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
-      "minimumOdds": 1.35,
-      "preferredMinimumOdds": 1.55
-    },
+    "selectedSportKeys": [],
+    "discovery": {},
+    "analysis": {},
     "dailyAnalysis": 15,
     "bestBets": 4,
-    "newBestBets": 4,
+    "newBestBets": 0,
     "bestBetsSynchronization": {
       "changed": false,
       "reason": "CURRENT_BATCH_FROZEN_AT_PUBLICATION",
@@ -106,17 +31,20 @@
       "id": "batch-8183ffda550dc28ef9ec",
       "sequence": 2,
       "status": "ACTIVE",
-      "statusLabel": "Подборка активна",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-30T18:13:33Z",
+      "updatedAt": "2026-07-30T19:18:11Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 0,
       "terminalBestBetsCount": 0,
       "pendingAnalysisCount": 15,
       "pendingBestBetsCount": 4,
-      "activeBestBetsCount": 4,
       "completed": false,
+      "placedAmount": 11066.44,
+      "availableAmount": 2766.62,
+      "startingBank": 13833.06,
+      "statusLabel": "Подборка активна",
+      "activeBestBetsCount": 4,
       "completedAt": null,
       "eventIds": [
         "4f68110ae33722f386ddcd2aa17cc01c",
@@ -141,10 +69,7 @@
         "b2dafd55f589fced90359c3f3bfe6f09",
         "2f75420bd3bb24996d73b1e23cecd77b"
       ],
-      "startingBank": 13833.06,
       "currentBank": 13833.06,
-      "placedAmount": 11066.44,
-      "availableAmount": 2766.62,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -152,514 +77,18 @@
       "selectionWindowEnd": "2026-08-01T18:13:33Z",
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
-    "batchRollover": true,
-    "footballDataMatches": 532,
+    "batchRollover": false,
+    "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "220",
-      "requestsUsed": "280",
-      "requestsLast": "4",
-      "estimatedCreditsThisRun": 68,
-      "calls": 80,
-      "updatedAt": "2026-07-30T18:13:33Z"
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-07-30T19:18:11Z"
     },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-23:2026-08-01",
-        "status": 200,
-        "elapsedSeconds": 1.323
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-13:2026-07-22",
-        "status": 200,
-        "elapsedSeconds": 1.226
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-03:2026-07-12",
-        "status": 200,
-        "elapsedSeconds": 1.305
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-06-23:2026-07-02",
-        "status": 200,
-        "elapsedSeconds": 1.455
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-06-13:2026-06-22",
-        "status": 200,
-        "elapsedSeconds": 1.605
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-06-03:2026-06-12",
-        "status": 200,
-        "elapsedSeconds": 1.395
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-05-24:2026-06-02",
-        "status": 200,
-        "elapsedSeconds": 2.033
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-05-14:2026-05-23",
-        "status": 200,
-        "elapsedSeconds": 1.701
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-05-04:2026-05-13",
-        "status": 200,
-        "elapsedSeconds": 2.008
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-24:2026-05-03",
-        "status": 200,
-        "elapsedSeconds": 2.588
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-14:2026-04-23",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 42 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-14:2026-04-23",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 40 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-14:2026-04-23",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 37 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-04:2026-04-13",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 36 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-04:2026-04-13",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 34 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-04:2026-04-13",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 31 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-01:2026-04-03",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 30 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-01:2026-04-03",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 28 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-04-01:2026-04-03",
-        "status": 429,
-        "error": "{\"message\":\"You reached your request limit. Wait 25 seconds.\",\"errorCode\":429}"
-      },
-      {
-        "label": "ODDS_SPORTS",
-        "status": 200,
-        "elapsedSeconds": 0.145
-      },
-      {
-        "label": "EVENTS:soccer_china_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.122
-      },
-      {
-        "label": "EVENTS:soccer_belgium_first_div",
-        "status": 200,
-        "elapsedSeconds": 0.124
-      },
-      {
-        "label": "EVENTS:soccer_brazil_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.125
-      },
-      {
-        "label": "EVENTS:soccer_chile_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.126
-      },
-      {
-        "label": "EVENTS:soccer_austria_bundesliga",
-        "status": 200,
-        "elapsedSeconds": 0.13
-      },
-      {
-        "label": "EVENTS:soccer_brazil_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.13
-      },
-      {
-        "label": "EVENTS:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.133
-      },
-      {
-        "label": "EVENTS:icehockey_nhl",
-        "status": 200,
-        "elapsedSeconds": 0.137
-      },
-      {
-        "label": "EVENTS:soccer_england_league1",
-        "status": 200,
-        "elapsedSeconds": 0.116
-      },
-      {
-        "label": "EVENTS:soccer_conmebol_copa_libertadores",
-        "status": 200,
-        "elapsedSeconds": 0.128
-      },
-      {
-        "label": "EVENTS:soccer_england_league2",
-        "status": 200,
-        "elapsedSeconds": 0.124
-      },
-      {
-        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
-        "status": 200,
-        "elapsedSeconds": 0.134
-      },
-      {
-        "label": "EVENTS:soccer_denmark_superliga",
-        "status": 200,
-        "elapsedSeconds": 0.134
-      },
-      {
-        "label": "EVENTS:soccer_epl",
-        "status": 200,
-        "elapsedSeconds": 0.126
-      },
-      {
-        "label": "EVENTS:soccer_efl_champ",
-        "status": 200,
-        "elapsedSeconds": 0.14
-      },
-      {
-        "label": "EVENTS:soccer_england_efl_cup",
-        "status": 200,
-        "elapsedSeconds": 0.142
-      },
-      {
-        "label": "EVENTS:soccer_finland_veikkausliiga",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_germany_liga3",
-        "status": 200,
-        "elapsedSeconds": 0.089
-      },
-      {
-        "label": "EVENTS:soccer_greece_super_league",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_germany_bundesliga2",
-        "status": 200,
-        "elapsedSeconds": 0.1
-      },
-      {
-        "label": "EVENTS:soccer_germany_bundesliga",
-        "status": 200,
-        "elapsedSeconds": 0.105
-      },
-      {
-        "label": "EVENTS:soccer_france_ligue_one",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_germany_dfb_pokal",
-        "status": 200,
-        "elapsedSeconds": 0.122
-      },
-      {
-        "label": "EVENTS:soccer_italy_serie_a",
-        "status": 200,
-        "elapsedSeconds": 0.12
-      },
-      {
-        "label": "EVENTS:soccer_italy_serie_b",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_korea_kleague1",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_netherlands_eredivisie",
-        "status": 200,
-        "elapsedSeconds": 0.126
-      },
-      {
-        "label": "EVENTS:soccer_league_of_ireland",
-        "status": 200,
-        "elapsedSeconds": 0.157
-      },
-      {
-        "label": "EVENTS:soccer_mexico_ligamx",
-        "status": 200,
-        "elapsedSeconds": 0.138
-      },
-      {
-        "label": "EVENTS:soccer_norway_eliteserien",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_portugal_primeira_liga",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_poland_ekstraklasa",
-        "status": 200,
-        "elapsedSeconds": 0.108
-      },
-      {
-        "label": "EVENTS:soccer_russia_premier_league",
-        "status": 200,
-        "elapsedSeconds": 0.104
-      },
-      {
-        "label": "EVENTS:soccer_spain_la_liga",
-        "status": 200,
-        "elapsedSeconds": 0.119
-      },
-      {
-        "label": "EVENTS:soccer_spl",
-        "status": 200,
-        "elapsedSeconds": 0.103
-      },
-      {
-        "label": "EVENTS:soccer_sweden_allsvenskan",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "EVENTS:soccer_france_ligue_one",
-        "status": 200,
-        "elapsedSeconds": 0.101
-      },
-      {
-        "label": "EVENTS:soccer_greece_super_league",
-        "status": 200,
-        "elapsedSeconds": 0.107
-      },
-      {
-        "label": "EVENTS:soccer_finland_veikkausliiga",
-        "status": 200,
-        "elapsedSeconds": 0.123
-      },
-      {
-        "label": "EVENTS:soccer_korea_kleague1",
-        "status": 200,
-        "elapsedSeconds": 0.12
-      },
-      {
-        "label": "EVENTS:soccer_sweden_superettan",
-        "status": 200,
-        "elapsedSeconds": 0.129
-      },
-      {
-        "label": "EVENTS:soccer_italy_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.144
-      },
-      {
-        "label": "EVENTS:soccer_turkey_super_league",
-        "status": 200,
-        "elapsedSeconds": 0.129
-      },
-      {
-        "label": "EVENTS:soccer_switzerland_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.138
-      },
-      {
-        "label": "EVENTS:soccer_uefa_champs_league_qualification",
-        "status": 200,
-        "elapsedSeconds": 0.11
-      },
-      {
-        "label": "EVENTS:soccer_uefa_nations_league",
-        "status": 200,
-        "elapsedSeconds": 0.106
-      },
-      {
-        "label": "EVENTS:soccer_usa_mls",
-        "status": 200,
-        "elapsedSeconds": 0.106
-      },
-      {
-        "label": "EVENTS:soccer_portugal_primeira_liga",
-        "status": 200,
-        "elapsedSeconds": 0.126
-      },
-      {
-        "label": "EVENTS:soccer_norway_eliteserien",
-        "status": 200,
-        "elapsedSeconds": 0.16
-      },
-      {
-        "label": "EVENTS:soccer_sweden_allsvenskan",
-        "status": 200,
-        "elapsedSeconds": 0.128
-      },
-      {
-        "label": "ODDS:soccer_poland_ekstraklasa",
-        "status": 200,
-        "elapsedSeconds": 0.104
-      },
-      {
-        "label": "ODDS:soccer_russia_premier_league",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "ODDS:soccer_argentina_primera_division",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "ODDS:soccer_sweden_superettan",
-        "status": 200,
-        "elapsedSeconds": 0.124
-      },
-      {
-        "label": "ODDS:soccer_norway_eliteserien",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "ODDS:soccer_china_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.182
-      },
-      {
-        "label": "ODDS:soccer_conmebol_copa_sudamericana",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "ODDS:soccer_austria_bundesliga",
-        "status": 200,
-        "elapsedSeconds": 0.168
-      },
-      {
-        "label": "ODDS:soccer_spl",
-        "status": 200,
-        "elapsedSeconds": 0.131
-      },
-      {
-        "label": "ODDS:soccer_mexico_ligamx",
-        "status": 429,
-        "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-      },
-      {
-        "label": "ODDS:soccer_korea_kleague1",
-        "status": 200,
-        "elapsedSeconds": 0.124
-      },
-      {
-        "label": "ODDS:soccer_finland_veikkausliiga",
-        "status": 200,
-        "elapsedSeconds": 0.173
-      },
-      {
-        "label": "ODDS:soccer_brazil_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.14
-      },
-      {
-        "label": "ODDS:soccer_league_of_ireland",
-        "status": 200,
-        "elapsedSeconds": 0.098
-      },
-      {
-        "label": "ODDS:soccer_chile_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.166
-      },
-      {
-        "label": "ODDS:soccer_switzerland_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.166
-      },
-      {
-        "label": "ODDS:soccer_russia_premier_league",
-        "status": 200,
-        "elapsedSeconds": 0.103
-      },
-      {
-        "label": "ODDS:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.122
-      },
-      {
-        "label": "ODDS:soccer_norway_eliteserien",
-        "status": 200,
-        "elapsedSeconds": 0.105
-      },
-      {
-        "label": "ODDS:soccer_conmebol_copa_sudamericana",
-        "status": 200,
-        "elapsedSeconds": 0.106
-      },
-      {
-        "label": "ODDS:soccer_mexico_ligamx",
-        "status": 200,
-        "elapsedSeconds": 0.109
-      },
-      {
-        "label": "MARKETS:4f68110ae33722f386ddcd2aa17cc01c",
-        "status": 200,
-        "elapsedSeconds": 0.113
-      },
-      {
-        "label": "ADVANCED_ODDS:4f68110ae33722f386ddcd2aa17cc01c",
-        "status": 200,
-        "elapsedSeconds": 0.147
-      },
-      {
-        "label": "MARKETS:778e839e022a74281964ba60cb664d06",
-        "status": 200,
-        "elapsedSeconds": 0.109
-      },
-      {
-        "label": "ADVANCED_ODDS:778e839e022a74281964ba60cb664d06",
-        "status": 200,
-        "elapsedSeconds": 0.115
-      },
-      {
-        "label": "MARKETS:b2dafd55f589fced90359c3f3bfe6f09",
-        "status": 200,
-        "elapsedSeconds": 0.126
-      },
-      {
-        "label": "ADVANCED_ODDS:b2dafd55f589fced90359c3f3bfe6f09",
-        "status": 200,
-        "elapsedSeconds": 0.108
-      },
-      {
-        "label": "MARKETS:7ee0fd8fbe0523f9720434983a72003c",
-        "status": 200,
-        "elapsedSeconds": 0.111
-      },
-      {
-        "label": "ADVANCED_ODDS:7ee0fd8fbe0523f9720434983a72003c",
-        "status": 200,
-        "elapsedSeconds": 0.13
-      }
-    ]
+    "apiCalls": []
   },
   "warnings": [],
   "errors": []
