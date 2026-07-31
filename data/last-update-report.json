@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
-  "mode": "auto",
-  "startedAt": "2026-07-31T22:17:10Z",
-  "finishedAt": "2026-07-31T22:17:11Z",
+  "mode": "settle",
+  "startedAt": "2026-07-31T22:30:07Z",
+  "finishedAt": "2026-07-31T22:30:07Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 1,
+      "analysisSettled": 0,
       "bestBetsSettled": 0,
-      "unresolved": 5
+      "unresolved": 0
     },
-    "duePending": 1,
+    "duePending": 0,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-31T22:17:10Z",
+      "updatedAt": "2026-07-31T22:30:07Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 11,
@@ -78,28 +78,17 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 20,
+    "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "193",
-      "requestsUsed": "307",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 2,
-      "calls": 1,
-      "updatedAt": "2026-07-31T22:17:10Z"
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-07-31T22:30:07Z"
     },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-24:2026-08-02",
-        "status": 200,
-        "elapsedSeconds": 1.551
-      },
-      {
-        "label": "SCORES:soccer_spl",
-        "status": 200,
-        "elapsedSeconds": 0.091
-      }
-    ]
+    "apiCalls": []
   },
   "warnings": [],
   "errors": []
