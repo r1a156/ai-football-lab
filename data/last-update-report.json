@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "settle",
-  "startedAt": "2026-07-31T01:54:59Z",
-  "finishedAt": "2026-07-31T01:55:05Z",
+  "mode": "auto",
+  "startedAt": "2026-07-31T03:54:16Z",
+  "finishedAt": "2026-07-31T03:54:18Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 2,
-      "bestBetsSettled": 1,
-      "unresolved": 14
+      "analysisSettled": 5,
+      "bestBetsSettled": 0,
+      "unresolved": 9
     },
-    "duePending": 2,
+    "duePending": 5,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-31T01:54:59Z",
+      "updatedAt": "2026-07-31T03:54:16Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 3,
+      "terminalAnalysisCount": 8,
       "terminalBestBetsCount": 2,
-      "pendingAnalysisCount": 12,
+      "pendingAnalysisCount": 7,
       "pendingBestBetsCount": 2,
       "completed": false,
       "placedAmount": 5533.22,
@@ -81,28 +81,33 @@
     "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "209",
-      "requestsUsed": "291",
+      "requestsRemaining": "203",
+      "requestsUsed": "297",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 4,
-      "calls": 2,
-      "updatedAt": "2026-07-31T01:54:59Z"
+      "estimatedCreditsThisRun": 6,
+      "calls": 3,
+      "updatedAt": "2026-07-31T03:54:16Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-24:2026-08-02",
         "status": 200,
-        "elapsedSeconds": 5.271
+        "elapsedSeconds": 1.54
       },
       {
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.245
+        "elapsedSeconds": 0.228
+      },
+      {
+        "label": "SCORES:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.137
       },
       {
         "label": "SCORES:soccer_conmebol_copa_sudamericana",
         "status": 200,
-        "elapsedSeconds": 0.099
+        "elapsedSeconds": 0.251
       }
     ]
   },
