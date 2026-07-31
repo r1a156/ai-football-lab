@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
-  "mode": "settle",
-  "startedAt": "2026-07-31T13:03:42Z",
-  "finishedAt": "2026-07-31T13:03:42Z",
+  "mode": "auto",
+  "startedAt": "2026-07-31T14:39:44Z",
+  "finishedAt": "2026-07-31T14:39:46Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 0
+      "analysisSettled": 1,
+      "bestBetsSettled": 1,
+      "unresolved": 7
     },
-    "duePending": 0,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,19 +32,19 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-31T13:03:42Z",
+      "updatedAt": "2026-07-31T14:39:44Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 8,
-      "terminalBestBetsCount": 2,
-      "pendingAnalysisCount": 7,
-      "pendingBestBetsCount": 2,
+      "terminalAnalysisCount": 9,
+      "terminalBestBetsCount": 3,
+      "pendingAnalysisCount": 6,
+      "pendingBestBetsCount": 1,
       "completed": false,
-      "placedAmount": 5533.22,
-      "availableAmount": 8106.18,
+      "placedAmount": 2766.61,
+      "availableAmount": 12532.76,
       "startingBank": 13833.06,
       "statusLabel": "Рассчитываются результаты",
-      "activeBestBetsCount": 2,
+      "activeBestBetsCount": 1,
       "completedAt": null,
       "eventIds": [
         "4f68110ae33722f386ddcd2aa17cc01c",
@@ -69,7 +69,7 @@
         "b2dafd55f589fced90359c3f3bfe6f09",
         "2f75420bd3bb24996d73b1e23cecd77b"
       ],
-      "currentBank": 13639.4,
+      "currentBank": 15299.37,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -78,17 +78,28 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-07-31T13:03:42Z"
+      "requestsRemaining": "200",
+      "requestsUsed": "300",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-07-31T14:39:44Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-24:2026-08-02",
+        "status": 200,
+        "elapsedSeconds": 1.713
+      },
+      {
+        "label": "SCORES:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.274
+      }
+    ]
   },
   "warnings": [
     "The current prediction batch is still active; overlapping generation was blocked."
