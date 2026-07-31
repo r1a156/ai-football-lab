@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-07-30T23:52:16Z",
+    "updatedAt": "2026-07-31T01:55:06Z",
     "analysisDateLocal": "2026-07-30",
     "status": "GREEN",
     "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
@@ -86,7 +86,7 @@
     "stakePerPredictionPercent": 20.0,
     "maximumDailyExposurePercent": 80.0,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-    "migrationAt": "2026-07-30T23:52:16Z",
+    "migrationAt": "2026-07-31T01:55:06Z",
     "analysisGeneratedAt": "2026-07-30T18:13:33Z",
     "analysisTarget": 15,
     "analysisPublished": 15,
@@ -103,20 +103,20 @@
     "predictionObjective": "MAXIMUM_CALIBRATED_PASS_PROBABILITY_WITH_NONTRIVIAL_ODDS",
     "publicationPolicy": "EXACTLY_FIFTEEN_DISTINCT_MATCHES_EXACTLY_FOUR_MAX_HIT_RATE_BEST_BETS",
     "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-    "lastSuccessfulRefreshAt": "2026-07-30T23:52:16Z",
+    "lastSuccessfulRefreshAt": "2026-07-31T01:54:59Z",
     "apiHealth": {
       "status": "GREEN",
-      "calls": 0,
+      "calls": 3,
       "errors": 0,
       "lastErrors": []
     },
-    "historyUpdatedAt": "2026-07-30T23:52:16Z",
-    "liveSettlementAt": "2026-07-30T23:52:16Z",
+    "historyUpdatedAt": "2026-07-31T01:54:59Z",
+    "liveSettlementAt": "2026-07-31T01:54:59Z",
     "currentBatchId": "batch-8183ffda550dc28ef9ec",
     "batchSequence": 2,
-    "batchStatus": "ACTIVE",
-    "batchStatusLabel": "Подборка активна",
-    "batchUpdatedAt": "2026-07-30T23:52:16Z",
+    "batchStatus": "SETTLING",
+    "batchStatusLabel": "Рассчитываются результаты",
+    "batchUpdatedAt": "2026-07-31T01:55:06Z",
     "batchGenerationBlockedAt": "2026-07-29T17:53:29Z",
     "batchGenerationBlockedReason": "CURRENT_BATCH_NOT_TERMINAL",
     "bestBetsSourceAnalysisGeneratedAt": "2026-07-30T18:13:33Z",
@@ -444,10 +444,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "profit": 0.0,
@@ -461,6 +461,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
+      "statusLabel": "Проигрыш",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "LIVE_CONFIRMED_FINAL",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z",
       "stakePercent": 20.0,
       "bestBetSelection": {
         "id": "bet-30764579a953f3980f93",
@@ -800,7 +806,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-c32d02f56644c8a66340",
@@ -993,10 +1000,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:1",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "profit": 0.0,
@@ -1010,6 +1017,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
+      "statusLabel": "Выигрыш",
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z",
       "stakePercent": 20.0,
       "bestBetSelection": {
         "id": "bet-f34fa34b4ea7a79c192d",
@@ -1330,10 +1343,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "1:3",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -1346,7 +1359,13 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Выигрыш",
+      "homeScore": 1,
+      "awayScore": 3,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "analysis-4f988506f6b7d4cc649f",
@@ -1629,7 +1648,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-3621329edaadfb146c01",
@@ -1787,7 +1807,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-44d36bdc59bf3b703f72",
@@ -2110,7 +2131,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-c606a534da2b517268c1",
@@ -2392,7 +2414,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-ec2a597df30624722c47",
@@ -2507,7 +2530,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-71ed4217c4b1ade831d8",
@@ -2829,6 +2853,7 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается",
       "stakePercent": 20.0,
       "bestBetSelection": {
         "id": "bet-2d1c8a1a3b43fcdebd0a",
@@ -3080,7 +3105,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-8b5bbf79fbded87de06c",
@@ -3405,7 +3431,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-ef5321e422271fe7049e",
@@ -3730,7 +3757,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     },
     {
       "id": "analysis-2e01a8cb761046946861",
@@ -4053,6 +4081,7 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается",
       "stakePercent": 20.0,
       "bestBetSelection": {
         "id": "bet-39081d38d4f03d85d557",
@@ -4388,7 +4417,8 @@
       "selectionGeneratedAt": "2026-07-30T18:13:33Z",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "statusLabel": "Ожидается"
     }
   ],
   "bestBets": [
@@ -4698,14 +4728,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": -2766.61,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -4722,14 +4752,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Лучшая ставка дня",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "LIVE_CONFIRMED_FINAL",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-f34fa34b4ea7a79c192d",
@@ -4922,14 +4957,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:1",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": 2572.95,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -4946,14 +4981,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Ставка №2",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Выигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-2d1c8a1a3b43fcdebd0a",
@@ -5944,14 +5984,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": -2766.61,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -5968,14 +6008,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Лучшая ставка дня",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "LIVE_CONFIRMED_FINAL",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-f34fa34b4ea7a79c192d",
@@ -6168,14 +6213,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:1",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": 2572.95,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -6192,14 +6237,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Ставка №2",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Выигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-2d1c8a1a3b43fcdebd0a",
@@ -13469,10 +13519,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "profit": 0.0,
@@ -13497,7 +13547,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается"
+      "statusLabel": "Проигрыш",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "LIVE_CONFIRMED_FINAL",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "analysis-bb01c00dd4ea9a102569",
@@ -14020,10 +14075,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:1",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "profit": 0.0,
@@ -14048,7 +14103,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается"
+      "statusLabel": "Выигрыш",
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "analysis-be58a25ee86dc1e8e301",
@@ -14358,10 +14418,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "1:3",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -14375,7 +14435,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается"
+      "statusLabel": "Выигрыш",
+      "homeScore": 1,
+      "awayScore": 3,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "analysis-4f988506f6b7d4cc649f",
@@ -20804,14 +20869,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": -2766.61,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -20828,14 +20893,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Лучшая ставка дня",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "LIVE_CONFIRMED_FINAL",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-f34fa34b4ea7a79c192d",
@@ -21028,14 +21098,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:1",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T01:54:59Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": 2572.95,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -21052,14 +21122,19 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Ставка №2",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Выигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR",
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T01:54:59Z"
     },
     {
       "id": "bet-2d1c8a1a3b43fcdebd0a",
@@ -21745,11 +21820,11 @@
   ],
   "bank": {
     "starting": 10000.0,
-    "current": 13833.06,
+    "current": 13639.4,
     "stakePercent": 20,
-    "roi": 38.33,
-    "maxDrawdown": 20.0,
-    "activeExposure": 11066.44,
+    "roi": 36.39,
+    "maxDrawdown": 36.0,
+    "activeExposure": 5533.22,
     "history": [
       {
         "date": "2026-07-17",
@@ -21869,162 +21944,182 @@
         "eventId": "f858d26e25a166ffd0ea372e3efa3520",
         "match": "Red Star Belgrade — Larne FC",
         "profit": -3458.27
+      },
+      {
+        "date": "2026-07-31",
+        "timestamp": "2026-07-31T01:54:59Z",
+        "value": 11066.45,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-30764579a953f3980f93",
+        "eventId": "4f68110ae33722f386ddcd2aa17cc01c",
+        "match": "Corinthians — Atletico Paranaense",
+        "profit": -2766.61
+      },
+      {
+        "date": "2026-07-31",
+        "timestamp": "2026-07-31T01:54:59Z",
+        "value": 13639.4,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-f34fa34b4ea7a79c192d",
+        "eventId": "c56c0611b78cf2c9b19aaf7403def23b",
+        "match": "Grêmio — Club Bolívar",
+        "profit": 2572.95
       }
     ],
-    "placedAmount": 11066.44,
-    "activeBetsCount": 4,
-    "available": 2766.62,
-    "closedBalance": 13833.06
+    "placedAmount": 5533.22,
+    "activeBetsCount": 2,
+    "available": 8106.18,
+    "closedBalance": 13639.4
   },
   "statistics": {
-    "analysisAccuracy": 60.0,
-    "bestBetsAccuracy": 63.6,
-    "averageOdds": 1.66,
-    "currentStreak": "2 проигрышных подряд",
-    "bestSegment": "HANDICAP · 70.0%",
-    "settledAnalyses": 25,
-    "settledBestBets": 11,
-    "wonBestBets": 7,
-    "lostBestBets": 4,
+    "analysisAccuracy": 60.7,
+    "bestBetsAccuracy": 61.5,
+    "averageOdds": 1.68,
+    "currentStreak": "1 выигрышных подряд",
+    "bestSegment": "HANDICAP · 72.7%",
+    "settledAnalyses": 28,
+    "settledBestBets": 13,
+    "wonBestBets": 8,
+    "lostBestBets": 5,
     "pushBestBets": 0,
-    "pendingBestBets": 4,
+    "pendingBestBets": 2,
     "allPredictions": {
       "total": 40,
-      "settled": 25,
-      "decided": 25,
-      "won": 15,
-      "lost": 10,
+      "settled": 28,
+      "decided": 28,
+      "won": 17,
+      "lost": 11,
       "push": 0,
       "void": 0,
       "unresolved": 0,
-      "pending": 15,
-      "accuracy": 60.0,
+      "pending": 12,
+      "accuracy": 60.7,
       "profit": 0.0
     },
     "bestBets": {
       "total": 31,
-      "settled": 11,
-      "decided": 11,
-      "won": 7,
-      "lost": 4,
+      "settled": 13,
+      "decided": 13,
+      "won": 8,
+      "lost": 5,
       "push": 0,
       "void": 16,
       "unresolved": 0,
-      "pending": 4,
-      "accuracy": 63.6,
-      "profit": 3833.06
+      "pending": 2,
+      "accuracy": 61.5,
+      "profit": 3639.4
     },
     "windows": {
       "7": {
         "allPredictions": {
           "total": 40,
-          "settled": 25,
-          "decided": 25,
-          "won": 15,
-          "lost": 10,
+          "settled": 28,
+          "decided": 28,
+          "won": 17,
+          "lost": 11,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 15,
-          "accuracy": 60.0,
+          "pending": 12,
+          "accuracy": 60.7,
           "profit": 0.0
         },
         "bestBets": {
           "total": 31,
-          "settled": 11,
-          "decided": 11,
-          "won": 7,
-          "lost": 4,
+          "settled": 13,
+          "decided": 13,
+          "won": 8,
+          "lost": 5,
           "push": 0,
           "void": 16,
           "unresolved": 0,
-          "pending": 4,
-          "accuracy": 63.6,
-          "profit": 3833.06
+          "pending": 2,
+          "accuracy": 61.5,
+          "profit": 3639.4
         }
       },
       "30": {
         "allPredictions": {
           "total": 40,
-          "settled": 25,
-          "decided": 25,
-          "won": 15,
-          "lost": 10,
+          "settled": 28,
+          "decided": 28,
+          "won": 17,
+          "lost": 11,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 15,
-          "accuracy": 60.0,
+          "pending": 12,
+          "accuracy": 60.7,
           "profit": 0.0
         },
         "bestBets": {
           "total": 31,
-          "settled": 11,
-          "decided": 11,
-          "won": 7,
-          "lost": 4,
+          "settled": 13,
+          "decided": 13,
+          "won": 8,
+          "lost": 5,
           "push": 0,
           "void": 16,
           "unresolved": 0,
-          "pending": 4,
-          "accuracy": 63.6,
-          "profit": 3833.06
+          "pending": 2,
+          "accuracy": 61.5,
+          "profit": 3639.4
         }
       },
       "90": {
         "allPredictions": {
           "total": 40,
-          "settled": 25,
-          "decided": 25,
-          "won": 15,
-          "lost": 10,
+          "settled": 28,
+          "decided": 28,
+          "won": 17,
+          "lost": 11,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 15,
-          "accuracy": 60.0,
+          "pending": 12,
+          "accuracy": 60.7,
           "profit": 0.0
         },
         "bestBets": {
           "total": 31,
-          "settled": 11,
-          "decided": 11,
-          "won": 7,
-          "lost": 4,
+          "settled": 13,
+          "decided": 13,
+          "won": 8,
+          "lost": 5,
           "push": 0,
           "void": 16,
           "unresolved": 0,
-          "pending": 4,
-          "accuracy": 63.6,
-          "profit": 3833.06
+          "pending": 2,
+          "accuracy": 61.5,
+          "profit": 3639.4
         }
       },
       "all": {
         "allPredictions": {
           "total": 40,
-          "settled": 25,
-          "decided": 25,
-          "won": 15,
-          "lost": 10,
+          "settled": 28,
+          "decided": 28,
+          "won": 17,
+          "lost": 11,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 15,
-          "accuracy": 60.0,
+          "pending": 12,
+          "accuracy": 60.7,
           "profit": 0.0
         },
         "bestBets": {
           "total": 31,
-          "settled": 11,
-          "decided": 11,
-          "won": 7,
-          "lost": 4,
+          "settled": 13,
+          "decided": 13,
+          "won": 8,
+          "lost": 5,
           "push": 0,
           "void": 16,
           "unresolved": 0,
-          "pending": 4,
-          "accuracy": 63.6,
-          "profit": 3833.06
+          "pending": 2,
+          "accuracy": 61.5,
+          "profit": 3639.4
         }
       }
     },
@@ -22032,15 +22127,15 @@
       {
         "key": "Футбол",
         "total": 40,
-        "settled": 25,
-        "decided": 25,
-        "won": 15,
-        "lost": 10,
+        "settled": 28,
+        "decided": 28,
+        "won": 17,
+        "lost": 11,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 15,
-        "accuracy": 60.0,
+        "pending": 12,
+        "accuracy": 60.7,
         "profit": 0.0
       }
     ],
@@ -22048,29 +22143,29 @@
       {
         "key": "TOTAL",
         "total": 27,
-        "settled": 15,
-        "decided": 15,
-        "won": 8,
-        "lost": 7,
+        "settled": 17,
+        "decided": 17,
+        "won": 9,
+        "lost": 8,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 12,
-        "accuracy": 53.3,
+        "pending": 10,
+        "accuracy": 52.9,
         "profit": 0.0
       },
       {
         "key": "HANDICAP",
         "total": 13,
-        "settled": 10,
-        "decided": 10,
-        "won": 7,
+        "settled": 11,
+        "decided": 11,
+        "won": 8,
         "lost": 3,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 3,
-        "accuracy": 70.0,
+        "pending": 2,
+        "accuracy": 72.7,
         "profit": 0.0
       }
     ],
@@ -22092,15 +22187,15 @@
       {
         "key": "Примера Дивисиóн - Аргентина",
         "total": 8,
-        "settled": 5,
-        "decided": 5,
-        "won": 2,
+        "settled": 6,
+        "decided": 6,
+        "won": 3,
         "lost": 3,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 3,
-        "accuracy": 40.0,
+        "pending": 2,
+        "accuracy": 50.0,
         "profit": 0.0
       },
       {
@@ -22116,74 +22211,88 @@
         "pending": 0,
         "accuracy": 100.0,
         "profit": 0.0
+      },
+      {
+        "key": "Южноамериканский кубок",
+        "total": 5,
+        "settled": 3,
+        "decided": 3,
+        "won": 1,
+        "lost": 2,
+        "push": 0,
+        "void": 0,
+        "unresolved": 0,
+        "pending": 2,
+        "accuracy": 33.3,
+        "profit": 0.0
       }
     ],
     "byOddsBand": [
       {
+        "key": "1,55–1,79",
+        "total": 26,
+        "settled": 14,
+        "decided": 14,
+        "won": 10,
+        "lost": 4,
+        "push": 0,
+        "void": 0,
+        "unresolved": 0,
+        "pending": 12,
+        "accuracy": 71.4,
+        "profit": 0.0
+      },
+      {
         "key": "1,80–2,19",
         "total": 14,
-        "settled": 13,
-        "decided": 13,
-        "won": 6,
+        "settled": 14,
+        "decided": 14,
+        "won": 7,
         "lost": 7,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 1,
-        "accuracy": 46.2,
-        "profit": 0.0
-      },
-      {
-        "key": "1,55–1,79",
-        "total": 26,
-        "settled": 12,
-        "decided": 12,
-        "won": 9,
-        "lost": 3,
-        "push": 0,
-        "void": 0,
-        "unresolved": 0,
-        "pending": 14,
-        "accuracy": 75.0,
+        "pending": 0,
+        "accuracy": 50.0,
         "profit": 0.0
       }
     ]
   },
   "learning": {
     "version": 4,
-    "updatedAt": "2026-07-30T23:52:16Z",
+    "updatedAt": "2026-07-31T01:55:06Z",
     "segments": {
       "SPORT|soccer": {
-        "settled": 25,
-        "wins": 15,
-        "losses": 10,
+        "settled": 28,
+        "wins": 17,
+        "losses": 11,
         "pushes": 0,
-        "predictedSum": 14.731679000000002,
-        "actualSum": 15.0,
-        "brierSum": 5.943512493780999,
-        "logLossSum": 16.723776590143018,
+        "predictedSum": 16.643753000000004,
+        "actualSum": 17.0,
+        "brierSum": 6.686828362546999,
+        "logLossSum": 18.801049213602237,
         "profit": 0.0,
-        "hitRate": 0.6,
-        "averagePredicted": 0.5893,
-        "probabilityBias": 0.010733,
-        "brierScore": 0.23774,
-        "logLoss": 0.668951
+        "hitRate": 0.6071,
+        "averagePredicted": 0.5944,
+        "probabilityBias": 0.012723,
+        "brierScore": 0.238815,
+        "logLoss": 0.671466
       },
       "MARKET|soccer|TOTAL": {
-        "settled": 15,
-        "wins": 8,
-        "losses": 7,
+        "settled": 17,
+        "wins": 9,
+        "losses": 8,
         "pushes": 0,
-        "predictedSum": 8.694595999999999,
-        "actualSum": 8.0,
-        "brierSum": 3.672873444698,
-        "logLossSum": 10.235787571815012,
+        "predictedSum": 9.982319999999998,
+        "actualSum": 9.0,
+        "brierSum": 4.275076390963999,
+        "logLossSum": 11.842016024853251,
         "profit": 0.0,
-        "hitRate": 0.5333,
-        "averagePredicted": 0.5796,
-        "probabilityBias": -0.046306,
-        "brierScore": 0.244858,
-        "logLoss": 0.682386
+        "hitRate": 0.5294,
+        "averagePredicted": 0.5872,
+        "probabilityBias": -0.057784,
+        "brierScore": 0.251475,
+        "logLoss": 0.696589
       },
       "LEAGUE|soccer|uefa champions league qualification": {
         "settled": 13,
@@ -22202,20 +22311,20 @@
         "logLoss": 0.640366
       },
       "ODDS|soccer|MID": {
-        "settled": 25,
-        "wins": 15,
-        "losses": 10,
+        "settled": 28,
+        "wins": 17,
+        "losses": 11,
         "pushes": 0,
-        "predictedSum": 14.731679000000002,
-        "actualSum": 15.0,
-        "brierSum": 5.943512493780999,
-        "logLossSum": 16.723776590143018,
+        "predictedSum": 16.643753000000004,
+        "actualSum": 17.0,
+        "brierSum": 6.686828362546999,
+        "logLossSum": 18.801049213602237,
         "profit": 0.0,
-        "hitRate": 0.6,
-        "averagePredicted": 0.5893,
-        "probabilityBias": 0.010733,
-        "brierScore": 0.23774,
-        "logLoss": 0.668951
+        "hitRate": 0.6071,
+        "averagePredicted": 0.5944,
+        "probabilityBias": 0.012723,
+        "brierScore": 0.238815,
+        "logLoss": 0.671466
       },
       "LEAGUE_MARKET|soccer|uefa champions league qualification|TOTAL": {
         "settled": 6,
@@ -22234,20 +22343,20 @@
         "logLoss": 0.618316
       },
       "MARKET|soccer|HANDICAP": {
-        "settled": 10,
-        "wins": 7,
+        "settled": 11,
+        "wins": 8,
         "losses": 3,
         "pushes": 0,
-        "predictedSum": 6.037083,
-        "actualSum": 7.0,
-        "brierSum": 2.2706390490830004,
-        "logLossSum": 6.487989018328002,
+        "predictedSum": 6.661433,
+        "actualSum": 8.0,
+        "brierSum": 2.4117519715830005,
+        "logLossSum": 6.959033188748985,
         "profit": 0.0,
-        "hitRate": 0.7,
-        "averagePredicted": 0.6037,
-        "probabilityBias": 0.096292,
-        "brierScore": 0.227064,
-        "logLoss": 0.648799
+        "hitRate": 0.7273,
+        "averagePredicted": 0.6056,
+        "probabilityBias": 0.121688,
+        "brierScore": 0.21925,
+        "logLoss": 0.632639
       },
       "LEAGUE_MARKET|soccer|uefa champions league qualification|HANDICAP": {
         "settled": 7,
@@ -22266,36 +22375,36 @@
         "logLoss": 0.659267
       },
       "LEAGUE|soccer|primera division argentina": {
+        "settled": 6,
+        "wins": 3,
+        "losses": 3,
+        "pushes": 0,
+        "predictedSum": 3.655725,
+        "actualSum": 3.0,
+        "brierSum": 1.553265593315,
+        "logLossSum": 4.267142136217702,
+        "profit": 0.0,
+        "hitRate": 0.5,
+        "averagePredicted": 0.6093,
+        "probabilityBias": -0.109287,
+        "brierScore": 0.258878,
+        "logLoss": 0.71119
+      },
+      "LEAGUE_MARKET|soccer|primera division argentina|TOTAL": {
         "settled": 5,
         "wins": 2,
         "losses": 3,
         "pushes": 0,
-        "predictedSum": 3.0413959999999998,
+        "predictedSum": 3.0608730000000004,
         "actualSum": 2.0,
-        "brierSum": 1.404523473074,
-        "logLossSum": 3.779917472495635,
+        "brierSum": 1.389120691411,
+        "logLossSum": 3.747699492344597,
         "profit": 0.0,
         "hitRate": 0.4,
-        "averagePredicted": 0.6083,
-        "probabilityBias": -0.208279,
-        "brierScore": 0.280905,
-        "logLoss": 0.755983
-      },
-      "LEAGUE_MARKET|soccer|primera division argentina|TOTAL": {
-        "settled": 4,
-        "wins": 1,
-        "losses": 3,
-        "pushes": 0,
-        "predictedSum": 2.4465440000000003,
-        "actualSum": 1.0,
-        "brierSum": 1.24037857117,
-        "logLossSum": 3.26047482862253,
-        "profit": 0.0,
-        "hitRate": 0.25,
-        "averagePredicted": 0.6116,
-        "probabilityBias": -0.361636,
-        "brierScore": 0.310095,
-        "logLoss": 0.815119
+        "averagePredicted": 0.6122,
+        "probabilityBias": -0.212175,
+        "brierScore": 0.277824,
+        "logLoss": 0.74954
       },
       "LEAGUE|soccer|superettan sweden": {
         "settled": 2,
@@ -22362,20 +22471,20 @@
         "logLoss": 0.532677
       },
       "LEAGUE|soccer|copa sudamericana": {
-        "settled": 2,
-        "wins": 0,
+        "settled": 3,
+        "wins": 1,
         "losses": 2,
         "pushes": 0,
-        "predictedSum": 1.1308340000000001,
-        "actualSum": 0.0,
-        "brierSum": 0.6396391433799999,
-        "logLossSum": 1.6673891317601066,
+        "predictedSum": 1.755184,
+        "actualSum": 1.0,
+        "brierSum": 0.78075206588,
+        "logLossSum": 2.1384333021810895,
         "profit": 0.0,
-        "hitRate": 0.0,
-        "averagePredicted": 0.5654,
-        "probabilityBias": -0.565417,
-        "brierScore": 0.31982,
-        "logLoss": 0.833695
+        "hitRate": 0.3333,
+        "averagePredicted": 0.5851,
+        "probabilityBias": -0.251728,
+        "brierScore": 0.260251,
+        "logLoss": 0.712811
       },
       "LEAGUE_MARKET|soccer|copa sudamericana|TOTAL": {
         "settled": 2,
@@ -22408,15 +22517,63 @@
         "probabilityBias": 0.405148,
         "brierScore": 0.164145,
         "logLoss": 0.519443
+      },
+      "LEAGUE|soccer|brazil serie a": {
+        "settled": 1,
+        "wins": 0,
+        "losses": 1,
+        "pushes": 0,
+        "predictedSum": 0.673395,
+        "actualSum": 0.0,
+        "brierSum": 0.45346082602499993,
+        "logLossSum": 1.1190037893161724,
+        "profit": 0.0,
+        "hitRate": 0.0,
+        "averagePredicted": 0.6734,
+        "probabilityBias": -0.673395,
+        "brierScore": 0.453461,
+        "logLoss": 1.119004
+      },
+      "LEAGUE_MARKET|soccer|brazil serie a|TOTAL": {
+        "settled": 1,
+        "wins": 0,
+        "losses": 1,
+        "pushes": 0,
+        "predictedSum": 0.673395,
+        "actualSum": 0.0,
+        "brierSum": 0.45346082602499993,
+        "logLossSum": 1.1190037893161724,
+        "profit": 0.0,
+        "hitRate": 0.0,
+        "averagePredicted": 0.6734,
+        "probabilityBias": -0.673395,
+        "brierScore": 0.453461,
+        "logLoss": 1.119004
+      },
+      "LEAGUE_MARKET|soccer|copa sudamericana|HANDICAP": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.62435,
+        "actualSum": 1.0,
+        "brierSum": 0.14111292250000004,
+        "logLossSum": 0.471044170420983,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.6243,
+        "probabilityBias": 0.37565,
+        "brierScore": 0.141113,
+        "logLoss": 0.471044
       }
     },
     "calibrationBins": {
       "60-69": {
-        "count": 7,
-        "predictedSum": 4.4381070000000005,
-        "actualSum": 5.0,
-        "averagePredicted": 0.634,
-        "actualRate": 0.7143
+        "count": 10,
+        "predictedSum": 6.350181,
+        "actualSum": 7.0,
+        "averagePredicted": 0.635,
+        "actualRate": 0.7
       },
       "50-59": {
         "count": 16,
@@ -22440,20 +22597,20 @@
         "actualRate": 0.0
       }
     },
-    "totalSettledAnalyses": 25,
-    "totalSettledBestBets": 11,
+    "totalSettledAnalyses": 28,
+    "totalSettledBestBets": 13,
     "modelNotes": [],
     "modelReadiness": {
       "stage": "Сбор выборки",
-      "settledSamples": 25,
+      "settledSamples": 28,
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-07-30T23:52:16Z"
+      "updatedAt": "2026-07-31T01:55:06Z"
     },
     "integrityRepair": {
-      "appliedAt": "2026-07-30T23:52:16Z",
-      "independentSamples": 25,
+      "appliedAt": "2026-07-31T01:55:06Z",
+      "independentSamples": 28,
       "bankPreserved": true
     }
   },
@@ -22461,21 +22618,21 @@
     "version": 1,
     "id": "batch-8183ffda550dc28ef9ec",
     "sequence": 2,
-    "status": "ACTIVE",
+    "status": "SETTLING",
     "createdAt": "2026-07-30T18:13:33Z",
-    "updatedAt": "2026-07-30T23:52:16Z",
+    "updatedAt": "2026-07-31T01:55:06Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
-    "terminalAnalysisCount": 0,
-    "terminalBestBetsCount": 0,
-    "pendingAnalysisCount": 15,
-    "pendingBestBetsCount": 4,
+    "terminalAnalysisCount": 3,
+    "terminalBestBetsCount": 2,
+    "pendingAnalysisCount": 12,
+    "pendingBestBetsCount": 2,
     "completed": false,
-    "placedAmount": 11066.44,
-    "availableAmount": 2766.62,
+    "placedAmount": 5533.22,
+    "availableAmount": 8106.18,
     "startingBank": 13833.06,
-    "statusLabel": "Подборка активна",
-    "activeBestBetsCount": 4,
+    "statusLabel": "Рассчитываются результаты",
+    "activeBestBetsCount": 2,
     "completedAt": null,
     "eventIds": [
       "4f68110ae33722f386ddcd2aa17cc01c",
@@ -22500,7 +22657,7 @@
       "b2dafd55f589fced90359c3f3bfe6f09",
       "2f75420bd3bb24996d73b1e23cecd77b"
     ],
-    "currentBank": 13833.06,
+    "currentBank": 13639.4,
     "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
     "operationalWindowStart": "2026-07-30T18:58:33Z",
     "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -22561,7 +22718,7 @@
   "quota": {},
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-07-30T23:52:16Z",
+    "updatedAt": "2026-07-31T01:55:06Z",
     "analysisHistory": {
       "input": 40,
       "output": 40,

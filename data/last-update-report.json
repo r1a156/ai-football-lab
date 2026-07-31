@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_GLOBAL_MULTISPORT_INTELLIGENCE",
   "mode": "settle",
-  "startedAt": "2026-07-30T23:52:16Z",
-  "finishedAt": "2026-07-30T23:52:16Z",
+  "startedAt": "2026-07-31T01:54:59Z",
+  "finishedAt": "2026-07-31T01:55:05Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 0
+      "analysisSettled": 2,
+      "bestBetsSettled": 1,
+      "unresolved": 14
     },
-    "duePending": 0,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -30,21 +30,21 @@
       "version": 1,
       "id": "batch-8183ffda550dc28ef9ec",
       "sequence": 2,
-      "status": "ACTIVE",
+      "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-30T23:52:16Z",
+      "updatedAt": "2026-07-31T01:54:59Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 0,
-      "terminalBestBetsCount": 0,
-      "pendingAnalysisCount": 15,
-      "pendingBestBetsCount": 4,
+      "terminalAnalysisCount": 3,
+      "terminalBestBetsCount": 2,
+      "pendingAnalysisCount": 12,
+      "pendingBestBetsCount": 2,
       "completed": false,
-      "placedAmount": 11066.44,
-      "availableAmount": 2766.62,
+      "placedAmount": 5533.22,
+      "availableAmount": 8106.18,
       "startingBank": 13833.06,
-      "statusLabel": "Подборка активна",
-      "activeBestBetsCount": 4,
+      "statusLabel": "Рассчитываются результаты",
+      "activeBestBetsCount": 2,
       "completedAt": null,
       "eventIds": [
         "4f68110ae33722f386ddcd2aa17cc01c",
@@ -69,7 +69,7 @@
         "b2dafd55f589fced90359c3f3bfe6f09",
         "2f75420bd3bb24996d73b1e23cecd77b"
       ],
-      "currentBank": 13833.06,
+      "currentBank": 13639.4,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -78,17 +78,33 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-07-30T23:52:16Z"
+      "requestsRemaining": "209",
+      "requestsUsed": "291",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 4,
+      "calls": 2,
+      "updatedAt": "2026-07-31T01:54:59Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-24:2026-08-02",
+        "status": 200,
+        "elapsedSeconds": 5.271
+      },
+      {
+        "label": "SCORES:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.245
+      },
+      {
+        "label": "SCORES:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      }
+    ]
   },
   "warnings": [],
   "errors": []

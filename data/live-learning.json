@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-07-30T23:52:13Z",
+  "updatedAt": "2026-07-31T01:54:57Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -703,6 +703,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.999
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.62435
         }
       ],
       "completed": false
@@ -740,6 +748,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.999
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.614329
         }
       ],
       "completed": false
@@ -777,9 +793,20 @@
           "clockLabel": "ориентировочно 82-я минута",
           "elapsedFraction": 0.9111,
           "liveProbability": 0.01926
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "FINISHED",
+          "score": "0:0",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.0
         }
       ],
-      "completed": false
+      "completed": true,
+      "completedAt": "2026-07-31T01:54:57Z",
+      "finalScore": "0:0",
+      "finalStatus": "lost"
     },
     "7dfcff5d0f15654cdf2c8af007091a70": {
       "eventId": "7dfcff5d0f15654cdf2c8af007091a70",
@@ -798,6 +825,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.60938
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "LIVE",
+          "score": "0:1",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.999
         }
       ],
       "completed": false
@@ -819,6 +854,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.584027
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "LIVE",
+          "score": "1:0",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.999
         }
       ],
       "completed": false
@@ -840,6 +883,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.58833
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "LIVE",
+          "score": "0:0",
+          "clockLabel": "ориентировочно 84-я минута",
+          "elapsedFraction": 0.9333,
+          "liveProbability": 0.917516
         }
       ],
       "completed": false
@@ -861,6 +912,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.592391
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "LIVE",
+          "score": "0:0",
+          "clockLabel": "ориентировочно 84-я минута",
+          "elapsedFraction": 0.9333,
+          "liveProbability": 0.999
         }
       ],
       "completed": false
@@ -882,16 +941,47 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.58818
+        },
+        {
+          "at": "2026-07-31T01:54:57Z",
+          "status": "LIVE",
+          "score": "0:1",
+          "clockLabel": "ориентировочно 84-я минута",
+          "elapsedFraction": 0.9333,
+          "liveProbability": 0.989301
         }
       ],
       "completed": false
     }
   },
-  "calibration": {},
-  "processedCompletedSessions": [],
+  "calibration": {
+    "soccer|TOTAL|EARLY": {
+      "count": 1,
+      "predictedSum": 0.541488,
+      "actualSum": 0.0,
+      "brierSum": 0.29320925414399995,
+      "averagePredicted": 0.5415,
+      "actualRate": 0.0,
+      "probabilityBias": -0.5415,
+      "brierScore": 0.293209
+    },
+    "soccer|TOTAL|LATE": {
+      "count": 1,
+      "predictedSum": 0.01926,
+      "actualSum": 0.0,
+      "brierSum": 0.0003709476,
+      "averagePredicted": 0.0193,
+      "actualRate": 0.0,
+      "probabilityBias": -0.0193,
+      "brierScore": 0.000371
+    }
+  },
+  "processedCompletedSessions": [
+    "4f68110ae33722f386ddcd2aa17cc01c"
+  ],
   "statistics": {
-    "completedSessions": 0,
-    "snapshotCount": 60,
+    "completedSessions": 1,
+    "snapshotCount": 68,
     "calibratedBuckets": 0
   }
 }
