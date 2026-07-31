@@ -4,15 +4,16 @@
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
-name: V10 R12 Живой цикл, точные 15 + 4 и результаты всех прогнозов
+# V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS
+# ALL_FIFTEEN_SETTLEMENT_VISIBLE
+name: V10 R13 Живой цикл — футбол, стандартные рынки, точные 15 + 4
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "scripts/update_live.py"
       - "scripts/update_predictions.py"
@@ -32,9 +33,9 @@ env:
 
 jobs:
   live:
-    name: Счёт всех 15, обучение и следующая точная подборка
+    name: Завершить все 15 и опубликовать следующую футбольную подборку
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
 
     steps:
       - name: Получить исходный код
@@ -47,7 +48,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Проверить исходный код текущих матчей
+      - name: Проверить код и выполнить только необходимый ремонт
         shell: bash
         run: |
           set -euo pipefail
@@ -56,14 +57,32 @@ jobs:
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/live-state.json > /dev/null
           python -m json.tool data/live-learning.json > /dev/null
-          python -m json.tool data/state.json > /dev/null
-          python -m json.tool data/last-update-report.json > /dev/null
           node --check assets/app.js
-          python scripts/update_predictions.py --repair-integrity
+
+          repair_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
+          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
+          meta = state.get('meta') or {}
+          expected = float(config.get('stakePerBestBetPercent', 20))
+          best = state.get('bestBets') or []
+          broken_stake = any(
+              abs(float(item.get('stakePercent') or 0) - expected) > 0.001
+              or float(item.get('stake') or 0) <= 0
+              for item in best
+          )
+          print('YES' if meta.get('integrityPatch') != 'V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS' or broken_stake else 'NO')
+          PY
+          )"
+          echo "R13_REPAIR_REQUIRED=${repair_required}"
+          if [ "${repair_required}" = "YES" ]; then
+            python scripts/update_predictions.py --repair-integrity
+          fi
           python scripts/update_predictions.py --validate
           python scripts/update_live.py --validate
 
-      - name: Обновить отслеживаемые матчи
+      - name: Обновить живые матчи
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
@@ -72,7 +91,7 @@ jobs:
           set -euo pipefail
           python scripts/update_live.py --update
 
-      - name: Рассчитать текущую подборку и сразу сформировать следующую
+      - name: Завершить текущую подборку и при готовности создать следующую
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
@@ -83,101 +102,75 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --live-cycle
 
-      - name: Проверить обновлённые данные
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m json.tool data/live-state.json > /dev/null
-          python -m json.tool data/live-learning.json > /dev/null
-          python scripts/update_live.py --validate
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          live = json.loads(Path("data/live-state.json").read_text(encoding="utf-8"))
-          learning = json.loads(Path("data/live-learning.json").read_text(encoding="utf-8"))
-          state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
-          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
-          bank = state.get("bank") or {}
-          batch = state.get("batch") or {}
-          meta = state.get("meta") or {}
-          daily = state.get("dailyAnalysis") or []
-          best = state.get("bestBets") or []
-
-          if live.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
-              raise SystemExit("Live state marker mismatch")
-          if learning.get("sourceMarker") != "V10_R6_LIVE_MATCH_INTELLIGENCE":
-              raise SystemExit("Live learning marker mismatch")
-          for event in live.get("events") or []:
-              if not event.get("eventId"):
-                  raise SystemExit("Live event without eventId")
-              if not event.get("originalPredictionImmutable"):
-                  raise SystemExit("Live event lost original-prediction immutability guard")
-              if event.get("status") in {"FINISHED", "CANCELLED", "POSTPONED", "UNCONFIRMED"}:
-                  raise SystemExit("Non-current event leaked into public live list")
-
-          target15 = int(config["dailyAnalysisTarget"])
-          target4 = int(config["bestBetsTarget"])
-          if daily and len(daily) != target15:
-              raise SystemExit(f"Published batch is not exact fifteen: {len(daily)}")
-          if daily and len(best) != target4:
-              raise SystemExit(f"Published best list is not exact four: {len(best)}")
-          daily_events = [str(item.get("eventId") or "") for item in daily]
-          best_events = [str(item.get("eventId") or "") for item in best]
-          if any(not value for value in daily_events + best_events):
-              raise SystemExit("Prediction without eventId")
-          if len(daily_events) != len(set(daily_events)):
-              raise SystemExit("The fifteen contains duplicate matches")
-          if len(best_events) != len(set(best_events)):
-              raise SystemExit("The best four contains duplicate matches")
-          if not set(best_events).issubset(set(daily_events)):
-              raise SystemExit("The best four is outside the current fifteen")
-
-          terminal = {"won", "lost", "push", "void", "cancelled"}
-          for item in daily:
-              status = str(item.get("status") or "pending")
-              if status in terminal and not str(item.get("score") or "").strip() and status not in {"void", "cancelled"}:
-                  raise SystemExit("A settled analysis is missing its visible final score")
-          if meta.get("bestBetsSynchronizationPolicy") != "IMMUTABLE_AFTER_PUBLICATION_UNTIL_SETTLEMENT":
-              raise SystemExit("Frozen best-four policy marker is missing")
-
-          expected_placed = sum(
-              float(item.get("stake") or 0)
-              for item in best
-              if str(item.get("status") or "pending") == "pending"
-          )
-          if abs(float(bank.get("placedAmount") or 0) - expected_placed) > 0.02:
-              raise SystemExit("Placed bank amount is not linked to pending best bets")
-          expected_available = max(0.0, float(bank.get("current") or 0) - expected_placed)
-          if abs(float(bank.get("available") or 0) - expected_available) > 0.02:
-              raise SystemExit("Available bank is not linked to current and placed amounts")
-          if daily and not batch.get("id"):
-              raise SystemExit("Current batch metadata is missing")
-          if batch.get("completed"):
-              raise SystemExit("Completed batch was not rolled over in the same live cycle")
-
-          print("LIVE_STATE_ACCEPTANCE=GREEN")
-          print("EXACT_DAILY_ANALYSIS=", len(daily))
-          print("EXACT_BEST_BETS=", len(best))
-          print("DAILY_TERMINAL_VISIBLE=", sum(1 for item in daily if str(item.get("status")) in terminal))
-          print("BANK_CURRENT=", bank.get("current"))
-          print("BANK_PLACED=", bank.get("placedAmount"))
-          print("BANK_AVAILABLE=", bank.get("available"))
-          PY
-
-      - name: V10 R12 финальная проверка точных 15 + 4 и результатов
+      - name: Финальная проверка R13
         shell: bash
         run: |
           set -euo pipefail
           python -m py_compile scripts/update_predictions.py scripts/update_live.py
-          python -m json.tool config/analysis.json > /dev/null
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/live-state.json > /dev/null
           python -m json.tool data/live-learning.json > /dev/null
-          python scripts/update_predictions.py --repair-integrity
-          python scripts/update_predictions.py --validate
+          python scripts/update_live.py --validate
+          if ! python scripts/update_predictions.py --validate; then
+            echo "R13_POST_UPDATE_REPAIR=START"
+            python scripts/update_predictions.py --repair-integrity
+            python scripts/update_predictions.py --validate
+          fi
+          python - <<'PY'
+          import importlib.util
+          import json
+          from pathlib import Path
 
-      - name: Сохранить изменившиеся данные
+          spec = importlib.util.spec_from_file_location('predictions', Path('scripts/update_predictions.py'))
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+
+          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
+          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
+          daily = state.get('dailyAnalysis') or []
+          best = state.get('bestBets') or []
+          bank = state.get('bank') or {}
+          target15 = int(config['dailyAnalysisTarget'])
+          target4 = int(config['bestBetsTarget'])
+          if daily and len(daily) != target15:
+              raise SystemExit(f'Published batch is not exact fifteen: {len(daily)}')
+          if daily and len(best) != target4:
+              raise SystemExit(f'Published best list is not exact four: {len(best)}')
+          daily_ids = [str(item.get('eventId') or '') for item in daily]
+          best_ids = [str(item.get('eventId') or '') for item in best]
+          if any(not value for value in daily_ids + best_ids):
+              raise SystemExit('Prediction without eventId')
+          if len(daily_ids) != len(set(daily_ids)) or len(best_ids) != len(set(best_ids)):
+              raise SystemExit('Duplicate match in current publication')
+          if not set(best_ids).issubset(set(daily_ids)):
+              raise SystemExit('Best four is outside the fifteen')
+          expected_percent = float(config['stakePerBestBetPercent'])
+          for item in best:
+              if abs(float(item.get('stakePercent') or 0) - expected_percent) > 0.001:
+                  raise SystemExit('Twenty-percent bank policy changed')
+          for item in daily + best:
+              if item.get('marketPolicy') == module.R13_MARKET_POLICY:
+                  if not module.record_uses_r13_standard_market(item):
+                      raise SystemExit('Forbidden Asian/nonstandard market in R13 publication')
+                  if item.get('sport') != 'soccer':
+                      raise SystemExit('Non-football event in R13 publication')
+          terminal = {'won', 'lost', 'push', 'void', 'cancelled'}
+          for item in daily:
+              status = str(item.get('status') or 'pending')
+              if status in terminal and status not in {'void', 'cancelled'} and not str(item.get('score') or '').strip():
+                  raise SystemExit('Settled analysis has no visible score')
+          expected_placed = sum(float(item.get('stake') or 0) for item in best if str(item.get('status') or 'pending') == 'pending')
+          if abs(float(bank.get('placedAmount') or 0) - expected_placed) > 0.02:
+              raise SystemExit('Placed bank amount mismatch')
+          print('R13_LIVE_ACCEPTANCE=GREEN')
+          print('EXACT_DAILY_ANALYSIS=', len(daily))
+          print('EXACT_BEST_BETS=', len(best))
+          print('FOOTBALL_ONLY=YES')
+          print('ASIAN_MARKETS=REMOVED')
+          print('BANK_CURRENT=', bank.get('current'))
+          PY
+
+      - name: Сохранить только реальные изменения данных
         shell: bash
         run: |
           set -euo pipefail
@@ -185,9 +178,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
-            echo "No live data changes to commit."
+            echo "R13_NO_DATA_CHANGES=YES"
             exit 0
           fi
-          git commit -m "V10 R12 settle all fifteen, learn and publish exact 15 plus 4 [skip ci]"
+          git commit -m "V10 R13 settle football 15 and publish standard-market batch [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

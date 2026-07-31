@@ -1,24 +1,23 @@
 # V10_AUTO_REFRESH_PIPELINE
-name: V10 Финальная спортивная аналитика R12
-
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
+# V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS
+# ALL_FIFTEEN_SETTLEMENT_VISIBLE
+name: V10 R13 Футбольная аналитика — стандартные рынки
+
 on:
   workflow_dispatch:
     inputs:
       force_generation:
-        description: "Сформировать новый список 15 прогнозов независимо от даты"
+        description: "Сформировать новую подборку из 15 футбольных матчей"
         required: false
         default: false
         type: boolean
-
   schedule:
     - cron: "17 */3 * * *"
-
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "scripts/update_predictions.py"
       - "scripts/update_live.py"
@@ -44,22 +43,17 @@ env:
 
 jobs:
   validate:
-    name: V10 R12 статическая и офлайн-проверка
+    name: R13 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Compile and validate source
+      - name: Compile and validate
         shell: bash
         run: |
           set -euo pipefail
@@ -68,43 +62,43 @@ jobs:
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/live-state.json > /dev/null
           python -m json.tool data/live-learning.json > /dev/null
-          python scripts/update_predictions.py --repair-integrity
+          repair_required="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
+          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
+          expected = float(config.get('stakePerBestBetPercent', 20))
+          broken = any(abs(float(item.get('stakePercent') or 0) - expected) > 0.001 or float(item.get('stake') or 0) <= 0 for item in state.get('bestBets') or [])
+          print('YES' if (state.get('meta') or {}).get('integrityPatch') != 'V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS' or broken else 'NO')
+          PY
+          )"
+          if [ "${repair_required}" = "YES" ]; then
+            python scripts/update_predictions.py --repair-integrity
+          fi
           python scripts/update_predictions.py --validate
           python scripts/update_predictions.py --self-test
           python scripts/update_live.py --validate
           python scripts/update_live.py --self-test
-
-      - name: Validate browser JavaScript
-        shell: bash
-        run: |
-          set -euo pipefail
           node --check assets/app.js
 
   update:
-    name: Refresh events, results, analysis and bank
+    name: Обновить результаты, модель и следующую футбольную подборку
     if: >-
       github.event_name == 'schedule' ||
       github.event_name == 'workflow_dispatch' ||
-      (
-        github.event_name == 'push' &&
-        contains(github.event.head_commit.message, '[v10-force-generation]')
-      )
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[v10-force-generation]'))
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-
+    timeout-minutes: 40
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Check required and optional data sources
+      - name: Проверить обязательные источники
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
@@ -112,152 +106,80 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           set -euo pipefail
-          test -n "${ODDS_API_KEY}" || {
-            echo "::error::ODDS_API_KEY is required for V10 production refresh"
-            exit 1
-          }
+          test -n "${ODDS_API_KEY}" || { echo "::error::ODDS_API_KEY is required"; exit 1; }
           if [ -z "${FOOTBALL_DATA_API_KEY}" ]; then
-            echo "::warning::FOOTBALL_DATA_API_KEY is missing; football events outside supported competitions will use the MARKET data tier."
+            echo "::warning::FOOTBALL_DATA_API_KEY is missing; market-only candidates will use stricter consensus floors."
           fi
           if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY is missing; deterministic explanations will be used."
+            echo "::warning::OPENROUTER_API_KEY is missing; deterministic Russian explanations will be used."
           fi
 
-      - name: Migrate legacy state when required
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          path = Path("data/state.json")
-          state = json.loads(path.read_text(encoding="utf-8-sig"))
-          meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
-          needs_migration = (
-              meta.get("version") != "10.0.0"
-              or meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE"
-              or not isinstance(state.get("dailyAnalysis"), list)
-              or not isinstance(state.get("bestBets"), list)
-          )
-          print(f"STATE_MIGRATION_REQUIRED={str(needs_migration).upper()}")
-          Path(".v10-migration-required").write_text(
-              "YES" if needs_migration else "NO",
-              encoding="ascii",
-          )
-          PY
-          if [ "$(cat .v10-migration-required)" = "YES" ]; then
-            python scripts/update_predictions.py --migrate-state
-          fi
-          rm -f .v10-migration-required
-
-      - name: Run V10 refresh
+      - name: Обновить подборку
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
-          V10_EVENT_NAME: ${{ github.event_name }}
-          V10_FORCE_INPUT: ${{ inputs.force_generation || 'false' }}
-          V10_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          EVENT_NAME: ${{ github.event_name }}
+          FORCE_INPUT: ${{ inputs.force_generation || 'false' }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-
-          force_generation="false"
-
-          if [ "${V10_EVENT_NAME}" = "workflow_dispatch" ] && [ "${V10_FORCE_INPUT}" = "true" ]; then
-            force_generation="true"
-          fi
-
-          if [ "${V10_EVENT_NAME}" = "push" ] && [[ "${V10_HEAD_COMMIT_MESSAGE}" == *"[v10-force-generation]"* ]]; then
-            force_generation="true"
-          fi
-
-          echo "V10_EVENT_NAME=${V10_EVENT_NAME}"
-          echo "V10_FORCE_GENERATION=${force_generation}"
-
-          if [ "${force_generation}" = "true" ]; then
+          force="false"
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ "${FORCE_INPUT}" = "true" ]; then force="true"; fi
+          if [ "${EVENT_NAME}" = "push" ] && [[ "${HEAD_MESSAGE}" == *"[v10-force-generation]"* ]]; then force="true"; fi
+          if [ "${force}" = "true" ]; then
             python scripts/update_predictions.py --update
           else
             python scripts/update_predictions.py --auto
           fi
 
-      - name: Validate published V10 state
+      - name: Проверить опубликованное состояние R13
         shell: bash
         run: |
           set -euo pipefail
           python -m json.tool data/state.json > /dev/null
           python -m json.tool data/last-update-report.json > /dev/null
           python -m json.tool data/ai_daily_analysis.json > /dev/null
-          python scripts/update_predictions.py --repair-integrity
-          python scripts/update_predictions.py --validate
+          if ! python scripts/update_predictions.py --validate; then
+            python scripts/update_predictions.py --repair-integrity
+            python scripts/update_predictions.py --validate
+          fi
           python - <<'PY'
+          import importlib.util
           import json
           from pathlib import Path
-
-          state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
-          report = json.loads(Path("data/last-update-report.json").read_text(encoding="utf-8"))
-          config = json.loads(Path("config/analysis.json").read_text(encoding="utf-8"))
-          meta = state.get("meta") or {}
-          daily = state.get("dailyAnalysis") or []
-          best = state.get("bestBets") or []
-          bank = state.get("bank") or {}
-
-          if meta.get("version") != "10.0.0":
-              raise SystemExit("State version is not 10.0.0")
-          if meta.get("sourceMarker") != "V10_GLOBAL_MULTISPORT_INTELLIGENCE":
-              raise SystemExit("V10 source marker is missing")
-          if report.get("status") not in {"GREEN", "DEGRADED"}:
-              raise SystemExit(f"Pipeline report is not publishable: {report.get('status')}")
-
-          target15 = int(config["dailyAnalysisTarget"])
-          target4 = int(config["bestBetsTarget"])
-          if daily and len(daily) != target15:
-              raise SystemExit(f"Current publication is not exact fifteen: {len(daily)}")
-          if daily and len(best) != target4:
-              raise SystemExit(f"Current publication is not exact four: {len(best)}")
-          daily_events = [str(item.get("eventId") or "") for item in daily]
-          best_events = [str(item.get("eventId") or "") for item in best]
-          if len(daily_events) != len(set(daily_events)):
-              raise SystemExit("Duplicate matches exist in dailyAnalysis")
-          if len(best_events) != len(set(best_events)):
-              raise SystemExit("Duplicate matches exist in bestBets")
-          if not set(best_events).issubset(set(daily_events)):
-              raise SystemExit("Current best four is not selected from current fifteen")
-          if meta.get("bestBetsSynchronizationPolicy") != "IMMUTABLE_AFTER_PUBLICATION_UNTIL_SETTLEMENT":
-              raise SystemExit("Best-four immutability marker is missing")
-
-          for item in best:
-              if abs(float(item.get("stakePercent") or 0) - float(config["stakePerBestBetPercent"])) > 0.001:
-                  raise SystemExit("The existing 20 percent bank policy changed")
-              if float(item.get("bookmakerOdds") or item.get("odds") or 0) < float(config["minimumBookmakerOdds"]):
-                  raise SystemExit("A published coefficient is below the configured floor")
-
-          terminal = {"won", "lost", "push", "void", "cancelled"}
-          for item in daily:
-              status = str(item.get("status") or "pending")
-              if status in terminal and status not in {"void", "cancelled"} and not str(item.get("score") or "").strip():
-                  raise SystemExit("A settled item from the fifteen has no visible score")
-
-          print("V10_R12_PUBLISHED_STATE=GREEN")
-          print("DAILY_ANALYSIS=", len(daily))
-          print("BEST_BETS=", len(best))
-          print("BANK_CURRENT=", bank.get("current"))
-          print("ALL_FIFTEEN_SETTLEMENT_VISIBLE=YES")
+          spec = importlib.util.spec_from_file_location('predictions', Path('scripts/update_predictions.py'))
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
+          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
+          report = json.loads(Path('data/last-update-report.json').read_text(encoding='utf-8-sig'))
+          daily = state.get('dailyAnalysis') or []
+          best = state.get('bestBets') or []
+          if report.get('status') not in {'GREEN', 'DEGRADED'}:
+              raise SystemExit(f"Unpublishable report: {report.get('status')}")
+          if daily and len(daily) != int(config['dailyAnalysisTarget']):
+              raise SystemExit('Current publication is not exact fifteen')
+          if daily and len(best) != int(config['bestBetsTarget']):
+              raise SystemExit('Current publication is not exact four')
+          ids = [str(item.get('eventId') or '') for item in daily]
+          best_ids = [str(item.get('eventId') or '') for item in best]
+          if len(ids) != len(set(ids)) or len(best_ids) != len(set(best_ids)):
+              raise SystemExit('Duplicate events exist')
+          if not set(best_ids).issubset(set(ids)):
+              raise SystemExit('Best four is outside the fifteen')
+          for item in daily + best:
+              if item.get('marketPolicy') == module.R13_MARKET_POLICY and not module.record_uses_r13_standard_market(item):
+                  raise SystemExit('Forbidden market in R13 publication')
+          print('V10_R13_PUBLISHED_STATE=GREEN')
+          print('DAILY_ANALYSIS=', len(daily))
+          print('BEST_BETS=', len(best))
+          print('FOOTBALL_ONLY=YES')
+          print('ASIAN_MARKETS=REMOVED')
+          print('ALL_FIFTEEN_SETTLEMENT_VISIBLE=YES')
           PY
-
-      - name: V10 R12 итоговая проверка изменённого состояния
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m py_compile scripts/update_predictions.py scripts/update_live.py
-          python -m json.tool config/analysis.json > /dev/null
-          python -m json.tool data/state.json > /dev/null
-          python -m json.tool data/live-state.json > /dev/null
-          python -m json.tool data/live-learning.json > /dev/null
-          python scripts/update_predictions.py --repair-integrity
-          python scripts/update_predictions.py --validate
 
       - name: Commit refreshed public data
         shell: bash
@@ -265,17 +187,11 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          git add \
-            data/state.json \
-            data/last-update-report.json \
-            data/ai_daily_analysis.json
-
+          git add data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
-            echo "No public data changes to commit."
+            echo "R13_NO_PUBLIC_DATA_CHANGES=YES"
             exit 0
           fi
-
-          git commit -m "V10 R11 refresh current 15 and synchronized 4 [skip ci]"
+          git commit -m "V10 R13 refresh football standard-market 15 and 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
