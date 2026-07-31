@@ -1,60 +1,10 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "LIVE",
-  "updatedAt": "2026-07-31T17:57:16Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-07-31T18:42:25Z",
   "refreshMinutes": 5,
   "events": [
-    {
-      "eventId": "a88b84040af2c78f8520b91adbc19c79",
-      "analysisId": "analysis-c606a534da2b517268c1",
-      "isBestBet": false,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_poland_ekstraklasa",
-      "league": "Ekstraklasa - Poland",
-      "leagueRu": "Екстракласа - Поланд",
-      "country": "Международный турнир",
-      "countryRu": "Международный турнир",
-      "home": "Wisła Płock",
-      "away": "Widzew Łódź",
-      "homeRu": "Висла Плок",
-      "awayRu": "Видзев Лодз",
-      "commenceTime": "2026-07-31T16:00:00Z",
-      "status": "LIVE",
-      "statusRu": "Матч идёт",
-      "homeScore": 0,
-      "awayScore": 0,
-      "score": "0:0",
-      "clockLabel": "ориентировочно 90-я минута",
-      "minute": 90,
-      "period": null,
-      "elapsedFraction": 1.0,
-      "pick": "Тотал меньше 2.5",
-      "pickRu": "Тотал меньше 2.5",
-      "market": "TOTAL_UNDER",
-      "marketFamily": "TOTAL",
-      "point": 2.5,
-      "preMatchProbability": 0.596239,
-      "liveProbability": 0.999,
-      "liveProbabilityPercent": 99.9,
-      "liveReason": "Пересчёт по текущему счёту и оставшемуся времени: 0 мин. до расчётного завершения.",
-      "calibrationEvidence": {
-        "count": 1,
-        "predictedSum": 0.01926,
-        "actualSum": 0.0,
-        "brierSum": 0.0003709476,
-        "averagePredicted": 0.0193,
-        "actualRate": 0.0,
-        "probabilityBias": -0.0193,
-        "brierScore": 0.000371
-      },
-      "provider": "THE_ODDS_API_SCORES",
-      "providerEventId": null,
-      "updatedAt": "2026-07-31T17:57:17Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    },
     {
       "eventId": "8ce2195530798c1a52f648b890c3c75e",
       "analysisId": "analysis-8b039266528b6da16393",
@@ -92,23 +42,21 @@
       "calibrationEvidence": null,
       "provider": "Ожидание источника",
       "providerEventId": null,
-      "updatedAt": "2026-07-31T17:57:16Z",
+      "updatedAt": "2026-07-31T18:42:25Z",
       "freshnessSeconds": 0,
       "originalPredictionImmutable": true
     }
   ],
-  "activeEventIds": [
-    "a88b84040af2c78f8520b91adbc19c79"
-  ],
+  "activeEventIds": [],
   "providerHealth": {
-    "status": "GREEN",
+    "status": "DEGRADED",
     "calls": 2,
-    "results": 1,
+    "results": 0,
     "oddsQuota": {
       "requestsRemaining": "198",
       "requestsUsed": "302",
-      "requestsLast": "1",
-      "estimatedCreditsThisRun": 1
+      "requestsLast": "0",
+      "estimatedCreditsThisRun": 0
     },
     "errors": []
   },
@@ -116,7 +64,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 0
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }

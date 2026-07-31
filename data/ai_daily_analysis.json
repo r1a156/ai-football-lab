@@ -1,6 +1,6 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-07-31T17:57:18Z",
+  "updatedAt": "2026-07-31T18:42:27Z",
   "analysisDateLocal": "2026-07-30",
   "batch": {
     "version": 1,
@@ -8,12 +8,12 @@
     "sequence": 2,
     "status": "SETTLING",
     "createdAt": "2026-07-30T18:13:33Z",
-    "updatedAt": "2026-07-31T17:57:18Z",
+    "updatedAt": "2026-07-31T18:42:27Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
-    "terminalAnalysisCount": 9,
+    "terminalAnalysisCount": 10,
     "terminalBestBetsCount": 3,
-    "pendingAnalysisCount": 6,
+    "pendingAnalysisCount": 5,
     "pendingBestBetsCount": 1,
     "completed": false,
     "placedAmount": 2766.61,
@@ -1527,10 +1527,10 @@
         ]
       },
       "alternatives": [],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-07-31T18:42:27Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -1544,8 +1544,13 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "statusLabel": "Выигрыш",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-07-31T18:42:27Z"
     },
     {
       "id": "analysis-ec2a597df30624722c47",

@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
   "mode": "settle",
-  "startedAt": "2026-07-31T17:57:18Z",
-  "finishedAt": "2026-07-31T17:57:18Z",
+  "startedAt": "2026-07-31T18:42:27Z",
+  "finishedAt": "2026-07-31T18:42:28Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 1,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 6
     },
-    "duePending": 0,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-07-31T17:57:18Z",
+      "updatedAt": "2026-07-31T18:42:27Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 9,
+      "terminalAnalysisCount": 10,
       "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 6,
+      "pendingAnalysisCount": 5,
       "pendingBestBetsCount": 1,
       "completed": false,
       "placedAmount": 2766.61,
@@ -78,17 +78,28 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-07-31T17:57:18Z"
+      "requestsRemaining": "196",
+      "requestsUsed": "304",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-07-31T18:42:27Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-24:2026-08-02",
+        "status": 200,
+        "elapsedSeconds": 1.346
+      },
+      {
+        "label": "SCORES:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      }
+    ]
   },
   "warnings": [
     "The current prediction batch is still active; overlapping generation was blocked."
