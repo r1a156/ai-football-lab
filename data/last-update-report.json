@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
-  "mode": "auto",
-  "startedAt": "2026-08-01T13:58:58Z",
-  "finishedAt": "2026-08-01T13:58:59Z",
+  "mode": "settle",
+  "startedAt": "2026-08-01T14:47:48Z",
+  "finishedAt": "2026-08-01T14:47:51Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 4
+      "analysisSettled": 1,
+      "bestBetsSettled": 1,
+      "unresolved": 2
     },
-    "duePending": 1,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,19 +32,19 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T13:58:58Z",
+      "updatedAt": "2026-08-01T14:47:48Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 12,
-      "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 3,
-      "pendingBestBetsCount": 1,
+      "terminalAnalysisCount": 13,
+      "terminalBestBetsCount": 4,
+      "pendingAnalysisCount": 2,
+      "pendingBestBetsCount": 0,
       "completed": false,
-      "placedAmount": 2766.61,
+      "placedAmount": 0.0,
       "availableAmount": 12532.76,
       "startingBank": 13833.06,
       "statusLabel": "Рассчитываются результаты",
-      "activeBestBetsCount": 1,
+      "activeBestBetsCount": 0,
       "completedAt": null,
       "eventIds": [
         "4f68110ae33722f386ddcd2aa17cc01c",
@@ -69,7 +69,7 @@
         "b2dafd55f589fced90359c3f3bfe6f09",
         "2f75420bd3bb24996d73b1e23cecd77b"
       ],
-      "currentBank": 15299.37,
+      "currentBank": 12532.76,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -81,23 +81,28 @@
     "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "488",
-      "requestsUsed": "12",
+      "requestsRemaining": "484",
+      "requestsUsed": "16",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 2,
-      "calls": 1,
-      "updatedAt": "2026-08-01T13:58:58Z"
+      "estimatedCreditsThisRun": 4,
+      "calls": 2,
+      "updatedAt": "2026-08-01T14:47:48Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
         "status": 200,
-        "elapsedSeconds": 1.521
+        "elapsedSeconds": 2.208
+      },
+      {
+        "label": "SCORES:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.15
       },
       {
         "label": "SCORES:soccer_russia_premier_league",
         "status": 200,
-        "elapsedSeconds": 0.152
+        "elapsedSeconds": 0.119
       }
     ]
   },

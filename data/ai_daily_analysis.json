@@ -1,6 +1,6 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-08-01T13:58:58Z",
+  "updatedAt": "2026-08-01T14:47:48Z",
   "analysisDateLocal": "2026-07-30",
   "batch": {
     "version": 1,
@@ -8,19 +8,19 @@
     "sequence": 2,
     "status": "SETTLING",
     "createdAt": "2026-07-30T18:13:33Z",
-    "updatedAt": "2026-08-01T13:58:58Z",
+    "updatedAt": "2026-08-01T14:47:48Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
-    "terminalAnalysisCount": 12,
-    "terminalBestBetsCount": 3,
-    "pendingAnalysisCount": 3,
-    "pendingBestBetsCount": 1,
+    "terminalAnalysisCount": 13,
+    "terminalBestBetsCount": 4,
+    "pendingAnalysisCount": 2,
+    "pendingBestBetsCount": 0,
     "completed": false,
-    "placedAmount": 2766.61,
+    "placedAmount": 0.0,
     "availableAmount": 12532.76,
     "startingBank": 13833.06,
     "statusLabel": "Рассчитываются результаты",
-    "activeBestBetsCount": 1,
+    "activeBestBetsCount": 0,
     "completedAt": null,
     "eventIds": [
       "4f68110ae33722f386ddcd2aa17cc01c",
@@ -45,7 +45,7 @@
       "b2dafd55f589fced90359c3f3bfe6f09",
       "2f75420bd3bb24996d73b1e23cecd77b"
     ],
-    "currentBank": 15299.37,
+    "currentBank": 12532.76,
     "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
     "operationalWindowStart": "2026-07-30T18:58:33Z",
     "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -54,10 +54,10 @@
     "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
   },
   "bank": {
-    "current": 15299.37,
-    "placedAmount": 2766.61,
+    "current": 12532.76,
+    "placedAmount": 0,
     "available": 12532.76,
-    "activeBetsCount": 1
+    "activeBetsCount": 0
   },
   "dailyAnalysis": [
     {
@@ -2596,10 +2596,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-08-01T14:47:48Z",
       "isBestBet": true,
       "stake": 2766.61,
       "profit": 0.0,
@@ -2613,7 +2613,7 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "stakePercent": 20.0,
       "bestBetSelection": {
@@ -2625,7 +2625,12 @@
         "odds": 1.57,
         "probabilityPercent": 62.6,
         "edgePercent": 2.42
-      }
+      },
+      "homeScore": 3,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-01T14:47:48Z"
     },
     {
       "id": "analysis-8b039266528b6da16393",
@@ -4018,14 +4023,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:0",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-08-01T14:47:48Z",
       "isBestBet": true,
       "stake": 2766.61,
       "stakePercent": 20.0,
-      "profit": 0.0,
+      "profit": -2766.61,
       "operationalDayId": "2026-07-30-MSK-2113-PLUS-48H",
       "operationalWindowStart": "2026-07-30T18:58:33Z",
       "operationalWindowEnd": "2026-08-01T18:13:33Z",
@@ -4046,7 +4051,7 @@
       "bestBetSelectionReason": "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения при сохранении допустимого коэффициента.",
       "analysisMarketDiffers": false,
       "rankLabel": "Ставка №4",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "stakeAssignedAt": "2026-07-30T18:13:33Z",
       "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
       "bankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET",
@@ -4054,7 +4059,12 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "homeScore": 3,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-01T14:47:48Z"
     }
   ]
 }
