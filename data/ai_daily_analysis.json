@@ -1,6 +1,6 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-08-01T17:43:45Z",
+  "updatedAt": "2026-08-01T17:54:38Z",
   "analysisDateLocal": "2026-07-30",
   "batch": {
     "version": 1,
@@ -8,12 +8,12 @@
     "sequence": 2,
     "status": "SETTLING",
     "createdAt": "2026-07-30T18:13:33Z",
-    "updatedAt": "2026-08-01T17:43:45Z",
+    "updatedAt": "2026-08-01T17:54:38Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
-    "terminalAnalysisCount": 13,
+    "terminalAnalysisCount": 14,
     "terminalBestBetsCount": 4,
-    "pendingAnalysisCount": 2,
+    "pendingAnalysisCount": 1,
     "pendingBestBetsCount": 0,
     "completed": false,
     "placedAmount": 0.0,
@@ -62,7 +62,7 @@
   "dailyAnalysis": [
     {
       "id": "analysis-25930adc556c70f7e957",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 1,
       "eventId": "4f68110ae33722f386ddcd2aa17cc01c",
       "sport": "soccer",
@@ -289,7 +289,7 @@
     },
     {
       "id": "analysis-bb01c00dd4ea9a102569",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 2,
       "eventId": "778e839e022a74281964ba60cb664d06",
       "sport": "soccer",
@@ -588,7 +588,7 @@
     },
     {
       "id": "analysis-c32d02f56644c8a66340",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 3,
       "eventId": "c56c0611b78cf2c9b19aaf7403def23b",
       "sport": "soccer",
@@ -815,7 +815,7 @@
     },
     {
       "id": "analysis-be58a25ee86dc1e8e301",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 4,
       "eventId": "605f4ec390b2ef0687e4732e14b75a13",
       "sport": "soccer",
@@ -981,7 +981,7 @@
     },
     {
       "id": "analysis-4f988506f6b7d4cc649f",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 5,
       "eventId": "7dfcff5d0f15654cdf2c8af007091a70",
       "sport": "soccer",
@@ -1103,7 +1103,7 @@
     },
     {
       "id": "analysis-3621329edaadfb146c01",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 6,
       "eventId": "0df9935b244ca0ed27d8fd4ca7b065ed",
       "sport": "soccer",
@@ -1268,7 +1268,7 @@
     },
     {
       "id": "analysis-44d36bdc59bf3b703f72",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 7,
       "eventId": "21dd1ea643412d74fa5a6c051ddc0bc1",
       "sport": "soccer",
@@ -1432,7 +1432,7 @@
     },
     {
       "id": "analysis-c606a534da2b517268c1",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 8,
       "eventId": "a88b84040af2c78f8520b91adbc19c79",
       "sport": "soccer",
@@ -1554,7 +1554,7 @@
     },
     {
       "id": "analysis-ec2a597df30624722c47",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 9,
       "eventId": "7f3d884f2b2a0e4b29b6209f2b4ade1e",
       "sport": "soccer",
@@ -1676,7 +1676,7 @@
     },
     {
       "id": "analysis-71ed4217c4b1ade831d8",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 10,
       "eventId": "b2dafd55f589fced90359c3f3bfe6f09",
       "sport": "soccer",
@@ -1933,7 +1933,7 @@
     },
     {
       "id": "analysis-b66832b0ca5f85f97c33",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 11,
       "eventId": "b11021c5e501da22975533149e08b49b",
       "sport": "soccer",
@@ -2071,10 +2071,10 @@
           }
         }
       ],
-      "status": "pending",
+      "status": "unresolved",
       "score": "",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": null,
+      "settledAt": "2026-08-01T17:43:47Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -2088,12 +2088,16 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "statusLabel": "Результат не подтверждён",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
+      "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW",
+      "settlementLastAttemptAt": "2026-08-01T17:54:38Z",
+      "settlementAttempts": 2
     },
     {
       "id": "analysis-8b5bbf79fbded87de06c",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 12,
       "eventId": "b412671f849c011536a6eaad09a294a9",
       "sport": "soccer",
@@ -2257,7 +2261,7 @@
     },
     {
       "id": "analysis-ef5321e422271fe7049e",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 13,
       "eventId": "a20ed5527f35c9f9847132ac9ea6d1e0",
       "sport": "soccer",
@@ -2414,11 +2418,13 @@
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
       "statusLabel": "Ожидается",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-08-01T17:54:38Z",
+      "settlementAttempts": 2
     },
     {
       "id": "analysis-2e01a8cb761046946861",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 14,
       "eventId": "2f75420bd3bb24996d73b1e23cecd77b",
       "sport": "soccer",
@@ -2615,6 +2621,11 @@
       "batchStatus": "ACTIVE",
       "statusLabel": "Проигрыш",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "homeScore": 3,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-01T14:47:48Z",
       "stakePercent": 20.0,
       "bestBetSelection": {
         "id": "bet-39081d38d4f03d85d557",
@@ -2625,16 +2636,11 @@
         "odds": 1.57,
         "probabilityPercent": 62.6,
         "edgePercent": 2.42
-      },
-      "homeScore": 3,
-      "awayScore": 0,
-      "settlementSource": "THE_ODDS_API_SCORES",
-      "resultVisible": true,
-      "resultUpdatedAt": "2026-08-01T14:47:48Z"
+      }
     },
     {
       "id": "analysis-8b039266528b6da16393",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 15,
       "eventId": "8ce2195530798c1a52f648b890c3c75e",
       "sport": "soccer",
