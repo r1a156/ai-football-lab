@@ -5,6 +5,7 @@
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
+# V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
 # V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
 name: V10 R14 Живой цикл — точные результаты и контроль направления голов
@@ -149,14 +150,22 @@ jobs:
           for item in best:
               if abs(float(item.get('stakePercent') or 0) - expected_percent) > 0.001:
                   raise SystemExit('Twenty-percent bank policy changed')
+          legacy_russian_event_ids = set()
           for item in daily + best:
-              if item.get('marketPolicy') == module.R14_MARKET_POLICY:
+              is_r14_record = item.get('marketPolicy') == module.R14_MARKET_POLICY
+              is_russian_domestic = module.competition_is_excluded(
+                  item.get('sportKey'), item.get('league'), '', item.get('country'), config
+              )
+              if is_r14_record:
                   if not module.record_uses_r14_standard_market(item):
                       raise SystemExit('Forbidden Asian/nonstandard market in R14 publication')
                   if item.get('sport') != 'soccer':
                       raise SystemExit('Non-football event in R14 publication')
-                  if module.competition_is_excluded(item.get('sportKey'), item.get('league'), '', item.get('country'), config):
-                      raise SystemExit('Russian domestic event in R14 publication')
+                  if is_russian_domestic:
+                      raise SystemExit('Russian domestic event in newly generated R14 publication')
+              elif is_russian_domestic:
+                  legacy_russian_event_ids.add(str(item.get('eventId') or item.get('id') or 'UNKNOWN'))
+          print('R14R1_LEGACY_RUSSIAN_EVENTS_ALLOWED_FOR_SETTLEMENT=', len(legacy_russian_event_ids))
           if any(bool(item.get('goalDirectionConflict')) for item in best):
               raise SystemExit('Unsupported total direction in R14 best four')
           if sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER') > int(config.get('maximumTotalUnderBestBets', 1)):

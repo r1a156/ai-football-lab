@@ -3,6 +3,7 @@
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
+# V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
 # V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
 name: V10 R14 Футбольная аналитика — без России и конфликтных тоталов
@@ -171,11 +172,19 @@ jobs:
               raise SystemExit('Duplicate events exist')
           if not set(best_ids).issubset(set(ids)):
               raise SystemExit('Best four is outside the fifteen')
+          legacy_russian_event_ids = set()
           for item in daily + best:
-              if item.get('marketPolicy') == module.R14_MARKET_POLICY and not module.record_uses_r14_standard_market(item):
+              is_r14_record = item.get('marketPolicy') == module.R14_MARKET_POLICY
+              if is_r14_record and not module.record_uses_r14_standard_market(item):
                   raise SystemExit('Forbidden market in R14 publication')
-              if module.competition_is_excluded(item.get('sportKey'), item.get('league'), '', item.get('country'), config):
-                  raise SystemExit('Russian domestic event in R14 publication')
+              is_russian_domestic = module.competition_is_excluded(
+                  item.get('sportKey'), item.get('league'), '', item.get('country'), config
+              )
+              if is_russian_domestic and is_r14_record:
+                  raise SystemExit('Russian domestic event in newly generated R14 publication')
+              if is_russian_domestic and not is_r14_record:
+                  legacy_russian_event_ids.add(str(item.get('eventId') or item.get('id') or 'UNKNOWN'))
+          print('R14R1_LEGACY_RUSSIAN_EVENTS_ALLOWED_FOR_SETTLEMENT=', len(legacy_russian_event_ids))
           if any(bool(item.get('goalDirectionConflict')) for item in best):
               raise SystemExit('Unsupported total direction in R14 best four')
           if sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER') > int(config.get('maximumTotalUnderBestBets', 1)):
