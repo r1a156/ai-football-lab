@@ -1,6 +1,6 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-08-01T17:54:38Z",
+  "updatedAt": "2026-08-01T18:42:54Z",
   "analysisDateLocal": "2026-07-30",
   "batch": {
     "version": 1,
@@ -8,7 +8,7 @@
     "sequence": 2,
     "status": "SETTLING",
     "createdAt": "2026-07-30T18:13:33Z",
-    "updatedAt": "2026-08-01T17:54:38Z",
+    "updatedAt": "2026-08-01T18:42:54Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
     "terminalAnalysisCount": 14,
@@ -2071,10 +2071,10 @@
           }
         }
       ],
-      "status": "unresolved",
-      "score": "",
+      "status": "lost",
+      "score": "1:2",
       "publishedAt": "2026-07-30T18:13:33Z",
-      "settledAt": "2026-08-01T17:43:47Z",
+      "settledAt": "2026-08-01T18:42:54Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -2088,12 +2088,16 @@
       "batchId": "batch-8183ffda550dc28ef9ec",
       "batchSequence": 2,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Результат не подтверждён",
+      "statusLabel": "Проигрыш",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
+      "settlementSource": "THE_ODDS_API_SCORES",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW",
-      "settlementLastAttemptAt": "2026-08-01T17:54:38Z",
-      "settlementAttempts": 2
+      "settlementLastAttemptAt": "2026-08-01T18:42:54Z",
+      "settlementAttempts": 4,
+      "homeScore": 1,
+      "awayScore": 2,
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-01T18:42:54Z"
     },
     {
       "id": "analysis-8b5bbf79fbded87de06c",
@@ -2419,8 +2423,8 @@
       "batchStatus": "ACTIVE",
       "statusLabel": "Ожидается",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-08-01T17:54:38Z",
-      "settlementAttempts": 2
+      "settlementLastAttemptAt": "2026-08-01T18:42:54Z",
+      "settlementAttempts": 4
     },
     {
       "id": "analysis-2e01a8cb761046946861",
