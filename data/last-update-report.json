@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-  "mode": "settle",
-  "startedAt": "2026-08-01T19:57:57Z",
-  "finishedAt": "2026-08-01T19:57:57Z",
+  "mode": "auto",
+  "startedAt": "2026-08-01T22:13:32Z",
+  "finishedAt": "2026-08-01T22:13:34Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 1,
       "bestBetsSettled": 0,
       "unresolved": 0
     },
-    "duePending": 0,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -30,22 +30,22 @@
       "version": 1,
       "id": "batch-8183ffda550dc28ef9ec",
       "sequence": 2,
-      "status": "SETTLING",
+      "status": "COMPLETED",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T19:57:57Z",
+      "updatedAt": "2026-08-01T22:13:32Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 14,
+      "terminalAnalysisCount": 15,
       "terminalBestBetsCount": 4,
-      "pendingAnalysisCount": 1,
+      "pendingAnalysisCount": 0,
       "pendingBestBetsCount": 0,
-      "completed": false,
+      "completed": true,
       "placedAmount": 0.0,
       "availableAmount": 12532.76,
       "startingBank": 13833.06,
-      "statusLabel": "Рассчитываются результаты",
+      "statusLabel": "Подборка завершена",
       "activeBestBetsCount": 0,
-      "completedAt": null,
+      "completedAt": "2026-08-01T22:13:32Z",
       "eventIds": [
         "4f68110ae33722f386ddcd2aa17cc01c",
         "778e839e022a74281964ba60cb664d06",
@@ -78,20 +78,29 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-08-01T19:57:57Z"
+      "requestsRemaining": "347",
+      "requestsUsed": "153",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-01T22:13:32Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
+        "status": 200,
+        "elapsedSeconds": 1.548
+      },
+      {
+        "label": "SCORES:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.149
+      }
+    ]
   },
-  "warnings": [
-    "The current prediction batch is still active; overlapping generation was blocked."
-  ],
+  "warnings": [],
   "errors": []
 }
