@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
   "mode": "settle",
-  "startedAt": "2026-08-01T11:58:24Z",
-  "finishedAt": "2026-08-01T11:58:24Z",
+  "startedAt": "2026-08-01T13:44:52Z",
+  "finishedAt": "2026-08-01T13:44:54Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 1,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 4
     },
-    "duePending": 0,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T11:58:24Z",
+      "updatedAt": "2026-08-01T13:44:52Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 11,
+      "terminalAnalysisCount": 12,
       "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 4,
+      "pendingAnalysisCount": 3,
       "pendingBestBetsCount": 1,
       "completed": false,
       "placedAmount": 2766.61,
@@ -78,17 +78,33 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-08-01T11:58:24Z"
+      "requestsRemaining": "490",
+      "requestsUsed": "10",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 4,
+      "calls": 2,
+      "updatedAt": "2026-08-01T13:44:52Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
+        "status": 200,
+        "elapsedSeconds": 1.769
+      },
+      {
+        "label": "SCORES:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.233
+      },
+      {
+        "label": "SCORES:soccer_russia_premier_league",
+        "status": 200,
+        "elapsedSeconds": 0.208
+      }
+    ]
   },
   "warnings": [
     "The current prediction batch is still active; overlapping generation was blocked."
