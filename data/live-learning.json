@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-01T09:20:40Z",
+  "updatedAt": "2026-08-01T10:53:26Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -1081,6 +1081,56 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.566829
+        },
+        {
+          "at": "2026-08-01T10:53:26Z",
+          "status": "LIVE",
+          "score": "0:1",
+          "clockLabel": "ориентировочно 23-я минута",
+          "elapsedFraction": 0.2556,
+          "liveProbability": 0.475719
+        }
+      ],
+      "completed": false
+    },
+    "2f75420bd3bb24996d73b1e23cecd77b": {
+      "eventId": "2f75420bd3bb24996d73b1e23cecd77b",
+      "sport": "soccer",
+      "marketFamily": "HANDICAP",
+      "pickRu": "Ифк Мариехамн с форой +1.5",
+      "homeRu": "Тпс Турку",
+      "awayRu": "Ифк Мариехамн",
+      "preMatchProbability": 0.625753,
+      "startedAt": "2026-08-01T12:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-01T10:53:26Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.625753
+        }
+      ],
+      "completed": false
+    },
+    "b11021c5e501da22975533149e08b49b": {
+      "eventId": "b11021c5e501da22975533149e08b49b",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 2.5",
+      "homeRu": "ФК Акрон Толятти",
+      "awayRu": "Рубин Казан",
+      "preMatchProbability": 0.569263,
+      "startedAt": "2026-08-01T11:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-01T10:53:26Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.569263
         }
       ],
       "completed": false
@@ -1113,7 +1163,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 78,
+    "snapshotCount": 81,
     "calibratedBuckets": 0
   }
 }
