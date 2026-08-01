@@ -1,5 +1,5 @@
 {
-  "version": 20,
+  "version": 21,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -78,19 +78,27 @@
     "futures"
   ],
   "excludedLeagueWords": [
+    "amateur",
+    "club friendly",
+    "esoccer",
+    "first league russia",
+    "fnl",
     "friendly",
-    "youth",
+    "premier liga",
+    "preseason",
     "reserve",
+    "russia",
+    "russian",
+    "russian cup",
+    "simulated",
     "u19",
     "u20",
     "u21",
-    "women friendly",
-    "club friendly",
-    "preseason",
-    "amateur",
-    "esoccer",
     "virtual",
-    "simulated"
+    "women friendly",
+    "youth",
+    "россий",
+    "россия"
   ],
   "sportPriority": {
     "soccer": 100
@@ -100,10 +108,10 @@
     "HYBRID": 0.55,
     "MARKET": 0.18
   },
-  "publicationPolicy": "EXACTLY_FIFTEEN_DISTINCT_FOOTBALL_MATCHES_EXACTLY_FOUR_STANDARD_MARKET_BEST_BETS",
-  "predictionObjective": "MAXIMUM_CONSERVATIVE_CALIBRATED_PASS_PROBABILITY_WITH_NONTRIVIAL_ODDS",
+  "publicationPolicy": "EXACTLY_FIFTEEN_NON_RUSSIAN_FOOTBALL_MATCHES_EXACTLY_FOUR_DIRECTION_CONFIRMED_STANDARD_MARKETS",
+  "predictionObjective": "MAXIMUM_CONSERVATIVE_HIT_RATE_WITH_GOAL_DIRECTION_CONSENSUS",
   "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-  "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
+  "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "topFourHardMinimumProbability": 0.48,
   "topFourHardMinimumDataQuality": 40,
   "topFourHardMaximumAnomaly": 62,
@@ -112,7 +120,7 @@
   "resultFirstMinimumAgreement": 58,
   "resultFirstMaximumAnomaly": 48,
   "resultFirstMinimumExpectedValue": -0.01,
-  "bestBetSelectionObjective": "CONSERVATIVE_HIT_RATE_FIRST_STANDARD_MARKETS_WITH_PREFERRED_ODDS_FROM_1_55",
+  "bestBetSelectionObjective": "DIRECTION_CONFIRMED_CONSERVATIVE_HIT_RATE_WITH_PREFERRED_ODDS_FROM_1_55",
   "visibleLanguage": "ru-RU",
   "localizationPolicy": "ALL_VISIBLE_TEXT_AND_TEAM_NAMES_RUSSIAN",
   "teamNamePolicy": "OFFICIAL_RUSSIAN_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
@@ -154,7 +162,7 @@
   "batchOverlapPolicy": "FORBID_OVERLAPPING_PUBLISHED_BATCHES",
   "batchPublicationPolicy": "ATOMIC_RESULTS_BANK_STATISTICS_LEARNING_NEXT_FIFTEEN_NEXT_FOUR",
   "bankMetricsPolicy": "CURRENT_PLACED_AVAILABLE_ACTIVE_COUNT_UPDATED_TOGETHER",
-  "batchUnresolvedReleaseMinutesSoccer": 360,
+  "batchUnresolvedReleaseMinutesSoccer": 720,
   "batchUnresolvedReleaseMinutesHockey": 420,
   "bestFourStatisticsPolicy": "DEDICATED_VISIBLE_STATISTICS_NEXT_TO_CURRENT_FOUR_BEST_BETS",
   "mobileNavigationPolicy": "FIXED_COMPACT_SINGLE_LINE_FOUR_ITEMS_NO_EXPANSION",
@@ -179,7 +187,7 @@
   "learningSamplePolicy": "ONE_SETTLED_ANALYSIS_PER_EVENT_NO_FINANCIAL_DUPLICATES",
   "allFifteenSettlementPolicy": "UPDATE_SCORE_STATUS_WIN_LOSS_PUSH_FOR_EVERY_PUBLISHED_ANALYSIS",
   "bankIntegrityPolicy": "PRESERVE_EXISTING_BANK_AND_TWENTY_PERCENT_PER_FOUR_BETS",
-  "dailySelectionObjective": "MAXIMUM_CONSERVATIVE_CALIBRATED_HIT_RATE_STANDARD_MARKETS_ONLY",
+  "dailySelectionObjective": "MAXIMUM_CONSERVATIVE_CALIBRATED_HIT_RATE_WITH_DIRECTIONAL_GOAL_GUARDS",
   "footballOnly": true,
   "allowedMarketKeys": [
     "btts",
@@ -215,5 +223,29 @@
   "fallbackMinimumConservativeProbability": 0.48,
   "fallbackMinimumMarketStability": 45,
   "marketPolicy": "FOOTBALL_ONLY_H2H_HALF_TOTALS_BTTS_DOUBLE_CHANCE_HALF_TEAM_TOTALS",
-  "asianMarketsPolicy": "FORBIDDEN_FOR_NEW_PUBLICATION_LEGACY_SETTLEMENT_ONLY"
+  "asianMarketsPolicy": "FORBIDDEN_FOR_NEW_PUBLICATION_LEGACY_SETTLEMENT_ONLY",
+  "excludedSportKeyPrefixes": [
+    "soccer_russia_"
+  ],
+  "excludedCountries": [
+    "Russia",
+    "Russian Federation",
+    "Россия"
+  ],
+  "settlementFuzzyTimeWindowHours": 18,
+  "settlementNameMatchThreshold": 0.72,
+  "totalDirectionMinimumStatisticalProbability": 0.54,
+  "totalDirectionMinimumMarketProbability": 0.5,
+  "totalDirectionMinimumRecentRate": 0.48,
+  "totalDirectionConflictPenalty": 34,
+  "underExpectedGoalsSafetyMargin": 0.05,
+  "overExpectedGoalsSafetyMargin": 0.05,
+  "under25MaximumBttsProbability": 0.56,
+  "under25MaximumRecentOverRate": 0.56,
+  "overMinimumRecentOverRate": 0.42,
+  "maximumTotalUnderBestBets": 1,
+  "maximumTotalMarketsBestBets": 4,
+  "settlementPolicy": "EXACT_EVENT_ID_THEN_FUZZY_PROVIDER_MATCH_THEN_FOOTBALL_DATA_WITH_VISIBLE_RETRIES",
+  "excludedCompetitionPolicy": "NO_NEW_RUSSIAN_DOMESTIC_MATCHES_CURRENT_PUBLISHED_RECORDS_SETTLE_HONESTLY",
+  "totalDirectionPolicy": "SCORE_MODEL_AND_BOOKMAKER_DIRECTION_MUST_AGREE; MAX_ONE_UNDER_IN_TOP_FOUR"
 }

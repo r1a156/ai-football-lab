@@ -1,5 +1,5 @@
-﻿#!/usr/bin/env python3
-# V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS
+#!/usr/bin/env python3
+# V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 # V10_GLOBAL_MULTISPORT_INTELLIGENCE
 # V10_R6_FINAL_LIVE_LEARNING_STATISTICS
@@ -8,13 +8,14 @@
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
-"""AI Football Lab V10 R13: football-only standard-market analytics.
+"""AI Football Lab V10 R14: result-integrity and goal-direction analytics.
 
 The pipeline searches a broad football pool, models match scenarios, and then
 evaluates only widely available standard markets. It publishes exactly fifteen
 distinct matches and four frozen virtual-bank bets while preserving the existing
-twenty-percent-per-bet bank policy. Asian handicaps and integer/quarter totals
-are legacy-settlement-only and can never be selected for a new R13 batch.
+twenty-percent-per-bet bank policy. Asian handicaps and integer/quarter totals remain forbidden. Russian domestic
+competitions are excluded, score settlement uses exact and fuzzy provider bridges,
+and total direction must be supported by both the score model and the market.
 
 No third-party Python packages are required.
 """
@@ -64,7 +65,7 @@ NHL_API_BASE = "https://api-web.nhle.com/v1"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 STATE_VERSION = "10.0.0"
-PIPELINE_MARKER = "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS"
+PIPELINE_MARKER = "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION"
 SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
 WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
 LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
@@ -299,8 +300,8 @@ def market_family(market: str) -> str:
     return "OTHER"
 
 
-R13_MARKET_POLICY = "R13_FOOTBALL_STANDARD_MARKETS_ONLY"
-R13_ALLOWED_MARKET_KEYS = frozenset({
+R14_MARKET_POLICY = "R14_FOOTBALL_STANDARD_MARKETS_ONLY"
+R14_ALLOWED_MARKET_KEYS = frozenset({
     "h2h",
     "h2h_3_way",
     "totals",
@@ -308,7 +309,7 @@ R13_ALLOWED_MARKET_KEYS = frozenset({
     "double_chance",
     "team_totals",
 })
-R13_ALLOWED_MARKET_CODES = frozenset({
+R14_ALLOWED_MARKET_CODES = frozenset({
     "HOME_WIN",
     "DRAW",
     "AWAY_WIN",
@@ -324,7 +325,7 @@ R13_ALLOWED_MARKET_CODES = frozenset({
     "TEAM_TOTAL_AWAY_OVER",
     "TEAM_TOTAL_AWAY_UNDER",
 })
-R13_FORBIDDEN_MARKET_KEYS = frozenset({
+R14_FORBIDDEN_MARKET_KEYS = frozenset({
     "spreads",
     "alternate_spreads",
     "alternate_totals",
@@ -349,16 +350,16 @@ def standard_market_allowed(
 ) -> bool:
     key = str(market_key or "").lower()
     code = str(market_code or "").upper()
-    if key not in R13_ALLOWED_MARKET_KEYS:
+    if key not in R14_ALLOWED_MARKET_KEYS:
         return False
-    if code and code not in R13_ALLOWED_MARKET_CODES:
+    if code and code not in R14_ALLOWED_MARKET_CODES:
         return False
     if key in {"totals", "team_totals"}:
         return is_half_goal_line(point)
     return point in (None, "") or key in {"h2h", "h2h_3_way", "btts", "double_chance"}
 
 
-def record_uses_r13_standard_market(record: dict[str, Any]) -> bool:
+def record_uses_r14_standard_market(record: dict[str, Any]) -> bool:
     return (
         str(record.get("sport") or "soccer") == "soccer"
         and standard_market_allowed(
@@ -504,23 +505,23 @@ def validate_config(config: dict[str, Any]) -> None:
     if safe_float(config.get("maximumDailyExposurePercent")) != 80.0:
         raise RuntimeError("maximumDailyExposurePercent must be 80")
     if not bool(config.get("footballOnly")):
-        raise RuntimeError("R13 footballOnly must be true")
+        raise RuntimeError("R14 footballOnly must be true")
     if safe_int(config.get("maximumHockeySportRequests"), 0) != 0:
-        raise RuntimeError("R13 maximumHockeySportRequests must be zero")
+        raise RuntimeError("R14 maximumHockeySportRequests must be zero")
     if safe_int(config.get("minimumHockeySportRequestsForFallback"), 0) != 0:
-        raise RuntimeError("R13 hockey fallback must be disabled")
+        raise RuntimeError("R14 hockey fallback must be disabled")
     featured = {str(value) for value in config.get("featuredMarkets") or []}
     if not featured or not featured.issubset({"h2h", "totals"}):
-        raise RuntimeError("R13 featuredMarkets may contain only h2h and totals")
+        raise RuntimeError("R14 featuredMarkets may contain only h2h and totals")
     advanced = {str(value) for value in config.get("advancedSoccerMarkets") or []}
     if not advanced.issubset({"btts", "double_chance", "team_totals"}):
-        raise RuntimeError("R13 advanced markets contain a forbidden Asian market")
+        raise RuntimeError("R14 advanced markets contain a forbidden Asian market")
     configured_allowed = {str(value) for value in config.get("allowedMarketKeys") or []}
-    if configured_allowed != set(R13_ALLOWED_MARKET_KEYS):
-        raise RuntimeError("R13 allowedMarketKeys mismatch")
+    if configured_allowed != set(R14_ALLOWED_MARKET_KEYS):
+        raise RuntimeError("R14 allowedMarketKeys mismatch")
     forbidden = {str(value) for value in config.get("forbiddenMarketKeys") or []}
-    if not R13_FORBIDDEN_MARKET_KEYS.issubset(forbidden):
-        raise RuntimeError("R13 forbiddenMarketKeys is incomplete")
+    if not R14_FORBIDDEN_MARKET_KEYS.issubset(forbidden):
+        raise RuntimeError("R14 forbiddenMarketKeys is incomplete")
     if safe_int(config.get("maximumOddsSportRequests")) < 15:
         raise RuntimeError("maximumOddsSportRequests must cover a broad football pool")
     if safe_int(config.get("minimumBookmakers"), 2) < 2:
@@ -528,7 +529,7 @@ def validate_config(config: dict[str, Any]) -> None:
     if safe_int(config.get("bestBetMinimumBookmakers"), 3) < 3:
         raise RuntimeError("bestBetMinimumBookmakers must be at least three")
     if safe_float(config.get("preferredMinimumOdds"), 1.55) < 1.50:
-        raise RuntimeError("preferredMinimumOdds is too small for the R13 objective")
+        raise RuntimeError("preferredMinimumOdds is too small for the R14 objective")
     generation_hour = safe_int(config.get("dailyGenerationHourLocal"), 8)
     if generation_hour < 0 or generation_hour > 23:
         raise RuntimeError("dailyGenerationHourLocal must be in 0..23")
@@ -543,8 +544,18 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("historyPendingExpiryHoursSoccer must be positive")
     if not bool(config.get("batchRolloverEnabled", True)):
         raise RuntimeError("batchRolloverEnabled must be true")
-    if safe_int(config.get("batchUnresolvedReleaseMinutesSoccer"), 360) < 240:
-        raise RuntimeError("batchUnresolvedReleaseMinutesSoccer must be at least 240")
+    if safe_int(config.get("batchUnresolvedReleaseMinutesSoccer"), 720) < 360:
+        raise RuntimeError("batchUnresolvedReleaseMinutesSoccer must be at least 360")
+    excluded_prefixes = {str(value).lower() for value in config.get("excludedSportKeyPrefixes") or []}
+    if "soccer_russia_" not in excluded_prefixes:
+        raise RuntimeError("R14 must exclude Russian domestic sport keys")
+    excluded_countries = {normalize_text(value) for value in config.get("excludedCountries") or []}
+    if not ({"russia", "россия"} & excluded_countries):
+        raise RuntimeError("R14 excludedCountries must contain Russia")
+    if safe_float(config.get("totalDirectionMinimumStatisticalProbability"), 0.54) < 0.50:
+        raise RuntimeError("R14 total direction statistical floor is too low")
+    if safe_int(config.get("maximumTotalUnderBestBets"), 1) > 1:
+        raise RuntimeError("R14 permits at most one total-under bet in the best four")
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
     now = now or utc_now()
@@ -997,6 +1008,8 @@ def infer_country(sport_key: str, sport_title: str) -> str:
         "china": "Китай",
         "chile": "Чили",
         "colombia": "Колумбия",
+        "russia": "Россия",
+        "russian": "Россия",
         "nhl": "США / Канада",
         "ahl": "США / Канада",
         "sweden_hockey": "Швеция",
@@ -1013,20 +1026,65 @@ def infer_country(sport_key: str, sport_title: str) -> str:
     return "Международный турнир"
 
 
+def competition_is_excluded(
+    sport_key: Any,
+    title: Any,
+    description: Any,
+    country: Any,
+    config: dict[str, Any],
+) -> bool:
+    key = str(sport_key or "").strip().lower()
+    text = " ".join(
+        [
+            key,
+            str(title or "").lower(),
+            str(description or "").lower(),
+            str(country or "").lower(),
+        ]
+    )
+    normalized_text = normalize_text(text)
+    for prefix in config.get("excludedSportKeyPrefixes") or []:
+        if key.startswith(str(prefix or "").strip().lower()):
+            return True
+    for word in config.get("excludedSportKeyWords", []):
+        if str(word).lower() in text:
+            return True
+    for word in config.get("excludedLeagueWords", []):
+        raw = str(word or "").strip().lower()
+        if raw and (raw in text or normalize_text(raw) in normalized_text):
+            return True
+    excluded_countries = {normalize_text(value) for value in config.get("excludedCountries") or []}
+    if normalize_text(country) in excluded_countries:
+        return True
+    return False
+
+
 def league_allowed(sport: dict[str, Any], config: dict[str, Any]) -> bool:
     if not sport.get("active", True) or sport.get("has_outrights"):
         return False
     sport_type = classify_sport(sport)
     if bool(config.get("footballOnly", True)) and sport_type != "soccer":
         return False
-    text = f"{sport.get('key', '')} {sport.get('title', '')} {sport.get('description', '')}".lower()
-    for word in config.get("excludedSportKeyWords", []):
-        if str(word).lower() in text:
-            return False
-    for word in config.get("excludedLeagueWords", []):
-        if str(word).lower() in text:
-            return False
+    country = infer_country(str(sport.get("key") or ""), str(sport.get("title") or ""))
+    if competition_is_excluded(
+        sport.get("key"),
+        sport.get("title"),
+        sport.get("description"),
+        country,
+        config,
+    ):
+        return False
     return sport_type == "soccer"
+
+
+def event_allowed(event: dict[str, Any], config: dict[str, Any]) -> bool:
+    return not competition_is_excluded(
+        event.get("sport_key"),
+        event.get("sport_title"),
+        event.get("sport_description"),
+        event.get("country"),
+        config,
+    )
 
 def fetch_active_sports(client: ApiClient, api_key: str) -> list[dict[str, Any]]:
     url = f"{ODDS_API_BASE}/sports/?" + urllib.parse.urlencode({"apiKey": api_key})
@@ -1264,7 +1322,7 @@ def odds_query_parameters(config: dict[str, Any], api_key: str) -> dict[str, str
     configured = [str(value) for value in config.get("featuredMarkets") or ["h2h", "totals"]]
     markets = [value for value in configured if value in {"h2h", "totals"}]
     if not markets:
-        raise RuntimeError("R13 has no standard featured markets configured")
+        raise RuntimeError("R14 has no standard featured markets configured")
     params = {
         "apiKey": api_key,
         "regions": str(config.get("oddsRegions") or "eu"),
@@ -1591,18 +1649,32 @@ def find_team_games(team_name: str, context: dict[str, Any]) -> tuple[list[dict[
 def recent_form_summary(games: list[dict[str, Any]], side: str | None = None, limit: int = 10) -> dict[str, float]:
     selected = [game for game in games if side is None or game.get("side") == side][:limit]
     if not selected:
-        return {"matches": 0, "gf": 0.0, "ga": 0.0, "points": 0.0, "variance": 0.0}
+        return {
+            "matches": 0, "gf": 0.0, "ga": 0.0, "points": 0.0,
+            "variance": 0.0, "totalGoals": 0.0, "over15": 0.0,
+            "over25": 0.0, "over35": 0.0, "btts": 0.0,
+            "failedToScore": 0.0, "cleanSheet": 0.0,
+        }
     goals_for = [safe_float(game.get("goalsFor")) for game in selected]
     goals_against = [safe_float(game.get("goalsAgainst")) for game in selected]
+    totals = [gf + ga for gf, ga in zip(goals_for, goals_against)]
     points = []
     for gf, ga in zip(goals_for, goals_against):
         points.append(3.0 if gf > ga else 1.0 if gf == ga else 0.0)
+    count = float(len(selected))
     return {
         "matches": len(selected),
         "gf": mean(goals_for),
         "ga": mean(goals_against),
         "points": mean(points) / 3.0,
         "variance": stdev([gf - ga for gf, ga in zip(goals_for, goals_against)]),
+        "totalGoals": mean(totals),
+        "over15": sum(1 for value in totals if value > 1.5) / count,
+        "over25": sum(1 for value in totals if value > 2.5) / count,
+        "over35": sum(1 for value in totals if value > 3.5) / count,
+        "btts": sum(1 for gf, ga in zip(goals_for, goals_against) if gf > 0 and ga > 0) / count,
+        "failedToScore": sum(1 for value in goals_for if value <= 0) / count,
+        "cleanSheet": sum(1 for value in goals_against if value <= 0) / count,
     }
 
 
@@ -1861,6 +1933,11 @@ def build_event_model(
                     "homeRecent": home_all,
                     "awayRecent": away_all,
                     "teamNameMatch": round(min(home_match, away_match), 3),
+                    "combinedRecentTotalGoals": round(mean([home_all["totalGoals"], away_all["totalGoals"]]), 4),
+                    "combinedRecentOver15": round(mean([home_all["over15"], away_all["over15"]]), 4),
+                    "combinedRecentOver25": round(mean([home_all["over25"], away_all["over25"]]), 4),
+                    "combinedRecentOver35": round(mean([home_all["over35"], away_all["over35"]]), 4),
+                    "combinedRecentBTTS": round(mean([home_all["btts"], away_all["btts"]]), 4),
                 }
             )
     elif "nhl" in str(event.get("sport_key") or "").lower() and nhl_standings:
@@ -1941,7 +2018,7 @@ def normalize_selection(
     event: dict[str, Any],
 ) -> tuple[str, str, str, float | None] | None:
     key = str(market_key or "").lower()
-    if key not in R13_ALLOWED_MARKET_KEYS:
+    if key not in R14_ALLOWED_MARKET_KEYS:
         return None
     name = str(outcome.get("name") or "").strip()
     description = str(outcome.get("description") or "").strip()
@@ -2011,7 +2088,7 @@ def parse_event_quotes(
             if not isinstance(market, dict):
                 continue
             market_key = str(market.get("key") or "").lower()
-            if market_key not in R13_ALLOWED_MARKET_KEYS:
+            if market_key not in R14_ALLOWED_MARKET_KEYS:
                 continue
             market_update = parse_datetime(market.get("last_update")) or bookmaker_update
             age_minutes = (
@@ -2090,7 +2167,7 @@ def parse_event_quotes(
                 "quoteCount": len(rows),
                 "marketProbability": clamp(mean(probabilities), 0.01, 0.99),
                 "marketDispersion": stdev(probabilities),
-                "marketPolicy": R13_MARKET_POLICY,
+                "marketPolicy": R14_MARKET_POLICY,
                 "lineIsStandard": standard_market_allowed(market_key, best["marketCode"], point),
                 "oddsMinimum": min(prices),
                 "oddsMedian": statistics.median(prices),
@@ -2166,6 +2243,14 @@ def model_probability_for_quote(model: dict[str, Any], quote: dict[str, Any]) ->
         return matrix_team_total_probability(matrix, "AWAY", "UNDER", point)
     return safe_float(quote.get("marketProbability"), 0.5)
 
+def learning_market_detail(record: dict[str, Any]) -> str:
+    market = str(record.get("market") or record.get("selectionCode") or "OTHER").upper()
+    point = record.get("point")
+    if point is not None and market.startswith(("TOTAL_", "TEAM_TOTAL_")):
+        return f"{market}@{safe_float(point):g}"
+    return market
+
+
 def learning_segment_keys(
     sport: str,
     league: str,
@@ -2173,20 +2258,25 @@ def learning_segment_keys(
     odds: float,
     data_tier: str = "",
     probability: float = 0.0,
+    market_detail: str = "",
 ) -> list[str]:
     odds_band = "LOW" if odds < 1.55 else "MID" if odds < 1.80 else "UPPER_MID" if odds < 2.20 else "HIGH"
     probability_band = f"P{int(clamp(probability, 0.0, 0.999) * 10) * 10:02d}"
     league_key = normalize_text(league)[:80] or "unknown"
     tier = str(data_tier or "UNKNOWN").upper()
+    detail = str(market_detail or family or "OTHER").upper()
     return [
         f"SPORT|{sport}",
         f"MARKET|{sport}|{family}",
+        f"MARKET_DETAIL|{sport}|{detail}",
         f"LEAGUE|{sport}|{league_key}",
         f"ODDS|{sport}|{odds_band}",
         f"DATA_TIER|{sport}|{tier}",
         f"PROBABILITY|{sport}|{probability_band}",
         f"LEAGUE_MARKET|{sport}|{league_key}|{family}",
+        f"LEAGUE_MARKET_DETAIL|{sport}|{league_key}|{detail}",
         f"MARKET_TIER|{sport}|{family}|{tier}",
+        f"MARKET_DETAIL_TIER|{sport}|{detail}|{tier}",
     ]
 
 def probability_adjustment(
@@ -2198,6 +2288,7 @@ def probability_adjustment(
     data_tier: str,
     probability: float,
     config: dict[str, Any],
+    market_detail: str = "",
 ) -> tuple[float, list[dict[str, Any]]]:
     minimum = safe_int(config.get("learningMinimumSegmentSamples"), 40)
     full = safe_int(config.get("learningFullWeightSamples"), 160)
@@ -2206,7 +2297,7 @@ def probability_adjustment(
     total_weight = 0.0
     weighted_adjustment = 0.0
     segments = learning.get("segments") if isinstance(learning.get("segments"), dict) else {}
-    for key in learning_segment_keys(sport, league, family, odds, data_tier, probability):
+    for key in learning_segment_keys(sport, league, family, odds, data_tier, probability, market_detail):
         segment = segments.get(key)
         if not isinstance(segment, dict):
             continue
@@ -2231,6 +2322,79 @@ def probability_adjustment(
     if total_weight <= 0:
         return 0.0, []
     return clamp(weighted_adjustment / total_weight, -maximum, maximum), contributions
+
+
+def goal_direction_diagnostics(
+    quote: dict[str, Any],
+    model: dict[str, Any],
+    statistical_probability: float,
+    market_probability: float,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    market = str(quote.get("market") or "").upper()
+    point = safe_float(quote.get("point"), 0.0)
+    is_total = market.startswith("TOTAL_") or market.startswith("TEAM_TOTAL_")
+    if not is_total:
+        return {
+            "isTotal": False, "conflict": False, "supportScore": 100.0,
+            "statisticalProbability": round(statistical_probability, 6),
+            "marketProbability": round(market_probability, 6),
+            "reasons": [],
+        }
+
+    components = model.get("components") if isinstance(model.get("components"), dict) else {}
+    expected_total = safe_float(model.get("homeLambda")) + safe_float(model.get("awayLambda"))
+    btts_probability = matrix_btts_probability(model.get("matrix") or [], True) if model.get("matrix") else 0.0
+    recent_key = ""
+    if abs(point - 1.5) < 1e-9:
+        recent_key = "combinedRecentOver15"
+    elif abs(point - 2.5) < 1e-9:
+        recent_key = "combinedRecentOver25"
+    elif abs(point - 3.5) < 1e-9:
+        recent_key = "combinedRecentOver35"
+    recent_over = safe_float(components.get(recent_key), -1.0) if recent_key else -1.0
+    is_over = market.endswith("_OVER")
+    recent_selected = recent_over if is_over else (1.0 - recent_over if recent_over >= 0 else -1.0)
+
+    stat_floor = safe_float(config.get("totalDirectionMinimumStatisticalProbability"), 0.54)
+    market_floor = safe_float(config.get("totalDirectionMinimumMarketProbability"), 0.50)
+    recent_floor = safe_float(config.get("totalDirectionMinimumRecentRate"), 0.48)
+    reasons: list[str] = []
+    if statistical_probability < stat_floor:
+        reasons.append("Модель счёта не подтверждает выбранное направление тотала")
+    if market_probability < market_floor:
+        reasons.append("Консенсус букмекеров не подтверждает выбранное направление тотала")
+    if recent_selected >= 0 and recent_selected < recent_floor:
+        reasons.append("Последние матчи команд противоречат выбранному направлению тотала")
+
+    if market == "TOTAL_UNDER":
+        if expected_total >= point - safe_float(config.get("underExpectedGoalsSafetyMargin"), 0.05):
+            reasons.append("Ожидаемая сумма голов слишком высока для ставки на меньше")
+        if point <= 2.5 and btts_probability >= safe_float(config.get("under25MaximumBttsProbability"), 0.56):
+            reasons.append("Высока вероятность голов обеих команд")
+        if point <= 2.5 and recent_over >= safe_float(config.get("under25MaximumRecentOverRate"), 0.56):
+            reasons.append("Команды часто пробивают тотал больше 2,5")
+    elif market == "TOTAL_OVER":
+        if expected_total <= point + safe_float(config.get("overExpectedGoalsSafetyMargin"), 0.05):
+            reasons.append("Ожидаемая сумма голов недостаточна для ставки на больше")
+        if recent_over >= 0 and recent_over < safe_float(config.get("overMinimumRecentOverRate"), 0.42):
+            reasons.append("Недавняя результативность недостаточна для ставки на больше")
+
+    available_signals = [statistical_probability, market_probability]
+    if recent_selected >= 0:
+        available_signals.append(recent_selected)
+    support_score = clamp(mean(available_signals, 0.0) * 100.0, 0.0, 100.0)
+    return {
+        "isTotal": True,
+        "conflict": bool(reasons),
+        "supportScore": round(support_score, 2),
+        "statisticalProbability": round(statistical_probability, 6),
+        "marketProbability": round(market_probability, 6),
+        "recentSelectedRate": round(recent_selected, 6) if recent_selected >= 0 else None,
+        "expectedTotalGoals": round(expected_total, 4),
+        "bttsProbability": round(btts_probability, 6),
+        "reasons": reasons,
+    }
 
 
 def evaluate_event_markets(
@@ -2274,6 +2438,9 @@ def evaluate_event_markets(
         market_probability = safe_float(quote.get("marketProbability"), 0.5)
         raw_probability = statistical_probability * stat_weight + market_probability * (1 - stat_weight)
         preliminary_probability = clamp(raw_probability, 0.03, 0.97)
+        direction = goal_direction_diagnostics(
+            quote, model, statistical_probability, market_probability, config
+        )
         adjustment, learning_evidence = probability_adjustment(
             learning,
             sport,
@@ -2283,6 +2450,7 @@ def evaluate_event_markets(
             data_tier,
             preliminary_probability,
             config,
+            learning_market_detail(quote),
         )
         model_probability = clamp(preliminary_probability + adjustment, 0.03, 0.97)
         # Market-only rows must not invent a large edge from a model that has no
@@ -2342,6 +2510,16 @@ def evaluate_event_markets(
             if evidence_weight > 0 else conservative_probability
         )
         historical_support = clamp((empirical_hit_rate - 0.50) * 42, -12, 18) if learning_evidence else 0.0
+        direction_penalty = (
+            safe_float(config.get("totalDirectionConflictPenalty"), 34.0)
+            if bool(direction.get("conflict"))
+            else 0.0
+        )
+        direction_bonus = (
+            max(0.0, safe_float(direction.get("supportScore")) - 55.0) * 0.20
+            if bool(direction.get("isTotal"))
+            else 0.0
+        )
 
         reliability_score = (
             conservative_probability * 82
@@ -2355,6 +2533,8 @@ def evaluate_event_markets(
             - anomaly * 0.16
             - data_tier_penalty
             - low_odds_penalty
+            - direction_penalty
+            + direction_bonus
         )
         best_bet_score = (
             conservative_probability * 92
@@ -2369,6 +2549,8 @@ def evaluate_event_markets(
             - anomaly * 0.18
             - data_tier_penalty
             - low_odds_penalty
+            - direction_penalty * 1.20
+            + direction_bonus * 1.15
         )
 
         candidate = {
@@ -2397,6 +2579,9 @@ def evaluate_event_markets(
             "scenarioConcentration": round(score_concentration, 6),
             "historicalHitRate": round(empirical_hit_rate, 6),
             "historicalSupport": round(historical_support, 4),
+            "goalDirection": direction,
+            "goalDirectionConflict": bool(direction.get("conflict")),
+            "goalDirectionSupport": safe_float(direction.get("supportScore")),
             "reliabilityScore": round(reliability_score, 4),
             "hitRateScore": round(reliability_score, 4),
             "analysisScore": round(reliability_score, 4),
@@ -2412,7 +2597,7 @@ def evaluate_event_markets(
             "sourceNotes": list(model.get("sourceNotes") or []),
             "learningAdjustment": round(adjustment, 6),
             "learningEvidence": learning_evidence,
-            "marketPolicy": R13_MARKET_POLICY,
+            "marketPolicy": R14_MARKET_POLICY,
             "selectionObjective": "MAXIMUM_CONSERVATIVE_CALIBRATED_PASS_PROBABILITY",
             "evaluatedAt": iso_z(now),
         }
@@ -2445,8 +2630,10 @@ def best_bet_qualification(candidate: dict[str, Any], config: dict[str, Any]) ->
     quote_count = safe_int(candidate.get("quoteCount"))
     data_tier = str(candidate.get("dataTier") or "MARKET").upper()
 
-    if not record_uses_r13_standard_market(candidate):
-        failures.append("Рынок не входит в стандартный белый список R13")
+    if not record_uses_r14_standard_market(candidate):
+        failures.append("Рынок не входит в стандартный белый список R14")
+    if bool(candidate.get("goalDirectionConflict")):
+        failures.extend(list((candidate.get("goalDirection") or {}).get("reasons") or ["Направление тотала не подтверждено"]))
     if conservative < safe_float(config.get("bestBetMinimumConservativeProbability"), 0.58):
         failures.append("Недостаточная консервативная вероятность")
     if probability < safe_float(config.get("bestBetMinimumProbability"), 0.62):
@@ -2562,7 +2749,7 @@ def event_to_analysis_record(
         "uncertaintyMargin": selected.get("uncertaintyMargin"),
         "marketStability": selected.get("marketStability"),
         "reliabilityScore": selected.get("reliabilityScore"),
-        "marketPolicy": R13_MARKET_POLICY,
+        "marketPolicy": R14_MARKET_POLICY,
         "dataTier": selected.get("dataTier"),
         "dataQuality": selected.get("dataQuality"),
         "agreement": selected.get("agreement"),
@@ -2616,7 +2803,7 @@ def event_to_analysis_record(
                 "uncertaintyMargin": item.get("uncertaintyMargin"),
                 "marketStability": item.get("marketStability"),
                 "reliabilityScore": item.get("reliabilityScore"),
-                "marketPolicy": R13_MARKET_POLICY,
+                "marketPolicy": R14_MARKET_POLICY,
                 "dataTier": item.get("dataTier"),
                 "dataQuality": item.get("dataQuality"),
                 "agreement": item.get("agreement"),
@@ -2686,6 +2873,11 @@ def build_daily_analysis(
     for raw_event in odds_events:
         if infer_sport_from_key(raw_event.get("sport_key")) != "soccer":
             continue
+        raw_event["country"] = infer_country(str(raw_event.get("sport_key") or ""), str(raw_event.get("sport_title") or ""))
+        if not event_allowed(raw_event, config):
+            diagnostics.setdefault("excludedCompetitions", 0)
+            diagnostics["excludedCompetitions"] += 1
+            continue
         diagnostics["footballEvents"] += 1
         event_id = str(raw_event.get("id") or "")
         event = merge_advanced_event(raw_event, advanced.get(event_id, {})) if event_id in advanced else raw_event
@@ -2750,7 +2942,7 @@ def build_daily_analysis(
             "EXACT_DAILY_FIFTEEN_NOT_MET: "
             f"footballOddsEvents={diagnostics['footballEvents']}; "
             f"eventsWithAnalysis={len(selected_per_event)}; target={target}. "
-            "R13 must expand the football source pool instead of publishing weak or Asian markets."
+            "R14 must expand the football source pool instead of publishing weak or Asian markets."
         )
 
     max_league = safe_int(config.get("maximumSameLeagueDailyAnalysis"), 2)
@@ -2775,10 +2967,10 @@ def build_daily_analysis(
     ]
     if len(records) != target:
         raise RuntimeError(f"EXACT_DAILY_FIFTEEN_PUBLICATION_FAILED={len(records)}")
-    if any(not record_uses_r13_standard_market(item) for item in records):
-        raise RuntimeError("R13_FORBIDDEN_MARKET_REACHED_PUBLICATION")
+    if any(not record_uses_r14_standard_market(item) for item in records):
+        raise RuntimeError("R14_FORBIDDEN_MARKET_REACHED_PUBLICATION")
     if any(str(item.get("sport")) != "soccer" for item in records):
-        raise RuntimeError("R13_NON_FOOTBALL_EVENT_REACHED_PUBLICATION")
+        raise RuntimeError("R14_NON_FOOTBALL_EVENT_REACHED_PUBLICATION")
 
     diagnostics["bySport"] = dict(diagnostics["bySport"])
     diagnostics["byMarketFamily"] = dict(diagnostics["byMarketFamily"])
@@ -2786,7 +2978,7 @@ def build_daily_analysis(
     diagnostics["candidateEventPool"] = len(selected_per_event)
     diagnostics["publishedAnalysis"] = len(records)
     diagnostics["selectionObjective"] = "MAXIMUM_CONSERVATIVE_CALIBRATED_PASS_PROBABILITY"
-    diagnostics["marketPolicy"] = R13_MARKET_POLICY
+    diagnostics["marketPolicy"] = R14_MARKET_POLICY
     diagnostics["minimumOdds"] = safe_float(config.get("minimumBookmakerOdds"), 1.35)
     diagnostics["preferredMinimumOdds"] = safe_float(config.get("preferredMinimumOdds"), 1.55)
     return records, diagnostics
@@ -2831,8 +3023,14 @@ def best_bet_selection_tier(
     hard_failures: list[str] = []
     if str(candidate.get("sport") or "soccer") != "soccer":
         hard_failures.append("Разрешён только футбол")
-    if not record_uses_r13_standard_market(candidate):
+    if competition_is_excluded(
+        candidate.get("sportKey"), candidate.get("league"), "", candidate.get("country"), config
+    ):
+        hard_failures.append("Российские внутренние соревнования исключены")
+    if not record_uses_r14_standard_market(candidate):
         hard_failures.append("Азиатский или нестандартный рынок запрещён")
+    if bool(candidate.get("goalDirectionConflict")):
+        hard_failures.append("Направление тотала не подтверждено моделью счёта и рынком")
     if odds < safe_float(config.get("minimumBookmakerOdds"), 1.35):
         hard_failures.append("Коэффициент ниже допустимого")
     if odds > safe_float(config.get("maximumBookmakerOdds"), 3.2):
@@ -3057,11 +3255,16 @@ def select_best_bets(
     used_events: set[str] = set()
     family_counts: dict[str, int] = defaultdict(int)
     league_counts: dict[str, int] = defaultdict(int)
+    total_under_count = 0
+    total_market_count = 0
+    max_total_under = safe_int(config.get("maximumTotalUnderBestBets"), 1)
+    max_total_markets = safe_int(config.get("maximumTotalMarketsBestBets"), 4)
     max_family = safe_int(config.get("maximumSameMarketFamilyBestBets"), 2)
     max_league = safe_int(config.get("maximumSameLeagueBestBets"), 1)
     preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
 
     def add_pass(preferred_only: bool, family_limit: int, league_limit: int) -> None:
+        nonlocal total_under_count, total_market_count
         for source in ranked:
             if len(selected) >= target:
                 return
@@ -3072,7 +3275,13 @@ def select_best_bets(
             if preferred_only and odds < preferred_min:
                 continue
             family = str(source.get("marketFamily") or market_family(str(source.get("market") or "")))
+            market_code = str(source.get("market") or "").upper()
             league = str(source.get("league") or "")
+            is_total_market = family == "TOTAL"
+            if market_code == "TOTAL_UNDER" and total_under_count >= max_total_under:
+                continue
+            if is_total_market and total_market_count >= max_total_markets:
+                continue
             if family_counts[family] >= family_limit or league_counts[league] >= league_limit:
                 continue
             item = copy.deepcopy(source)
@@ -3093,6 +3302,10 @@ def select_best_bets(
             used_events.add(event_id)
             family_counts[family] += 1
             league_counts[league] += 1
+            if market_code == "TOTAL_UNDER":
+                total_under_count += 1
+            if is_total_market:
+                total_market_count += 1
 
     add_pass(True, max_family, max_league)
     add_pass(True, max(3, max_family), max(2, max_league))
@@ -4073,10 +4286,51 @@ def fetch_scores_for_sport_keys(
                     "away": away,
                     "homeScore": score_map[home],
                     "awayScore": score_map[away],
+                    "commenceTime": str(event.get("commence_time") or ""),
                     "completed": True,
                     "source": "THE_ODDS_API_SCORES",
                 }
     return scores, errors
+
+
+def match_provider_score_result(
+    record: dict[str, Any],
+    results: dict[str, dict[str, Any]],
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    config = config or {}
+    event_id = str(record.get("eventId") or record.get("oddsEventId") or "")
+    if event_id and event_id in results:
+        return results[event_id]
+    commence = parse_datetime(record.get("commenceTime") or record.get("utcDate"))
+    home = str(record.get("home") or "")
+    away = str(record.get("away") or "")
+    threshold = safe_float(config.get("settlementNameMatchThreshold"), 0.72)
+    window_hours = safe_float(config.get("settlementFuzzyTimeWindowHours"), 18.0)
+    best: tuple[float, dict[str, Any] | None, bool] = (0.0, None, False)
+    for item in results.values():
+        if not isinstance(item, dict) or not item.get("completed"):
+            continue
+        item_time = parse_datetime(item.get("commenceTime") or item.get("utcDate"))
+        if commence and item_time and abs((commence - item_time).total_seconds()) > window_hours * 3600:
+            continue
+        direct = (token_similarity(home, item.get("home")) + token_similarity(away, item.get("away"))) / 2
+        swapped = (token_similarity(home, item.get("away")) + token_similarity(away, item.get("home"))) / 2
+        if direct > best[0]:
+            best = (direct, item, False)
+        if swapped > best[0]:
+            best = (swapped, item, True)
+    if best[0] < threshold or best[1] is None:
+        return None
+    item = copy.deepcopy(best[1])
+    if best[2]:
+        item["homeScore"], item["awayScore"] = item.get("awayScore"), item.get("homeScore")
+        item["source"] = str(item.get("source") or "PROVIDER_SCORE") + "_FUZZY_SWAPPED"
+    else:
+        item["source"] = str(item.get("source") or "PROVIDER_SCORE") + "_FUZZY"
+    item["eventId"] = event_id
+    item["matchConfidence"] = round(best[0], 4)
+    return item
 
 
 def match_football_result(record: dict[str, Any], context: dict[str, Any]) -> dict[str, Any] | None:
@@ -4180,7 +4434,10 @@ def update_learning_from_record(state: dict[str, Any], record: dict[str, Any]) -
     brier = (probability - actual) ** 2
     log_loss = -(actual * math.log(probability) + (1 - actual) * math.log(1 - probability))
 
-    for key in learning_segment_keys(sport, league, family, odds, str(record.get("dataTier") or ""), probability):
+    for key in learning_segment_keys(
+        sport, league, family, odds, str(record.get("dataTier") or ""),
+        probability, learning_market_detail(record)
+    ):
         segment = segments.setdefault(
             key,
             {
@@ -4228,7 +4485,9 @@ def settle_pending_records(
     results: dict[str, dict[str, Any]],
     football_context: dict[str, Any],
     now: dt.datetime,
+    config: dict[str, Any] | None = None,
 ) -> dict[str, int]:
+    config = config or {}
     counters = {
         "analysisSettled": 0,
         "bestBetsSettled": 0,
@@ -4253,7 +4512,9 @@ def settle_pending_records(
                 or record.get("oddsEventId")
                 or ""
             )
-            result = results.get(event_id)
+            result = match_provider_score_result(record, results, config)
+            record["settlementLastAttemptAt"] = iso_z(now)
+            record["settlementAttempts"] = safe_int(record.get("settlementAttempts")) + 1
             if (
                 result is None
                 and str(record.get("sport") or "soccer")
@@ -4352,6 +4613,8 @@ def settle_pending_records(
         "settlementSource",
         "resultVisible",
         "resultUpdatedAt",
+        "settlementLastAttemptAt",
+        "settlementAttempts",
         "profit",
     )
 
@@ -5085,6 +5348,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             score_results,
             football_context,
             now,
+            config,
         )
         log(
             "Settlement: "
@@ -5271,7 +5535,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
                 "dataFreshness": "CURRENT",
                 "predictionObjective": config.get("predictionObjective"),
                 "publicationPolicy": config.get("publicationPolicy"),
-                "marketPolicy": R13_MARKET_POLICY,
+                "marketPolicy": R14_MARKET_POLICY,
                 "footballOnly": True,
                 "virtualBankPolicy": config.get("virtualBankPolicy"),
             }
@@ -5416,11 +5680,11 @@ def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: 
     minimum_odds = safe_float(config.get("minimumBookmakerOdds"), 1.35)
     expected_stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
     for item in daily + best:
-        if str(item.get("marketPolicy") or "") == R13_MARKET_POLICY:
-            if not record_uses_r13_standard_market(item):
-                raise RuntimeError("R13 publication contains a forbidden market")
+        if str(item.get("marketPolicy") or "") == R14_MARKET_POLICY:
+            if not record_uses_r14_standard_market(item):
+                raise RuntimeError("R14 publication contains a forbidden market")
             if str(item.get("sport") or "") != "soccer":
-                raise RuntimeError("R13 publication contains a non-football event")
+                raise RuntimeError("R14 publication contains a non-football event")
     for item in best:
         if abs(safe_float(item.get("stakePercent")) - expected_stake_percent) > 0.001:
             raise RuntimeError("Every best bet must preserve the configured 20 percent stake policy")
@@ -5484,10 +5748,10 @@ def validate_repository_files() -> int:
         raise RuntimeError("R11 Moscow operational-day marker missing")
     if "V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT" not in source_text:
         raise RuntimeError("R12 max-hit-rate and all-fifteen settlement marker missing")
-    if "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS" not in source_text:
-        raise RuntimeError("R13 football-only standard-market marker missing")
+    if "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION" not in source_text:
+        raise RuntimeError("R14 football-only standard-market marker missing")
     if any(value in set(config.get("featuredMarkets") or []) for value in ("spreads", "alternate_spreads", "alternate_totals")):
-        raise RuntimeError("R13 forbidden market leaked into featuredMarkets")
+        raise RuntimeError("R14 forbidden market leaked into featuredMarkets")
     if "ALL_FIFTEEN_SETTLEMENT_VISIBLE" not in WORKFLOW_PATH.read_text(encoding="utf-8"):
         raise RuntimeError("R12 all-fifteen workflow acceptance marker missing")
     if "LIVE_CYCLE_DIRECT_SETTLEMENT=START" not in source_text:
@@ -5589,6 +5853,14 @@ def run_self_test() -> int:
             "fallbackMinimumMarketStability": 20,
             "topFourHardMinimumConservativeProbability": 0.35,
             "topFourHardMinimumMarketStability": 20,
+            "totalDirectionMinimumStatisticalProbability": 0.45,
+            "totalDirectionMinimumMarketProbability": 0.45,
+            "totalDirectionMinimumRecentRate": 0.0,
+            "underExpectedGoalsSafetyMargin": -1.0,
+            "under25MaximumBttsProbability": 0.99,
+            "under25MaximumRecentOverRate": 0.99,
+            "overExpectedGoalsSafetyMargin": -1.0,
+            "overMinimumRecentOverRate": 0.0,
         }
     )
     now = dt.datetime(2026, 8, 1, 8, 0, tzinfo=UTC)
@@ -5908,7 +6180,7 @@ def run_self_test() -> int:
             f"SELF_TEST visible Latin text remains: {visible_probe}"
         )
 
-    # R13 standard-market and payout regression matrix. New publication must
+    # R14 standard-market and payout regression matrix. New publication must
     # reject every Asian/quarter/integer line while legacy settlement remains
     # available for already published historical records.
     forbidden_probes = [
@@ -5920,7 +6192,7 @@ def run_self_test() -> int:
         ("draw_no_bet", "DRAW_NO_BET_HOME", None),
     ]
     if any(standard_market_allowed(*probe) for probe in forbidden_probes):
-        raise RuntimeError("SELF_TEST Asian market reached the R13 whitelist")
+        raise RuntimeError("SELF_TEST Asian market reached the R14 whitelist")
     allowed_probes = [
         ("h2h", "HOME_WIN", None),
         ("totals", "TOTAL_OVER", 2.5),
@@ -6218,9 +6490,9 @@ def repair_prediction_integrity() -> int:
         changed = True
 
     meta = state.setdefault("meta", {})
-    if meta.get("integrityPatch") != "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS":
-        meta["integrityPatch"] = "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS"
-        meta["marketPolicy"] = R13_MARKET_POLICY
+    if meta.get("integrityPatch") != "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION":
+        meta["integrityPatch"] = "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION"
+        meta["marketPolicy"] = R14_MARKET_POLICY
         meta["futurePublicationPolicy"] = "FOOTBALL_ONLY_NO_ASIAN_MARKETS"
         meta["translationPolicy"] = "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
         changed = True
@@ -6249,7 +6521,7 @@ def repair_prediction_integrity() -> int:
     print(f"STATE_REPAIR_CHANGED={str(changed).upper()}")
     print("BANK_PRESERVED=TRUE")
     print(f"BANK_CURRENT={bank_snapshot.get('current')}")
-    print("V10_R13_STATE_REPAIR=GREEN")
+    print("V10_R14_STATE_REPAIR=GREEN")
     return 0
 
 def cli_main(argv: list[str] | None = None) -> int:

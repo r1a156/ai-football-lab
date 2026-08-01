@@ -2,9 +2,10 @@
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
-# V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS
+# V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
+# V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R13 Футбольная аналитика — стандартные рынки
+name: V10 R14 Футбольная аналитика — без России и конфликтных тоталов
 
 on:
   workflow_dispatch:
@@ -43,7 +44,7 @@ env:
 
 jobs:
   validate:
-    name: R13 статическая и офлайн-проверка
+    name: R14 статическая и офлайн-проверка
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -69,7 +70,7 @@ jobs:
           config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
           expected = float(config.get('stakePerBestBetPercent', 20))
           broken = any(abs(float(item.get('stakePercent') or 0) - expected) > 0.001 or float(item.get('stake') or 0) <= 0 for item in state.get('bestBets') or [])
-          print('YES' if (state.get('meta') or {}).get('integrityPatch') != 'V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS' or broken else 'NO')
+          print('YES' if (state.get('meta') or {}).get('integrityPatch') != 'V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION' or broken else 'NO')
           PY
           )"
           if [ "${repair_required}" = "YES" ]; then
@@ -135,7 +136,7 @@ jobs:
             python scripts/update_predictions.py --auto
           fi
 
-      - name: Проверить опубликованное состояние R13
+      - name: Проверить опубликованное состояние R14
         shell: bash
         run: |
           set -euo pipefail
@@ -171,9 +172,15 @@ jobs:
           if not set(best_ids).issubset(set(ids)):
               raise SystemExit('Best four is outside the fifteen')
           for item in daily + best:
-              if item.get('marketPolicy') == module.R13_MARKET_POLICY and not module.record_uses_r13_standard_market(item):
-                  raise SystemExit('Forbidden market in R13 publication')
-          print('V10_R13_PUBLISHED_STATE=GREEN')
+              if item.get('marketPolicy') == module.R14_MARKET_POLICY and not module.record_uses_r14_standard_market(item):
+                  raise SystemExit('Forbidden market in R14 publication')
+              if module.competition_is_excluded(item.get('sportKey'), item.get('league'), '', item.get('country'), config):
+                  raise SystemExit('Russian domestic event in R14 publication')
+          if any(bool(item.get('goalDirectionConflict')) for item in best):
+              raise SystemExit('Unsupported total direction in R14 best four')
+          if sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER') > int(config.get('maximumTotalUnderBestBets', 1)):
+              raise SystemExit('Too many total-under bets in R14 best four')
+          print('V10_R14_PUBLISHED_STATE=GREEN')
           print('DAILY_ANALYSIS=', len(daily))
           print('BEST_BETS=', len(best))
           print('FOOTBALL_ONLY=YES')
@@ -189,9 +196,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
-            echo "R13_NO_PUBLIC_DATA_CHANGES=YES"
+            echo "R14_NO_PUBLIC_DATA_CHANGES=YES"
             exit 0
           fi
-          git commit -m "V10 R13 refresh football standard-market 15 and 4 [skip ci]"
+          git commit -m "V10 R14 refresh football standard-market 15 and 4 [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

@@ -4,9 +4,10 @@
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
-# V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS
+# V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
+# V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R13 Живой цикл — футбол, стандартные рынки, точные 15 + 4
+name: V10 R14 Живой цикл — точные результаты и контроль направления голов
 
 on:
   workflow_dispatch:
@@ -72,10 +73,10 @@ jobs:
               or float(item.get('stake') or 0) <= 0
               for item in best
           )
-          print('YES' if meta.get('integrityPatch') != 'V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS' or broken_stake else 'NO')
+          print('YES' if meta.get('integrityPatch') != 'V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION' or broken_stake else 'NO')
           PY
           )"
-          echo "R13_REPAIR_REQUIRED=${repair_required}"
+          echo "R14_REPAIR_REQUIRED=${repair_required}"
           if [ "${repair_required}" = "YES" ]; then
             python scripts/update_predictions.py --repair-integrity
           fi
@@ -102,7 +103,7 @@ jobs:
           set -euo pipefail
           python scripts/update_predictions.py --live-cycle
 
-      - name: Финальная проверка R13
+      - name: Финальная проверка R14
         shell: bash
         run: |
           set -euo pipefail
@@ -112,7 +113,7 @@ jobs:
           python -m json.tool data/live-learning.json > /dev/null
           python scripts/update_live.py --validate
           if ! python scripts/update_predictions.py --validate; then
-            echo "R13_POST_UPDATE_REPAIR=START"
+            echo "R14_POST_UPDATE_REPAIR=START"
             python scripts/update_predictions.py --repair-integrity
             python scripts/update_predictions.py --validate
           fi
@@ -149,11 +150,17 @@ jobs:
               if abs(float(item.get('stakePercent') or 0) - expected_percent) > 0.001:
                   raise SystemExit('Twenty-percent bank policy changed')
           for item in daily + best:
-              if item.get('marketPolicy') == module.R13_MARKET_POLICY:
-                  if not module.record_uses_r13_standard_market(item):
-                      raise SystemExit('Forbidden Asian/nonstandard market in R13 publication')
+              if item.get('marketPolicy') == module.R14_MARKET_POLICY:
+                  if not module.record_uses_r14_standard_market(item):
+                      raise SystemExit('Forbidden Asian/nonstandard market in R14 publication')
                   if item.get('sport') != 'soccer':
-                      raise SystemExit('Non-football event in R13 publication')
+                      raise SystemExit('Non-football event in R14 publication')
+                  if module.competition_is_excluded(item.get('sportKey'), item.get('league'), '', item.get('country'), config):
+                      raise SystemExit('Russian domestic event in R14 publication')
+          if any(bool(item.get('goalDirectionConflict')) for item in best):
+              raise SystemExit('Unsupported total direction in R14 best four')
+          if sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER') > int(config.get('maximumTotalUnderBestBets', 1)):
+              raise SystemExit('Too many total-under bets in R14 best four')
           terminal = {'won', 'lost', 'push', 'void', 'cancelled'}
           for item in daily:
               status = str(item.get('status') or 'pending')
@@ -162,7 +169,7 @@ jobs:
           expected_placed = sum(float(item.get('stake') or 0) for item in best if str(item.get('status') or 'pending') == 'pending')
           if abs(float(bank.get('placedAmount') or 0) - expected_placed) > 0.02:
               raise SystemExit('Placed bank amount mismatch')
-          print('R13_LIVE_ACCEPTANCE=GREEN')
+          print('R14_LIVE_ACCEPTANCE=GREEN')
           print('EXACT_DAILY_ANALYSIS=', len(daily))
           print('EXACT_BEST_BETS=', len(best))
           print('FOOTBALL_ONLY=YES')
@@ -178,9 +185,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
-            echo "R13_NO_DATA_CHANGES=YES"
+            echo "R14_NO_DATA_CHANGES=YES"
             exit 0
           fi
-          git commit -m "V10 R13 settle football 15 and publish standard-market batch [skip ci]"
+          git commit -m "V10 R14 settle football 15 and publish standard-market batch [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
