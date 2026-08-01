@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
-  "mode": "settle",
-  "startedAt": "2026-08-01T13:44:52Z",
-  "finishedAt": "2026-08-01T13:44:54Z",
+  "mode": "auto",
+  "startedAt": "2026-08-01T13:58:58Z",
+  "finishedAt": "2026-08-01T13:58:59Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 1,
+      "analysisSettled": 0,
       "bestBetsSettled": 0,
       "unresolved": 4
     },
-    "duePending": 2,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T13:44:52Z",
+      "updatedAt": "2026-08-01T13:58:58Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 12,
@@ -81,28 +81,23 @@
     "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "490",
-      "requestsUsed": "10",
+      "requestsRemaining": "488",
+      "requestsUsed": "12",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 4,
-      "calls": 2,
-      "updatedAt": "2026-08-01T13:44:52Z"
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-01T13:58:58Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
         "status": 200,
-        "elapsedSeconds": 1.769
-      },
-      {
-        "label": "SCORES:soccer_korea_kleague1",
-        "status": 200,
-        "elapsedSeconds": 0.233
+        "elapsedSeconds": 1.521
       },
       {
         "label": "SCORES:soccer_russia_premier_league",
         "status": 200,
-        "elapsedSeconds": 0.208
+        "elapsedSeconds": 0.152
       }
     ]
   },
