@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
   "mode": "settle",
-  "startedAt": "2026-08-01T14:47:48Z",
-  "finishedAt": "2026-08-01T14:47:51Z",
+  "startedAt": "2026-08-01T15:46:03Z",
+  "finishedAt": "2026-08-01T15:46:05Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 1,
-      "bestBetsSettled": 1,
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
       "unresolved": 2
     },
-    "duePending": 2,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T14:47:48Z",
+      "updatedAt": "2026-08-01T15:46:03Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 13,
@@ -81,28 +81,23 @@
     "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "484",
-      "requestsUsed": "16",
+      "requestsRemaining": "482",
+      "requestsUsed": "18",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 4,
-      "calls": 2,
-      "updatedAt": "2026-08-01T14:47:48Z"
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-01T15:46:03Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
         "status": 200,
-        "elapsedSeconds": 2.208
-      },
-      {
-        "label": "SCORES:soccer_finland_veikkausliiga",
-        "status": 200,
-        "elapsedSeconds": 0.15
+        "elapsedSeconds": 1.903
       },
       {
         "label": "SCORES:soccer_russia_premier_league",
         "status": 200,
-        "elapsedSeconds": 0.119
+        "elapsedSeconds": 0.167
       }
     ]
   },
