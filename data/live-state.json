@@ -1,19 +1,61 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-07-31T21:21:31Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-08-01T09:20:40Z",
   "refreshMinutes": 5,
-  "events": [],
+  "events": [
+    {
+      "eventId": "b412671f849c011536a6eaad09a294a9",
+      "analysisId": "analysis-8b5bbf79fbded87de06c",
+      "isBestBet": false,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_korea_kleague1",
+      "league": "K League 1",
+      "leagueRu": "К Лига 1",
+      "country": "Южная Корея",
+      "countryRu": "Южная Корея",
+      "home": "Gangwon FC",
+      "away": "Bucheon FC 1995",
+      "homeRu": "Гангвон ФК",
+      "awayRu": "Бучеон ФК 1995",
+      "commenceTime": "2026-08-01T10:30:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Тотал меньше 2.5",
+      "pickRu": "Тотал меньше 2.5",
+      "market": "TOTAL_UNDER",
+      "marketFamily": "TOTAL",
+      "point": 2.5,
+      "preMatchProbability": 0.566829,
+      "liveProbability": 0.566829,
+      "liveProbabilityPercent": 56.7,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "Ожидание источника",
+      "providerEventId": null,
+      "updatedAt": "2026-08-01T09:20:40Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "DEGRADED",
-    "calls": 2,
+    "calls": 1,
     "results": 0,
     "oddsQuota": {
-      "requestsRemaining": "195",
-      "requestsUsed": "305",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": []
@@ -22,7 +64,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 1
+    "unconfirmedRemoved": 0
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
