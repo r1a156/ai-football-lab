@@ -2,9 +2,9 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R13_FOOTBALL_ONLY_STANDARD_MARKETS",
-  "mode": "settle",
-  "startedAt": "2026-08-01T15:46:03Z",
-  "finishedAt": "2026-08-01T15:46:05Z",
+  "mode": "auto",
+  "startedAt": "2026-08-01T16:16:38Z",
+  "finishedAt": "2026-08-01T16:16:39Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
@@ -32,7 +32,7 @@
       "sequence": 2,
       "status": "SETTLING",
       "createdAt": "2026-07-30T18:13:33Z",
-      "updatedAt": "2026-08-01T15:46:03Z",
+      "updatedAt": "2026-08-01T16:16:38Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 13,
@@ -81,23 +81,23 @@
     "footballDataMatches": 20,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "482",
-      "requestsUsed": "18",
+      "requestsRemaining": "480",
+      "requestsUsed": "20",
       "requestsLast": "2",
       "estimatedCreditsThisRun": 2,
       "calls": 1,
-      "updatedAt": "2026-08-01T15:46:03Z"
+      "updatedAt": "2026-08-01T16:16:38Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-25:2026-08-03",
         "status": 200,
-        "elapsedSeconds": 1.903
+        "elapsedSeconds": 1.312
       },
       {
         "label": "SCORES:soccer_russia_premier_league",
         "status": 200,
-        "elapsedSeconds": 0.167
+        "elapsedSeconds": 0.269
       }
     ]
   },
