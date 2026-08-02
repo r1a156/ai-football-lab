@@ -1,3 +1,4 @@
+# V10_R14R2_MOSCOW_08_WATCHDOG
 #!/usr/bin/env python3
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
@@ -544,8 +545,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("historyPendingExpiryHoursSoccer must be positive")
     if not bool(config.get("batchRolloverEnabled", True)):
         raise RuntimeError("batchRolloverEnabled must be true")
-    if safe_int(config.get("batchUnresolvedReleaseMinutesSoccer"), 720) < 360:
-        raise RuntimeError("batchUnresolvedReleaseMinutesSoccer must be at least 360")
+    if safe_int(config.get("batchUnresolvedReleaseMinutesSoccer"), 720) < 240:
+        raise RuntimeError("batchUnresolvedReleaseMinutesSoccer must be at least 240")
     excluded_prefixes = {str(value).lower() for value in config.get("excludedSportKeyPrefixes") or []}
     if "soccer_russia_" not in excluded_prefixes:
         raise RuntimeError("R14 must exclude Russian domestic sport keys")
@@ -5236,6 +5237,12 @@ def run_live_cycle() -> int:
         print("LIVE_CYCLE_DIRECT_SETTLEMENT=GREEN")
 
     released = release_overdue_batch_records(state, config, now)
+    local_now = now.astimezone(configured_timezone(config))
+    if local_now.hour >= safe_int(config.get("morningRolloverHourLocal"), 8):
+        print("R14R2_MORNING_WATCHDOG=ACTIVE")
+        print(f"R14R2_MORNING_LOCAL_TIME={local_now.isoformat()}")
+        print(f"R14R2_STALE_RELEASE_ANALYSIS={released.get('analysis', 0)}")
+        print(f"R14R2_STALE_RELEASE_BEST_BETS={released.get('bestBets', 0)}")
     if released.get("analysis") or released.get("bestBets"):
         maintain_prediction_history(state, config, now)
         update_bank_metrics(state)

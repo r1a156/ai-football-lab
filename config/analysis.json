@@ -1,5 +1,5 @@
 {
-  "version": 21,
+  "version": 22,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -162,7 +162,7 @@
   "batchOverlapPolicy": "FORBID_OVERLAPPING_PUBLISHED_BATCHES",
   "batchPublicationPolicy": "ATOMIC_RESULTS_BANK_STATISTICS_LEARNING_NEXT_FIFTEEN_NEXT_FOUR",
   "bankMetricsPolicy": "CURRENT_PLACED_AVAILABLE_ACTIVE_COUNT_UPDATED_TOGETHER",
-  "batchUnresolvedReleaseMinutesSoccer": 720,
+  "batchUnresolvedReleaseMinutesSoccer": 240,
   "batchUnresolvedReleaseMinutesHockey": 420,
   "bestFourStatisticsPolicy": "DEDICATED_VISIBLE_STATISTICS_NEXT_TO_CURRENT_FOUR_BEST_BETS",
   "mobileNavigationPolicy": "FIXED_COMPACT_SINGLE_LINE_FOUR_ITEMS_NO_EXPANSION",
@@ -247,5 +247,13 @@
   "maximumTotalMarketsBestBets": 4,
   "settlementPolicy": "EXACT_EVENT_ID_THEN_FUZZY_PROVIDER_MATCH_THEN_FOOTBALL_DATA_WITH_VISIBLE_RETRIES",
   "excludedCompetitionPolicy": "NO_NEW_RUSSIAN_DOMESTIC_MATCHES_CURRENT_PUBLISHED_RECORDS_SETTLE_HONESTLY",
-  "totalDirectionPolicy": "SCORE_MODEL_AND_BOOKMAKER_DIRECTION_MUST_AGREE; MAX_ONE_UNDER_IN_TOP_FOUR"
+  "totalDirectionPolicy": "SCORE_MODEL_AND_BOOKMAKER_DIRECTION_MUST_AGREE; MAX_ONE_UNDER_IN_TOP_FOUR",
+  "morningRolloverHourLocal": 8,
+  "morningRolloverRetryMinutes": [
+    7,
+    22,
+    37
+  ],
+  "morningRolloverPolicy": "SETTLE_RELEASE_STALE_AND_GENERATE_AT_08_MSK_WITH_RETRIES",
+  "scheduleTimezone": "Europe/Moscow"
 }

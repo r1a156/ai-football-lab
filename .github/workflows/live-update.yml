@@ -6,14 +6,15 @@
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
 # V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
+# V10_R14R2_MOSCOW_08_WATCHDOG
 # V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R14 Живой цикл — точные результаты и контроль направления голов
+name: V10 R14R2 Живой цикл — результаты, утренний watchdog и rollover
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "2-59/5 * * * *"
   push:
     branches: [main]
     paths:
@@ -103,6 +104,7 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/update_predictions.py --live-cycle
+          echo "R14R2_LIVE_CYCLE_COMPLETED=YES"
 
       - name: Финальная проверка R14
         shell: bash

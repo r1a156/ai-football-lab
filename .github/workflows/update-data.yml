@@ -4,9 +4,10 @@
 # V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
 # V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
+# V10_R14R2_MOSCOW_08_WATCHDOG
 # V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R14 Футбольная аналитика — без России и конфликтных тоталов
+name: V10 R14R2 Футбольная аналитика — утренний rollover 08:00 МСК
 
 on:
   workflow_dispatch:
@@ -17,7 +18,14 @@ on:
         default: false
         type: boolean
   schedule:
-    - cron: "17 */3 * * *"
+    - cron: "7 8 * * *"
+      timezone: "Europe/Moscow"
+    - cron: "22 8 * * *"
+      timezone: "Europe/Moscow"
+    - cron: "37 8 * * *"
+      timezone: "Europe/Moscow"
+    - cron: "17 0,3,6,9,12,15,18,21 * * *"
+      timezone: "Europe/Moscow"
   push:
     branches: [main]
     paths:
@@ -124,6 +132,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
           FORCE_INPUT: ${{ inputs.force_generation || 'false' }}
           HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
@@ -131,8 +140,16 @@ jobs:
           force="false"
           if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ "${FORCE_INPUT}" = "true" ]; then force="true"; fi
           if [ "${EVENT_NAME}" = "push" ] && [[ "${HEAD_MESSAGE}" == *"[v10-force-generation]"* ]]; then force="true"; fi
+          morning_watchdog="false"
+          case "${EVENT_SCHEDULE:-}" in
+            "7 8 * * *"|"22 8 * * *"|"37 8 * * *") morning_watchdog="true" ;;
+          esac
+          echo "R14R2_EVENT_SCHEDULE=${EVENT_SCHEDULE:-manual_or_push}"
+          echo "R14R2_MORNING_WATCHDOG=${morning_watchdog}"
           if [ "${force}" = "true" ]; then
             python scripts/update_predictions.py --update
+          elif [ "${morning_watchdog}" = "true" ]; then
+            python scripts/update_predictions.py --live-cycle
           else
             python scripts/update_predictions.py --auto
           fi
