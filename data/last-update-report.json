@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-  "mode": "settle",
-  "startedAt": "2026-08-02T19:33:36Z",
-  "finishedAt": "2026-08-02T19:33:37Z",
+  "mode": "auto",
+  "startedAt": "2026-08-02T19:37:37Z",
+  "finishedAt": "2026-08-02T19:37:38Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 1,
-      "bestBetsSettled": 1,
-      "unresolved": 6
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
+      "unresolved": 0
     },
-    "duePending": 1,
+    "duePending": 0,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T19:33:36Z",
+      "updatedAt": "2026-08-02T19:37:37Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 9,
@@ -78,28 +78,17 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 17,
+    "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "70",
-      "requestsUsed": "430",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 2,
-      "calls": 1,
-      "updatedAt": "2026-08-02T19:33:36Z"
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-08-02T19:37:37Z"
     },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
-        "status": 200,
-        "elapsedSeconds": 1.225
-      },
-      {
-        "label": "SCORES:soccer_denmark_superliga",
-        "status": 200,
-        "elapsedSeconds": 0.156
-      }
-    ]
+    "apiCalls": []
   },
   "warnings": [],
   "errors": []
