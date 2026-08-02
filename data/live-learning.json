@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-02T12:13:06Z",
+  "updatedAt": "2026-08-02T13:56:02Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -1261,6 +1261,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.980587
+        },
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.619302
         }
       ],
       "completed": false
@@ -1298,6 +1306,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.001
+        },
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.600665
         }
       ],
       "completed": false
@@ -1327,6 +1343,14 @@
           "clockLabel": "ориентировочно 13-я минута",
           "elapsedFraction": 0.1444,
           "liveProbability": 0.785684
+        },
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "LIVE",
+          "score": "2:1",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.960789
         }
       ],
       "completed": false
@@ -1356,6 +1380,14 @@
           "clockLabel": "ориентировочно 13-я минута",
           "elapsedFraction": 0.1444,
           "liveProbability": 0.580068
+        },
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "LIVE",
+          "score": "2:3",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.001
         }
       ],
       "completed": false
@@ -1377,6 +1409,77 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.578737
+        },
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "LIVE",
+          "score": "1:1",
+          "clockLabel": "ориентировочно 71-я минута",
+          "elapsedFraction": 0.7889,
+          "liveProbability": 0.23443
+        }
+      ],
+      "completed": false
+    },
+    "71c389f15d960e817660cd85c03c0001": {
+      "eventId": "71c389f15d960e817660cd85c03c0001",
+      "sport": "soccer",
+      "marketFamily": "BTTS",
+      "pickRu": "Обе команды забьют — да",
+      "homeRu": "ФК Сион",
+      "awayRu": "ФК Лузерн",
+      "preMatchProbability": 0.615895,
+      "startedAt": "2026-08-02T14:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.615895
+        }
+      ],
+      "completed": false
+    },
+    "9d49893900d172d53f16771f82984160": {
+      "eventId": "9d49893900d172d53f16771f82984160",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 3.5",
+      "homeRu": "Аик",
+      "awayRu": "Оргрите Ис",
+      "preMatchProbability": 0.619151,
+      "startedAt": "2026-08-02T14:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.619151
+        }
+      ],
+      "completed": false
+    },
+    "82dd629264999ca4ff163c6264aadbe7": {
+      "eventId": "82dd629264999ca4ff163c6264aadbe7",
+      "sport": "soccer",
+      "marketFamily": "BTTS",
+      "pickRu": "Обе команды забьют — да",
+      "homeRu": "Аалесунд",
+      "awayRu": "Тромсо",
+      "preMatchProbability": 0.583918,
+      "startedAt": "2026-08-02T15:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T13:56:02Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.583918
         }
       ],
       "completed": false
@@ -1409,7 +1512,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 102,
+    "snapshotCount": 110,
     "calibratedBuckets": 0
   }
 }

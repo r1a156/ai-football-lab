@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T12:13:08Z",
-  "finishedAt": "2026-08-02T12:13:08Z",
+  "startedAt": "2026-08-02T13:56:05Z",
+  "finishedAt": "2026-08-02T13:56:07Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 0
+      "analysisSettled": 2,
+      "bestBetsSettled": 1,
+      "unresolved": 16
     },
-    "duePending": 0,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -30,21 +30,21 @@
       "version": 1,
       "id": "batch-52339d6a60dd6d7b30bc",
       "sequence": 3,
-      "status": "ACTIVE",
+      "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T12:13:08Z",
+      "updatedAt": "2026-08-02T13:56:05Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 0,
-      "terminalBestBetsCount": 0,
-      "pendingAnalysisCount": 15,
-      "pendingBestBetsCount": 4,
+      "terminalAnalysisCount": 2,
+      "terminalBestBetsCount": 1,
+      "pendingAnalysisCount": 13,
+      "pendingBestBetsCount": 3,
       "completed": false,
-      "placedAmount": 10026.2,
-      "availableAmount": 2506.56,
+      "placedAmount": 7519.65,
+      "availableAmount": 6391.71,
       "startingBank": 12532.76,
-      "statusLabel": "Подборка активна",
-      "activeBestBetsCount": 4,
+      "statusLabel": "Рассчитываются результаты",
+      "activeBestBetsCount": 3,
       "completedAt": null,
       "eventIds": [
         "25b07fc0e2e55cde958ac42fb345cda3",
@@ -69,7 +69,7 @@
         "7ebdca8fb4ef84a455589ea024dda075",
         "9d49893900d172d53f16771f82984160"
       ],
-      "currentBank": 12532.76,
+      "currentBank": 13911.36,
       "operationalDayId": "2026-08-02-MSK-0921-PLUS-24H",
       "operationalWindowStart": "2026-08-02T07:06:25Z",
       "operationalWindowEnd": "2026-08-03T06:21:25Z",
@@ -78,17 +78,28 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 17,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-08-02T12:13:08Z"
+      "requestsRemaining": "96",
+      "requestsUsed": "404",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-02T13:56:05Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
+        "status": 200,
+        "elapsedSeconds": 1.262
+      },
+      {
+        "label": "SCORES:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.134
+      }
+    ]
   },
   "warnings": [],
   "errors": []
