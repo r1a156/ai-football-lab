@@ -2,11 +2,11 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-08-02T06:21:25Z",
+    "updatedAt": "2026-08-02T07:52:50Z",
     "analysisDateLocal": "2026-08-02",
     "status": "GREEN",
     "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-    "dataFreshness": "CURRENT",
+    "dataFreshness": "SETTLEMENT_REFRESH",
     "notice": "Каждый опубликованный прогноз получает виртуальную ставку 20% от текущего банка. Расчёт выигрыша выполняется по реальному коэффициенту букмекера, зафиксированному при публикации.",
     "analyzedMatches": 5,
     "source": "football-data.org + The Odds API",
@@ -86,7 +86,7 @@
     "stakePerPredictionPercent": 20.0,
     "maximumDailyExposurePercent": 80.0,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-    "migrationAt": "2026-08-02T06:21:25Z",
+    "migrationAt": "2026-08-02T07:52:50Z",
     "analysisGeneratedAt": "2026-08-02T06:21:25Z",
     "analysisTarget": 15,
     "analysisPublished": 15,
@@ -103,46 +103,20 @@
     "predictionObjective": "MAXIMUM_CONSERVATIVE_HIT_RATE_WITH_GOAL_DIRECTION_CONSENSUS",
     "publicationPolicy": "EXACTLY_FIFTEEN_NON_RUSSIAN_FOOTBALL_MATCHES_WITH_FOUR_SAFE_PORTFOLIO_ANCHORS",
     "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-    "lastSuccessfulRefreshAt": "2026-08-02T06:21:25Z",
+    "lastSuccessfulRefreshAt": "2026-08-02T07:52:50Z",
     "apiHealth": {
-      "status": "DEGRADED",
-      "calls": 101,
-      "errors": 13,
-      "lastErrors": [
-        {
-          "label": "EVENTS:soccer_turkey_super_league",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_uefa_nations_league",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_usa_mls",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_mexico_ligamx",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "ODDS:soccer_sweden_superettan",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        }
-      ]
+      "status": "GREEN",
+      "calls": 0,
+      "errors": 0,
+      "lastErrors": []
     },
-    "historyUpdatedAt": "2026-08-02T06:21:24Z",
-    "liveSettlementAt": "2026-08-02T06:21:24Z",
+    "historyUpdatedAt": "2026-08-02T07:52:50Z",
+    "liveSettlementAt": "2026-08-02T07:52:50Z",
     "currentBatchId": "batch-52339d6a60dd6d7b30bc",
     "batchSequence": 3,
     "batchStatus": "ACTIVE",
     "batchStatusLabel": "Подборка активна",
-    "batchUpdatedAt": "2026-08-02T06:21:25Z",
+    "batchUpdatedAt": "2026-08-02T07:52:50Z",
     "batchGenerationBlockedAt": "2026-08-01T19:57:57Z",
     "batchGenerationBlockedReason": "CURRENT_BATCH_NOT_TERMINAL",
     "bestBetsSourceAnalysisGeneratedAt": "2026-08-02T06:21:25Z",
@@ -3422,7 +3396,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-5c5c8e9940dd8ea0f6a7",
@@ -3689,7 +3664,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-6ea5004ac829d8e22db3",
@@ -3858,7 +3834,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-9b33d072340741c258ef",
@@ -4130,7 +4107,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     }
   ],
   "predictions": [
@@ -4399,7 +4377,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-5c5c8e9940dd8ea0f6a7",
@@ -4666,7 +4645,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-6ea5004ac829d8e22db3",
@@ -4835,7 +4815,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-9b33d072340741c258ef",
@@ -5107,7 +5088,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     }
   ],
   "analysisHistory": [
@@ -25356,7 +25338,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-08-02T06:21:48Z"
+      "updatedAt": "2026-08-02T07:52:50Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -25369,17 +25351,20 @@
     "id": "batch-52339d6a60dd6d7b30bc",
     "sequence": 3,
     "status": "ACTIVE",
-    "statusLabel": "Подборка активна",
     "createdAt": "2026-08-02T06:21:25Z",
-    "updatedAt": "2026-08-02T06:21:25Z",
+    "updatedAt": "2026-08-02T07:52:50Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
     "terminalAnalysisCount": 0,
     "terminalBestBetsCount": 0,
     "pendingAnalysisCount": 15,
     "pendingBestBetsCount": 4,
-    "activeBestBetsCount": 4,
     "completed": false,
+    "placedAmount": 10026.2,
+    "availableAmount": 2506.56,
+    "startingBank": 12532.76,
+    "statusLabel": "Подборка активна",
+    "activeBestBetsCount": 4,
     "completedAt": null,
     "eventIds": [
       "25b07fc0e2e55cde958ac42fb345cda3",
@@ -25404,10 +25389,7 @@
       "7ebdca8fb4ef84a455589ea024dda075",
       "9d49893900d172d53f16771f82984160"
     ],
-    "startingBank": 12532.76,
     "currentBank": 12532.76,
-    "placedAmount": 10026.2,
-    "availableAmount": 2506.56,
     "operationalDayId": "2026-08-02-MSK-0921-PLUS-24H",
     "operationalWindowStart": "2026-08-02T07:06:25Z",
     "operationalWindowEnd": "2026-08-03T06:21:25Z",
@@ -25521,16 +25503,16 @@
   ],
   "quota": {
     "provider": "THE_ODDS_API",
-    "requestsRemaining": "105",
-    "requestsUsed": "395",
-    "requestsLast": "2",
-    "estimatedCreditsThisRun": 66,
-    "calls": 95,
-    "updatedAt": "2026-08-02T06:21:25Z"
+    "requestsRemaining": null,
+    "requestsUsed": null,
+    "requestsLast": null,
+    "estimatedCreditsThisRun": 0,
+    "calls": 0,
+    "updatedAt": "2026-08-02T07:52:50Z"
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-08-02T06:21:48Z",
+    "updatedAt": "2026-08-02T07:52:50Z",
     "analysisHistory": {
       "input": 55,
       "output": 55,
