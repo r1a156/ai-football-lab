@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-  "mode": "auto",
-  "startedAt": "2026-08-02T14:00:01Z",
-  "finishedAt": "2026-08-02T14:00:01Z",
+  "mode": "settle",
+  "startedAt": "2026-08-02T14:59:47Z",
+  "finishedAt": "2026-08-02T14:59:49Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 2,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 14
     },
-    "duePending": 0,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T14:00:01Z",
+      "updatedAt": "2026-08-02T14:59:47Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 2,
+      "terminalAnalysisCount": 4,
       "terminalBestBetsCount": 1,
-      "pendingAnalysisCount": 13,
+      "pendingAnalysisCount": 11,
       "pendingBestBetsCount": 3,
       "completed": false,
       "placedAmount": 7519.65,
@@ -78,17 +78,33 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 17,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-08-02T14:00:01Z"
+      "requestsRemaining": "89",
+      "requestsUsed": "411",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 4,
+      "calls": 2,
+      "updatedAt": "2026-08-02T14:59:47Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
+        "status": 200,
+        "elapsedSeconds": 1.349
+      },
+      {
+        "label": "SCORES:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "label": "SCORES:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.132
+      }
+    ]
   },
   "warnings": [],
   "errors": []
