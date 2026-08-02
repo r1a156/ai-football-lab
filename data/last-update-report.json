@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T20:31:18Z",
-  "finishedAt": "2026-08-02T20:31:20Z",
+  "startedAt": "2026-08-02T21:28:01Z",
+  "finishedAt": "2026-08-02T21:28:01Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 3,
+      "analysisSettled": 0,
       "bestBetsSettled": 0,
-      "unresolved": 3
+      "unresolved": 0
     },
-    "duePending": 3,
+    "duePending": 0,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T20:31:18Z",
+      "updatedAt": "2026-08-02T21:28:01Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 12,
@@ -78,38 +78,17 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 17,
+    "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "64",
-      "requestsUsed": "436",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 6,
-      "calls": 3,
-      "updatedAt": "2026-08-02T20:31:18Z"
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-08-02T21:28:01Z"
     },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
-        "status": 200,
-        "elapsedSeconds": 1.529
-      },
-      {
-        "label": "SCORES:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.137
-      },
-      {
-        "label": "SCORES:soccer_league_of_ireland",
-        "status": 200,
-        "elapsedSeconds": 0.282
-      },
-      {
-        "label": "SCORES:soccer_norway_eliteserien",
-        "status": 200,
-        "elapsedSeconds": 0.204
-      }
-    ]
+    "apiCalls": []
   },
   "warnings": [],
   "errors": []

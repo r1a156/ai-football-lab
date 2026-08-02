@@ -2,7 +2,7 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "TRACKING",
-  "updatedAt": "2026-08-02T20:31:16Z",
+  "updatedAt": "2026-08-02T21:27:58Z",
   "refreshMinutes": 5,
   "events": [
     {
@@ -40,23 +40,23 @@
       "liveProbabilityPercent": 58.0,
       "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
       "calibrationEvidence": null,
-      "provider": "Ожидание источника",
+      "provider": "THE_ODDS_API_SCORES",
       "providerEventId": null,
-      "updatedAt": "2026-08-02T20:31:16Z",
+      "updatedAt": "2026-08-02T21:28:01Z",
       "freshnessSeconds": 0,
       "originalPredictionImmutable": true
     }
   ],
   "activeEventIds": [],
   "providerHealth": {
-    "status": "DEGRADED",
-    "calls": 4,
-    "results": 0,
+    "status": "GREEN",
+    "calls": 2,
+    "results": 1,
     "oddsQuota": {
-      "requestsRemaining": "70",
-      "requestsUsed": "430",
-      "requestsLast": "0",
-      "estimatedCreditsThisRun": 0
+      "requestsRemaining": "63",
+      "requestsUsed": "437",
+      "requestsLast": "1",
+      "estimatedCreditsThisRun": 1
     },
     "errors": []
   },
@@ -64,7 +64,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 3
+    "unconfirmedRemoved": 0
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
