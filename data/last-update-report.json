@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T14:59:47Z",
-  "finishedAt": "2026-08-02T14:59:49Z",
+  "startedAt": "2026-08-02T16:07:02Z",
+  "finishedAt": "2026-08-02T16:07:04Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 2,
+      "analysisSettled": 1,
       "bestBetsSettled": 0,
-      "unresolved": 14
+      "unresolved": 13
     },
-    "duePending": 2,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T14:59:47Z",
+      "updatedAt": "2026-08-02T16:07:02Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 4,
+      "terminalAnalysisCount": 5,
       "terminalBestBetsCount": 1,
-      "pendingAnalysisCount": 11,
+      "pendingAnalysisCount": 10,
       "pendingBestBetsCount": 3,
       "completed": false,
       "placedAmount": 7519.65,
@@ -81,28 +81,23 @@
     "footballDataMatches": 17,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "89",
-      "requestsUsed": "411",
+      "requestsRemaining": "84",
+      "requestsUsed": "416",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 4,
-      "calls": 2,
-      "updatedAt": "2026-08-02T14:59:47Z"
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-02T16:07:02Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
         "status": 200,
-        "elapsedSeconds": 1.349
+        "elapsedSeconds": 1.88
       },
       {
-        "label": "SCORES:soccer_denmark_superliga",
+        "label": "SCORES:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.099
-      },
-      {
-        "label": "SCORES:soccer_switzerland_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.132
+        "elapsedSeconds": 0.133
       }
     ]
   },

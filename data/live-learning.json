@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-02T14:59:45Z",
+  "updatedAt": "2026-08-02T16:06:59Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -1470,6 +1470,14 @@
           "clockLabel": "ориентировочно 29-я минута",
           "elapsedFraction": 0.3222,
           "liveProbability": 0.569728
+        },
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "LIVE",
+          "score": "2:0",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.019801
         }
       ],
       "completed": false
@@ -1499,6 +1507,14 @@
           "clockLabel": "ориентировочно 29-я минута",
           "elapsedFraction": 0.3222,
           "liveProbability": 0.442983
+        },
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "LIVE",
+          "score": "0:3",
+          "clockLabel": "ориентировочно 90-я минута",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.960789
         }
       ],
       "completed": false
@@ -1519,6 +1535,14 @@
           "score": "",
           "clockLabel": "",
           "elapsedFraction": 0.0,
+          "liveProbability": 0.583918
+        },
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.7333,
           "liveProbability": 0.583918
         }
       ],
@@ -1541,6 +1565,56 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.601904
+        },
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "LIVE",
+          "score": "0:0",
+          "clockLabel": "ориентировочно 6-я минута",
+          "elapsedFraction": 0.0667,
+          "liveProbability": 0.506184
+        }
+      ],
+      "completed": false
+    },
+    "c697e676abd3caeb609cf7f064a58b3d": {
+      "eventId": "c697e676abd3caeb609cf7f064a58b3d",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 3.5",
+      "homeRu": "Ск Бранн",
+      "awayRu": "Росенборг",
+      "preMatchProbability": 0.610538,
+      "startedAt": "2026-08-02T17:15:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.610538
+        }
+      ],
+      "completed": false
+    },
+    "6bef2ade9de3e82ef28fb1b5de032151": {
+      "eventId": "6bef2ade9de3e82ef28fb1b5de032151",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал больше 1.5",
+      "homeRu": "Альдосиви",
+      "awayRu": "Гимнасиа Ла Плата",
+      "preMatchProbability": 0.590761,
+      "startedAt": "2026-08-02T17:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T16:06:59Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.590761
         }
       ],
       "completed": false
@@ -1573,7 +1647,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 116,
+    "snapshotCount": 122,
     "calibratedBuckets": 0
   }
 }
