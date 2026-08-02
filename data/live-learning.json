@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-02T16:06:59Z",
+  "updatedAt": "2026-08-02T17:11:57Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -1478,6 +1478,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.019801
+        },
+        {
+          "at": "2026-08-02T17:11:57Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.615895
         }
       ],
       "completed": false
@@ -1515,6 +1523,14 @@
           "clockLabel": "ориентировочно 90-я минута",
           "elapsedFraction": 1.0,
           "liveProbability": 0.960789
+        },
+        {
+          "at": "2026-08-02T17:11:57Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.619151
         }
       ],
       "completed": false
@@ -1573,6 +1589,14 @@
           "clockLabel": "ориентировочно 6-я минута",
           "elapsedFraction": 0.0667,
           "liveProbability": 0.506184
+        },
+        {
+          "at": "2026-08-02T17:11:57Z",
+          "status": "LIVE",
+          "score": "1:2",
+          "clockLabel": "ориентировочно 71-я минута",
+          "elapsedFraction": 0.7889,
+          "liveProbability": 0.999
         }
       ],
       "completed": false
@@ -1618,6 +1642,27 @@
         }
       ],
       "completed": false
+    },
+    "26caa407850f73f995e008ff3ea8d23e": {
+      "eventId": "26caa407850f73f995e008ff3ea8d23e",
+      "sport": "soccer",
+      "marketFamily": "OUTCOME",
+      "pickRu": "Победа Бохемианс",
+      "homeRu": "Бохемианс",
+      "awayRu": "Галваи Юнайтед",
+      "preMatchProbability": 0.585952,
+      "startedAt": "2026-08-02T18:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-02T17:11:57Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.585952
+        }
+      ],
+      "completed": false
     }
   },
   "calibration": {
@@ -1647,7 +1692,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 122,
+    "snapshotCount": 126,
     "calibratedBuckets": 0
   }
 }
