@@ -9,6 +9,7 @@
 # V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
 # V10_R10_ATOMIC_BEST_FOUR_SYNC
 # V10_R11_MOSCOW_OPERATIONAL_DAY_ROLLOVER
+# V10_R14R3_EXACT_FOUR_PORTFOLIO
 """AI Football Lab V10 R14: result-integrity and goal-direction analytics.
 
 The pipeline searches a broad football pool, models match scenarios, and then
@@ -555,8 +556,12 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("R14 excludedCountries must contain Russia")
     if safe_float(config.get("totalDirectionMinimumStatisticalProbability"), 0.54) < 0.50:
         raise RuntimeError("R14 total direction statistical floor is too low")
-    if safe_int(config.get("maximumTotalUnderBestBets"), 1) > 1:
-        raise RuntimeError("R14 permits at most one total-under bet in the best four")
+    preferred_under = safe_int(config.get("preferredMaximumTotalUnderBestBets"), 1)
+    hard_under = safe_int(config.get("maximumTotalUnderBestBets"), 4)
+    if preferred_under < 0 or preferred_under > 1:
+        raise RuntimeError("R14R3 preferred total-under maximum must be zero or one")
+    if hard_under < preferred_under or hard_under > 4:
+        raise RuntimeError("R14R3 hard total-under ceiling must preserve exact four")
 
 def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
     now = now or utc_now()
@@ -1524,12 +1529,20 @@ def fetch_football_data_matches(
                     f"{window_start.isoformat()}:"
                     f"{window_end.isoformat()}"
                 ),
+                retries=0,
             )
         except Exception as exc:
+            message = str(exc)
             log(
                 "football-data.org window unavailable "
-                f"{window_start}..{window_end}: {exc}"
+                f"{window_start}..{window_end}: {message}"
             )
+            # A 429 is a provider-wide rate limit, not a bad date window.
+            # Continuing into older windows only multiplies failures and delays
+            # rollover. Keep already collected recent matches and stop cleanly.
+            if "429" in message or "Too Many Requests" in message:
+                log("FOOTBALL_DATA_RATE_LIMIT_STOP=YES")
+                break
             window_end = window_start - dt.timedelta(days=1)
             window_count += 1
             continue
@@ -2849,6 +2862,162 @@ def merge_advanced_event(featured: dict[str, Any], advanced: dict[str, Any]) -> 
     return merged
 
 
+
+def choose_exact_portfolio_candidates(
+    options: list[dict[str, Any]],
+    target: int,
+    config: dict[str, Any],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Choose an exact safe portfolio from all event-market options.
+
+    The one-under limit is a preference, not a publication-killing invariant.
+    We first search for a diversified portfolio, then progressively relax only
+    portfolio composition. Candidate safety floors and total-direction checks
+    are never relaxed.
+    """
+    tier_order = {
+        "STRICT_QUALIFIED": 0,
+        "RESULT_FIRST": 1,
+        "MARKET_CONSENSUS": 2,
+        "MARKET_RESERVE": 3,
+        "TOP_FOUR_AVAILABLE": 4,
+    }
+    preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
+    preferred_under = safe_int(
+        config.get("preferredMaximumTotalUnderBestBets"), 1
+    )
+    hard_under = safe_int(config.get("maximumTotalUnderBestBets"), target)
+    max_family = safe_int(config.get("maximumSameMarketFamilyBestBets"), 2)
+    max_league = safe_int(config.get("maximumSameLeagueBestBets"), 1)
+    under_penalty = safe_float(config.get("totalUnderPortfolioPenalty"), 8.0)
+
+    ranked: list[dict[str, Any]] = []
+    seen_options: set[str] = set()
+    rejected = 0
+    for source in options:
+        event_id = str(source.get("eventId") or "")
+        key = "|".join(
+            [
+                event_id,
+                str(source.get("market") or ""),
+                str(source.get("selectionCode") or ""),
+                str(source.get("point") or ""),
+            ]
+        )
+        if not event_id or key in seen_options:
+            continue
+        seen_options.add(key)
+        tier, failures = best_bet_selection_tier(source, config)
+        if tier == "REJECTED":
+            rejected += 1
+            continue
+        item = copy.deepcopy(source)
+        item["bestBetSelectionTier"] = tier
+        item["bestBetHardFailures"] = failures
+        item["bestBetSoftWarnings"] = list(
+            (item.get("qualification") or {}).get("failures") or []
+        )
+        base_score = best_bet_result_first_score(item, tier, config)
+        is_under = str(item.get("market") or "").upper() == "TOTAL_UNDER"
+        item["resultFirstScore"] = base_score
+        item["portfolioAdjustedScore"] = round(
+            base_score - (under_penalty if is_under else 0.0), 6
+        )
+        ranked.append(item)
+
+    ranked.sort(
+        key=lambda item: (
+            safe_float(item.get("bookmakerOdds") or item.get("odds")) >= preferred_min,
+            -tier_order.get(str(item.get("bestBetSelectionTier") or ""), 9),
+            safe_float(item.get("portfolioAdjustedScore")),
+            safe_float(item.get("conservativeProbability"), item.get("modelProbability")),
+            safe_float(item.get("marketStability")),
+            safe_float(item.get("dataQuality")),
+        ),
+        reverse=True,
+    )
+
+    selected: list[dict[str, Any]] = []
+    used_events: set[str] = set()
+    family_counts: dict[str, int] = defaultdict(int)
+    league_counts: dict[str, int] = defaultdict(int)
+    total_under_count = 0
+    pass_usage: list[str] = []
+
+    def add_pass(
+        name: str,
+        preferred_only: bool,
+        under_limit: int,
+        family_limit: int,
+        league_limit: int,
+    ) -> None:
+        nonlocal total_under_count
+        before = len(selected)
+        for source in ranked:
+            if len(selected) >= target:
+                break
+            event_id = str(source.get("eventId") or "")
+            if not event_id or event_id in used_events:
+                continue
+            odds = safe_float(source.get("bookmakerOdds") or source.get("odds"))
+            if preferred_only and odds < preferred_min:
+                continue
+            family = str(
+                source.get("marketFamily")
+                or market_family(str(source.get("market") or ""))
+            )
+            league = str(source.get("league") or "")
+            is_under = str(source.get("market") or "").upper() == "TOTAL_UNDER"
+            if is_under and total_under_count >= under_limit:
+                continue
+            if family_counts[family] >= family_limit:
+                continue
+            if league_counts[league] >= league_limit:
+                continue
+            item = copy.deepcopy(source)
+            item["portfolioSelectionPass"] = name
+            item["portfolioUnderPreferenceRelaxed"] = bool(
+                is_under and total_under_count >= preferred_under
+            )
+            selected.append(item)
+            used_events.add(event_id)
+            family_counts[family] += 1
+            league_counts[league] += 1
+            if is_under:
+                total_under_count += 1
+        if len(selected) > before:
+            pass_usage.append(name)
+
+    # Keep quality floors fixed; only portfolio diversity and price preference
+    # are relaxed. The final pass prevents a valid batch from dying merely
+    # because several strongest safe candidates share the same market family.
+    add_pass("PREFERRED_DIVERSE", True, preferred_under, max_family, max_league)
+    add_pass(
+        "PREFERRED_RELAXED",
+        True,
+        min(hard_under, max(preferred_under, 2)),
+        max(3, max_family),
+        max(2, max_league),
+    )
+    add_pass(
+        "SAFE_PRICE_RELAXED",
+        False,
+        min(hard_under, max(preferred_under, 2)),
+        max(3, max_family),
+        max(2, max_league),
+    )
+    add_pass("EXACT_SAFE_PORTFOLIO", False, hard_under, target, target)
+
+    return selected, {
+        "safeOptions": len(ranked),
+        "rejectedOptions": rejected,
+        "selected": len(selected),
+        "totalUnderSelected": total_under_count,
+        "underPreferenceRelaxed": total_under_count > preferred_under,
+        "passes": pass_usage,
+    }
+
+
 def build_daily_analysis(
     odds_events: list[dict[str, Any]],
     advanced: dict[str, dict[str, Any]],
@@ -2874,29 +3043,52 @@ def build_daily_analysis(
     for raw_event in odds_events:
         if infer_sport_from_key(raw_event.get("sport_key")) != "soccer":
             continue
-        raw_event["country"] = infer_country(str(raw_event.get("sport_key") or ""), str(raw_event.get("sport_title") or ""))
+        raw_event["country"] = infer_country(
+            str(raw_event.get("sport_key") or ""),
+            str(raw_event.get("sport_title") or ""),
+        )
         if not event_allowed(raw_event, config):
             diagnostics.setdefault("excludedCompetitions", 0)
             diagnostics["excludedCompetitions"] += 1
             continue
         diagnostics["footballEvents"] += 1
         event_id = str(raw_event.get("id") or "")
-        event = merge_advanced_event(raw_event, advanced.get(event_id, {})) if event_id in advanced else raw_event
-        event["country"] = infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
+        event = (
+            merge_advanced_event(raw_event, advanced.get(event_id, {}))
+            if event_id in advanced
+            else raw_event
+        )
+        event["country"] = infer_country(
+            str(event.get("sport_key") or ""),
+            str(event.get("sport_title") or ""),
+        )
         quotes = parse_event_quotes(event, now, config)
-        quotes = [quote for quote in quotes if standard_market_allowed(quote.get("marketKey"), quote.get("market"), quote.get("point"))]
+        quotes = [
+            quote
+            for quote in quotes
+            if standard_market_allowed(
+                quote.get("marketKey"), quote.get("market"), quote.get("point")
+            )
+        ]
         if not quotes:
             continue
         diagnostics["eventsWithQuotes"] += 1
         model = build_event_model(event, quotes, football_context, {})
-        candidates = evaluate_event_markets(event, quotes, model, state.get("learning", {}), config, now)
+        candidates = evaluate_event_markets(
+            event, quotes, model, state.get("learning", {}), config, now
+        )
         candidates = [
-            item for item in candidates
-            if safe_float(item.get("conservativeProbability"), item.get("modelProbability"))
+            item
+            for item in candidates
+            if safe_float(
+                item.get("conservativeProbability"), item.get("modelProbability")
+            )
             >= safe_float(config.get("analysisMinimumConservativeProbability"), 0.46)
         ]
         if not candidates:
             continue
+        for item in candidates:
+            item["eventId"] = event_id
         diagnostics["eventsWithAnalysis"] += 1
         diagnostics["marketCandidates"] += len(candidates)
         diagnostics["bySport"]["soccer"] += 1
@@ -2905,9 +3097,53 @@ def build_daily_analysis(
             diagnostics["byMarketFamily"][str(item.get("marketFamily"))] += 1
         event_analyses.append((event, candidates))
 
-    selected_per_event: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    target = safe_int(config.get("dailyAnalysisTarget"), 15)
+    best_target = safe_int(config.get("bestBetsTarget"), 4)
+    if len(event_analyses) < target:
+        raise RuntimeError(
+            "EXACT_DAILY_FIFTEEN_NOT_MET: "
+            f"footballOddsEvents={diagnostics['footballEvents']}; "
+            f"eventsWithAnalysis={len(event_analyses)}; target={target}. "
+            "R14R3 must expand the football source pool instead of publishing weak or Asian markets."
+        )
+
+    # Reserve four safe event-market anchors from the entire candidate pool
+    # before choosing the remaining eleven analyses. This prevents a top-15
+    # list dominated by one market direction from making exact-four impossible.
+    all_candidate_options: list[dict[str, Any]] = []
+    events_by_id: dict[str, dict[str, Any]] = {}
+    candidates_by_event: dict[str, list[dict[str, Any]]] = {}
     for event, candidates in event_analyses:
-        best = max(
+        event_id = str(event.get("id") or "")
+        if not event_id:
+            continue
+        events_by_id[event_id] = event
+        candidates_by_event[event_id] = candidates
+        for candidate in candidates:
+            option = copy.deepcopy(candidate)
+            option["eventId"] = event_id
+            all_candidate_options.append(option)
+
+    anchors, anchor_diagnostics = choose_exact_portfolio_candidates(
+        all_candidate_options, best_target, config
+    )
+    if len(anchors) != best_target:
+        raise RuntimeError(
+            "EXACT_BEST_FOUR_SOURCE_POOL_NOT_MET: "
+            f"eventsWithAnalysis={len(event_analyses)}; "
+            f"marketCandidates={len(all_candidate_options)}; "
+            f"safeOptions={anchor_diagnostics.get('safeOptions')}; "
+            f"selected={len(anchors)}"
+        )
+    anchor_by_event = {
+        str(item.get("eventId") or ""): item for item in anchors
+    }
+
+    anchor_rows: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    regular_rows: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    for event, candidates in event_analyses:
+        event_id = str(event.get("id") or "")
+        candidates_sorted = sorted(
             candidates,
             key=lambda item: (
                 safe_float(item.get("reliabilityScore")),
@@ -2915,59 +3151,78 @@ def build_daily_analysis(
                 safe_float(item.get("marketStability")),
                 safe_float(item.get("dataQuality")),
             ),
-        )
-        alternatives = [item for item in candidates if item is not best]
-        alternatives.sort(
-            key=lambda item: (
-                safe_float(item.get("reliabilityScore")),
-                safe_float(item.get("conservativeProbability")),
-            ),
             reverse=True,
         )
-        selected_per_event.append((event, best, alternatives))
+        selected = anchor_by_event.get(event_id) or candidates_sorted[0]
+        alternatives = [
+            item
+            for item in candidates_sorted
+            if not (
+                str(item.get("market") or "") == str(selected.get("market") or "")
+                and str(item.get("selectionCode") or "")
+                == str(selected.get("selectionCode") or "")
+                and str(item.get("point") or "") == str(selected.get("point") or "")
+            )
+        ]
+        row = (event, selected, alternatives)
+        if event_id in anchor_by_event:
+            anchor_rows.append(row)
+        else:
+            regular_rows.append(row)
 
-    selected_per_event.sort(
-        key=lambda row: (
-            safe_float(row[1].get("reliabilityScore")),
-            safe_float(row[1].get("conservativeProbability")),
-            safe_float(row[1].get("dataQuality")),
-            safe_float(row[1].get("agreement")),
-            safe_float(row[1].get("marketStability")),
-            -safe_float(row[1].get("anomaly")),
-        ),
-        reverse=True,
+    rank_key = lambda row: (
+        safe_float(row[1].get("reliabilityScore")),
+        safe_float(row[1].get("conservativeProbability")),
+        safe_float(row[1].get("dataQuality")),
+        safe_float(row[1].get("agreement")),
+        safe_float(row[1].get("marketStability")),
+        -safe_float(row[1].get("anomaly")),
     )
-    target = safe_int(config.get("dailyAnalysisTarget"), 15)
-    if len(selected_per_event) < target:
-        raise RuntimeError(
-            "EXACT_DAILY_FIFTEEN_NOT_MET: "
-            f"footballOddsEvents={diagnostics['footballEvents']}; "
-            f"eventsWithAnalysis={len(selected_per_event)}; target={target}. "
-            "R14 must expand the football source pool instead of publishing weak or Asian markets."
-        )
+    anchor_rows.sort(key=rank_key, reverse=True)
+    regular_rows.sort(key=rank_key, reverse=True)
 
+    # Anchors cannot be dropped by daily league diversification. Fill the other
+    # eleven positions with the strongest available events, preferring league
+    # diversity but never sacrificing exact publication.
     max_league = safe_int(config.get("maximumSameLeagueDailyAnalysis"), 2)
-    diversified: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
-    deferred: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    chosen_rows = list(anchor_rows)
     league_counts: dict[str, int] = defaultdict(int)
-    for row in selected_per_event:
+    used_events = {
+        str(row[0].get("id") or "") for row in chosen_rows
+    }
+    for row in chosen_rows:
+        league_counts[str(row[1].get("league") or "")] += 1
+
+    deferred: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]]]] = []
+    for row in regular_rows:
+        if len(chosen_rows) >= target:
+            break
+        event_id = str(row[0].get("id") or "")
+        if not event_id or event_id in used_events:
+            continue
         league = str(row[1].get("league") or "")
-        if league_counts[league] < max_league and len(diversified) < target:
-            diversified.append(row)
+        if league_counts[league] < max_league:
+            chosen_rows.append(row)
+            used_events.add(event_id)
             league_counts[league] += 1
         else:
             deferred.append(row)
     for row in deferred:
-        if len(diversified) >= target:
+        if len(chosen_rows) >= target:
             break
-        diversified.append(row)
+        event_id = str(row[0].get("id") or "")
+        if not event_id or event_id in used_events:
+            continue
+        chosen_rows.append(row)
+        used_events.add(event_id)
 
+    if len(chosen_rows) != target:
+        raise RuntimeError(f"EXACT_DAILY_FIFTEEN_PUBLICATION_FAILED={len(chosen_rows)}")
+    chosen_rows.sort(key=rank_key, reverse=True)
     records = [
         event_to_analysis_record(event, selected, alternatives, index, now)
-        for index, (event, selected, alternatives) in enumerate(diversified[:target], start=1)
+        for index, (event, selected, alternatives) in enumerate(chosen_rows, start=1)
     ]
-    if len(records) != target:
-        raise RuntimeError(f"EXACT_DAILY_FIFTEEN_PUBLICATION_FAILED={len(records)}")
     if any(not record_uses_r14_standard_market(item) for item in records):
         raise RuntimeError("R14_FORBIDDEN_MARKET_REACHED_PUBLICATION")
     if any(str(item.get("sport")) != "soccer" for item in records):
@@ -2976,13 +3231,21 @@ def build_daily_analysis(
     diagnostics["bySport"] = dict(diagnostics["bySport"])
     diagnostics["byMarketFamily"] = dict(diagnostics["byMarketFamily"])
     diagnostics["byDataTier"] = dict(diagnostics["byDataTier"])
-    diagnostics["candidateEventPool"] = len(selected_per_event)
+    diagnostics["candidateEventPool"] = len(event_analyses)
     diagnostics["publishedAnalysis"] = len(records)
-    diagnostics["selectionObjective"] = "MAXIMUM_CONSERVATIVE_CALIBRATED_PASS_PROBABILITY"
+    diagnostics["portfolioAnchors"] = len(anchor_rows)
+    diagnostics["portfolioSafeOptions"] = anchor_diagnostics.get("safeOptions")
+    diagnostics["portfolioTotalUnder"] = anchor_diagnostics.get("totalUnderSelected")
+    diagnostics["portfolioUnderPreferenceRelaxed"] = anchor_diagnostics.get(
+        "underPreferenceRelaxed"
+    )
+    diagnostics["portfolioPasses"] = anchor_diagnostics.get("passes")
+    diagnostics["selectionObjective"] = "MAXIMUM_CONSERVATIVE_CALIBRATED_PASS_PROBABILITY_WITH_EXACT_SAFE_PORTFOLIO"
     diagnostics["marketPolicy"] = R14_MARKET_POLICY
     diagnostics["minimumOdds"] = safe_float(config.get("minimumBookmakerOdds"), 1.35)
     diagnostics["preferredMinimumOdds"] = safe_float(config.get("preferredMinimumOdds"), 1.55)
     return records, diagnostics
+
 
 def active_pending_best_bets(state: dict[str, Any], now: dt.datetime) -> list[dict[str, Any]]:
     active: list[dict[str, Any]] = []
@@ -3205,9 +3468,6 @@ def select_best_bets(
             f"BEST_FOUR_REQUIRES_EXACT_FIFTEEN={len(daily_analysis)}"
         )
 
-    # The four are a strict subset of the published fifteen. They cannot use
-    # a different alternative market because then the visible result of the
-    # fifteen and the financial settlement would describe different bets.
     candidate_options: list[dict[str, Any]] = []
     for analysis in daily_analysis:
         base = copy.deepcopy(analysis)
@@ -3215,118 +3475,64 @@ def select_best_bets(
         base["sourceAnalysisMarket"] = str(analysis.get("market") or "")
         candidate_options.append(base)
 
-    ranked: list[dict[str, Any]] = []
-    seen_options: set[str] = set()
-    for source in candidate_options:
-        event_id = str(source.get("eventId") or "")
-        key = "|".join(
-            [event_id, str(source.get("market") or ""), str(source.get("selectionCode") or ""), str(source.get("point") or "")]
-        )
-        if not event_id or key in seen_options:
-            continue
-        seen_options.add(key)
-        tier, failures = best_bet_selection_tier(source, config)
-        if tier == "REJECTED":
-            continue
-        item = copy.deepcopy(source)
-        item["bestBetSelectionTier"] = tier
-        item["bestBetHardFailures"] = failures
-        item["bestBetSoftWarnings"] = list((item.get("qualification") or {}).get("failures") or [])
-        item["resultFirstScore"] = best_bet_result_first_score(item, tier, config)
-        item["bestBetSelectionReason"] = (
-            "Выбран среди пятнадцати по максимальной калиброванной вероятности прохождения "
-            "при сохранении допустимого коэффициента."
-        )
-        ranked.append(item)
-
-    tier_order = {"STRICT_QUALIFIED": 0, "RESULT_FIRST": 1, "MARKET_CONSENSUS": 2, "MARKET_RESERVE": 3, "TOP_FOUR_AVAILABLE": 4}
-    ranked.sort(
-        key=lambda item: (
-            safe_float(item.get("bookmakerOdds") or item.get("odds")) >= safe_float(config.get("preferredMinimumOdds"), 1.55),
-            -tier_order.get(str(item.get("bestBetSelectionTier") or ""), 9),
-            safe_float(item.get("resultFirstScore")),
-            safe_float(item.get("conservativeProbability"), item.get("modelProbability")),
-            safe_float(item.get("marketStability")),
-            safe_float(item.get("dataQuality")),
-        ),
-        reverse=True,
+    selected_sources, portfolio_diagnostics = choose_exact_portfolio_candidates(
+        candidate_options, target, config
     )
-
-    selected: list[dict[str, Any]] = []
-    used_events: set[str] = set()
-    family_counts: dict[str, int] = defaultdict(int)
-    league_counts: dict[str, int] = defaultdict(int)
-    total_under_count = 0
-    total_market_count = 0
-    max_total_under = safe_int(config.get("maximumTotalUnderBestBets"), 1)
-    max_total_markets = safe_int(config.get("maximumTotalMarketsBestBets"), 4)
-    max_family = safe_int(config.get("maximumSameMarketFamilyBestBets"), 2)
-    max_league = safe_int(config.get("maximumSameLeagueBestBets"), 1)
-    preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
-
-    def add_pass(preferred_only: bool, family_limit: int, league_limit: int) -> None:
-        nonlocal total_under_count, total_market_count
-        for source in ranked:
-            if len(selected) >= target:
-                return
-            event_id = str(source.get("eventId") or "")
-            if not event_id or event_id in used_events:
-                continue
-            odds = safe_float(source.get("bookmakerOdds") or source.get("odds"))
-            if preferred_only and odds < preferred_min:
-                continue
-            family = str(source.get("marketFamily") or market_family(str(source.get("market") or "")))
-            market_code = str(source.get("market") or "").upper()
-            league = str(source.get("league") or "")
-            is_total_market = family == "TOTAL"
-            if market_code == "TOTAL_UNDER" and total_under_count >= max_total_under:
-                continue
-            if is_total_market and total_market_count >= max_total_markets:
-                continue
-            if family_counts[family] >= family_limit or league_counts[league] >= league_limit:
-                continue
-            item = copy.deepcopy(source)
-            source_analysis_id = str(item.get("sourceAnalysisId") or item.get("id") or "")
-            item["sourceAnalysisId"] = source_analysis_id
-            item["id"] = "bet-" + stable_id(
-                event_id,
-                item.get("market"),
-                item.get("selectionCode"),
-                item.get("point"),
-                source_analysis_id,
-                iso_z(now),
-            )
-            item["recordType"] = "BEST_BET"
-            item["isBestBet"] = True
-            item["analysisMarketDiffers"] = str(item.get("market") or "") != str(item.get("sourceAnalysisMarket") or "")
-            selected.append(item)
-            used_events.add(event_id)
-            family_counts[family] += 1
-            league_counts[league] += 1
-            if market_code == "TOTAL_UNDER":
-                total_under_count += 1
-            if is_total_market:
-                total_market_count += 1
-
-    add_pass(True, max_family, max_league)
-    add_pass(True, max(3, max_family), max(2, max_league))
-    add_pass(False, max(3, max_family), max(2, max_league))
-    add_pass(False, target, target)
-
-    if len(selected) != target:
+    if len(selected_sources) != target:
         raise RuntimeError(
             "EXACT_BEST_FOUR_NOT_MET: "
-            f"dailyAnalysis={len(daily_analysis)}; safeOptions={len(ranked)}; selected={len(selected)}"
+            f"dailyAnalysis={len(daily_analysis)}; "
+            f"safeOptions={portfolio_diagnostics.get('safeOptions')}; "
+            f"selected={len(selected_sources)}"
         )
 
+    selected: list[dict[str, Any]] = []
+    for source in selected_sources:
+        item = copy.deepcopy(source)
+        event_id = str(item.get("eventId") or "")
+        source_analysis_id = str(
+            item.get("sourceAnalysisId") or item.get("id") or ""
+        )
+        item["sourceAnalysisId"] = source_analysis_id
+        item["id"] = "bet-" + stable_id(
+            event_id,
+            item.get("market"),
+            item.get("selectionCode"),
+            item.get("point"),
+            source_analysis_id,
+            iso_z(now),
+        )
+        item["recordType"] = "BEST_BET"
+        item["isBestBet"] = True
+        item["analysisMarketDiffers"] = (
+            str(item.get("market") or "")
+            != str(item.get("sourceAnalysisMarket") or "")
+        )
+        item["bestBetSelectionReason"] = (
+            "Выбран среди пятнадцати по максимальной калиброванной вероятности "
+            "с последовательным смягчением только портфельных ограничений."
+        )
+        item["portfolioSafeOptions"] = portfolio_diagnostics.get("safeOptions")
+        item["portfolioTotalUnder"] = portfolio_diagnostics.get(
+            "totalUnderSelected"
+        )
+        item["portfolioUnderPreferenceRelaxed"] = portfolio_diagnostics.get(
+            "underPreferenceRelaxed"
+        )
+        selected.append(item)
+
     bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
-    bank_value = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000))
+    bank_value = safe_float(
+        bank.get("current"), config.get("startingVirtualBank", 10000)
+    )
     stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
     stake = round(bank_value * stake_percent / 100.0, 2)
     published_at = iso_z(now)
     for rank, item in enumerate(selected, start=1):
         item["rank"] = rank
-        item["rankLabel"] = "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}"
+        item["rankLabel"] = (
+            "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}"
+        )
         item["recordType"] = "BEST_BET"
         item["isBestBet"] = True
         item["status"] = "pending"
@@ -3337,7 +3543,9 @@ def select_best_bets(
         item["stakeAssignedAt"] = published_at
         item["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
         item["bankPolicy"] = "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET"
-        item["selectionObjective"] = "MAXIMUM_CALIBRATED_HIT_RATE_WITH_PRICE_FLOOR"
+        item["selectionObjective"] = (
+            "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO"
+        )
 
     return selected, copy.deepcopy(selected)
 
@@ -6225,6 +6433,44 @@ def run_self_test() -> int:
     if payout_probe != 80.0:
         raise RuntimeError("SELF_TEST net-profit formula regression")
 
+    # R14R3 regression: a safe pool dominated by TOTAL_UNDER must still
+    # produce exactly four. The one-under limit is a preference and cannot
+    # abort publication after a completed batch.
+    under_pool = []
+    for index in range(7):
+        probe = copy.deepcopy(daily[index])
+        probe["eventId"] = f"under-safe-{index}"
+        probe["marketKey"] = "totals"
+        probe["market"] = "TOTAL_UNDER"
+        probe["marketFamily"] = "TOTAL"
+        probe["selectionCode"] = "UNDER"
+        probe["point"] = 2.5
+        probe["bookmakerOdds"] = 1.70
+        probe["odds"] = 1.70
+        probe["quoteCount"] = 5
+        probe["modelProbability"] = 0.70
+        probe["conservativeProbability"] = 0.64
+        probe["dataTier"] = "FULL"
+        probe["dataQuality"] = 75
+        probe["agreement"] = 80
+        probe["marketStability"] = 82
+        probe["anomaly"] = 10
+        probe["expectedValue"] = 0.08
+        probe["goalDirectionConflict"] = False
+        probe["qualification"] = {"qualified": True, "failures": []}
+        under_pool.append(probe)
+    under_selected, under_diag = choose_exact_portfolio_candidates(
+        under_pool, 4, test_config
+    )
+    if len(under_selected) != 4:
+        raise RuntimeError(
+            f"SELF_TEST R14R3 exact-four under portfolio failed: {len(under_selected)}"
+        )
+    if not under_diag.get("underPreferenceRelaxed"):
+        raise RuntimeError("SELF_TEST R14R3 under preference relaxation was not reported")
+    print("R14R3_EXACT_FOUR_PORTFOLIO=GREEN")
+    print("R14R3_SAFE_UNDER_POOL_SELECTED=4")
+
     # R11 operational-day tests: rollover executes immediately, while the
     # selected fixtures remain inside one Moscow 08:00-08:00 day.
     before_eight_utc = dt.datetime(2026, 7, 29, 0, 20, tzinfo=UTC)
@@ -6265,7 +6511,7 @@ def run_self_test() -> int:
         f"HISTORY_CLEANUP=YES LIVE_FINAL_BRIDGE=YES "
         f"ATOMIC_BATCH_ROLLOVER=YES LINKED_BANK_METRICS=YES "
         f"FROZEN_BEST_FOUR=YES OPERATIONAL_DAY_08_MSK=YES IMMEDIATE_ROLLOVER=YES "
-        f"FOOTBALL_ONLY=YES STANDARD_MARKETS_ONLY=YES ASIAN_MARKETS=REMOVED"
+        f"FOOTBALL_ONLY=YES STANDARD_MARKETS_ONLY=YES ASIAN_MARKETS=REMOVED EXACT_SAFE_PORTFOLIO=YES"
     )
     return 0
 

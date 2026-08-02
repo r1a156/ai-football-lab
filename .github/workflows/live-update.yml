@@ -7,9 +7,10 @@
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
 # V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
 # V10_R14R2_MOSCOW_08_WATCHDOG
+# V10_R14R3_EXACT_FOUR_PORTFOLIO
 # V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
 # ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R14R2 Живой цикл — результаты, утренний watchdog и rollover
+name: V10 R14R3 Живой цикл — результаты, утренний watchdog и rollover
 
 on:
   workflow_dispatch:
@@ -104,7 +105,7 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/update_predictions.py --live-cycle
-          echo "R14R2_LIVE_CYCLE_COMPLETED=YES"
+          echo "R14R3_LIVE_CYCLE_COMPLETED=YES"
 
       - name: Финальная проверка R14
         shell: bash
@@ -170,8 +171,13 @@ jobs:
           print('R14R1_LEGACY_RUSSIAN_EVENTS_ALLOWED_FOR_SETTLEMENT=', len(legacy_russian_event_ids))
           if any(bool(item.get('goalDirectionConflict')) for item in best):
               raise SystemExit('Unsupported total direction in R14 best four')
-          if sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER') > int(config.get('maximumTotalUnderBestBets', 1)):
-              raise SystemExit('Too many total-under bets in R14 best four')
+          total_under_count = sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER')
+          preferred_under = int(config.get('preferredMaximumTotalUnderBestBets', 1))
+          hard_under = int(config.get('maximumTotalUnderBestBets', 4))
+          if total_under_count > hard_under:
+              raise SystemExit('R14R3 hard total-under ceiling exceeded')
+          print('R14R3_TOTAL_UNDER_COUNT=', total_under_count)
+          print('R14R3_UNDER_PREFERENCE_RELAXED=', total_under_count > preferred_under)
           terminal = {'won', 'lost', 'push', 'void', 'cancelled'}
           for item in daily:
               status = str(item.get('status') or 'pending')
@@ -180,7 +186,7 @@ jobs:
           expected_placed = sum(float(item.get('stake') or 0) for item in best if str(item.get('status') or 'pending') == 'pending')
           if abs(float(bank.get('placedAmount') or 0) - expected_placed) > 0.02:
               raise SystemExit('Placed bank amount mismatch')
-          print('R14_LIVE_ACCEPTANCE=GREEN')
+          print('R14R3_LIVE_ACCEPTANCE=GREEN')
           print('EXACT_DAILY_ANALYSIS=', len(daily))
           print('EXACT_BEST_BETS=', len(best))
           print('FOOTBALL_ONLY=YES')
@@ -196,7 +202,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/live-state.json data/live-learning.json data/state.json data/last-update-report.json data/ai_daily_analysis.json
           if git diff --cached --quiet; then
-            echo "R14_NO_DATA_CHANGES=YES"
+            echo "R14R3_NO_DATA_CHANGES=YES"
             exit 0
           fi
           git commit -m "V10 R14 settle football 15 and publish standard-market batch [skip ci]"

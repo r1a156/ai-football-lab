@@ -27,9 +27,9 @@
     "double_chance",
     "team_totals"
   ],
-  "maximumAdvancedEvents": 8,
+  "maximumAdvancedEvents": 12,
   "maximumAdvancedMarketsPerEvent": 3,
-  "advancedMarketsMinimumQuotaRemaining": 240,
+  "advancedMarketsMinimumQuotaRemaining": 120,
   "oddsRegions": "eu",
   "oddsBookmakers": [],
   "preferredBookmakers": [],
@@ -108,7 +108,7 @@
     "HYBRID": 0.55,
     "MARKET": 0.18
   },
-  "publicationPolicy": "EXACTLY_FIFTEEN_NON_RUSSIAN_FOOTBALL_MATCHES_EXACTLY_FOUR_DIRECTION_CONFIRMED_STANDARD_MARKETS",
+  "publicationPolicy": "EXACTLY_FIFTEEN_NON_RUSSIAN_FOOTBALL_MATCHES_WITH_FOUR_SAFE_PORTFOLIO_ANCHORS",
   "predictionObjective": "MAXIMUM_CONSERVATIVE_HIT_RATE_WITH_GOAL_DIRECTION_CONSENSUS",
   "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
@@ -120,7 +120,7 @@
   "resultFirstMinimumAgreement": 58,
   "resultFirstMaximumAnomaly": 48,
   "resultFirstMinimumExpectedValue": -0.01,
-  "bestBetSelectionObjective": "DIRECTION_CONFIRMED_CONSERVATIVE_HIT_RATE_WITH_PREFERRED_ODDS_FROM_1_55",
+  "bestBetSelectionObjective": "EXACT_FOUR_FROM_SAFE_FULL_POOL_WITH_SOFT_UNDER_DIVERSITY_PREFERENCE",
   "visibleLanguage": "ru-RU",
   "localizationPolicy": "ALL_VISIBLE_TEXT_AND_TEAM_NAMES_RUSSIAN",
   "teamNamePolicy": "OFFICIAL_RUSSIAN_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
@@ -177,7 +177,7 @@
   "operationalWindowRolloverPolicy": "IMMEDIATE_AFTER_CURRENT_BATCH_TERMINAL_NO_WAIT_FOR_08",
   "operationalWindowSelectionPolicy": "PROGRESSIVE_FUTURE_SEARCH_24_TO_120_HOURS_UNTIL_EXACT_FIFTEEN",
   "footballDataRequestWindowDays": 10,
-  "footballDataMaximumWindowsPerRun": 13,
+  "footballDataMaximumWindowsPerRun": 6,
   "fallbackMinimumProbability": 0.5,
   "fallbackMinimumDataQuality": 38,
   "fallbackMinimumAgreement": 45,
@@ -243,7 +243,7 @@
   "under25MaximumBttsProbability": 0.56,
   "under25MaximumRecentOverRate": 0.56,
   "overMinimumRecentOverRate": 0.42,
-  "maximumTotalUnderBestBets": 1,
+  "maximumTotalUnderBestBets": 4,
   "maximumTotalMarketsBestBets": 4,
   "settlementPolicy": "EXACT_EVENT_ID_THEN_FUZZY_PROVIDER_MATCH_THEN_FOOTBALL_DATA_WITH_VISIBLE_RETRIES",
   "excludedCompetitionPolicy": "NO_NEW_RUSSIAN_DOMESTIC_MATCHES_CURRENT_PUBLISHED_RECORDS_SETTLE_HONESTLY",
@@ -255,5 +255,9 @@
     37
   ],
   "morningRolloverPolicy": "SETTLE_RELEASE_STALE_AND_GENERATE_AT_08_MSK_WITH_RETRIES",
-  "scheduleTimezone": "Europe/Moscow"
+  "scheduleTimezone": "Europe/Moscow",
+  "preferredMaximumTotalUnderBestBets": 1,
+  "totalUnderPortfolioPenalty": 8.0,
+  "exactFourPortfolioPolicy": "RESERVE_FOUR_SAFE_EVENT_MARKET_ANCHORS_FROM_FULL_POOL; RELAX_COMPOSITION_NOT_SAFETY",
+  "footballDataRateLimitPolicy": "NO_RETRY_AND_STOP_ON_429_KEEP_RECENT_COLLECTED_WINDOWS"
 }
