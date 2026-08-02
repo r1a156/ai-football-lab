@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-  "mode": "settle",
-  "startedAt": "2026-08-02T13:56:05Z",
-  "finishedAt": "2026-08-02T13:56:07Z",
+  "mode": "auto",
+  "startedAt": "2026-08-02T14:00:01Z",
+  "finishedAt": "2026-08-02T14:00:01Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 2,
-      "bestBetsSettled": 1,
-      "unresolved": 16
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
+      "unresolved": 0
     },
-    "duePending": 2,
+    "duePending": 0,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,7 +32,7 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T13:56:05Z",
+      "updatedAt": "2026-08-02T14:00:01Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
       "terminalAnalysisCount": 2,
@@ -78,28 +78,17 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 17,
+    "footballDataMatches": 0,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "96",
-      "requestsUsed": "404",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 2,
-      "calls": 1,
-      "updatedAt": "2026-08-02T13:56:05Z"
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
+      "estimatedCreditsThisRun": 0,
+      "calls": 0,
+      "updatedAt": "2026-08-02T14:00:01Z"
     },
-    "apiCalls": [
-      {
-        "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
-        "status": 200,
-        "elapsedSeconds": 1.262
-      },
-      {
-        "label": "SCORES:soccer_korea_kleague1",
-        "status": 200,
-        "elapsedSeconds": 0.134
-      }
-    ]
+    "apiCalls": []
   },
   "warnings": [],
   "errors": []
