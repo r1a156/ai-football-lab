@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T17:11:59Z",
-  "finishedAt": "2026-08-02T17:12:01Z",
+  "startedAt": "2026-08-02T18:10:45Z",
+  "finishedAt": "2026-08-02T18:10:47Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 2,
-      "bestBetsSettled": 2,
-      "unresolved": 9
+      "analysisSettled": 1,
+      "bestBetsSettled": 0,
+      "unresolved": 8
     },
-    "duePending": 2,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T17:11:59Z",
+      "updatedAt": "2026-08-02T18:10:45Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 7,
+      "terminalAnalysisCount": 8,
       "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 8,
+      "pendingAnalysisCount": 7,
       "pendingBestBetsCount": 1,
       "completed": false,
       "placedAmount": 2506.55,
@@ -81,28 +81,23 @@
     "footballDataMatches": 17,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "78",
-      "requestsUsed": "422",
+      "requestsRemaining": "73",
+      "requestsUsed": "427",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 4,
-      "calls": 2,
-      "updatedAt": "2026-08-02T17:11:59Z"
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-02T18:10:45Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
         "status": 200,
-        "elapsedSeconds": 1.898
+        "elapsedSeconds": 1.374
       },
       {
-        "label": "SCORES:soccer_sweden_allsvenskan",
+        "label": "SCORES:soccer_norway_eliteserien",
         "status": 200,
-        "elapsedSeconds": 0.088
-      },
-      {
-        "label": "SCORES:soccer_switzerland_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.06
+        "elapsedSeconds": 0.091
       }
     ]
   },
