@@ -3,14 +3,14 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T18:10:45Z",
-  "finishedAt": "2026-08-02T18:10:47Z",
+  "startedAt": "2026-08-02T19:33:36Z",
+  "finishedAt": "2026-08-02T19:33:37Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
       "analysisSettled": 1,
-      "bestBetsSettled": 0,
-      "unresolved": 8
+      "bestBetsSettled": 1,
+      "unresolved": 6
     },
     "duePending": 1,
     "selectedSportKeys": [],
@@ -32,19 +32,19 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T18:10:45Z",
+      "updatedAt": "2026-08-02T19:33:36Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 8,
-      "terminalBestBetsCount": 3,
-      "pendingAnalysisCount": 7,
-      "pendingBestBetsCount": 1,
+      "terminalAnalysisCount": 9,
+      "terminalBestBetsCount": 4,
+      "pendingAnalysisCount": 6,
+      "pendingBestBetsCount": 0,
       "completed": false,
-      "placedAmount": 2506.55,
-      "availableAmount": 10427.26,
+      "placedAmount": 0.0,
+      "availableAmount": 14462.81,
       "startingBank": 12532.76,
       "statusLabel": "Рассчитываются результаты",
-      "activeBestBetsCount": 1,
+      "activeBestBetsCount": 0,
       "completedAt": null,
       "eventIds": [
         "25b07fc0e2e55cde958ac42fb345cda3",
@@ -69,7 +69,7 @@
         "7ebdca8fb4ef84a455589ea024dda075",
         "9d49893900d172d53f16771f82984160"
       ],
-      "currentBank": 12933.81,
+      "currentBank": 14462.81,
       "operationalDayId": "2026-08-02-MSK-0921-PLUS-24H",
       "operationalWindowStart": "2026-08-02T07:06:25Z",
       "operationalWindowEnd": "2026-08-03T06:21:25Z",
@@ -81,23 +81,23 @@
     "footballDataMatches": 17,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "73",
-      "requestsUsed": "427",
+      "requestsRemaining": "70",
+      "requestsUsed": "430",
       "requestsLast": "2",
       "estimatedCreditsThisRun": 2,
       "calls": 1,
-      "updatedAt": "2026-08-02T18:10:45Z"
+      "updatedAt": "2026-08-02T19:33:36Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-26:2026-08-04",
         "status": 200,
-        "elapsedSeconds": 1.374
+        "elapsedSeconds": 1.225
       },
       {
-        "label": "SCORES:soccer_norway_eliteserien",
+        "label": "SCORES:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.091
+        "elapsedSeconds": 0.156
       }
     ]
   },
