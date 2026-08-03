@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-03T16:35:04Z",
+  "updatedAt": "2026-08-03T18:22:24Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -1832,6 +1832,14 @@
           "clockLabel": "ориентировочно 35-я минута",
           "elapsedFraction": 0.3889,
           "liveProbability": 0.907997
+        },
+        {
+          "at": "2026-08-03T18:22:24Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.611032
         }
       ],
       "completed": false
@@ -1853,6 +1861,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.578051
+        },
+        {
+          "at": "2026-08-03T18:22:24Z",
+          "status": "LIVE",
+          "score": "5:0",
+          "clockLabel": "ориентировочно 82-я минута",
+          "elapsedFraction": 0.9111,
+          "liveProbability": 0.001
         }
       ],
       "completed": false
@@ -1874,6 +1890,35 @@
           "clockLabel": "",
           "elapsedFraction": 0.0,
           "liveProbability": 0.575972
+        },
+        {
+          "at": "2026-08-03T18:22:24Z",
+          "status": "LIVE",
+          "score": "0:2",
+          "clockLabel": "ориентировочно 82-я минута",
+          "elapsedFraction": 0.9111,
+          "liveProbability": 0.973498
+        }
+      ],
+      "completed": false
+    },
+    "1f1ce8636a7ac55020beee5757c5236b": {
+      "eventId": "1f1ce8636a7ac55020beee5757c5236b",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 2.5",
+      "homeRu": "Сармиенто де Йунин",
+      "awayRu": "Индепендиенте Ривадавиа",
+      "preMatchProbability": 0.620005,
+      "startedAt": "2026-08-03T19:45:00Z",
+      "snapshots": [
+        {
+          "at": "2026-08-03T18:22:24Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.620005
         }
       ],
       "completed": false
@@ -1906,7 +1951,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 143,
+    "snapshotCount": 147,
     "calibratedBuckets": 0
   }
 }
