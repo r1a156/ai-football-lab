@@ -2,11 +2,11 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-08-03T04:45:12Z",
+    "updatedAt": "2026-08-03T08:13:13Z",
     "analysisDateLocal": "2026-08-03",
     "status": "GREEN",
     "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-    "dataFreshness": "CURRENT",
+    "dataFreshness": "SETTLEMENT_REFRESH",
     "notice": "Каждый опубликованный прогноз получает виртуальную ставку 20% от текущего банка. Расчёт выигрыша выполняется по реальному коэффициенту букмекера, зафиксированному при публикации.",
     "analyzedMatches": 5,
     "source": "football-data.org + The Odds API",
@@ -86,7 +86,7 @@
     "stakePerPredictionPercent": 20.0,
     "maximumDailyExposurePercent": 80.0,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
-    "migrationAt": "2026-08-03T04:45:12Z",
+    "migrationAt": "2026-08-03T08:13:13Z",
     "analysisGeneratedAt": "2026-08-03T04:45:12Z",
     "analysisTarget": 15,
     "analysisPublished": 15,
@@ -103,46 +103,20 @@
     "predictionObjective": "MAXIMUM_CONSERVATIVE_HIT_RATE_WITH_GOAL_DIRECTION_CONSENSUS",
     "publicationPolicy": "EXACTLY_FIFTEEN_NON_RUSSIAN_FOOTBALL_MATCHES_WITH_FOUR_SAFE_PORTFOLIO_ANCHORS",
     "virtualBankPolicy": "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET_FIXED_AT_PUBLICATION",
-    "lastSuccessfulRefreshAt": "2026-08-03T04:45:12Z",
+    "lastSuccessfulRefreshAt": "2026-08-03T08:13:13Z",
     "apiHealth": {
-      "status": "DEGRADED",
-      "calls": 72,
-      "errors": 12,
-      "lastErrors": [
-        {
-          "label": "EVENTS:soccer_norway_eliteserien",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_japan_j_league",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_usa_mls",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_netherlands_eredivisie",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        },
-        {
-          "label": "EVENTS:soccer_norway_eliteserien",
-          "status": 429,
-          "error": "{\"message\":\"Requests are too frequent\",\"error_code\":\"EXCEEDED_FREQ_LIMIT\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#exceeded-freq-limit\"}\n"
-        }
-      ]
+      "status": "GREEN",
+      "calls": 0,
+      "errors": 0,
+      "lastErrors": []
     },
-    "historyUpdatedAt": "2026-08-03T04:45:11Z",
-    "liveSettlementAt": "2026-08-03T04:45:11Z",
+    "historyUpdatedAt": "2026-08-03T08:13:13Z",
+    "liveSettlementAt": "2026-08-03T08:13:13Z",
     "currentBatchId": "batch-d337dd98268f9ab37a5a",
     "batchSequence": 4,
     "batchStatus": "ACTIVE",
     "batchStatusLabel": "Подборка активна",
-    "batchUpdatedAt": "2026-08-03T04:45:12Z",
+    "batchUpdatedAt": "2026-08-03T08:13:13Z",
     "batchGenerationBlockedAt": "2026-08-01T19:57:57Z",
     "batchGenerationBlockedReason": "CURRENT_BATCH_NOT_TERMINAL",
     "bestBetsSourceAnalysisGeneratedAt": "2026-08-03T04:45:12Z",
@@ -3180,7 +3154,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-87af9ab11c8e5d2fe916",
@@ -3401,7 +3376,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-4c209c3fed9d9dffbdd3",
@@ -3622,7 +3598,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-95b7c092f58d0a80ffa1",
@@ -3784,7 +3761,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     }
   ],
   "predictions": [
@@ -4007,7 +3985,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-87af9ab11c8e5d2fe916",
@@ -4228,7 +4207,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-4c209c3fed9d9dffbdd3",
@@ -4449,7 +4429,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     },
     {
       "id": "bet-95b7c092f58d0a80ffa1",
@@ -4611,7 +4592,8 @@
       "selectionObjective": "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
     }
   ],
   "analysisHistory": [
@@ -29408,7 +29390,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-08-03T04:45:31Z"
+      "updatedAt": "2026-08-03T08:13:13Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -29421,17 +29403,20 @@
     "id": "batch-d337dd98268f9ab37a5a",
     "sequence": 4,
     "status": "ACTIVE",
-    "statusLabel": "Подборка активна",
     "createdAt": "2026-08-03T04:45:12Z",
-    "updatedAt": "2026-08-03T04:45:12Z",
+    "updatedAt": "2026-08-03T08:13:13Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
     "terminalAnalysisCount": 0,
     "terminalBestBetsCount": 0,
     "pendingAnalysisCount": 15,
     "pendingBestBetsCount": 4,
-    "activeBestBetsCount": 4,
     "completed": false,
+    "placedAmount": 11570.24,
+    "availableAmount": 2892.57,
+    "startingBank": 14462.81,
+    "statusLabel": "Подборка активна",
+    "activeBestBetsCount": 4,
     "completedAt": null,
     "eventIds": [
       "004b0d634351d34f62dc5ebb339f8f50",
@@ -29456,10 +29441,7 @@
       "fadd514709eaad344a2d7f3bdc1b20b5",
       "713ff08f1bd3e066b0f281e2788c3554"
     ],
-    "startingBank": 14462.81,
     "currentBank": 14462.81,
-    "placedAmount": 11570.24,
-    "availableAmount": 2892.57,
     "operationalDayId": "2026-08-03-MSK-0745-PLUS-72H",
     "operationalWindowStart": "2026-08-03T05:30:12Z",
     "operationalWindowEnd": "2026-08-06T04:45:12Z",
@@ -29627,16 +29609,16 @@
   ],
   "quota": {
     "provider": "THE_ODDS_API",
-    "requestsRemaining": "38",
-    "requestsUsed": "462",
-    "requestsLast": "2",
-    "estimatedCreditsThisRun": 20,
-    "calls": 66,
-    "updatedAt": "2026-08-03T04:45:12Z"
+    "requestsRemaining": null,
+    "requestsUsed": null,
+    "requestsLast": null,
+    "estimatedCreditsThisRun": 0,
+    "calls": 0,
+    "updatedAt": "2026-08-03T08:13:13Z"
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-08-03T04:45:31Z",
+    "updatedAt": "2026-08-03T08:13:13Z",
     "analysisHistory": {
       "input": 70,
       "output": 70,
