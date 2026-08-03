@@ -3,16 +3,16 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
   "mode": "settle",
-  "startedAt": "2026-08-02T23:30:18Z",
-  "finishedAt": "2026-08-02T23:30:19Z",
+  "startedAt": "2026-08-03T01:08:47Z",
+  "finishedAt": "2026-08-03T01:08:48Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 1,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 2
     },
-    "duePending": 0,
+    "duePending": 1,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -32,12 +32,12 @@
       "sequence": 3,
       "status": "SETTLING",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-02T23:30:18Z",
+      "updatedAt": "2026-08-03T01:08:47Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 12,
+      "terminalAnalysisCount": 13,
       "terminalBestBetsCount": 4,
-      "pendingAnalysisCount": 3,
+      "pendingAnalysisCount": 2,
       "pendingBestBetsCount": 0,
       "completed": false,
       "placedAmount": 0.0,
@@ -78,17 +78,28 @@
       "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
     },
     "batchRollover": false,
-    "footballDataMatches": 0,
+    "footballDataMatches": 10,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
-      "estimatedCreditsThisRun": 0,
-      "calls": 0,
-      "updatedAt": "2026-08-02T23:30:18Z"
+      "requestsRemaining": "58",
+      "requestsUsed": "442",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 2,
+      "calls": 1,
+      "updatedAt": "2026-08-03T01:08:47Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "label": "FOOTBALL_DATA_MATCHES:2026-07-27:2026-08-05",
+        "status": 200,
+        "elapsedSeconds": 1.031
+      },
+      {
+        "label": "SCORES:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      }
+    ]
   },
   "warnings": [],
   "errors": []

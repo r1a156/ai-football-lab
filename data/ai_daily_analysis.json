@@ -1,6 +1,6 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-08-02T23:30:18Z",
+  "updatedAt": "2026-08-03T01:08:47Z",
   "analysisDateLocal": "2026-08-02",
   "batch": {
     "version": 1,
@@ -8,12 +8,12 @@
     "sequence": 3,
     "status": "SETTLING",
     "createdAt": "2026-08-02T06:21:25Z",
-    "updatedAt": "2026-08-02T23:30:18Z",
+    "updatedAt": "2026-08-03T01:08:47Z",
     "analysisCount": 15,
     "bestBetsCount": 4,
-    "terminalAnalysisCount": 12,
+    "terminalAnalysisCount": 13,
     "terminalBestBetsCount": 4,
-    "pendingAnalysisCount": 3,
+    "pendingAnalysisCount": 2,
     "pendingBestBetsCount": 0,
     "completed": false,
     "placedAmount": 0.0,
@@ -254,8 +254,8 @@
       "batchSequence": 3,
       "batchStatus": "ACTIVE",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-02T20:31:18Z",
-      "settlementAttempts": 14
+      "settlementLastAttemptAt": "2026-08-03T01:08:47Z",
+      "settlementAttempts": 16
     },
     {
       "id": "analysis-0d78feb9784c2ebd288b",
@@ -2136,8 +2136,8 @@
       "batchSequence": 3,
       "batchStatus": "ACTIVE",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-02T20:31:18Z",
-      "settlementAttempts": 14
+      "settlementLastAttemptAt": "2026-08-03T01:08:47Z",
+      "settlementAttempts": 16
     },
     {
       "id": "analysis-9e62eb0f793bf30c2779",
@@ -2976,10 +2976,10 @@
         ]
       },
       "alternatives": [],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "2:0",
       "publishedAt": "2026-08-02T06:21:25Z",
-      "settledAt": null,
+      "settledAt": "2026-08-03T01:08:47Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -2993,9 +2993,14 @@
       "batchId": "batch-52339d6a60dd6d7b30bc",
       "batchSequence": 3,
       "batchStatus": "ACTIVE",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-02T20:31:18Z",
-      "settlementAttempts": 14
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-08-03T01:08:47Z",
+      "settlementAttempts": 16,
+      "homeScore": 2,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-03T01:08:47Z"
     },
     {
       "id": "analysis-6fc3b2b2d2d7a18624c2",
