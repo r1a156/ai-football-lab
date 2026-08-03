@@ -2,17 +2,17 @@
   "status": "GREEN",
   "version": "10.0.0",
   "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
-  "mode": "settle",
-  "startedAt": "2026-08-03T01:08:47Z",
-  "finishedAt": "2026-08-03T01:08:48Z",
+  "mode": "auto",
+  "startedAt": "2026-08-03T03:58:37Z",
+  "finishedAt": "2026-08-03T03:58:38Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 1,
+      "analysisSettled": 2,
       "bestBetsSettled": 0,
-      "unresolved": 2
+      "unresolved": 0
     },
-    "duePending": 1,
+    "duePending": 2,
     "selectedSportKeys": [],
     "discovery": {},
     "analysis": {},
@@ -30,22 +30,22 @@
       "version": 1,
       "id": "batch-52339d6a60dd6d7b30bc",
       "sequence": 3,
-      "status": "SETTLING",
+      "status": "COMPLETED",
       "createdAt": "2026-08-02T06:21:25Z",
-      "updatedAt": "2026-08-03T01:08:47Z",
+      "updatedAt": "2026-08-03T03:58:37Z",
       "analysisCount": 15,
       "bestBetsCount": 4,
-      "terminalAnalysisCount": 13,
+      "terminalAnalysisCount": 15,
       "terminalBestBetsCount": 4,
-      "pendingAnalysisCount": 2,
+      "pendingAnalysisCount": 0,
       "pendingBestBetsCount": 0,
-      "completed": false,
+      "completed": true,
       "placedAmount": 0.0,
       "availableAmount": 14462.81,
       "startingBank": 12532.76,
-      "statusLabel": "Рассчитываются результаты",
+      "statusLabel": "Подборка завершена",
       "activeBestBetsCount": 0,
-      "completedAt": null,
+      "completedAt": "2026-08-03T03:58:37Z",
       "eventIds": [
         "25b07fc0e2e55cde958ac42fb345cda3",
         "6bef2ade9de3e82ef28fb1b5de032151",
@@ -81,23 +81,28 @@
     "footballDataMatches": 10,
     "quota": {
       "provider": "THE_ODDS_API",
-      "requestsRemaining": "58",
-      "requestsUsed": "442",
+      "requestsRemaining": "54",
+      "requestsUsed": "446",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 2,
-      "calls": 1,
-      "updatedAt": "2026-08-03T01:08:47Z"
+      "estimatedCreditsThisRun": 4,
+      "calls": 2,
+      "updatedAt": "2026-08-03T03:58:37Z"
     },
     "apiCalls": [
       {
         "label": "FOOTBALL_DATA_MATCHES:2026-07-27:2026-08-05",
         "status": 200,
-        "elapsedSeconds": 1.031
+        "elapsedSeconds": 1.305
       },
       {
-        "label": "SCORES:soccer_chile_campeonato",
+        "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.161
+      },
+      {
+        "label": "SCORES:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.172
       }
     ]
   },
