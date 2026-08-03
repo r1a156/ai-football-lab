@@ -1,16 +1,16 @@
 {
   "status": "GREEN",
   "version": "10.0.0",
-  "sourceMarker": "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION",
+  "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-08-03T18:22:26Z",
-  "finishedAt": "2026-08-03T18:22:26Z",
+  "finishedAt": "2026-08-03T19:35:53Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 3,
       "bestBetsSettled": 0,
-      "unresolved": 0
+      "unresolved": 16
     },
     "duePending": 0,
     "selectedSportKeys": [],
@@ -88,7 +88,38 @@
       "calls": 0,
       "updatedAt": "2026-08-03T18:22:26Z"
     },
-    "apiCalls": []
+    "apiCalls": [
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.17
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.216
+      }
+    ],
+    "dueRecords": 3,
+    "providerFinalResults": 13,
+    "trackedHistory": {
+      "added": 3,
+      "matches": 13391,
+      "coverageStart": "2019-06-01T00:00:00Z",
+      "coverageEnd": "2027-05-23T13:30:00Z"
+    },
+    "overdueRelease": {
+      "analysis": 0,
+      "bestBets": 0
+    },
+    "expressSettlement": {
+      "settled": 0,
+      "won": 0,
+      "lost": 0,
+      "push": 0
+    }
   },
   "warnings": [],
   "errors": []

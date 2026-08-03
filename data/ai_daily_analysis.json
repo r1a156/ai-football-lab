@@ -1,6 +1,7 @@
 {
   "version": "10.0.0",
-  "updatedAt": "2026-08-03T18:22:26Z",
+  "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
+  "updatedAt": "2026-08-03T19:35:53Z",
   "analysisDateLocal": "2026-08-03",
   "batch": {
     "version": 1,
@@ -53,16 +54,31 @@
     "selectionWindowEnd": "2026-08-06T04:45:12Z",
     "rolloverExecutionPolicy": "IMMEDIATE_AFTER_ALL_CURRENT_MATCHES_TERMINAL"
   },
-  "bank": {
-    "current": 14462.81,
-    "placedAmount": 11570.24,
-    "available": 2892.57,
-    "activeBetsCount": 4
+  "dataCoverage": {},
+  "expressBank": {
+    "starting": 10000.0,
+    "current": 10000.0,
+    "history": [
+      {
+        "timestamp": "2026-08-03T19:35:53Z",
+        "value": 10000.0,
+        "reason": "R15_EXPRESS_BANK_CREATED"
+      }
+    ],
+    "createdAt": "2026-08-03T19:35:53Z",
+    "placedAmount": 0,
+    "activeExposure": 0,
+    "available": 10000.0,
+    "activeExpressCount": 0,
+    "roi": 0.0,
+    "maxDrawdown": 0.0,
+    "updatedAt": "2026-08-03T19:35:53Z"
   },
+  "expresses": [],
   "dailyAnalysis": [
     {
       "id": "analysis-4d011dab0852f217a8b8",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 1,
       "eventId": "004b0d634351d34f62dc5ebb339f8f50",
       "sport": "soccer",
@@ -263,11 +279,15 @@
       },
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-9752411fed909bd02e1b",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 2,
       "eventId": "1f1ce8636a7ac55020beee5757c5236b",
       "sport": "soccer",
@@ -456,11 +476,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-ff2e96181a6646b5e3fe",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 3,
       "eventId": "fadd514709eaad344a2d7f3bdc1b20b5",
       "sport": "soccer",
@@ -661,11 +685,15 @@
       },
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-e7ea8ad208f6c5979025",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 4,
       "eventId": "da7597293509b90e5b048ed138133638",
       "sport": "soccer",
@@ -867,11 +895,15 @@
       },
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-8a10e298b1163ff93bfd",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 5,
       "eventId": "a5a3ffad41ec4a1e234e3057d44490e4",
       "sport": "soccer",
@@ -1061,11 +1093,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-12e7f771cab5651c8cbe",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 6,
       "eventId": "4a82f1d6594e24737da818c52349e141",
       "sport": "soccer",
@@ -1256,11 +1292,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-b5167aa9eccf9eea3a17",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 7,
       "eventId": "a60dd7580eba6a18dc4695398227781d",
       "sport": "soccer",
@@ -1398,11 +1438,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-ef59831bf1b48c8482a6",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 8,
       "eventId": "46d14ff4067b8a280b7d2d17fdb2111e",
       "sport": "soccer",
@@ -1593,11 +1637,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-54d5192f4c73e8327eec",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 9,
       "eventId": "d48f5f7712711337cfe08fe90576dc2c",
       "sport": "soccer",
@@ -1771,10 +1819,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "3:0",
       "publishedAt": "2026-08-03T04:45:12Z",
-      "settledAt": null,
+      "settledAt": "2026-08-03T19:35:53Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -1787,11 +1835,20 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1,
+      "homeScore": 3,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-03T19:35:53Z"
     },
     {
       "id": "analysis-037c34631d168c44df4d",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 10,
       "eventId": "f4144de32dd469f0e4311953f5ab33b1",
       "sport": "soccer",
@@ -2014,10 +2071,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "6:0",
       "publishedAt": "2026-08-03T04:45:12Z",
-      "settledAt": null,
+      "settledAt": "2026-08-03T19:35:53Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -2030,11 +2087,20 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1,
+      "homeScore": 6,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-03T19:35:53Z"
     },
     {
       "id": "analysis-5d524fd7160260503a5f",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 11,
       "eventId": "caa92af37544e12749703ff98426bc8c",
       "sport": "soccer",
@@ -2172,11 +2238,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-177d7e6c74e8738def49",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 12,
       "eventId": "899614c0f2d17e7e57adcc291cf6ef84",
       "sport": "soccer",
@@ -2398,10 +2468,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:2",
       "publishedAt": "2026-08-03T04:45:12Z",
-      "settledAt": null,
+      "settledAt": "2026-08-03T19:35:53Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -2414,11 +2484,20 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1,
+      "homeScore": 0,
+      "awayScore": 2,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-03T19:35:53Z"
     },
     {
       "id": "analysis-e275d77034d793055217",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 13,
       "eventId": "d44929c99b98bb6333de83bef7b6f65d",
       "sport": "soccer",
@@ -2556,11 +2635,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-d3743ce12000c66fd7d3",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 14,
       "eventId": "99a8d4054357fa2be2603ac5cdf8f51a",
       "sport": "soccer",
@@ -2699,11 +2782,15 @@
       "selectionGeneratedAt": "2026-08-03T04:45:12Z",
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-f2f6da62413a447bf0d3",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 15,
       "eventId": "713ff08f1bd3e066b0f281e2788c3554",
       "sport": "soccer",
@@ -2844,7 +2931,11 @@
       },
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     }
   ],
   "bestBets": [
@@ -3068,7 +3159,9 @@
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "bet-87af9ab11c8e5d2fe916",
@@ -3290,7 +3383,9 @@
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "bet-4c209c3fed9d9dffbdd3",
@@ -3512,7 +3607,9 @@
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     },
     {
       "id": "bet-95b7c092f58d0a80ffa1",
@@ -3675,7 +3772,9 @@
       "batchId": "batch-d337dd98268f9ab37a5a",
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
-      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT"
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-08-03T19:35:53Z",
+      "settlementAttempts": 1
     }
   ]
 }
