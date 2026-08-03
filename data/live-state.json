@@ -2,12 +2,12 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "TRACKING",
-  "updatedAt": "2026-08-03T19:35:51Z",
+  "updatedAt": "2026-08-03T20:46:40Z",
   "refreshMinutes": 10,
   "events": [
     {
-      "eventId": "1f1ce8636a7ac55020beee5757c5236b",
-      "analysisId": "analysis-9752411fed909bd02e1b",
+      "eventId": "a5a3ffad41ec4a1e234e3057d44490e4",
+      "analysisId": "analysis-8a10e298b1163ff93bfd",
       "isBestBet": false,
       "sport": "soccer",
       "sportLabel": "Футбол",
@@ -16,11 +16,11 @@
       "leagueRu": "Примера Аргентины",
       "country": "Аргентина",
       "countryRu": "Аргентина",
-      "home": "Sarmiento de Junin",
-      "away": "Independiente Rivadavia",
-      "homeRu": "Сармиенто де Йунин",
-      "awayRu": "Индепендиенте Ривадавиа",
-      "commenceTime": "2026-08-03T19:45:00Z",
+      "home": "Platense",
+      "away": "Talleres",
+      "homeRu": "Платенсе",
+      "awayRu": "Таллерес",
+      "commenceTime": "2026-08-03T22:00:00Z",
       "status": "SCHEDULED",
       "statusRu": "Ожидается",
       "homeScore": null,
@@ -30,19 +30,19 @@
       "minute": 0,
       "period": null,
       "elapsedFraction": 0.0,
-      "pick": "Тотал меньше 2.5",
-      "pickRu": "Тотал меньше 2.5",
-      "market": "TOTAL_UNDER",
+      "pick": "Тотал больше 1.5",
+      "pickRu": "Тотал больше 1.5",
+      "market": "TOTAL_OVER",
       "marketFamily": "TOTAL",
-      "point": 2.5,
-      "preMatchProbability": 0.620005,
-      "liveProbability": 0.620005,
-      "liveProbabilityPercent": 62.0,
+      "point": 1.5,
+      "preMatchProbability": 0.592711,
+      "liveProbability": 0.592711,
+      "liveProbabilityPercent": 59.3,
       "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
       "calibrationEvidence": null,
       "provider": "THESPORTSDB_PUBLIC_123",
-      "providerEventId": "2397994",
-      "updatedAt": "2026-08-03T19:35:51Z",
+      "providerEventId": "2397991",
+      "updatedAt": "2026-08-03T20:46:40Z",
       "freshnessSeconds": 0,
       "originalPredictionImmutable": true
     }
@@ -50,21 +50,20 @@
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 5,
-    "results": 3,
+    "calls": 4,
+    "results": 46,
     "oddsQuota": {
-      "requestsRemaining": "32",
-      "requestsUsed": "468",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-08-03: SOFASCORE_PUBLIC:2026-08-03 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
-      "ESPN 20260803: ESPN_PUBLIC:20260803 failed after retries: HTTP Error 502: Bad Gateway"
+      "SofaScore 2026-08-03: SOFASCORE_PUBLIC:2026-08-03 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 0,
+      "espn": 43,
       "theSportsDB": 3,
       "footballDataOptional": 0
     }
@@ -73,7 +72,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 3
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
