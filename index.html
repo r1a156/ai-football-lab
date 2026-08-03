@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="ru" data-version="V10_R7_HISTORY_LIVE_CLEANUP">
+<html lang="ru" data-version="V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#07090f">
-    <meta name="description" content="Лаборатория спортивного ИИ — глобальная аналитика футбола и хоккея, 15 прогнозов дня и четыре лучшие ставки.">
+    <meta name="description" content="Лаборатория спортивного ИИ — полный анализ футбольных матчей суток, 15 стратегических прогнозов и три экспресса.">
     <title>Лаборатория спортивного ИИ — аналитика матчей</title>
-    <link rel="stylesheet" href="assets/styles.css?v=10.5.0">
+    <link rel="stylesheet" href="assets/styles.css?v=15.0.0">
 </head>
 <body>
     <!-- V10_R9_BEST_FOUR_STATS_AND_COMPACT_MOBILE_NAV -->
@@ -22,12 +22,12 @@
             </span>
             <span class="brand-copy">
                 <strong><span class="brand-title-full">Лаборатория спортивного ИИ</span><span class="brand-title-short">Спортивный ИИ</span></strong>
-                <small>Версия 10 · Спортивная аналитика</small>
+                <small>R15 · Интеллект матча и экспресс-стратегия</small>
             </span>
         </a>
 
         <nav class="desktop-nav" aria-label="Основная навигация">
-            <a href="#best-bets">Лучшие</a>
+            <a href="#expresses">Экспрессы</a>
             <a href="#daily-analysis">15 прогнозов</a>
             <a href="#bank">Банк</a>
             <a href="#learning">Обучение</a>
@@ -55,14 +55,13 @@
                     Затем оцениваем цену.
                 </h1>
                 <p>
-                    Система анализирует футбол по доступным странам и лигам,
-                    подключает хоккей при нехватке качественных событий,
-                    формирует 15 прогнозов и выделяет четыре лучшие ставки,
-                    прошедших строгую проверку данных, вероятности и рынка.
+                    Система изучает все доступные футбольные матчи операционных суток,
+                    сопоставляет историю, форму, силу атаки и защиты, домашние и гостевые показатели,
+                    затем выбирает 15 наиболее понятных рынков и собирает три сбалансированных экспресса.
                 </p>
                 <div class="hero-actions">
-                    <a class="button button-primary" href="#best-bets">
-                        Открыть лучшие ставки
+                    <a class="button button-primary" href="#expresses">
+                        Открыть три экспресса
                         <span>↗</span>
                     </a>
                     <a class="button button-secondary" href="#daily-analysis">
@@ -70,9 +69,9 @@
                     </a>
                 </div>
                 <div class="principle-row">
-                    <span>Результат прежде коэффициента</span>
-                    <span>Футбол + хоккей</span>
-                    <span>Обучение на завершённых матчах</span>
+                    <span>Понимание матча прежде рынка</span>
+                    <span>Только футбол · без России</span>
+                    <span>Строго 08:00–08:00 МСК</span>
                 </div>
             </div>
 
@@ -100,7 +99,7 @@
 
                 <div class="panel-metrics">
                     <div>
-                        <span>Лучших ставок</span>
+                        <span>Экспрессов</span>
                         <strong id="heroBestCount">—</strong>
                     </div>
                     <div>
@@ -108,7 +107,7 @@
                         <strong id="heroLeagueCount">—</strong>
                     </div>
                     <div>
-                        <span>Виртуальный банк</span>
+                        <span>Экспресс-банк</span>
                         <strong id="heroBank">—</strong>
                     </div>
                     <div>
@@ -122,9 +121,9 @@
         <section class="live-strip" aria-label="Текущие показатели">
             <div class="live-strip-track">
                 <span><i></i> Футбол: <strong id="stripSoccer">—</strong></span>
-                <span><i></i> Хоккей: <strong id="stripHockey">—</strong></span>
+                <span><i></i> Экспрессы: <strong id="stripHockey">—</strong></span>
                 <span><i></i> Сейчас идут: <strong id="stripLive">0</strong></span>
-                <span><i></i> Точность лучших: <strong id="stripAccuracy">—</strong></span>
+                <span><i></i> Проходимость экспрессов: <strong id="stripAccuracy">—</strong></span>
                 <span><i></i> Доходность банка: <strong id="stripRoi">—</strong></span>
                 <span><i></i> Источник коэффициентов: <strong>глобальная букмекерская линия</strong></span>
             </div>
@@ -151,16 +150,54 @@
             </p>
         </section>
 
-        <section class="section shell" id="best-bets">
+
+        <section class="section shell express-section" id="expresses">
             <div class="section-heading reveal">
                 <div>
                     <span class="section-index">01</span>
-                    <p class="section-kicker">Квалифицированный отбор</p>
-                    <h2>Лучшие ставки дня</h2>
+                    <p class="section-kicker">Стратегия всех пятнадцати матчей</p>
+                    <h2>Три сбалансированных экспресса</h2>
+                </div>
+                <div class="section-meta">
+                    <span id="expressUpdated">Ожидание публикации</span>
+                    <strong id="expressStatus">3 × 5 событий</strong>
+                </div>
+            </div>
+
+            <div class="express-bank-overview reveal">
+                <div><span>Банк</span><strong id="expressBankCurrent">10 000 ₽</strong></div>
+                <div><span>Поставлено</span><strong id="expressBankPlaced">0 ₽</strong></div>
+                <div><span>Свободно</span><strong id="expressBankAvailable">10 000 ₽</strong></div>
+                <div><span>Операционный день</span><strong id="expressOperationalWindow">08:00–08:00 МСК</strong></div>
+            </div>
+
+            <div class="data-control-panel reveal" aria-label="Контроль полноты данных">
+                <article><span>Матчи суток</span><strong id="dataCoverageSummary">Проверяются</strong><small>Сначала полный календарь, затем глубокая аналитика</small></article>
+                <article><span>История команд</span><strong id="historyCoverageSummary">Кэш готовится</strong><small>Форма 5 / 10 / 20, дом, выезд, Elo и сила соперников</small></article>
+                <article><span>Источники</span><strong id="providerHealthSummary">Проверяются</strong><small>Квоты резервируются для коэффициентов и результатов</small></article>
+            </div>
+
+            <div class="express-grid" id="expressGrid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+            <p class="express-disclaimer">
+                Каждый экспресс использует пять разных матчей. Ставка — 10% текущего экспресс-банка.
+                Совместная вероятность показывается отдельно: гарантии выигрыша нет.
+            </p>
+        </section>
+
+        <section class="section shell" id="best-bets">
+            <div class="section-heading reveal">
+                <div>
+                    <span class="section-index">02</span>
+                    <p class="section-kicker">Информационный рейтинг без отдельной ставки</p>
+                    <h2>Четыре самых надёжных прогноза</h2>
                 </div>
                 <div class="section-meta">
                     <span id="bestBetsUpdated">Обновление данных…</span>
-                    <strong id="bestBetsExposure">Экспозиция —</strong>
+                    <strong id="bestBetsExposure">Без отдельной ставки</strong>
                 </div>
             </div>
 
@@ -184,14 +221,13 @@
         <section class="section shell" id="daily-analysis">
             <div class="section-heading reveal">
                 <div>
-                    <span class="section-index">02</span>
-                    <p class="section-kicker">Полная аналитическая выборка</p>
+                    <span class="section-index">03</span>
+                    <p class="section-kicker">Каждый прогноз — плечо одного из трёх экспрессов</p>
                     <h2>15 прогнозов дня</h2>
                 </div>
                 <div class="analysis-controls" role="group" aria-label="Фильтры прогнозов">
-                    <button class="filter-chip is-active" data-sport-filter="all" type="button">Все</button>
+                    <button class="filter-chip is-active" data-sport-filter="all" type="button">Все 15</button>
                     <button class="filter-chip" data-sport-filter="soccer" type="button">Футбол</button>
-                    <button class="filter-chip" data-sport-filter="ice_hockey" type="button">Хоккей</button>
                 </div>
             </div>
 
@@ -222,13 +258,13 @@
         <section class="section shell" id="bank">
             <div class="section-heading reveal">
                 <div>
-                    <span class="section-index">03</span>
-                    <p class="section-kicker">Только квалифицированные ставки</p>
-                    <h2>Виртуальный банк</h2>
+                    <span class="section-index">04</span>
+                    <p class="section-kicker">Отдельный финансовый контур трёх экспрессов</p>
+                    <h2>Экспресс-банк</h2>
                 </div>
                 <p class="section-description">
-                    Общий банк включает свободные средства и суммы, уже зафиксированные
-                    в активных лучших ставках. Аналитические прогнозы без ставки баланс не изменяют.
+                    Стартовый банк — 10 000 ₽. На каждый из трёх экспрессов фиксируется 10% текущего банка;
+                    общая дневная экспозиция составляет 30%, а прежняя история одиночных ставок сохраняется отдельно.
                 </p>
             </div>
 
@@ -236,7 +272,7 @@
                 <article class="bank-card bank-primary reveal">
                     <div class="bank-topline">
                         <div>
-                            <span>Общий банк сейчас</span>
+                            <span>Экспресс-банк сейчас</span>
                             <strong id="currentBank">—</strong>
                         </div>
                         <span class="roi-badge" id="bankRoi">—</span>
@@ -250,7 +286,7 @@
                             <strong id="availableBank">—</strong>
                         </div>
                         <div>
-                            <span>Сейчас поставлено</span>
+                            <span>В трёх экспрессах</span>
                             <strong id="bankExposureInline">—</strong>
                         </div>
                         <div>
@@ -499,8 +535,8 @@
     </footer>
 
     <nav class="mobile-nav" aria-label="Мобильная навигация">
-        <a href="#best-bets" data-mobile-nav="best-bets">Лучшие</a>
-        <a href="#daily-analysis" data-mobile-nav="daily-analysis">Прогнозы</a>
+        <a href="#expresses" data-mobile-nav="expresses">Экспрессы</a>
+        <a href="#daily-analysis" data-mobile-nav="daily-analysis">15 матчей</a>
         <a href="#bank" data-mobile-nav="bank">Банк</a>
         <a href="#learning" data-mobile-nav="learning">Обучение</a>
     </nav>
@@ -515,6 +551,6 @@
         <strong>Обновление данных</strong>
     </div>
 
-    <script src="assets/app.js?v=10.5.0"></script>
+    <script src="assets/app.js?v=15.0.0"></script>
 </body>
 </html>

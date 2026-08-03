@@ -3,6 +3,7 @@
 # V10_R7_HISTORY_LIVE_CLEANUP
 # V10_R8_ATOMIC_BATCH_ROLLOVER
 # V10_R9_BEST_FOUR_LIVE_COVERAGE
+# V10_R15F_FREE_NO_KEY_LIVE_SCORE_MESH
 """Safe live-score and live-calibration layer for AI Football Lab V10.
 
 This module writes live score and calibration only. The core R8 live-cycle command
@@ -421,6 +422,304 @@ def fetch_nhl_live(
             )
     return results, errors
 
+
+def _status_from_public_text(value: Any, *, completed: bool = False) -> str:
+    text = core.normalize_text(value)
+    if completed or any(token in text for token in (
+        "finished", "final", "match finished", "after extra time", "after penalties", "ended"
+    )):
+        return "FINISHED"
+    if any(token in text for token in (
+        "live", "in progress", "inprogress", "1st half", "2nd half",
+        "halftime", "half time", "extra time", "penalties", "1h", "2h", "ht"
+    )):
+        return "LIVE"
+    if any(token in text for token in ("postponed", "suspended", "delayed")):
+        return "POSTPONED"
+    if any(token in text for token in ("cancelled", "canceled", "abandoned")):
+        return "CANCELLED"
+    return "SCHEDULED"
+
+
+def _public_score(value: Any) -> int | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, dict):
+        for key in ("current", "normaltime", "displayValue", "value", "score"):
+            if value.get(key) is not None:
+                return _public_score(value.get(key))
+        return None
+    match = re.search(r"-?\d+", str(value))
+    return int(match.group(0)) if match else None
+
+
+def parse_sofascore_public(payload: Any, now: dt.datetime) -> list[dict[str, Any]]:
+    events = payload.get("events") if isinstance(payload, dict) else []
+    results: list[dict[str, Any]] = []
+    for event in events or []:
+        if not isinstance(event, dict):
+            continue
+        home_obj = event.get("homeTeam") if isinstance(event.get("homeTeam"), dict) else {}
+        away_obj = event.get("awayTeam") if isinstance(event.get("awayTeam"), dict) else {}
+        home = str(home_obj.get("name") or home_obj.get("shortName") or "")
+        away = str(away_obj.get("name") or away_obj.get("shortName") or "")
+        if not home or not away:
+            continue
+        status_obj = event.get("status") if isinstance(event.get("status"), dict) else {}
+        status_type = core.normalize_text(status_obj.get("type"))
+        status_text = " ".join(str(status_obj.get(key) or "") for key in ("type", "description", "statusCode"))
+        status = _status_from_public_text(status_text, completed=status_type == "finished")
+        timestamp = event.get("startTimestamp")
+        commence = None
+        if timestamp is not None:
+            try:
+                commence = core.iso_z(dt.datetime.fromtimestamp(float(timestamp), tz=UTC))
+            except (TypeError, ValueError, OSError):
+                commence = None
+        time_obj = event.get("time") if isinstance(event.get("time"), dict) else {}
+        results.append({
+            "eventId": str(event.get("id") or ""),
+            "providerEventId": str(event.get("id") or ""),
+            "home": home,
+            "away": away,
+            "homeScore": _public_score(event.get("homeScore")),
+            "awayScore": _public_score(event.get("awayScore")),
+            "completed": status == "FINISHED",
+            "status": status,
+            "minute": _public_score(time_obj.get("currentPeriodStartTimestamp") or event.get("time")),
+            "period": None,
+            "clock": "",
+            "commenceTime": commence,
+            "updatedAt": core.iso_z(now),
+            "source": "SOFASCORE_PUBLIC_WEB",
+            "sourcePriority": 96,
+        })
+    return results
+
+
+def fetch_sofascore_public(
+    client: core.ApiClient,
+    records: list[dict[str, Any]],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not any(item.get("sport") == "soccer" for item in records):
+        return [], []
+    dates = sorted({
+        (core.parse_datetime(item.get("commenceTime") or item.get("utcDate")) or now).date().isoformat()
+        for item in records if item.get("sport") == "soccer"
+    })[:2]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for date_value in dates:
+        payload = None
+        last_error: Exception | None = None
+        for host in ("https://www.sofascore.com", "https://api.sofascore.com"):
+            try:
+                payload = client.request_json(
+                    f"{host}/api/v1/sport/football/scheduled-events/{date_value}",
+                    timeout=15,
+                    retries=0,
+                    label=f"SOFASCORE_PUBLIC:{date_value}",
+                )
+                break
+            except Exception as exc:
+                last_error = exc
+        if payload is None:
+            errors.append(f"SofaScore {date_value}: {last_error}")
+            continue
+        results.extend(parse_sofascore_public(payload, now))
+    return results, errors
+
+
+def parse_thesportsdb_public(payload: Any, now: dt.datetime) -> list[dict[str, Any]]:
+    events = payload.get("events") if isinstance(payload, dict) else []
+    results: list[dict[str, Any]] = []
+    for event in events or []:
+        if not isinstance(event, dict):
+            continue
+        home = str(event.get("strHomeTeam") or "")
+        away = str(event.get("strAwayTeam") or "")
+        if not home or not away:
+            continue
+        status_text = str(event.get("strStatus") or event.get("strProgress") or "")
+        home_score = _public_score(event.get("intHomeScore"))
+        away_score = _public_score(event.get("intAwayScore"))
+        completed = bool(
+            home_score is not None and away_score is not None
+            and any(token in core.normalize_text(status_text) for token in ("finished", "final"))
+        )
+        results.append({
+            "eventId": str(event.get("idEvent") or ""),
+            "providerEventId": str(event.get("idEvent") or ""),
+            "home": home,
+            "away": away,
+            "homeScore": home_score,
+            "awayScore": away_score,
+            "completed": completed,
+            "status": _status_from_public_text(status_text, completed=completed),
+            "minute": _public_score(event.get("strProgress")),
+            "period": None,
+            "clock": str(event.get("strProgress") or ""),
+            "commenceTime": event.get("strTimestamp") or event.get("dateEvent"),
+            "updatedAt": core.iso_z(now),
+            "source": "THESPORTSDB_PUBLIC_123",
+            "sourcePriority": 82,
+        })
+    return results
+
+
+def fetch_thesportsdb_public(
+    client: core.ApiClient,
+    records: list[dict[str, Any]],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not any(item.get("sport") == "soccer" for item in records):
+        return [], []
+    dates = sorted({
+        (core.parse_datetime(item.get("commenceTime") or item.get("utcDate")) or now).date().isoformat()
+        for item in records if item.get("sport") == "soccer"
+    })[:2]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for date_value in dates:
+        params = urllib.parse.urlencode({"d": date_value, "s": "Soccer"})
+        try:
+            payload = client.request_json(
+                f"https://www.thesportsdb.com/api/v1/json/123/eventsday.php?{params}",
+                timeout=15,
+                retries=0,
+                label=f"THESPORTSDB_PUBLIC:{date_value}",
+            )
+            results.extend(parse_thesportsdb_public(payload, now))
+        except Exception as exc:
+            errors.append(f"TheSportsDB {date_value}: {exc}")
+    return results, errors
+
+
+def _walk_espn_events(value: Any) -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        competitions = value.get("competitions")
+        if isinstance(competitions, list) and competitions:
+            found.append(value)
+            return found
+        if isinstance(value.get("competitors"), list):
+            found.append({
+                "id": value.get("id"),
+                "date": value.get("date"),
+                "status": value.get("status"),
+                "competitions": [value],
+            })
+            return found
+        for child in value.values():
+            if isinstance(child, (dict, list)):
+                found.extend(_walk_espn_events(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.extend(_walk_espn_events(child))
+    return found
+
+
+def parse_espn_public(payload: Any, now: dt.datetime) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for event in _walk_espn_events(payload):
+        competitions = event.get("competitions") or []
+        competition = competitions[0] if competitions and isinstance(competitions[0], dict) else {}
+        competitors = competition.get("competitors") if isinstance(competition.get("competitors"), list) else []
+        home_row = next((row for row in competitors if isinstance(row, dict) and str(row.get("homeAway") or "").lower() == "home"), None)
+        away_row = next((row for row in competitors if isinstance(row, dict) and str(row.get("homeAway") or "").lower() == "away"), None)
+        if not home_row or not away_row:
+            continue
+
+        def team_name(row: dict[str, Any]) -> str:
+            team = row.get("team") if isinstance(row.get("team"), dict) else {}
+            return str(team.get("displayName") or team.get("shortDisplayName") or team.get("name") or row.get("displayName") or "")
+
+        home = team_name(home_row)
+        away = team_name(away_row)
+        if not home or not away:
+            continue
+        provider_id = str(event.get("id") or competition.get("id") or "")
+        dedupe = provider_id or f"{core.normalize_text(home)}|{core.normalize_text(away)}|{event.get('date') or competition.get('date')}"
+        if dedupe in seen:
+            continue
+        seen.add(dedupe)
+        status_obj = competition.get("status") if isinstance(competition.get("status"), dict) else event.get("status") if isinstance(event.get("status"), dict) else {}
+        status_type = status_obj.get("type") if isinstance(status_obj.get("type"), dict) else {}
+        status_text = " ".join(str(part or "") for part in (
+            status_type.get("name"), status_type.get("state"), status_type.get("description"),
+            status_type.get("shortDetail"), status_obj.get("displayClock")
+        ))
+        completed = bool(status_type.get("completed"))
+        results.append({
+            "eventId": provider_id,
+            "providerEventId": provider_id,
+            "home": home,
+            "away": away,
+            "homeScore": _public_score(home_row.get("score")),
+            "awayScore": _public_score(away_row.get("score")),
+            "completed": completed,
+            "status": _status_from_public_text(status_text, completed=completed),
+            "minute": _public_score(status_obj.get("displayClock")),
+            "period": _public_score(status_obj.get("period")),
+            "clock": str(status_obj.get("displayClock") or ""),
+            "commenceTime": event.get("date") or competition.get("date"),
+            "updatedAt": core.iso_z(now),
+            "source": "ESPN_PUBLIC_SCOREBOARD",
+            "sourcePriority": 90,
+        })
+    return results
+
+
+def fetch_espn_public(
+    client: core.ApiClient,
+    records: list[dict[str, Any]],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    if not any(item.get("sport") == "soccer" for item in records):
+        return [], []
+    dates = sorted({
+        (core.parse_datetime(item.get("commenceTime") or item.get("utcDate")) or now).strftime("%Y%m%d")
+        for item in records if item.get("sport") == "soccer"
+    })[:2]
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for date_value in dates:
+        params = urllib.parse.urlencode({
+            "sport": "soccer",
+            "region": "us",
+            "lang": "en",
+            "contentorigin": "espn",
+            "tz": "Europe/Moscow",
+            "dates": date_value,
+            "limit": 1000,
+        })
+        try:
+            payload = client.request_json(
+                f"https://site.web.api.espn.com/apis/v2/scoreboard/header?{params}",
+                timeout=15,
+                retries=0,
+                label=f"ESPN_PUBLIC:{date_value}",
+            )
+            results.extend(parse_espn_public(payload, now))
+        except Exception as exc:
+            errors.append(f"ESPN {date_value}: {exc}")
+    return results, errors
+
+
+def paid_score_fallback_due(record: dict[str, Any], now: dt.datetime, config: dict[str, Any]) -> bool:
+    commence = core.parse_datetime(record.get("commenceTime") or record.get("utcDate"))
+    if not commence:
+        return False
+    minimum_after = max(90, core.safe_int(config.get("livePaidScoreMinimumMinutesAfterKickoff"), 115))
+    if now < commence + dt.timedelta(minutes=minimum_after):
+        return False
+    last_attempt = core.parse_datetime(record.get("settlementLastAttemptAt"))
+    interval = max(120, core.safe_int(config.get("livePaidScoreFallbackIntervalMinutes"), 240))
+    if last_attempt and now - last_attempt < dt.timedelta(minutes=interval):
+        return False
+    return True
 
 def result_similarity(record: dict[str, Any], result: dict[str, Any]) -> float:
     if str(result.get("eventId") or "") == str(record.get("eventId") or ""):
@@ -899,6 +1198,9 @@ def run_update() -> int:
         return 0
 
     client = core.ApiClient()
+    sofascore_results, sofascore_errors = fetch_sofascore_public(client, records, now)
+    espn_results, espn_errors = fetch_espn_public(client, records, now)
+    sportsdb_results, sportsdb_errors = fetch_thesportsdb_public(client, records, now)
     football_results, football_errors = fetch_football_live(
         client,
         records,
@@ -906,11 +1208,12 @@ def run_update() -> int:
         now,
     )
     nhl_results, nhl_errors = fetch_nhl_live(client, records, now)
-    free_results = nhl_results + football_results
+    free_results = sofascore_results + espn_results + sportsdb_results + nhl_results + football_results
     unresolved_records = [
         record
         for record in records
         if best_result(record, free_results) is None
+        and paid_score_fallback_due(record, now, config)
     ]
     odds_results, odds_errors = fetch_odds_scores(
         client,
@@ -961,7 +1264,13 @@ def run_update() -> int:
             "calls": len(client.calls),
             "results": len(all_results),
             "oddsQuota": client.odds_quota,
-            "errors": odds_errors + football_errors + nhl_errors,
+            "errors": odds_errors + sofascore_errors + espn_errors + sportsdb_errors + football_errors + nhl_errors,
+            "freeScoreMesh": {
+                "sofascore": len(sofascore_results),
+                "espn": len(espn_results),
+                "theSportsDB": len(sportsdb_results),
+                "footballDataOptional": len(football_results),
+            },
         },
         "cleanup": {
             "finishedRemoved": sum(
@@ -1014,7 +1323,9 @@ def run_update() -> int:
         f"{live_state.get('cleanup', {}).get('unconfirmedRemoved', 0)}"
     )
     print(f"LIVE_PROVIDER_RESULTS={len(all_results)}")
-    print(f"LIVE_PROVIDER_ERRORS={len(odds_errors + football_errors + nhl_errors)}")
+    print(f"LIVE_PROVIDER_ERRORS={len(odds_errors + sofascore_errors + espn_errors + sportsdb_errors + football_errors + nhl_errors)}")
+    print(f"LIVE_FREE_SCORE_RESULTS={len(free_results)}")
+    print(f"LIVE_PAID_SCORE_FALLBACK_RECORDS={len(unresolved_records)}")
     print("LIVE_BANK_MUTATION=NO")
     print("LIVE_PUBLISHED_PREDICTION_MUTATION=NO")
     print("FINAL_STATUS=GREEN_V10_R6_LIVE_REFRESH")
@@ -1159,6 +1470,26 @@ def run_self_test() -> int:
             "Live self-test finished event was not removed"
         )
 
+    public_now = dt.datetime(2026, 8, 3, 12, 0, tzinfo=UTC)
+    sofa_probe = parse_sofascore_public(
+        {"events": [{"id": 1, "homeTeam": {"name": "Home FC"}, "awayTeam": {"name": "Away FC"}, "status": {"type": "finished"}, "homeScore": {"current": 2}, "awayScore": {"current": 1}, "startTimestamp": 1785758400}]},
+        public_now,
+    )
+    if len(sofa_probe) != 1 or sofa_probe[0].get("status") != "FINISHED" or sofa_probe[0].get("homeScore") != 2:
+        raise RuntimeError("Live self-test SofaScore public parser failed")
+    sportsdb_probe = parse_thesportsdb_public(
+        {"events": [{"idEvent": "2", "strHomeTeam": "Home FC", "strAwayTeam": "Away FC", "intHomeScore": "1", "intAwayScore": "1", "strStatus": "Match Finished", "strTimestamp": "2026-08-03T12:00:00Z"}]},
+        public_now,
+    )
+    if len(sportsdb_probe) != 1 or sportsdb_probe[0].get("status") != "FINISHED":
+        raise RuntimeError("Live self-test TheSportsDB public parser failed")
+    espn_probe = parse_espn_public(
+        {"events": [{"id": "3", "date": "2026-08-03T12:00:00Z", "competitions": [{"competitors": [{"homeAway": "home", "team": {"displayName": "Home FC"}, "score": "3"}, {"homeAway": "away", "team": {"displayName": "Away FC"}, "score": "2"}], "status": {"type": {"completed": True, "name": "STATUS_FINAL"}}}]}]},
+        public_now,
+    )
+    if len(espn_probe) != 1 or espn_probe[0].get("status") != "FINISHED" or espn_probe[0].get("awayScore") != 2:
+        raise RuntimeError("Live self-test ESPN public parser failed")
+    print("LIVE_FREE_SCORE_MESH_SELF_TEST=GREEN")
     print("SELF_TEST_GREEN_V10_R7_LIVE SCORE=2:1 LIVE_PROBABILITY=100.0 SNAPSHOTS=2")
     print("FINISHED_PUBLIC_EVENTS=0")
     print("CLOCK_ONLY_FALSE_LIVE=0")

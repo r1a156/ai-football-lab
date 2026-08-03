@@ -3,6 +3,7 @@
 /* V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY */
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 /* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
+/* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
 (() => {
     "use strict";
 
@@ -31,7 +32,7 @@
         initializeFilters();
         initializeDialog();
         initializeMobileNavigation();
-        window.addEventListener("resize", debounce(() => renderBankChart(runtime.state?.bank), 120));
+        window.addEventListener("resize", debounce(() => renderBankChart(runtime.state?.expressBank || runtime.state?.bank), 120));
         window.addEventListener("online", () => loadState({ notify: true }));
         window.addEventListener("offline", () => setConnectionState("offline"));
 
@@ -82,6 +83,10 @@
         const normalized = state && typeof state === "object" ? state : {};
         normalized.meta = normalized.meta && typeof normalized.meta === "object" ? normalized.meta : {};
         normalized.bank = normalized.bank && typeof normalized.bank === "object" ? normalized.bank : {};
+        normalized.expressBank = normalized.expressBank && typeof normalized.expressBank === "object" ? normalized.expressBank : normalized.bank;
+        normalized.expresses = Array.isArray(normalized.expresses) ? normalized.expresses : [];
+        normalized.expressHistory = Array.isArray(normalized.expressHistory) ? normalized.expressHistory : [];
+        normalized.dataCoverage = normalized.dataCoverage && typeof normalized.dataCoverage === "object" ? normalized.dataCoverage : {};
         normalized.statistics = normalized.statistics && typeof normalized.statistics === "object" ? normalized.statistics : {};
         normalized.learning = normalized.learning && typeof normalized.learning === "object" ? normalized.learning : {};
         normalized.batch = normalized.batch && typeof normalized.batch === "object" ? normalized.batch : {};
@@ -106,12 +111,14 @@
 
     function createStateSignature(state, liveState) {
         const meta = state?.meta || {};
-        const bank = state?.bank || {};
+        const bank = state?.expressBank || state?.bank || {};
         return [
             meta.updatedAt || "",
             meta.version || "",
             state?.dailyAnalysis?.length || 0,
             state?.bestBets?.length || state?.predictions?.length || 0,
+            state?.expresses?.length || 0,
+            (state?.expresses || []).map((item) => `${item?.id || ""}:${item?.status || ""}:${item?.profit || 0}`).join(","),
             (state?.bestBets || state?.predictions || []).map((item) => item?.id || item?.eventId || "").join(","),
             (state?.dailyAnalysis || []).map((item) => item?.id || item?.eventId || "").join(","),
             state?.statistics?.bestBets?.settled || 0,
@@ -132,9 +139,10 @@
     function renderApplication(state, liveState) {
         renderMeta(state, liveState);
         renderLiveMatches(liveState);
-        renderBestBets(state.bestBets, state.meta, state.bank, state.statistics);
+        renderExpresses(state.expresses, state.expressBank, state.meta, state.dataCoverage, state.statistics);
+        renderBestBets(state.bestBets, state.meta, state.expressBank, state.statistics);
         renderDailyAnalysis(state.dailyAnalysis);
-        renderBank(state.bank, state.statistics);
+        renderBank(state.expressBank, state.statistics);
         renderStatistics(state.statistics, state.learning);
         renderLearning(state.learning, state.statistics);
         renderHistory(state.history, state.analysisHistory);
@@ -142,20 +150,21 @@
     }
 
     function renderMeta(state, liveState) {
-        const { meta = {}, bank = {}, statistics = {}, dailyAnalysis = [], bestBets = [] } = state;
+        const { meta = {}, statistics = {}, dailyAnalysis = [], bestBets = [], expresses = [] } = state;
+        const bank = state.expressBank || state.bank || {};
         const soccerCount = Number(meta.soccerAnalyses ?? dailyAnalysis.filter((item) => item.sport === "soccer").length);
         const hockeyCount = Number(meta.hockeyAnalyses ?? dailyAnalysis.filter((item) => item.sport === "ice_hockey").length);
         const leagueCount = Number(meta.leaguesAnalyzed ?? new Set(dailyAnalysis.map((item) => item.league).filter(Boolean)).size);
 
         setText("heroAnalysisCount", dailyAnalysis.length || meta.analysisPublished || 0);
-        setText("heroBestCount", bestBets.length);
+        setText("heroBestCount", expresses.length);
         setText("heroLeagueCount", leagueCount);
         setText("heroBank", formatCurrency(bank.current));
         setText("heroUpdated", formatCompactDateTime(meta.updatedAt));
         setText("stripSoccer", soccerCount);
-        setText("stripHockey", hockeyCount);
+        setText("stripHockey", expresses.length);
         setText("stripLive", Array.isArray(liveState?.activeEventIds) ? liveState.activeEventIds.length : 0);
-        setText("stripAccuracy", formatPercent(statistics.bestBetsAccuracy));
+        setText("stripAccuracy", formatPercent(statistics?.expresses?.accuracy));
         setText("stripRoi", formatSignedPercent(bank.roi));
         setText("footerUpdated", `Обновлено ${formatDateTime(meta.updatedAt)}`);
 
@@ -241,6 +250,86 @@
         return `<div class="inline-live"><span>Матч идёт · ${escapeHtml(live.clockLabel || "сейчас")}</span><strong>${escapeHtml(live.score || "— : —")}</strong><b>${formatNumber(number(live.liveProbability) * 100, 1)}%</b></div>`;
     }
 
+    function renderExpresses(expresses = [], bank = {}, meta = {}, coverage = {}, statistics = {}) {
+        const grid = document.getElementById("expressGrid");
+        if (!grid) return;
+        const current = number(bank.current || bank.starting || 10000);
+        const placed = number(bank.placedAmount ?? bank.activeExposure ?? 0);
+        const available = number(bank.available ?? Math.max(0, current - placed));
+        setText("expressBankCurrent", formatCurrency(current));
+        setText("expressBankPlaced", formatCurrency(placed));
+        setText("expressBankAvailable", formatCurrency(available));
+        setText("expressUpdated", meta.analysisGeneratedAt ? `Опубликовано ${formatDateTime(meta.analysisGeneratedAt)}` : `Обновлено ${formatDateTime(meta.updatedAt)}`);
+        setText("expressStatus", expresses.length ? `${expresses.length} экспресса · ${expresses.reduce((sum, item) => sum + number(item.legCount || item.legs?.length), 0)} событий` : "Ожидается качественная подборка");
+        const windowStart = meta.operationalWindowStart ? formatCompactDateTime(meta.operationalWindowStart) : "08:00";
+        const windowEnd = meta.operationalWindowEnd ? formatCompactDateTime(meta.operationalWindowEnd) : "08:00";
+        setText("expressOperationalWindow", `${windowStart} — ${windowEnd}`);
+        const discovered = number(coverage.discoveredEvents);
+        const withOdds = number(coverage.oddsEvents);
+        const qualified = number(coverage.qualifiedEvents);
+        setText("dataCoverageSummary", discovered ? `${discovered} найдено · ${withOdds} с линией · ${qualified} прошли` : "Ожидание сканирования суток");
+        const historyMatches = number(coverage.historyMatches);
+        const matched = number(coverage.historyMatchedEvents);
+        setText("historyCoverageSummary", historyMatches ? `${historyMatches} матчей в памяти · ${matched} событий сопоставлено` : "Историческая база наполняется");
+        const providerValues = coverage.providerHealth && typeof coverage.providerHealth === "object"
+            ? Object.values(coverage.providerHealth).filter((item) => item && typeof item === "object")
+            : [];
+        const freeSources = coverage.freeDataMesh?.sources && typeof coverage.freeDataMesh.sources === "object"
+            ? Object.entries(coverage.freeDataMesh.sources)
+            : [];
+        const greenProviders = providerValues.filter((item) => String(item.status || "").toUpperCase() === "GREEN").length;
+        const greenFree = freeSources.filter(([, status]) => ["GREEN", "PARTIAL", "NOT_MODIFIED"].includes(String(status || "").toUpperCase())).length;
+        const sourceTotal = providerValues.length + freeSources.length;
+        const sourceGreen = greenProviders + greenFree;
+        setText("providerHealthSummary", sourceTotal
+            ? `${sourceGreen} из ${sourceTotal} источников доступны · без новых ключей`
+            : (meta.apiHealth?.status === "GREEN" ? "Источники доступны" : "Контроль источников активен"));
+
+        if (!expresses.length) {
+            grid.innerHTML = `<div class="empty-state"><strong>Подборка не зафиксирована</strong><p>Система не добавляет матчи следующих суток и не снижает требования. Публикация появится, когда внутри текущего окна найдутся 15 событий с полноценной историей и качественной линией.</p></div>`;
+            return;
+        }
+        grid.innerHTML = expresses.map((item) => expressTemplate(item)).join("");
+        grid.querySelectorAll("[data-analysis-id]").forEach((node) => {
+            node.addEventListener("click", () => openAnalysisDialog(findRecord(node.dataset.analysisId)));
+        });
+    }
+
+    function expressTemplate(item) {
+        const legs = Array.isArray(item.legs) ? item.legs : [];
+        const settled = legs.filter((leg) => ["won", "lost", "push", "void", "cancelled", "unresolved"].includes(String(leg.status || "pending"))).length;
+        const won = legs.filter((leg) => String(leg.status) === "won").length;
+        const lost = legs.filter((leg) => String(leg.status) === "lost").length;
+        const status = String(item.status || "pending");
+        return `
+            <article class="express-card ${statusClass(status)}">
+                <div class="express-card-head">
+                    <div><span>${escapeHtml(item.label || "Экспресс")}</span><strong>${legs.length} событий</strong></div>
+                    <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
+                </div>
+                <div class="express-metrics">
+                    <div><span>Общий коэффициент</span><strong>${formatNumber(item.settledCombinedOdds || item.combinedOdds, 3)}</strong></div>
+                    <div><span>Расчётная вероятность</span><strong>${formatNumber(item.jointProbabilityPercent ?? number(item.jointProbability) * 100, 2)}%</strong></div>
+                    <div><span>Ставка</span><strong>${formatCurrency(item.stake)} · ${formatNumber(item.stakePercent, 0)}%</strong></div>
+                    <div><span>Возможная выплата</span><strong>${formatCurrency(item.potentialPayout)}</strong></div>
+                </div>
+                <div class="express-progress"><span>${settled} из ${legs.length} завершены</span><strong>${won} прошло · ${lost} не прошло</strong></div>
+                <div class="express-legs">${legs.map((leg) => expressLegTemplate(leg)).join("")}</div>
+                <div class="express-card-footer"><span>Потенциальная чистая прибыль</span><strong>${status === "won" ? formatSignedCurrency(item.profit) : formatCurrency(item.potentialProfit)}</strong></div>
+            </article>`;
+    }
+
+    function expressLegTemplate(leg) {
+        const status = String(leg.status || "pending");
+        return `
+            <button class="express-leg" type="button" data-analysis-id="${escapeHtml(leg.analysisId || "")}">
+                <span class="express-leg-number">${escapeHtml(leg.legNumber || "—")}</span>
+                <span class="express-leg-match"><small>${escapeHtml(displayLeague(leg))} · ${formatMatchTime(leg.commenceTime)}</small><strong>${escapeHtml(displayTeam(leg, "home"))} — ${escapeHtml(displayTeam(leg, "away"))}</strong><b>${escapeHtml(displayPick(leg))}</b></span>
+                <span class="express-leg-price"><strong>${formatNumber(leg.odds, 2)}</strong><small>${formatNumber(number(leg.probability) * 100, 1)}%</small></span>
+                <span class="status-chip ${statusClass(status)}">${escapeHtml(leg.score || statusLabel(status))}</span>
+            </button>`;
+    }
+
     function renderBestBets(bestBets, meta, bank, statistics = {}) {
         const grid = document.getElementById("bestBetsGrid");
         if (!grid) return;
@@ -252,15 +341,7 @@
             "bestBetsUpdated",
             `${sequence ? `Подборка №${sequence} · ` : ""}${batchLabel} · ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`,
         );
-        const exposure = number(bank?.placedAmount ?? bank?.activeExposure ?? bestBets
-            .filter((item) => String(item.status || "pending") === "pending")
-            .reduce((sum, item) => sum + number(item.stake), 0));
-        const activeCount = number(bank?.activeBetsCount ?? bestBets.filter((item) => String(item.status || "pending") === "pending").length);
-        const bankValue = Math.max(1, number(bank?.current));
-        setText(
-            "bestBetsExposure",
-            `${formatCount(activeCount, "активная ставка", "активные ставки", "активных ставок")} · поставлено ${formatCurrency(exposure)} · ${formatNumber((exposure / bankValue) * 100, 0)}%`,
-        );
+        setText("bestBetsExposure", "Информационный рейтинг · без отдельной ставки");
         const bestStatistics = statistics?.bestBets && typeof statistics.bestBets === "object"
             ? statistics.bestBets
             : {};
@@ -291,12 +372,12 @@
     }
 
     function bestBetTemplate(bet, index) {
-        const probability = number(bet.modelProbability || bet.probability) * 100;
+        const probability = number(bet.conservativeProbability || bet.modelProbability || bet.probability) * 100;
         const edge = number(bet.edge) * 100;
         const ev = number(bet.expectedValue) * 100;
         const dataQuality = number(bet.dataQuality);
         const status = String(bet.status || "pending");
-        const rankLabel = bet.rankLabel || (index === 0 ? "Лучшая ставка" : `Ставка №${index + 1}`);
+        const rankLabel = bet.rankLabel || (index === 0 ? "Самый надёжный прогноз" : `Надёжность №${index + 1}`);
         return `
             <article class="best-bet-card" data-sport="${escapeHtml(bet.sport || "soccer")}" data-analysis-id="${escapeHtml(bet.id)}" tabindex="0" role="button">
                 <div class="bet-card-top">
@@ -326,8 +407,8 @@
                 </div>
                 ${liveInlineTemplate(bet)}
                 <div class="bet-card-footer">
-                    <span>Виртуальная ставка</span>
-                    <strong>${formatCurrency(bet.stake)} · ${formatNumber(bet.stakePercent, 0)}%</strong>
+                    <span>Финансовый режим</span>
+                    <strong>Информационный рейтинг</strong>
                     <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
                 </div>
             </article>`;
@@ -361,18 +442,13 @@
     }
 
     function analysisRowTemplate(item) {
-        const probability = number(item.modelProbability || item.probability) * 100;
+        const probability = number(item.conservativeProbability || item.modelProbability || item.probability) * 100;
         const edge = number(item.edge) * 100;
         const bestSelection = item.bestBetSelection;
         const pick = bestSelection?.pick || item.pick;
         const odds = bestSelection?.odds || item.bookmakerOdds || item.odds;
-        const status = String(item.status || "pending").toLowerCase();
-        const isTerminal = ["won", "lost", "push", "void", "cancelled"].includes(status);
-        const resultText = isTerminal
-            ? `${statusLabel(status)}${item.score ? ` · ${item.score}` : ""}`
-            : statusLabel(status);
         return `
-            <div class="analysis-row ${item.isBestBet ? "is-best" : ""} ${isTerminal ? `is-${status}` : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
+            <div class="analysis-row ${item.isBestBet ? "is-best" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
                 <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
                 <div class="analysis-match">
                     <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
@@ -381,12 +457,8 @@
                     ${liveInlineTemplate(item)}
                 </div>
                 <div class="analysis-pick">
-                    <small>${item.isBestBet ? "Лучшая ставка" : "Лучший рынок матча"}</small>
+                    <small>${escapeHtml(item.expressLabel ? `${item.expressLabel} · плечо ${item.expressLegNumber}` : (item.isBestBet ? "Топ-4 надёжности" : "Лучший рынок матча"))}</small>
                     <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
-                </div>
-                <div class="analysis-result">
-                    <small>Результат</small>
-                    <strong class="status-chip ${statusClass(status)}">${escapeHtml(resultText)}</strong>
                 </div>
                 <div class="analysis-stats">
                     <div class="analysis-stat analysis-probability"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
@@ -869,7 +941,7 @@
         const dialog = document.getElementById("analysisDialog");
         const content = document.getElementById("dialogContent");
         if (!dialog || !content) return;
-        const probability = number(record.modelProbability || record.probability) * 100;
+        const probability = number(record.conservativeProbability || record.modelProbability || record.probability) * 100;
         const marketProbability = number(record.marketProbability) * 100;
         const edge = number(record.edge) * 100;
         const ev = number(record.expectedValue) * 100;
@@ -890,7 +962,7 @@
                 </div>
 
                 <div class="dialog-metrics">
-                    <div class="dialog-metric"><span>Модель</span><strong>${formatNumber(probability, 1)}%</strong></div>
+                    <div class="dialog-metric"><span>Консервативная вероятность</span><strong>${formatNumber(probability, 1)}%</strong></div>
                     <div class="dialog-metric"><span>Рынок</span><strong>${formatNumber(marketProbability, 1)}%</strong></div>
                     <div class="dialog-metric"><span>Преимущество</span><strong>${formatSignedNumber(edge, 1)} п.п.</strong></div>
                     <div class="dialog-metric"><span>Ожидаемая доходность</span><strong>${formatSignedNumber(ev, 1)}%</strong></div>
@@ -900,13 +972,43 @@
                     <div class="dialog-metric"><span>Букмекеры</span><strong>${formatNumber(record.quoteCount, 0)}</strong></div>
                 </div>
 
-                <div class="dialog-section"><h4>Почему выбран этот прогноз</h4><p>${escapeHtml(displayNarrative(record.reasonRu || record.reason || "Аналитическое объяснение отсутствует."))}</p></div>
+                ${matchDossierTemplate(record)}
+                <div class="dialog-section"><h4>Почему выбран этот прогноз</h4><p>${escapeHtml((record.selectionRationale?.reasons || []).join(" · ") || displayNarrative(record.reasonRu || record.reason || "Аналитическое объяснение отсутствует."))}</p></div>
+                <div class="dialog-section"><h4>Почему отклонены альтернативы</h4><div class="alternative-grid">${(record.selectionRationale?.rejectedAlternatives || []).length ? record.selectionRationale.rejectedAlternatives.map((item) => `<div class="alternative-card"><strong>${escapeHtml(russianDisplayText(item.pick || "—"))}</strong><span>${formatNumber(item.probabilityPercent, 1)}% · ${formatNumber(item.odds, 2)} · ${escapeHtml(item.reason || "Уступает выбранному рынку")}</span></div>`).join("") : '<div class="empty-mini">Выбранный рынок доминирует над опубликованными альтернативами</div>'}</div></div>
                 <div class="dialog-section"><h4>Наиболее вероятные счета</h4><div class="score-probabilities">${scores.length ? scores.map((item) => `<span>${escapeHtml(item.score)} · ${formatNumber(number(item.probability) * 100, 1)}%</span>`).join("") : "<span>Недостаточно данных</span>"}</div></div>
                 <div class="dialog-section"><h4>Альтернативные рынки</h4><div class="alternative-grid">${alternatives.length ? alternatives.map((item) => `<div class="alternative-card"><strong>${escapeHtml(displayPick(item))}</strong><span>${formatNumber(item.probabilityPercent || number(item.probability) * 100, 1)}% · коэффициент ${formatNumber(item.odds || item.bookmakerOdds, 2)}</span></div>`).join("") : '<div class="empty-mini">Альтернативы не опубликованы</div>'}</div></div>
                 <div class="dialog-section"><h4>Статус квалификации</h4><p>${record.qualification?.qualified ? "Прогноз прошёл пороги вероятности, преимущества, качества данных и аномальности." : qualificationFailures.length ? escapeHtml(qualificationFailures.join("; ")) : "Используется в аналитической выборке, но не включён в виртуальный банк."}</p></div>
             </div>`;
         if (typeof dialog.showModal === "function") dialog.showModal();
         else dialog.setAttribute("open", "");
+    }
+
+    function matchDossierTemplate(record) {
+        const dossier = record?.matchDossier && typeof record.matchDossier === "object" ? record.matchDossier : {};
+        const components = dossier.components && typeof dossier.components === "object" ? dossier.components : {};
+        const home5 = components.homeForm5 || {};
+        const home10 = components.homeRecent || {};
+        const home20 = components.homeForm20 || {};
+        const away5 = components.awayForm5 || {};
+        const away10 = components.awayRecent || {};
+        const away20 = components.awayForm20 || {};
+        if (!Object.keys(dossier).length) return "";
+        const formCell = (label, row) => `<div><span>${escapeHtml(label)}</span><strong>${formatNumber(row.gf, 2)} : ${formatNumber(row.ga, 2)}</strong><small>${formatNumber(number(row.wins) * 100, 0)}% побед · ТБ2,5 ${formatNumber(number(row.over25) * 100, 0)}%</small></div>`;
+        return `
+            <div class="dialog-section dossier-section">
+                <h4>Полное досье матча</h4>
+                <div class="dossier-score-grid">
+                    <div><span>Ожидаемые голы хозяев</span><strong>${formatNumber(dossier.expectedHomeGoals, 2)}</strong></div>
+                    <div><span>Ожидаемые голы гостей</span><strong>${formatNumber(dossier.expectedAwayGoals, 2)}</strong></div>
+                    <div><span>Ожидаемый тотал</span><strong>${formatNumber(dossier.expectedTotalGoals, 2)}</strong></div>
+                    <div><span>Elo</span><strong>${formatNumber(components.homeElo, 0)} : ${formatNumber(components.awayElo, 0)}</strong></div>
+                </div>
+                <div class="dossier-form-grid">
+                    ${formCell("Хозяева · 5", home5)}${formCell("Хозяева · 10", home10)}${formCell("Хозяева · 20", home20)}
+                    ${formCell("Гости · 5", away5)}${formCell("Гости · 10", away10)}${formCell("Гости · 20", away20)}
+                </div>
+                <p>${escapeHtml((dossier.sources || []).join(" · ") || "Источники статистики ещё не опубликованы")}</p>
+            </div>`;
     }
 
     function initializeRevealObserver() {

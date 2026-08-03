@@ -1,45 +1,19 @@
-# V10_AUTO_REFRESH_PIPELINE
-# V10_R9_IMMEDIATE_SETTLEMENT_ROLLOVER
-# V10_R10_ATOMIC_BEST_FOUR_SYNC
-# V10_R12_FINAL_MAX_HIT_RATE_15_SETTLEMENT
-# V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
-# V10_R14R1_LEGACY_RUSSIAN_SETTLEMENT_BRIDGE
-# V10_R14R2_MOSCOW_08_WATCHDOG
-# V10_R14R3_EXACT_FOUR_PORTFOLIO
-# V10_R14_FOOTBALL_ONLY_STANDARD_MARKETS
-# ALL_FIFTEEN_SETTLEMENT_VISIBLE
-name: V10 R14R3 Футбольная аналитика — утренний rollover 08:00 МСК
+# V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO
+name: R15F morning match intelligence and express portfolio
 
 on:
   workflow_dispatch:
-    inputs:
-      force_generation:
-        description: "Сформировать новую подборку из 15 футбольных матчей"
-        required: false
-        default: false
-        type: boolean
-  schedule:
-    - cron: "7 8 * * *"
-      timezone: "Europe/Moscow"
-    - cron: "22 8 * * *"
-      timezone: "Europe/Moscow"
-    - cron: "37 8 * * *"
-      timezone: "Europe/Moscow"
-    - cron: "17 0,3,6,9,12,15,18,21 * * *"
-      timezone: "Europe/Moscow"
   push:
     branches: [main]
-    paths:
-      - "scripts/update_predictions.py"
-      - "scripts/update_live.py"
-      - "config/analysis.json"
-      - "index.html"
-      - "assets/app.js"
-      - "assets/styles.css"
-      - ".github/workflows/update-data.yml"
-      - ".github/workflows/live-update.yml"
-      - "README.md"
-      - "data/force-generation-request.json"
+  schedule:
+    - cron: '7 8 * * *'
+      timezone: 'Europe/Moscow'
+    - cron: '22 8 * * *'
+      timezone: 'Europe/Moscow'
+    - cron: '37 8 * * *'
+      timezone: 'Europe/Moscow'
+    - cron: '2 9 * * *'
+      timezone: 'Europe/Moscow'
 
 permissions:
   contents: write
@@ -48,189 +22,88 @@ concurrency:
   group: v10-production-state-writer
   cancel-in-progress: false
 
-env:
-  PYTHONDONTWRITEBYTECODE: "1"
-  PYTHONUTF8: "1"
-
 jobs:
-  validate:
-    name: R14 статическая и офлайн-проверка
+  publish-r15f:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout production source
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Compile and validate
+          python-version: '3.12'
+
+      - name: Compile and validate source
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile scripts/update_predictions.py scripts/update_live.py
-          python -m json.tool config/analysis.json > /dev/null
-          python -m json.tool data/state.json > /dev/null
-          python -m json.tool data/live-state.json > /dev/null
-          python -m json.tool data/live-learning.json > /dev/null
-          repair_required="$(python - <<'PY'
-          import json
-          from pathlib import Path
-          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
-          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
-          expected = float(config.get('stakePerBestBetPercent', 20))
-          broken = any(abs(float(item.get('stakePercent') or 0) - expected) > 0.001 or float(item.get('stake') or 0) <= 0 for item in state.get('bestBets') or [])
-          print('YES' if (state.get('meta') or {}).get('integrityPatch') != 'V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION' or broken else 'NO')
-          PY
-          )"
-          if [ "${repair_required}" = "YES" ]; then
-            python scripts/update_predictions.py --repair-integrity
-          fi
-          python scripts/update_predictions.py --validate
-          python scripts/update_predictions.py --self-test
-          python scripts/update_live.py --validate
-          python scripts/update_live.py --self-test
+          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/update_live.py
+          python -m json.tool config/analysis.json >/dev/null
+          python -m json.tool data/state.json >/dev/null
+          python -m json.tool data/football-history-cache.json >/dev/null
+          python -m json.tool data/team-registry.json >/dev/null
+          python -m json.tool data/free-data-mesh.json >/dev/null
+          python -m json.tool data/clubelo-ratings.json >/dev/null
+          python -m json.tool data/russian-team-names.json >/dev/null
+          python -m json.tool data/provider-health.json >/dev/null
           node --check assets/app.js
+          python scripts/r15_free_mesh.py --self-test
+          python scripts/r15_intelligence.py --self-test
+          python scripts/update_live.py --self-test
 
-  update:
-    name: Обновить результаты, модель и следующую футбольную подборку
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[v10-force-generation]'))
-    needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 40
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Refresh no-key historical intelligence first
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/r15_free_mesh.py --refresh
+          python scripts/r15_intelligence.py --history-refresh
 
-      - name: Проверить обязательные источники
+      - name: Refresh final scores without regenerating picks
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           set -euo pipefail
-          test -n "${ODDS_API_KEY}" || { echo "::error::ODDS_API_KEY is required"; exit 1; }
-          if [ -z "${FOOTBALL_DATA_API_KEY}" ]; then
-            echo "::warning::FOOTBALL_DATA_API_KEY is missing; market-only candidates will use stricter consensus floors."
-          fi
-          if [ -z "${OPENROUTER_API_KEY}" ]; then
-            echo "::warning::OPENROUTER_API_KEY is missing; deterministic Russian explanations will be used."
-          fi
+          python scripts/update_live.py --update
+          python scripts/r15_intelligence.py --settle
 
-      - name: Обновить подборку
+      - name: Analyze every event and publish strict Moscow day
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-          FOOTBALL_DATA_API_KEY: ${{ secrets.FOOTBALL_DATA_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_SCHEDULE: ${{ github.event.schedule }}
-          FORCE_INPUT: ${{ inputs.force_generation || 'false' }}
-          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
-          force="false"
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ "${FORCE_INPUT}" = "true" ]; then force="true"; fi
-          if [ "${EVENT_NAME}" = "push" ] && [[ "${HEAD_MESSAGE}" == *"[v10-force-generation]"* ]]; then force="true"; fi
-          morning_watchdog="false"
-          case "${EVENT_SCHEDULE:-}" in
-            "7 8 * * *"|"22 8 * * *"|"37 8 * * *") morning_watchdog="true" ;;
-          esac
-          echo "R14R3_EVENT_SCHEDULE=${EVENT_SCHEDULE:-manual_or_push}"
-          echo "R14R3_MORNING_WATCHDOG=${morning_watchdog}"
-          if [ "${force}" = "true" ]; then
-            python scripts/update_predictions.py --update
-          elif [ "${morning_watchdog}" = "true" ]; then
-            python scripts/update_predictions.py --live-cycle
-          else
-            python scripts/update_predictions.py --auto
-          fi
+          python scripts/r15_intelligence.py --generate
+          python scripts/r15_intelligence.py --validate
+          python scripts/update_live.py --validate
 
-      - name: Проверить опубликованное состояние R14
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m json.tool data/state.json > /dev/null
-          python -m json.tool data/last-update-report.json > /dev/null
-          python -m json.tool data/ai_daily_analysis.json > /dev/null
-          if ! python scripts/update_predictions.py --validate; then
-            python scripts/update_predictions.py --repair-integrity
-            python scripts/update_predictions.py --validate
-          fi
-          python - <<'PY'
-          import importlib.util
-          import json
-          from pathlib import Path
-          spec = importlib.util.spec_from_file_location('predictions', Path('scripts/update_predictions.py'))
-          module = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(module)
-          state = json.loads(Path('data/state.json').read_text(encoding='utf-8-sig'))
-          config = json.loads(Path('config/analysis.json').read_text(encoding='utf-8-sig'))
-          report = json.loads(Path('data/last-update-report.json').read_text(encoding='utf-8-sig'))
-          daily = state.get('dailyAnalysis') or []
-          best = state.get('bestBets') or []
-          if report.get('status') not in {'GREEN', 'DEGRADED'}:
-              raise SystemExit(f"Unpublishable report: {report.get('status')}")
-          if daily and len(daily) != int(config['dailyAnalysisTarget']):
-              raise SystemExit('Current publication is not exact fifteen')
-          if daily and len(best) != int(config['bestBetsTarget']):
-              raise SystemExit('Current publication is not exact four')
-          ids = [str(item.get('eventId') or '') for item in daily]
-          best_ids = [str(item.get('eventId') or '') for item in best]
-          if len(ids) != len(set(ids)) or len(best_ids) != len(set(best_ids)):
-              raise SystemExit('Duplicate events exist')
-          if not set(best_ids).issubset(set(ids)):
-              raise SystemExit('Best four is outside the fifteen')
-          legacy_russian_event_ids = set()
-          for item in daily + best:
-              is_r14_record = item.get('marketPolicy') == module.R14_MARKET_POLICY
-              if is_r14_record and not module.record_uses_r14_standard_market(item):
-                  raise SystemExit('Forbidden market in R14 publication')
-              is_russian_domestic = module.competition_is_excluded(
-                  item.get('sportKey'), item.get('league'), '', item.get('country'), config
-              )
-              if is_russian_domestic and is_r14_record:
-                  raise SystemExit('Russian domestic event in newly generated R14 publication')
-              if is_russian_domestic and not is_r14_record:
-                  legacy_russian_event_ids.add(str(item.get('eventId') or item.get('id') or 'UNKNOWN'))
-          print('R14R1_LEGACY_RUSSIAN_EVENTS_ALLOWED_FOR_SETTLEMENT=', len(legacy_russian_event_ids))
-          if any(bool(item.get('goalDirectionConflict')) for item in best):
-              raise SystemExit('Unsupported total direction in R14 best four')
-          total_under_count = sum(1 for item in best if str(item.get('market') or '').upper() == 'TOTAL_UNDER')
-          preferred_under = int(config.get('preferredMaximumTotalUnderBestBets', 1))
-          hard_under = int(config.get('maximumTotalUnderBestBets', 4))
-          if total_under_count > hard_under:
-              raise SystemExit('R14R3 hard total-under ceiling exceeded')
-          print('R14R3_TOTAL_UNDER_COUNT=', total_under_count)
-          print('R14R3_UNDER_PREFERENCE_RELAXED=', total_under_count > preferred_under)
-          print('V10_R14R3_PUBLISHED_STATE=GREEN')
-          print('DAILY_ANALYSIS=', len(daily))
-          print('BEST_BETS=', len(best))
-          print('FOOTBALL_ONLY=YES')
-          print('ASIAN_MARKETS=REMOVED')
-          print('ALL_FIFTEEN_SETTLEMENT_VISIBLE=YES')
-          PY
-
-      - name: Commit refreshed public data
+      - name: Commit one atomic public state
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/state.json data/last-update-report.json data/ai_daily_analysis.json
+          git add \
+            data/state.json \
+            data/ai_daily_analysis.json \
+            data/last-update-report.json \
+            data/live-state.json \
+            data/live-learning.json \
+            data/football-history-cache.json \
+            data/team-registry.json \
+            data/free-data-mesh.json \
+            data/clubelo-ratings.json \
+            data/russian-team-names.json \
+            data/fonbet-public-snapshot.json \
+            data/provider-health.json
           if git diff --cached --quiet; then
-            echo "R14R3_NO_PUBLIC_DATA_CHANGES=YES"
+            echo "R15F_NO_PUBLIC_DATA_CHANGES=YES"
             exit 0
           fi
-          git commit -m "V10 R14 refresh football standard-market 15 and 4 [skip ci]"
+          git commit -m "R15F publish no-key data mesh express portfolio [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main

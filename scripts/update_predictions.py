@@ -1,3 +1,4 @@
+# V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO
 # V10_R14R2_MOSCOW_08_WATCHDOG
 #!/usr/bin/env python3
 # V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION
@@ -67,7 +68,7 @@ NHL_API_BASE = "https://api-web.nhle.com/v1"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 STATE_VERSION = "10.0.0"
-PIPELINE_MARKER = "V10_R14_RESULT_INTEGRITY_GOAL_DIRECTION"
+PIPELINE_MARKER = "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO"
 SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
 WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
 LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
@@ -4764,16 +4765,30 @@ def settle_pending_records(
                     or record.get("odds"),
                     0.0,
                 )
+                financial_mode = str(
+                    record.get("financialMode") or "LEGACY_SINGLE_BET"
+                ).strip().upper()
+                informational_only = (
+                    financial_mode == "INFORMATIONAL_ONLY"
+                    or stake <= 0.0
+                )
                 profit = (
-                    round(stake * (odds - 1), 2)
+                    0.0
+                    if informational_only
+                    else round(stake * (odds - 1), 2)
                     if status == "won"
                     else round(-stake, 2)
                     if status == "lost"
                     else 0.0
                 )
                 record["profit"] = profit
+                record["financialMode"] = (
+                    "INFORMATIONAL_ONLY"
+                    if informational_only
+                    else financial_mode
+                )
                 record_id = str(record.get("id") or "")
-                if record_id not in processed_ids:
+                if not informational_only and record_id not in processed_ids:
                     apply_bank_profit(
                         state,
                         record,

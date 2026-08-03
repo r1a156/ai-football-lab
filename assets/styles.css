@@ -3272,61 +3272,409 @@ section[id] {
     }
 }
 
-
-/* V10 R12: visible settlement result for every one of the fifteen forecasts. */
-.analysis-row {
-    grid-template-columns: 42px minmax(210px, 1.35fr) minmax(170px, .95fr) minmax(118px, .62fr) 92px 88px 88px 32px;
+/* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
+.express-section {
+    position: relative;
 }
 
-.analysis-result {
-    min-width: 0;
+.express-section::before {
+    content: "";
+    position: absolute;
+    inset: 88px 3% auto;
+    height: 340px;
+    background: radial-gradient(circle at 50% 0%, rgba(95, 224, 255, 0.09), transparent 68%);
+    pointer-events: none;
+}
+
+.express-bank-overview,
+.data-control-panel,
+.express-grid {
+    position: relative;
+    z-index: 1;
+}
+
+.express-bank-overview {
     display: grid;
-    gap: 6px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
 }
 
-.analysis-result small {
+.express-bank-overview > div,
+.data-control-panel article {
+    padding: 18px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: linear-gradient(145deg, rgba(18, 25, 39, 0.92), rgba(10, 14, 23, 0.82));
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+}
+
+.express-bank-overview span,
+.data-control-panel span,
+.data-control-panel small {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.express-bank-overview strong {
+    display: block;
+    margin-top: 7px;
+    font-size: clamp(17px, 2vw, 24px);
+    font-variant-numeric: tabular-nums;
+}
+
+.data-control-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.data-control-panel article {
+    min-height: 116px;
+}
+
+.data-control-panel strong {
+    display: block;
+    margin: 9px 0 7px;
+    color: var(--accent-2);
+    font-size: 16px;
+    line-height: 1.35;
+}
+
+.data-control-panel small {
+    line-height: 1.5;
+}
+
+.express-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.express-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(95, 224, 255, 0.15);
+    border-radius: 26px;
+    background:
+        linear-gradient(160deg, rgba(95, 224, 255, 0.07), transparent 34%),
+        linear-gradient(145deg, rgba(17, 24, 37, 0.96), rgba(9, 13, 22, 0.94));
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.express-card.is-won {
+    border-color: rgba(113, 242, 164, 0.34);
+}
+
+.express-card.is-lost {
+    border-color: rgba(255, 109, 134, 0.3);
+}
+
+.express-card-head,
+.express-card-footer,
+.express-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.express-card-head {
+    padding: 20px 20px 14px;
+}
+
+.express-card-head span,
+.express-card-head strong {
+    display: block;
+}
+
+.express-card-head > div > span {
+    color: var(--accent-2);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.express-card-head > div > strong {
+    margin-top: 5px;
+    font-size: 20px;
+}
+
+.express-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 0 20px 14px;
+}
+
+.express-metrics > div {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.express-metrics span,
+.express-metrics strong {
+    display: block;
+}
+
+.express-metrics span {
     color: var(--muted);
     font-size: 9px;
+    line-height: 1.25;
     text-transform: uppercase;
-    letter-spacing: .08em;
 }
 
-.analysis-result .status-chip {
-    width: fit-content;
-    max-width: 100%;
+.express-metrics strong {
+    margin-top: 6px;
+    overflow: hidden;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.express-progress {
+    margin: 0 20px 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(184, 255, 74, 0.055);
+    color: var(--muted-strong);
+    font-size: 11px;
+}
+
+.express-progress strong {
+    color: var(--text);
+    font-size: 11px;
+}
+
+.express-legs {
+    display: grid;
+    gap: 1px;
+    background: var(--line);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.express-leg {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 58px auto;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 0;
+    color: var(--text);
+    background: rgba(11, 16, 25, 0.97);
+    text-align: left;
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+.express-leg:hover,
+.express-leg:focus-visible {
+    z-index: 1;
+    background: rgba(22, 31, 47, 0.98);
+    outline: none;
+}
+
+.express-leg-number {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border: 1px solid rgba(95, 224, 255, 0.18);
+    border-radius: 9px;
+    color: var(--accent-2);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.express-leg-match,
+.express-leg-price {
+    min-width: 0;
+}
+
+.express-leg-match small,
+.express-leg-match strong,
+.express-leg-match b,
+.express-leg-price strong,
+.express-leg-price small {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.analysis-row.is-won {
-    border-color: rgba(184, 255, 74, .28);
+.express-leg-match small {
+    color: var(--muted);
+    font-size: 9px;
 }
 
-.analysis-row.is-lost {
-    border-color: rgba(255, 103, 122, .28);
+.express-leg-match strong {
+    margin-top: 3px;
+    font-size: 12px;
 }
 
-@media (max-width: 1120px) {
-    .analysis-row {
-        grid-template-columns: 38px minmax(190px, 1.35fr) minmax(150px, .9fr) minmax(108px, .62fr) 80px 80px 28px;
+.express-leg-match b {
+    margin-top: 3px;
+    color: var(--muted-strong);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.express-leg-price {
+    text-align: right;
+}
+
+.express-leg-price strong {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+.express-leg-price small {
+    margin-top: 3px;
+    color: var(--accent);
+    font-size: 9px;
+}
+
+.express-card-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+}
+
+.express-card-footer span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.express-card-footer strong {
+    color: var(--accent);
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+}
+
+.express-disclaimer {
+    margin: 16px auto 0;
+    max-width: 880px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.65;
+    text-align: center;
+}
+
+.dossier-score-grid,
+.dossier-form-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.dossier-score-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 8px;
+}
+
+.dossier-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dossier-score-grid > div,
+.dossier-form-grid > div {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.dossier-score-grid span,
+.dossier-score-grid strong,
+.dossier-form-grid span,
+.dossier-form-grid strong,
+.dossier-form-grid small {
+    display: block;
+}
+
+.dossier-score-grid span,
+.dossier-form-grid span,
+.dossier-form-grid small {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.dossier-score-grid strong,
+.dossier-form-grid strong {
+    margin-top: 5px;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+}
+
+.dossier-form-grid small {
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+    .express-grid {
+        grid-template-columns: 1fr;
     }
-    .analysis-row .analysis-stat:nth-of-type(3) { display: none; }
+
+    .express-card {
+        max-width: 880px;
+        width: 100%;
+        margin-inline: auto;
+    }
 }
 
 @media (max-width: 760px) {
-    .analysis-row {
-        grid-template-columns: 30px minmax(0, 1fr) 22px;
-        grid-template-rows: auto auto auto auto;
+    .express-bank-overview,
+    .data-control-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .analysis-result {
-        grid-column: 2 / 4;
-        grid-row: 3;
-        padding-top: 8px;
-        border-top: 1px solid var(--line);
-    }
-    .analysis-stats {
+
+    .data-control-panel article:last-child {
         grid-column: 1 / -1;
-        grid-row: 4;
+    }
+
+    .express-leg {
+        grid-template-columns: 26px minmax(0, 1fr) 48px;
+    }
+
+    .express-leg > .status-chip {
+        grid-column: 2 / -1;
+        justify-self: start;
+    }
+
+    .dossier-score-grid,
+    .dossier-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 440px) {
+    .express-bank-overview,
+    .data-control-panel,
+    .express-metrics,
+    .dossier-score-grid,
+    .dossier-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-control-panel article:last-child {
+        grid-column: auto;
+    }
+
+    .express-card-head,
+    .express-card-footer,
+    .express-progress {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
