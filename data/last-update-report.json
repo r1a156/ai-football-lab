@@ -4,13 +4,13 @@
   "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-08-03T18:22:26Z",
-  "finishedAt": "2026-08-04T00:15:19Z",
+  "finishedAt": "2026-08-04T03:44:10Z",
   "diagnostics": {
     "generated": false,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 0
+      "analysisSettled": 3,
+      "bestBetsSettled": 2,
+      "unresolved": 10
     },
     "duePending": 0,
     "selectedSportKeys": [],
@@ -88,12 +88,19 @@
       "calls": 0,
       "updatedAt": "2026-08-03T18:22:26Z"
     },
-    "apiCalls": [],
-    "dueRecords": 0,
-    "providerFinalResults": 1,
+    "apiCalls": [
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.301
+      }
+    ],
+    "dueRecords": 3,
+    "providerFinalResults": 16,
     "trackedHistory": {
-      "added": 0,
-      "matches": 13392,
+      "added": 3,
+      "matches": 13395,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-23T13:30:00Z"
     },
