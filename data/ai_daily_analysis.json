@@ -1,7 +1,7 @@
 {
   "version": "V10_R15F_R3R1_FINAL_PORTABLE_MOSCOW_TIME",
-  "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
-  "updatedAt": "2026-08-04T17:29:55.370783Z",
+  "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
+  "updatedAt": "2026-08-04T18:17:00.440134Z",
   "analysisDateLocal": "2026-08-03",
   "batch": {
     "version": 1,
@@ -3809,6 +3809,19 @@
       "settlementAttempts": 3
     }
   ],
+  "dailyAudit": {},
+  "systemNarrative": {
+    "title": "Я готовлю следующий полный день",
+    "lead": "Система не публикует прогнозы на уже начавшиеся операционные сутки.",
+    "body": "История команд, источники и календарь подготавливаются заранее. После 08:00 МСК я заново проверю реальные события, рассчитаю все допустимые рынки и зафиксирую портфель только при полном качестве.",
+    "focus": [
+      "следующее окно 08:00–08:00",
+      "банк не задействован",
+      "частичная публикация запрещена"
+    ],
+    "tone": "CALM_PREPARATION",
+    "generatedBy": "DETERMINISTIC_SYSTEM"
+  },
   "nextPortfolio": {
     "status": "PREPARING_NEXT_OPERATIONAL_WINDOW",
     "statusLabel": "Подготовка следующего полного портфеля",
@@ -3821,18 +3834,6 @@
     "bankEngaged": false,
     "partialDayPublicationAllowed": false,
     "phase": "HISTORY_AND_SOURCE_PREWARM",
-    "updatedAt": "2026-08-04T17:29:55.370783Z"
-  },
-  "systemNarrative": {
-    "title": "Я готовлю следующий полный день",
-    "lead": "Система не публикует прогнозы на уже начавшиеся операционные сутки.",
-    "body": "История команд, источники и календарь подготавливаются заранее. После 08:00 МСК я заново проверю реальные события, рассчитаю все допустимые рынки и зафиксирую портфель только при полном качестве.",
-    "focus": [
-      "следующее окно 08:00–08:00",
-      "банк не задействован",
-      "частичная публикация запрещена"
-    ],
-    "tone": "CALM_PREPARATION",
-    "generatedBy": "DETERMINISTIC_SYSTEM"
+    "updatedAt": "2026-08-04T18:17:00.440134Z"
   }
 }
