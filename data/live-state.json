@@ -2,14 +2,14 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "IDLE",
-  "updatedAt": "2026-08-04T18:16:59Z",
+  "updatedAt": "2026-08-04T19:09:32Z",
   "refreshMinutes": 10,
   "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
     "calls": 4,
-    "results": 37,
+    "results": 3,
     "oddsQuota": {
       "requestsRemaining": null,
       "requestsUsed": null,
@@ -17,11 +17,12 @@
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-08-04: SOFASCORE_PUBLIC:2026-08-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+      "SofaScore 2026-08-04: SOFASCORE_PUBLIC:2026-08-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
+      "ESPN 20260804: ESPN_PUBLIC:20260804 failed after retries: <urlopen error timed out>"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 34,
+      "espn": 0,
       "theSportsDB": 3,
       "footballDataOptional": 0
     }
