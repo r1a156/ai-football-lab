@@ -4,7 +4,7 @@
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 /* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
 /* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
-/* V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO */
+/* V10_R15F_R3R2_VISUAL_SYSTEM */
 (() => {
     "use strict";
 
@@ -419,22 +419,31 @@
         const won = legs.filter((leg) => String(leg.status) === "won").length;
         const lost = legs.filter((leg) => String(leg.status) === "lost").length;
         const status = String(item.status || "pending");
+        const combinedOdds = number(item.settledCombinedOdds || item.combinedOdds);
+        const probability = number(item.jointProbabilityPercent ?? number(item.jointProbability) * 100);
+        const open = String(item.label || "").toUpperCase().includes("A") ? " open" : "";
         return `
-            <article class="express-card ${statusClass(status)}">
-                <div class="express-card-head">
-                    <div><span>${escapeHtml(item.label || "Экспресс")}</span><strong>${legs.length} событий</strong></div>
-                    <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
+            <details class="express-card ${statusClass(status)}"${open}>
+                <summary>
+                    <span class="express-summary-main">
+                        <span class="express-summary-label">${escapeHtml(item.label || "Экспресс")}</span>
+                        <strong class="express-summary-title">${legs.length} событий · ставка ${formatCurrency(item.stake)}</strong>
+                        <small class="express-summary-meta">${settled} завершено · ${won} прошло · ${lost} не прошло</small>
+                    </span>
+                    <span class="express-summary-side"><strong>${formatNumber(combinedOdds, 3)}</strong><small>${formatNumber(probability, 2)}% совместно</small><span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span></span>
+                </summary>
+                <div class="express-body">
+                    <div class="express-metrics">
+                        <div><span>Ставка</span><strong>${formatCurrency(item.stake)} · ${formatNumber(item.stakePercent, 0)}%</strong></div>
+                        <div><span>Возможная выплата</span><strong>${formatCurrency(item.potentialPayout)}</strong></div>
+                        <div><span>Совместная вероятность</span><strong>${formatNumber(probability, 2)}%</strong></div>
+                        <div><span>Чистая прибыль</span><strong>${status === "won" ? formatSignedCurrency(item.profit) : formatCurrency(item.potentialProfit)}</strong></div>
+                    </div>
+                    <div class="express-progress"><span>${settled} из ${legs.length} завершены</span><strong>${won} прошло · ${lost} не прошло</strong></div>
+                    <div class="express-legs">${legs.map((leg) => expressLegTemplate(leg)).join("")}</div>
+                    <div class="express-card-footer"><span>Потенциальная чистая прибыль</span><strong>${status === "won" ? formatSignedCurrency(item.profit) : formatCurrency(item.potentialProfit)}</strong></div>
                 </div>
-                <div class="express-metrics">
-                    <div><span>Общий коэффициент</span><strong>${formatNumber(item.settledCombinedOdds || item.combinedOdds, 3)}</strong></div>
-                    <div><span>Расчётная вероятность</span><strong>${formatNumber(item.jointProbabilityPercent ?? number(item.jointProbability) * 100, 2)}%</strong></div>
-                    <div><span>Ставка</span><strong>${formatCurrency(item.stake)} · ${formatNumber(item.stakePercent, 0)}%</strong></div>
-                    <div><span>Возможная выплата</span><strong>${formatCurrency(item.potentialPayout)}</strong></div>
-                </div>
-                <div class="express-progress"><span>${settled} из ${legs.length} завершены</span><strong>${won} прошло · ${lost} не прошло</strong></div>
-                <div class="express-legs">${legs.map((leg) => expressLegTemplate(leg)).join("")}</div>
-                <div class="express-card-footer"><span>Потенциальная чистая прибыль</span><strong>${status === "won" ? formatSignedCurrency(item.profit) : formatCurrency(item.potentialProfit)}</strong></div>
-            </article>`;
+            </details>`;
     }
 
     function expressLegTemplate(leg) {
@@ -443,8 +452,7 @@
             <button class="express-leg" type="button" data-analysis-id="${escapeHtml(leg.analysisId || "")}">
                 <span class="express-leg-number">${escapeHtml(leg.legNumber || "—")}</span>
                 <span class="express-leg-match"><small>${escapeHtml(displayLeague(leg))} · ${formatMatchTime(leg.commenceTime)}</small><strong>${escapeHtml(displayTeam(leg, "home"))} — ${escapeHtml(displayTeam(leg, "away"))}</strong><b>${escapeHtml(displayPick(leg))}</b></span>
-                <span class="express-leg-price"><strong>${formatNumber(leg.odds, 2)}</strong><small>${formatNumber(number(leg.probability) * 100, 1)}%</small></span>
-                <span class="status-chip ${statusClass(status)}">${escapeHtml(leg.score || statusLabel(status))}</span>
+                <span class="express-leg-price"><strong>${formatNumber(leg.odds, 2)}</strong><small>${formatNumber(number(leg.probability) * 100, 1)}%</small><span class="status-chip ${statusClass(status)}">${escapeHtml(leg.score || statusLabel(status))}</span></span>
             </button>`;
     }
 
@@ -548,27 +556,23 @@
         const list = document.getElementById("analysisList");
         if (!list) return;
         const unified = isUnifiedPublication();
-        const filtered = records.filter((item) => runtime.sportFilter === "all" || item.sport === runtime.sportFilter);
+        const filtered = records
+            .filter((item) => runtime.sportFilter === "all" || item.sport === runtime.sportFilter)
+            .slice()
+            .sort((left, right) => number(left.rank) - number(right.rank));
 
+        const countries = new Set(records.map((item) => item.countryRu || item.country).filter(Boolean));
+        const markets = new Set(records.map((item) => item.marketFamily || item.pickRu || item.pick).filter(Boolean));
         setText("analysisCount", unified ? records.length : 0);
-        setText("countryCount", unified ? new Set(records.map((item) => item.country).filter(Boolean)).size : 0);
-        setText("marketFamilyCount", unified ? new Set(records.map((item) => item.marketFamily).filter(Boolean)).size : 0);
+        setText("countryCount", unified ? countries.size : 0);
+        setText("marketFamilyCount", unified ? markets.size : 0);
         setText("averageDataQuality", unified && records.length ? `${formatNumber(average(records.map((item) => number(item.dataQuality))), 0)}/100` : "—");
 
         if (!unified) {
             const legacyRows = filtered.length ? `<details class="legacy-batch-disclosure"><summary>Показать предыдущие ${filtered.length} прогнозов</summary><div class="legacy-analysis-list">${filtered.map((item) => analysisRowTemplate(item, true)).join("")}</div></details>` : "";
-            list.innerHTML = `<div class="transition-state"><span>ОБНОВЛЕНИЕ СТРАТЕГИИ</span><strong>Новая единая подборка ещё не опубликована</strong><p>Предыдущие прогнозы остаются доступными только как переходный архив. Они не считаются текущими ординарами и не распределяются в новые экспрессы.</p>${legacyRows}</div>`;
+            list.innerHTML = `<div class="transition-state"><span>ОБНОВЛЕНИЕ СТРАТЕГИИ</span><strong>Новая единая подборка ещё не опубликована</strong><p>Предыдущие прогнозы сохранены как переходный архив. Они не считаются текущими ординарами и не распределяются в новые экспрессы.</p>${legacyRows}</div>`;
         } else {
-            const groups = ["Экспресс A", "Экспресс B", "Экспресс C"].map((label) => ({
-                label,
-                rows: filtered.filter((item) => String(item.expressLabel || "") === label).sort((a, b) => number(a.rank) - number(b.rank)),
-            }));
-            const ungrouped = filtered.filter((item) => !item.expressLabel);
-            list.innerHTML = groups.filter((group) => group.rows.length).map((group, index) => `
-                <section class="analysis-group group-${index + 1}">
-                    <header><div><span>${escapeHtml(group.label)}</span><strong>${group.rows.length} матчей</strong></div><small>Рейтинги ${group.rows.map((row) => row.rank).join(" · ")}</small></header>
-                    <div>${group.rows.map((item) => analysisRowTemplate(item, false)).join("")}</div>
-                </section>`).join("") + (ungrouped.length ? ungrouped.map((item) => analysisRowTemplate(item, false)).join("") : "");
+            list.innerHTML = filtered.map((item) => analysisRowTemplate(item, false)).join("");
         }
 
         list.querySelectorAll("[data-analysis-id]").forEach((node) => {
@@ -585,11 +589,19 @@
     function analysisRowTemplate(item, legacy = false) {
         const probability = number(item.conservativeProbability || item.modelProbability || item.probability) * 100;
         const edge = number(item.edge) * 100;
+        const quality = number(item.dataQuality);
         const bestSelection = item.bestBetSelection;
-        const pick = bestSelection?.pick || item.pick;
+        const pick = bestSelection?.pickRu || bestSelection?.pick || item.pickRu || item.pick;
         const odds = bestSelection?.odds || item.bookmakerOdds || item.odds;
+        const role = legacy
+            ? "Предыдущая подборка"
+            : item.expressLabel
+              ? `${item.expressLabel}${item.expressLegNumber ? ` · плечо ${item.expressLegNumber}` : ""}`
+              : number(item.rank) <= 3
+                ? `Ординар №${item.rank}`
+                : "Позиция общего рейтинга";
         return `
-            <div class="analysis-row ${item.isBestBet ? "is-best" : ""} ${legacy ? "is-legacy" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
+            <article class="analysis-row ${number(item.rank) <= 3 ? "is-best" : ""} ${legacy ? "is-legacy" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button" aria-label="Открыть анализ матча ${escapeHtml(displayTeam(item, "home"))} — ${escapeHtml(displayTeam(item, "away"))}">
                 <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
                 <div class="analysis-match">
                     <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
@@ -598,16 +610,17 @@
                     ${liveInlineTemplate(item)}
                 </div>
                 <div class="analysis-pick">
-                    <small>${escapeHtml(legacy ? "Предыдущая подборка" : item.expressLabel ? `${item.expressLabel} · плечо ${item.expressLegNumber}` : (number(item.rank) <= 3 ? `Ординар №${item.rank}` : "Лучший рынок матча"))}</small>
+                    <small>${escapeHtml(role)}</small>
                     <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
                 </div>
                 <div class="analysis-stats">
-                    <div class="analysis-stat analysis-probability"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
-                    <div class="analysis-stat analysis-odds"><small>Коэффициент</small><strong>${formatNumber(odds, 2)}</strong></div>
-                    <div class="analysis-stat analysis-edge"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                    <div class="analysis-stat"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
+                    <div class="analysis-stat"><small>Коэффициент</small><strong>${formatNumber(odds, 2)}</strong></div>
+                    <div class="analysis-stat"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
+                    <div class="analysis-stat"><small>Данные</small><strong>${formatNumber(quality, 0)}/100</strong></div>
                 </div>
                 <span class="analysis-chevron">›</span>
-            </div>`;
+            </article>`;
     }
 
     function renderBank(bank = {}, statistics = {}) {
