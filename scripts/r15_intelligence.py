@@ -27,6 +27,7 @@ from typing import Any, Iterable
 
 import update_predictions as core
 import r15_free_mesh as free_mesh
+import r15_daily_auditor as daily_auditor
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "analysis.json"
@@ -40,7 +41,7 @@ LIVE_STATE_PATH = ROOT / "data" / "live-state.json"
 LIVE_LEARNING_PATH = ROOT / "data" / "live-learning.json"
 
 UTC = dt.timezone.utc
-R15_MARKER = "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO"
+R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
 R15_HISTORY_MARKER = "V10_R15_PERSISTENT_FOOTBALL_HISTORY"
 R15_EXPRESS_POLICY = "THREE_BALANCED_EXPRESSES_FIVE_LEGS_TEN_PERCENT_EACH"
 R15_MARKET_POLICY = "FOOTBALL_STANDARD_MARKETS_ONLY_NO_ASIAN_LINES"
@@ -1481,8 +1482,11 @@ def build_strategy_analysis(
     return records, diagnostics
 
 
-def informational_best_four(records: list[dict[str, Any]], now: dt.datetime) -> list[dict[str, Any]]:
-    ranked = sorted(records, key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("obviousMarketScore"))), reverse=True)[:4]
+def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, preferred_event_ids: list[str] | None = None) -> list[dict[str, Any]]:
+    by_event = {str(row.get("eventId") or ""): row for row in records}
+    preferred = [by_event[value] for value in (preferred_event_ids or []) if value in by_event]
+    remaining = [row for row in sorted(records, key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("obviousMarketScore"))), reverse=True) if row not in preferred]
+    ranked = (preferred + remaining)[:3]
     result = []
     for rank, source in enumerate(ranked, start=1):
         item = copy.deepcopy(source)
@@ -1590,14 +1594,32 @@ def update_express_bank_metrics(state: dict[str, Any], now: dt.datetime) -> None
         bank["updatedAt"] = iso(now)
 
 
-def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> list[dict[str, Any]]:
+def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config: dict[str, Any], now: dt.datetime, preferred_groups: dict[str, list[str]] | None = None) -> list[dict[str, Any]]:
     if len(records) != 15:
         raise RuntimeError(f"R15_EXPRESS_REQUIRES_15_LEGS={len(records)}")
     bank = ensure_express_bank(state, config, now)
     current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
     stake_percent = safe_float(config.get("expressStakePercent"), 10.0)
     stake = round(current * stake_percent / 100.0, 2)
-    groups = balanced_groups(records)
+    deterministic_groups = balanced_groups(records)
+    groups = deterministic_groups
+    if isinstance(preferred_groups, dict):
+        by_event = {str(row.get("eventId") or ""): row for row in records}
+        candidate_groups = []
+        candidate_ids = []
+        valid = True
+        for label in ("A", "B", "C"):
+            ids = [str(value) for value in preferred_groups.get(label) or []]
+            if len(ids) != 5 or len(set(ids)) != 5 or any(value not in by_event for value in ids):
+                valid = False
+                break
+            candidate_ids.extend(ids)
+            candidate_groups.append([by_event[value] for value in ids])
+        if valid and len(candidate_ids) == 15 and len(set(candidate_ids)) == 15:
+            deterministic_score = express_balance_score(deterministic_groups)
+            candidate_score = express_balance_score(candidate_groups)
+            if candidate_score <= deterministic_score * safe_float(config.get("openRouterExpressBalanceTolerance"), 1.25):
+                groups = candidate_groups
     result = []
     labels = ["Экспресс A", "Экспресс B", "Экспресс C"]
     for group_index, group in enumerate(groups):
@@ -1817,6 +1839,9 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "expresses": state.get("expresses", []),
         "dailyAnalysis": state.get("dailyAnalysis", []),
         "bestBets": state.get("bestBets", []),
+        "dailyAudit": state.get("dailyAudit", {}),
+        "systemNarrative": state.get("systemNarrative", {}),
+        "nextPortfolio": state.get("nextPortfolio", {}),
     })
 
 
@@ -1923,6 +1948,14 @@ def publish_generation() -> int:
     validate_config(config)
     now = now_utc()
     state = ensure_r15_state(load_json(STATE_PATH, {}), config, now)
+    activation = daily_auditor.activation_gate(now)
+    if not activation.get("ready"):
+        prepared = daily_auditor.prepare_next_window_state()
+        print(f"R15F_R3_FIRST_ACTIVE_OPERATIONAL_DATE={prepared.get('operationalDateLocal')}")
+        print("R15F_R3_PARTIAL_DAY_PUBLICATION=NO")
+        print("R15F_R3_BANK_MUTATION=NO")
+        print("FINAL_STATUS=GREEN_R15F_R3_PREPARING_NEXT_WINDOW")
+        return 0
     day = operational_day(now, config)
     current_day = str(state.get("meta", {}).get("operationalDayId") or "")
     current_records = state.get("dailyAnalysis") or []
@@ -2076,12 +2109,17 @@ def publish_generation() -> int:
     russian_names_result = free_mesh.apply_russian_names(records)
     fonbet_result = free_mesh.fonbet_gate(records)
     core.apply_operational_window_metadata(records, discovery, now)
-    if openrouter_key and bool(config.get("openRouterNarrativeEnabled", True)):
-        try:
-            core.enrich_narratives_with_openrouter(records, openrouter_key, config, client)
-        except Exception as exc:
-            report["warnings"].append(f"OPENROUTER_NARRATIVE_SKIPPED:{exc}")
-    best = informational_best_four(records, now)
+    audited_records, daily_audit = daily_auditor.audit_records(
+        records,
+        config,
+        openrouter_key,
+        day["operationalDayId"],
+        now,
+    )
+    records = audited_records
+    audit_system_message = daily_audit.get("systemMessage") if isinstance(daily_audit.get("systemMessage"), dict) else {}
+    state["dailyAudit"] = copy.deepcopy(daily_audit)
+    best = informational_best_three(records, now, list(daily_audit.get("topSingles") or []))
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -2093,7 +2131,7 @@ def publish_generation() -> int:
     state["dailyAnalysis"] = records
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
-    expresses = build_expresses(records, state, config, now)
+    expresses = build_expresses(records, state, config, now, daily_audit.get("expresses") if isinstance(daily_audit, dict) else None)
     core.update_statistics(state)
     update_express_statistics(state)
     state["dataCoverage"] = {
@@ -2119,6 +2157,13 @@ def publish_generation() -> int:
         "status": "GREEN",
         "updatedAt": iso(now),
     }
+    state["systemNarrative"] = {
+        **daily_auditor.deterministic_system_narrative(state, "PUBLISHED", str(daily_audit.get("status") or "FALLBACK")),
+        **audit_system_message,
+        "generatedBy": "OPENROUTER_FREE_AUDIT" if daily_audit.get("schemaValid") else "DETERMINISTIC_SYSTEM",
+        "modelUsed": daily_audit.get("modelUsed"),
+        "updatedAt": iso(now),
+    }
     state.setdefault("meta", {}).update({
         "version": core.STATE_VERSION,
         "sourceMarker": R15_MARKER,
@@ -2134,12 +2179,16 @@ def publish_generation() -> int:
         "operationalWindowPolicy": day["policy"],
         "analysisTarget": 15,
         "analysisPublished": 15,
-        "bestBetsPublished": 4,
+        "bestBetsPublished": 3,
         "expressesPublished": 3,
         "expressLegsPublished": 15,
         "soccerAnalyses": 15,
         "hockeyAnalyses": 0,
         "candidateMatchesAnalyzed": analysis_diag.get("eventsWithMarkets"),
+        "openRouterAuditStatus": daily_audit.get("status"),
+        "openRouterModelUsed": daily_audit.get("modelUsed"),
+        "openRouterSchemaValid": bool(daily_audit.get("schemaValid")),
+        "openRouterLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
         "publicationPolicy": "STRICT_08_TO_08_FIFTEEN_QUALITY_MATCHES_THREE_EXPRESSES",
         "virtualBankPolicy": R15_EXPRESS_POLICY,
@@ -2158,16 +2207,21 @@ def publish_generation() -> int:
     }
     report["diagnostics"].update({
         "dailyAnalysis": 15,
-        "informationalBestFour": 4,
+        "informationalTopThree": 3,
         "expresses": len(expresses),
         "expressBank": state.get("expressBank"),
         "russianNames": russian_names_result,
         "fonbetGate": fonbet_result,
+        "dailyOpenRouterAudit": daily_audit,
+        "topSingles": 3,
     })
+    state.pop("nextPortfolio", None)
+    state.setdefault("meta", {})["nextPortfolioStatus"] = "PUBLISHED"
+    daily_auditor.mark_activated(day["operationalDayId"])
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
     print("R15F_ANALYSIS=15")
-    print("R15F_INFORMATIONAL_TOP_FOUR=4")
+    print("R15F_INFORMATIONAL_TOP_THREE=3")
     print("R15F_EXPRESSES=3")
     print("R15F_EXPRESS_LEGS=15")
     print(f"R15F_EXPRESS_BANK={state.get('expressBank', {}).get('current')}")
@@ -2228,8 +2282,8 @@ def validate_state() -> int:
     if is_r15_publication:
         if len(daily) != 15:
             raise RuntimeError(f"R15 daily analysis must be 15, got {len(daily)}")
-        if len(best) != 4:
-            raise RuntimeError(f"R15 informational top four must be 4, got {len(best)}")
+        if len(best) != 3:
+            raise RuntimeError(f"R15 informational top three must be 3, got {len(best)}")
         if len(expresses) != 3:
             raise RuntimeError(f"R15 expresses must be 3, got {len(expresses)}")
         event_ids = [str(row.get("eventId") or "") for row in daily]
@@ -2260,7 +2314,12 @@ def validate_state() -> int:
             if not core.record_uses_r14_standard_market(row):
                 raise RuntimeError("R15 contains Asian or unsupported market")
         if any(safe_float(row.get("stake")) != 0.0 for row in best):
-            raise RuntimeError("R15 informational top four carries a separate stake")
+            raise RuntimeError("R15 informational top three carries a separate stake")
+        audit = state.get("dailyAudit") if isinstance(state.get("dailyAudit"), dict) else {}
+        if audit.get("schemaValid") and safe_int(audit.get("logicalRuns"), 0) > 1:
+            raise RuntimeError("R15 OpenRouter logical audit ran more than once")
+        if any(safe_float(row.get("auditRiskPenalty"), 0.0) < 0 for row in daily):
+            raise RuntimeError("R15 audit increased confidence")
     update_express_bank_metrics(state, now)
     bank = state.get("expressBank") or {}
     active = [row for row in expresses if str(row.get("status") or "pending") == "pending"]
@@ -2359,7 +2418,7 @@ def self_test() -> int:
         raise RuntimeError(f"SELF_TEST strategy produced {len(records)}: {diag}")
     day = operational_day(now, config)
     core.apply_operational_window_metadata(records, day, now)
-    best = informational_best_four(records, now)
+    best = informational_best_three(records, now)
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -2386,7 +2445,7 @@ def self_test() -> int:
         row["status"] = "won"
     records2[0]["status"] = "lost"
     state2["dailyAnalysis"] = records2
-    state2["bestBets"] = informational_best_four(records2, now)
+    state2["bestBets"] = informational_best_three(records2, now)
     state2["expresses"] = build_expresses(records2, state2, config, now)
     legacy_before = safe_float(state2.get("bank", {}).get("current"))
     sync_and_settle_expresses(state2, now + dt.timedelta(days=1))
@@ -2450,7 +2509,7 @@ def history_refresh_cli() -> int:
 
 
 def cli(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="R15 match intelligence and express portfolio")
+    parser = argparse.ArgumentParser(description="R15F R3 cognitive football portfolio")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--history-refresh", action="store_true")
     group.add_argument("--generate", action="store_true")

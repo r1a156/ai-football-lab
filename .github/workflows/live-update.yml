@@ -1,4 +1,4 @@
-# V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO
+# V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO
 # V10_R6_LIVE_AUTO_REFRESH — compatibility marker for existing live validator
 name: R15F live scores and express settlement
 
@@ -35,7 +35,7 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: |
           set -euo pipefail
-          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/update_live.py
+          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/r15_daily_auditor.py scripts/update_live.py
           python scripts/update_live.py --update
           python scripts/r15_intelligence.py --settle
           python scripts/r15_intelligence.py --validate

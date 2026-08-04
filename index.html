@@ -1,556 +1,227 @@
 <!doctype html>
-<html lang="ru" data-version="V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO">
+<html lang="ru" data-version="V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#07090f">
-    <meta name="description" content="Лаборатория спортивного ИИ — полный анализ футбольных матчей суток, 15 стратегических прогнозов и три экспресса.">
-    <title>Лаборатория спортивного ИИ — аналитика матчей</title>
-    <link rel="stylesheet" href="assets/styles.css?v=15.0.0">
+    <meta name="description" content="Спортивный ИИ — единый портфель из 15 футбольных прогнозов, трёх экспрессов и трёх лучших ординаров.">
+    <title>Спортивный ИИ — единый портфель дня</title>
+    <link rel="stylesheet" href="assets/styles.css?v=15.3.0">
 </head>
-<body>
-    <!-- V10_R9_BEST_FOUR_STATS_AND_COMPACT_MOBILE_NAV -->
+<body class="r15-unified-ui">
     <div class="page-noise" aria-hidden="true"></div>
     <div class="aurora aurora-a" aria-hidden="true"></div>
     <div class="aurora aurora-b" aria-hidden="true"></div>
 
-    <header class="topbar" id="top">
-        <a class="brand" href="#top" aria-label="Лаборатория спортивного ИИ">
-            <span class="brand-mark" aria-hidden="true">
-                <span class="brand-orbit"></span>
-                <span class="brand-core"></span>
-            </span>
-            <span class="brand-copy">
-                <strong><span class="brand-title-full">Лаборатория спортивного ИИ</span><span class="brand-title-short">Спортивный ИИ</span></strong>
-                <small>R15 · Интеллект матча и экспресс-стратегия</small>
-            </span>
+    <header class="topbar compact-topbar" id="top">
+        <a class="brand" href="#dashboard" aria-label="Спортивный ИИ">
+            <span class="brand-mark" aria-hidden="true"><span class="brand-orbit"></span><span class="brand-core"></span></span>
+            <span class="brand-copy"><strong>Спортивный ИИ</strong><small>Когнитивный портфель R15F R3</small></span>
         </a>
-
         <nav class="desktop-nav" aria-label="Основная навигация">
+            <a href="#daily-analysis">15 матчей</a>
             <a href="#expresses">Экспрессы</a>
-            <a href="#daily-analysis">15 прогнозов</a>
+            <a href="#best-bets">Ординары</a>
             <a href="#bank">Банк</a>
             <a href="#learning">Обучение</a>
         </nav>
-
-        <div class="topbar-status" id="topbarStatus">
-            <span class="status-pulse"></span>
-            <span>
-                <small>Состояние</small>
-                <strong id="systemStatus">Загрузка</strong>
-            </span>
-        </div>
+        <div class="topbar-status" id="topbarStatus"><span class="status-pulse"></span><strong id="systemStatus">Загрузка</strong></div>
     </header>
 
     <main>
-        <section class="hero shell">
-            <div class="hero-copy reveal">
-                <div class="eyebrow">
-                    <span class="eyebrow-line"></span>
-                    Глобальная спортивная аналитика
-                </div>
-                <h1>
-                    Сначала прогнозируем
-                    <span>саму игру.</span>
-                    Затем оцениваем цену.
-                </h1>
-                <p>
-                    Система изучает все доступные футбольные матчи операционных суток,
-                    сопоставляет историю, форму, силу атаки и защиты, домашние и гостевые показатели,
-                    затем выбирает 15 наиболее понятных рынков и собирает три сбалансированных экспресса.
-                </p>
-                <div class="hero-actions">
-                    <a class="button button-primary" href="#expresses">
-                        Открыть три экспресса
-                        <span>↗</span>
-                    </a>
-                    <a class="button button-secondary" href="#daily-analysis">
-                        Смотреть все 15
-                    </a>
-                </div>
-                <div class="principle-row">
-                    <span>Понимание матча прежде рынка</span>
-                    <span>Только футбол · без России</span>
-                    <span>Строго 08:00–08:00 МСК</span>
-                </div>
-            </div>
-
-            <aside class="intelligence-panel reveal" aria-label="Сводка системы">
-                <div class="panel-head">
-                    <div>
-                        <small>АНАЛИТИКА В РЕАЛЬНОМ ВРЕМЕНИ</small>
-                        <strong>Контур актуальных данных</strong>
-                    </div>
-                    <span class="live-chip"><i></i> ОБНОВЛЯЕТСЯ</span>
-                </div>
-
-                <div class="signal-visual" aria-hidden="true">
-                    <div class="signal-grid"></div>
-                    <div class="signal-wave wave-one"></div>
-                    <div class="signal-wave wave-two"></div>
-                    <div class="signal-node node-a"></div>
-                    <div class="signal-node node-b"></div>
-                    <div class="signal-node node-c"></div>
-                    <div class="signal-center">
-                        <strong id="heroAnalysisCount">—</strong>
-                        <span>событий</span>
-                    </div>
-                </div>
-
-                <div class="panel-metrics">
-                    <div>
-                        <span>Экспрессов</span>
-                        <strong id="heroBestCount">—</strong>
-                    </div>
-                    <div>
-                        <span>Лиг в анализе</span>
-                        <strong id="heroLeagueCount">—</strong>
-                    </div>
-                    <div>
-                        <span>Экспресс-банк</span>
-                        <strong id="heroBank">—</strong>
-                    </div>
-                    <div>
-                        <span>Последнее обновление</span>
-                        <strong id="heroUpdated">—</strong>
-                    </div>
-                </div>
-            </aside>
-        </section>
-
-        <section class="live-strip" aria-label="Текущие показатели">
-            <div class="live-strip-track">
-                <span><i></i> Футбол: <strong id="stripSoccer">—</strong></span>
-                <span><i></i> Экспрессы: <strong id="stripHockey">—</strong></span>
-                <span><i></i> Сейчас идут: <strong id="stripLive">0</strong></span>
-                <span><i></i> Проходимость экспрессов: <strong id="stripAccuracy">—</strong></span>
-                <span><i></i> Доходность банка: <strong id="stripRoi">—</strong></span>
-                <span><i></i> Источник коэффициентов: <strong>глобальная букмекерская линия</strong></span>
-            </div>
-        </section>
-
-        <section class="section shell live-section" id="live-matches" aria-labelledby="liveMatchesTitle">
-            <div class="section-heading reveal">
+        <section class="unified-dashboard shell" id="dashboard">
+            <div class="dashboard-head reveal">
                 <div>
-                    <span class="section-index">СЕЙЧАС</span>
-                    <p class="section-kicker">Текущий счёт и пересчёт вероятности</p>
-                    <h2 id="liveMatchesTitle">Матчи сейчас</h2>
+                    <span class="section-index">ПОРТФЕЛЬ СУТОК</span>
+                    <h1>15 матчей. Три экспресса. Три ординара. Один интеллект.</h1>
+                    <p>Одна аналитика используется во всех стратегиях: сначала рейтинг 15 матчей, затем сбалансированное распределение по трём экспрессам и выделение трёх самых надёжных ординаров.</p>
                 </div>
-                <div class="section-meta">
-                    <span id="liveUpdated">Ожидание первого обновления</span>
-                    <strong id="liveStatus">Нет активных матчей</strong>
-                </div>
-            </div>
-            <div class="live-match-grid" id="liveMatchGrid">
-                <div class="analysis-loading">Система автоматически покажет счёт, когда начнётся один из отслеживаемых матчей.</div>
-            </div>
-            <p class="live-safety-note">
-                Текущий пересчёт не меняет исходный прогноз, коэффициент и виртуальную ставку.
-                Банк пересчитывается только после подтверждённого финального результата.
-            </p>
-        </section>
-
-
-        <section class="section shell express-section" id="expresses">
-            <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">01</span>
-                    <p class="section-kicker">Стратегия всех пятнадцати матчей</p>
-                    <h2>Три сбалансированных экспресса</h2>
-                </div>
-                <div class="section-meta">
-                    <span id="expressUpdated">Ожидание публикации</span>
-                    <strong id="expressStatus">3 × 5 событий</strong>
+                <div class="dashboard-state" id="portfolioStateCard">
+                    <span class="status-pulse"></span>
+                    <div><small>Состояние портфеля</small><strong id="portfolioStatus">Проверяем данные</strong><span id="portfolioUpdated">—</span></div>
                 </div>
             </div>
 
-            <div class="express-bank-overview reveal">
-                <div><span>Банк</span><strong id="expressBankCurrent">10 000 ₽</strong></div>
-                <div><span>Поставлено</span><strong id="expressBankPlaced">0 ₽</strong></div>
-                <div><span>Свободно</span><strong id="expressBankAvailable">10 000 ₽</strong></div>
-                <div><span>Операционный день</span><strong id="expressOperationalWindow">08:00–08:00 МСК</strong></div>
+            <div class="portfolio-metrics reveal">
+                <article><span>Матчи</span><strong id="heroAnalysisCount">—</strong><small>единый рейтинг</small></article>
+                <article><span>Экспрессы</span><strong id="heroBestCount">—</strong><small>по пять матчей</small></article>
+                <article><span>Ординары</span><strong id="singleCount">—</strong><small>три лучших</small></article>
+                <article><span>Качество</span><strong id="portfolioQuality">—</strong><small>среднее по 15</small></article>
+                <article><span>Экспресс-банк</span><strong id="heroBank">—</strong><small id="portfolioExposure">—</small></article>
+                <article><span>Обновлено</span><strong id="heroUpdated">—</strong><small>Москва</small></article>
             </div>
 
-            <div class="data-control-panel reveal" aria-label="Контроль полноты данных">
-                <article><span>Матчи суток</span><strong id="dataCoverageSummary">Проверяются</strong><small>Сначала полный календарь, затем глубокая аналитика</small></article>
-                <article><span>История команд</span><strong id="historyCoverageSummary">Кэш готовится</strong><small>Форма 5 / 10 / 20, дом, выезд, Elo и сила соперников</small></article>
-                <article><span>Источники</span><strong id="providerHealthSummary">Проверяются</strong><small>Квоты резервируются для коэффициентов и результатов</small></article>
+            <div class="portfolio-flow reveal" aria-label="Логика портфеля">
+                <div><b>1</b><span><strong>Все матчи суток</strong><small>история, форма, состав источников</small></span></div>
+                <i>→</i>
+                <div><b>2</b><span><strong>Рейтинг 1–15</strong><small>по надёжности и качеству</small></span></div>
+                <i>→</i>
+                <div><b>3</b><span><strong>3 × 5</strong><small>A: 1/6/7/12/13 · B: 2/5/8/11/14 · C: 3/4/9/10/15</small></span></div>
+                <i>→</i>
+                <div><b>4</b><span><strong>Топ-3 ординара</strong><small>первые три позиции рейтинга</small></span></div>
             </div>
 
-            <div class="express-grid" id="expressGrid">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
+            <div class="data-control-panel compact-data-panel reveal" aria-label="Контроль данных">
+                <article><span>Матчи суток</span><strong id="dataCoverageSummary">Проверяются</strong><small>строго 08:00–08:00 МСК</small></article>
+                <article><span>История команд</span><strong id="historyCoverageSummary">Кэш готовится</strong><small>форма 5/10/20, дом/выезд, Elo</small></article>
+                <article><span>Источники</span><strong id="providerHealthSummary">Проверяются</strong><small>бесплатная сеть и актуальная линия</small></article>
             </div>
-            <p class="express-disclaimer">
-                Каждый экспресс использует пять разных матчей. Ставка — 10% текущего экспресс-банка.
-                Совместная вероятность показывается отдельно: гарантии выигрыша нет.
-            </p>
-        </section>
-
-        <section class="section shell" id="best-bets">
-            <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">02</span>
-                    <p class="section-kicker">Информационный рейтинг без отдельной ставки</p>
-                    <h2>Четыре самых надёжных прогноза</h2>
+            <section class="system-phase-cockpit reveal" id="systemPhaseCockpit" aria-live="polite">
+                <div class="phase-orb" aria-hidden="true"><span></span><i></i></div>
+                <div class="phase-copy">
+                    <span class="phase-eyebrow">ТЕКУЩЕЕ ДЕЙСТВИЕ СИСТЕМЫ</span>
+                    <strong id="systemPhaseTitle">Определяем фазу</strong>
+                    <p id="systemPhaseDescription">Проверяем операционные сутки и состояние источников.</p>
+                    <div class="phase-clock"><span id="systemPhaseClock">—</span><small id="systemPhaseClockLabel">до следующего действия</small></div>
                 </div>
-                <div class="section-meta">
-                    <span id="bestBetsUpdated">Обновление данных…</span>
-                    <strong id="bestBetsExposure">Без отдельной ставки</strong>
+                <div class="phase-telemetry">
+                    <div><span>AI-аудит</span><strong id="auditStatus">Ожидается</strong><small id="auditModel">только бесплатная модель</small></div>
+                    <div><span>Линия</span><strong id="marketGateStatus">Проверяется</strong><small id="marketGateDetails">Фонбет и консенсус</small></div>
+                    <div><span>Первый полный день</span><strong id="firstActiveDay">—</strong><small>частичный день не публикуется</small></div>
                 </div>
+                <div class="phase-track" id="phaseTrack" aria-label="Суточный цикл системы">
+                    <span data-phase-step="PREPARATION">Подготовка</span>
+                    <span data-phase-step="SCAN">Сканирование</span>
+                    <span data-phase-step="MODELLING">Расчёт</span>
+                    <span data-phase-step="AUDIT">AI-аудит</span>
+                    <span data-phase-step="PUBLISHED">Портфель</span>
+                    <span data-phase-step="LIVE">Live</span>
+                    <span data-phase-step="LEARNING">Обучение</span>
+                </div>
+            </section>
+
+            <div class="live-compact" id="live-matches" aria-labelledby="liveMatchesTitle">
+                <div><span class="section-index">LIVE</span><strong id="liveMatchesTitle">Матчи сейчас</strong><small id="liveUpdated">—</small></div>
+                <span id="liveStatus">Нет активных матчей</span>
+                <div class="live-match-grid" id="liveMatchGrid"></div>
             </div>
 
-            <div class="best-four-statistics reveal" aria-label="Статистика лучших четырёх ставок">
-                <div><span>Проходимость</span><strong id="bestFourStatsAccuracy">—</strong></div>
-                <div><span>Завершено</span><strong id="bestFourStatsSettled">0</strong></div>
-                <div><span>Выиграно</span><strong id="bestFourStatsWon">0</strong></div>
-                <div><span>Проиграно</span><strong id="bestFourStatsLost">0</strong></div>
-                <div><span>Возврат</span><strong id="bestFourStatsPush">0</strong></div>
-                <div><span>Прибыль</span><strong id="bestFourStatsProfit">0 ₽</strong></div>
-            </div>
-
-            <div class="best-bets-grid" id="bestBetsGrid">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
+            <div class="compatibility-metrics" aria-hidden="true">
+                <span id="heroLeagueCount"></span><span id="stripSoccer"></span><span id="stripHockey"></span><span id="stripLive"></span><span id="stripAccuracy"></span><span id="stripRoi"></span>
             </div>
         </section>
 
-        <section class="section shell" id="daily-analysis">
+        <section class="section shell primary-section" id="daily-analysis">
             <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">03</span>
-                    <p class="section-kicker">Каждый прогноз — плечо одного из трёх экспрессов</p>
-                    <h2>15 прогнозов дня</h2>
-                </div>
+                <div><span class="section-index">01 · ОСНОВА</span><p class="section-kicker">Один рейтинг для всех стратегий</p><h2>15 прогнозов суток</h2></div>
                 <div class="analysis-controls" role="group" aria-label="Фильтры прогнозов">
                     <button class="filter-chip is-active" data-sport-filter="all" type="button">Все 15</button>
                     <button class="filter-chip" data-sport-filter="soccer" type="button">Футбол</button>
                 </div>
             </div>
-
             <div class="analysis-summary reveal">
-                <div>
-                    <span>Проанализировано</span>
-                    <strong id="analysisCount">—</strong>
-                </div>
-                <div>
-                    <span>Страны и регионы</span>
-                    <strong id="countryCount">—</strong>
-                </div>
-                <div>
-                    <span>Рыночные семейства</span>
-                    <strong id="marketFamilyCount">—</strong>
-                </div>
-                <div>
-                    <span>Качество данных</span>
-                    <strong id="averageDataQuality">—</strong>
-                </div>
+                <div><span>Проанализировано</span><strong id="analysisCount">—</strong></div>
+                <div><span>Страны и регионы</span><strong id="countryCount">—</strong></div>
+                <div><span>Рынки</span><strong id="marketFamilyCount">—</strong></div>
+                <div><span>Качество данных</span><strong id="averageDataQuality">—</strong></div>
             </div>
+            <div class="analysis-list" id="analysisList"><div class="analysis-loading">Загрузка единого рейтинга…</div></div>
+        </section>
 
-            <div class="analysis-list" id="analysisList">
-                <div class="analysis-loading">Загрузка аналитической выборки…</div>
+        <section class="section shell strategy-section" id="expresses">
+            <div class="section-heading reveal">
+                <div><span class="section-index">02 · СТРАТЕГИЯ</span><p class="section-kicker">Все пятнадцать матчей используются один раз</p><h2>Три экспресса по пять</h2></div>
+                <div class="section-meta"><span id="expressUpdated">Ожидание публикации</span><strong id="expressStatus">3 × 5</strong></div>
+            </div>
+            <div class="express-bank-overview reveal">
+                <div><span>Банк</span><strong id="expressBankCurrent">10 000 ₽</strong></div>
+                <div><span>Поставлено</span><strong id="expressBankPlaced">0 ₽</strong></div>
+                <div><span>Свободно</span><strong id="expressBankAvailable">10 000 ₽</strong></div>
+                <div><span>Операционные сутки</span><strong id="expressOperationalWindow">08:00–08:00 МСК</strong></div>
+            </div>
+            <div class="express-grid" id="expressGrid"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+            <p class="express-disclaimer">Распределение выполняется по рейтингу «змейкой», чтобы один экспресс не получил только сильные или только слабые позиции.</p>
+        </section>
+
+        <section class="section shell singles-section" id="best-bets">
+            <div class="section-heading reveal">
+                <div><span class="section-index">03 · КОНТРОЛЬ</span><p class="section-kicker">Первые три позиции единого рейтинга</p><h2>Три лучших ординара</h2></div>
+                <div class="section-meta"><span id="bestBetsUpdated">Обновление данных…</span><strong id="bestBetsExposure">Без двойного списания банка</strong></div>
+            </div>
+            <div class="single-policy reveal"><strong>Один прогноз — одна аналитическая истина</strong><span>Ординары не пересчитываются отдельно и не получают скрытую вторую модель. Это те же позиции №1, №2 и №3 из общего списка 15.</span></div>
+            <div class="best-bets-grid top-three-grid" id="bestBetsGrid"><div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+            <div class="best-four-statistics compact-single-statistics reveal" aria-label="Статистика ординаров">
+                <div><span>Историческая точность</span><strong id="bestFourStatsAccuracy">—</strong></div>
+                <div><span>Завершено</span><strong id="bestFourStatsSettled">0</strong></div>
+                <div><span>Выиграно</span><strong id="bestFourStatsWon">0</strong></div>
+                <div><span>Проиграно</span><strong id="bestFourStatsLost">0</strong></div>
+                <div><span>Возврат</span><strong id="bestFourStatsPush">0</strong></div>
+                <div><span>Архивный результат</span><strong id="bestFourStatsProfit">0 ₽</strong></div>
             </div>
         </section>
 
         <section class="section shell" id="bank">
             <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">04</span>
-                    <p class="section-kicker">Отдельный финансовый контур трёх экспрессов</p>
-                    <h2>Экспресс-банк</h2>
-                </div>
-                <p class="section-description">
-                    Стартовый банк — 10 000 ₽. На каждый из трёх экспрессов фиксируется 10% текущего банка;
-                    общая дневная экспозиция составляет 30%, а прежняя история одиночных ставок сохраняется отдельно.
-                </p>
+                <div><span class="section-index">04 · ФИНАНСЫ</span><p class="section-kicker">Один экран без смешивания стратегий</p><h2>Банк и экспозиция</h2></div>
+                <p class="section-description">Активный финансовый контур — три экспресса. Старый ординарный банк и его история сохраняются как отдельный архив и не сбрасываются.</p>
             </div>
-
+            <div class="bank-switch-summary reveal">
+                <article><span>Активный экспресс-банк</span><strong id="currentBank">—</strong><small id="activeStrategyLabel">3 экспресса · 30% максимальной экспозиции</small></article>
+                <article><span>Архивный ординарный банк</span><strong id="legacyBankCurrent">—</strong><small>История сохранена, новые списания отключены</small></article>
+                <article><span>Доступно сейчас</span><strong id="availableBankCard">—</strong><small>Экспресс-банк минус активные ставки</small></article>
+            </div>
             <div class="bank-layout">
                 <article class="bank-card bank-primary reveal">
-                    <div class="bank-topline">
-                        <div>
-                            <span>Экспресс-банк сейчас</span>
-                            <strong id="currentBank">—</strong>
-                        </div>
-                        <span class="roi-badge" id="bankRoi">—</span>
-                    </div>
-                    <div class="chart-wrap">
-                        <canvas id="bankChart" aria-label="Динамика виртуального банка"></canvas>
-                    </div>
-                    <div class="bank-liquidity" aria-label="Структура виртуального банка">
-                        <div>
-                            <span>Свободно</span>
-                            <strong id="availableBank">—</strong>
-                        </div>
-                        <div>
-                            <span>В трёх экспрессах</span>
-                            <strong id="bankExposureInline">—</strong>
-                        </div>
-                        <div>
-                            <span>Результат от старта</span>
-                            <strong id="bankProfit">—</strong>
-                        </div>
-                    </div>
-                    <div class="chart-caption">
-                        <span><i></i> Динамика закрытого баланса</span>
-                        <span id="bankHistoryCaption">Нет данных</span>
-                    </div>
+                    <div class="bank-topline"><div><span>Экспресс-банк сейчас</span><strong id="startingBank">—</strong></div><span class="roi-badge" id="bankRoi">—</span></div>
+                    <div class="chart-wrap"><canvas id="bankChart" aria-label="Динамика экспресс-банка"></canvas></div>
+                    <div class="bank-liquidity"><div><span>Свободно</span><strong id="availableBank">—</strong></div><div><span>В экспрессах</span><strong id="bankExposureInline">—</strong></div><div><span>Результат</span><strong id="bankProfit">—</strong></div></div>
+                    <div class="chart-caption"><span><i></i> Закрытый баланс</span><span id="bankHistoryCaption">Нет данных</span></div>
                 </article>
-
                 <div class="bank-metrics reveal">
-                    <article>
-                        <span>Стартовый банк</span>
-                        <strong id="startingBank">—</strong>
-                        <small>Базовая точка расчёта</small>
-                    </article>
-                    <article>
-                        <span>Поставлено сейчас</span>
-                        <strong id="activeExposure">—</strong>
-                        <small id="activeExposurePercent">—</small>
-                    </article>
-                    <article>
-                        <span>Максимальная просадка</span>
-                        <strong id="maxDrawdown">—</strong>
-                        <small>От локального максимума</small>
-                    </article>
-                    <article>
-                        <span>Доступно сейчас</span>
-                        <strong id="availableBankCard">—</strong>
-                        <small>Общий банк за вычетом поставленной суммы</small>
-                    </article>
+                    <article><span>Поставлено сейчас</span><strong id="activeExposure">—</strong><small id="activeExposurePercent">—</small></article>
+                    <article><span>Максимальная просадка</span><strong id="maxDrawdown">—</strong><small>От локального максимума</small></article>
+                    <article><span>Старт экспресс-банка</span><strong id="expressBankStartCard">10 000 ₽</strong><small>Отдельно от старого банка</small></article>
                 </div>
             </div>
         </section>
 
-        <section class="section shell" id="learning">
+        <section class="section shell compact-learning" id="learning">
             <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">04</span>
-                    <p class="section-kicker">Калибровка на реальных результатах</p>
-                    <h2>Обучение системы</h2>
-                </div>
-                <p class="section-description">
-                    Ошибки учитываются по спорту, лиге, рынку и диапазону коэффициента.
-                    Коррекция включается только после накопления достаточной выборки.
-                </p>
+                <div><span class="section-index">05 · ОБУЧЕНИЕ</span><p class="section-kicker">Факт обновляет одну модель, а не четыре разрозненных отчёта</p><h2>Единая калибровка</h2></div>
+                <p class="section-description">Каждый матч даёт один независимый результат. Затем статистика раскладывается по рынкам, лигам, коэффициентам и качеству данных.</p>
             </div>
+            <article class="system-address reveal" id="systemAddress">
+                <div class="system-address-head"><span class="system-address-mark" aria-hidden="true"></span><div><small>ОБРАЩЕНИЕ СИСТЕМЫ</small><strong id="systemNarrativeTitle">Я учусь на подтверждённых результатах</strong></div><span id="systemNarrativeSource">Статистическое ядро</span></div>
+                <p class="system-address-lead" id="systemNarrativeLead">Каждый прогноз проходит единый контроль данных, рынка и риска.</p>
+                <p id="systemNarrativeBody">После завершения матчей система сравнит прогноз с фактом и обновит калибровку.</p>
+                <div class="system-focus-list" id="systemNarrativeFocus"><span>Не завышать уверенность</span><span>Искать повторяющиеся ошибки</span></div>
+            </article>
 
-            <div class="prediction-statistics reveal" aria-label="Статистика всех прогнозов">
-                <article class="statistics-panel statistics-panel-all">
-                    <div class="statistics-panel-head">
-                        <div>
-                            <span>Все 15 прогнозов</span>
-                            <strong id="allPredictionAccuracy">—</strong>
-                        </div>
-                        <small id="allPredictionSettled">0 завершено</small>
-                    </div>
-                    <div class="statistics-counters">
-                        <div><span>Прошло</span><strong id="allPredictionWon">0</strong></div>
-                        <div><span>Не прошло</span><strong id="allPredictionLost">0</strong></div>
-                        <div><span>Возврат</span><strong id="allPredictionPush">0</strong></div>
-                        <div><span>Ожидается</span><strong id="allPredictionPending">0</strong></div>
-                    </div>
-                </article>
-                <article class="statistics-panel statistics-panel-best">
-                    <div class="statistics-panel-head">
-                        <div>
-                            <span>Лучшие четыре</span>
-                            <strong id="bestPredictionAccuracy">—</strong>
-                        </div>
-                        <small id="bestPredictionSettled">0 завершено</small>
-                    </div>
-                    <div class="statistics-counters">
-                        <div><span>Выиграно</span><strong id="bestPredictionWon">0</strong></div>
-                        <div><span>Проиграно</span><strong id="bestPredictionLost">0</strong></div>
-                        <div><span>Возврат</span><strong id="bestPredictionPush">0</strong></div>
-                        <div><span>Ожидается</span><strong id="bestPredictionPending">0</strong></div>
-                    </div>
-                </article>
-                <article class="statistics-panel statistics-panel-window">
-                    <div class="statistics-panel-head">
-                        <div>
-                            <span>Последние 30 дней</span>
-                            <strong id="windowThirtyAccuracy">—</strong>
-                        </div>
-                        <small id="windowThirtySettled">0 завершено</small>
-                    </div>
-                    <div class="model-readiness">
-                        <span>Состояние обучения</span>
-                        <strong id="modelLearningStage">Сбор выборки</strong>
-                        <small id="modelLearningSamples">0 результатов</small>
-                    </div>
-                </article>
+            <div class="prediction-statistics reveal">
+                <article class="statistics-panel statistics-panel-all"><div class="statistics-panel-head"><div><span>Все прогнозы</span><strong id="allPredictionAccuracy">—</strong></div><small id="allPredictionSettled">0 завершено</small></div><div class="statistics-counters"><div><span>Прошло</span><strong id="allPredictionWon">0</strong></div><div><span>Не прошло</span><strong id="allPredictionLost">0</strong></div><div><span>Возврат</span><strong id="allPredictionPush">0</strong></div><div><span>Ожидается</span><strong id="allPredictionPending">0</strong></div></div></article>
+                <article class="statistics-panel statistics-panel-best"><div class="statistics-panel-head"><div><span>Лучший контур</span><strong id="bestPredictionAccuracy">—</strong></div><small id="bestPredictionSettled">0 завершено</small></div><div class="statistics-counters"><div><span>Выиграно</span><strong id="bestPredictionWon">0</strong></div><div><span>Проиграно</span><strong id="bestPredictionLost">0</strong></div><div><span>Возврат</span><strong id="bestPredictionPush">0</strong></div><div><span>Ожидается</span><strong id="bestPredictionPending">0</strong></div></div></article>
+                <article class="statistics-panel statistics-panel-window"><div class="statistics-panel-head"><div><span>Последние 30 дней</span><strong id="windowThirtyAccuracy">—</strong></div><small id="windowThirtySettled">0 завершено</small></div><div class="model-readiness"><span>Состояние модели</span><strong id="modelLearningStage">Сбор выборки</strong><small id="modelLearningSamples">0 результатов</small></div></article>
             </div>
-
-            <div class="statistics-breakdown reveal">
-                <div class="statistics-breakdown-head">
-                    <div>
-                        <span>Где модель точнее</span>
-                        <strong>Результаты по спорту, рынкам и диапазонам коэффициента</strong>
-                    </div>
-                    <div class="statistics-tabs" role="group" aria-label="Раздел статистики">
-                        <button class="filter-chip is-active" type="button" data-statistics-tab="market">Рынки</button>
-                        <button class="filter-chip" type="button" data-statistics-tab="sport">Спорт</button>
-                        <button class="filter-chip" type="button" data-statistics-tab="odds">Коэффициенты</button>
-                        <button class="filter-chip" type="button" data-statistics-tab="league">Лиги</button>
-                    </div>
-                </div>
-                <div class="statistics-breakdown-list" id="statisticsBreakdownList">
-                    <div class="empty-mini">Данные накапливаются</div>
-                </div>
-            </div>
-
-            <div class="learning-grid">
-                <article class="learning-card learning-score reveal">
-                    <div class="learning-card-head">
-                        <span>Точность аналитики</span>
-                        <small id="settledAnalysisCount">— завершено</small>
-                    </div>
-                    <div class="score-orbit" id="analysisAccuracyOrbit">
-                        <div>
-                            <strong id="analysisAccuracy">—</strong>
-                            <span>всех прогнозов</span>
-                        </div>
-                    </div>
-                    <p>Рассчитывается по всей ежедневной выборке, а не только по ставкам.</p>
-                </article>
-
-                <article class="learning-card learning-score reveal">
-                    <div class="learning-card-head">
-                        <span>Точность лучших ставок</span>
-                        <small id="settledBestCount">— завершено</small>
-                    </div>
-                    <div class="score-orbit score-orbit-accent" id="bestAccuracyOrbit">
-                        <div>
-                            <strong id="bestAccuracy">—</strong>
-                            <span>лучший контур</span>
-                        </div>
-                    </div>
-                    <p id="currentStreak">Нет завершённой серии</p>
-                </article>
-
-                <article class="learning-card calibration-card reveal">
-                    <div class="learning-card-head">
-                        <span>Калибровка вероятностей</span>
-                        <small>Прогноз против факта</small>
-                    </div>
-                    <div class="calibration-chart" id="calibrationChart">
-                        <div class="empty-mini">Недостаточно завершённых прогнозов</div>
-                    </div>
-                </article>
-
-                <article class="learning-card segment-card reveal">
-                    <div class="learning-card-head">
-                        <span>Лучшие сегменты</span>
-                        <small>Не менее 10 результатов</small>
-                    </div>
-                    <div class="segment-list" id="segmentList">
-                        <div class="empty-mini">Данные накапливаются</div>
-                    </div>
-                </article>
+            <div class="statistics-breakdown reveal"><div class="statistics-breakdown-head"><div><span>Где модель точнее</span><strong>Результаты по сегментам</strong></div><div class="statistics-tabs"><button class="filter-chip is-active" type="button" data-statistics-tab="market">Рынки</button><button class="filter-chip" type="button" data-statistics-tab="odds">Коэффициенты</button><button class="filter-chip" type="button" data-statistics-tab="league">Лиги</button></div></div><div class="statistics-breakdown-list" id="statisticsBreakdownList"><div class="empty-mini">Данные накапливаются</div></div></div>
+            <div class="learning-grid reduced-learning-grid">
+                <article class="learning-card learning-score reveal"><div class="learning-card-head"><span>Точность аналитики</span><small id="settledAnalysisCount">— завершено</small></div><div class="score-orbit" id="analysisAccuracyOrbit"><div><strong id="analysisAccuracy">—</strong><span>всех прогнозов</span></div></div></article>
+                <article class="learning-card learning-score reveal"><div class="learning-card-head"><span>Точность лучших</span><small id="settledBestCount">— завершено</small></div><div class="score-orbit score-orbit-accent" id="bestAccuracyOrbit"><div><strong id="bestAccuracy">—</strong><span>лучший контур</span></div></div><p id="currentStreak">Нет завершённой серии</p></article>
+                <article class="learning-card calibration-card reveal"><div class="learning-card-head"><span>Калибровка вероятностей</span><small>Прогноз против факта</small></div><div class="calibration-chart" id="calibrationChart"><div class="empty-mini">Недостаточно результатов</div></div></article>
+                <article class="learning-card segment-card reveal"><div class="learning-card-head"><span>Лучшие сегменты</span><small>Не менее 10 результатов</small></div><div class="segment-list" id="segmentList"><div class="empty-mini">Данные накапливаются</div></div></article>
             </div>
         </section>
 
-        <section class="section shell" id="history">
-            <div class="section-heading reveal">
-                <div>
-                    <span class="section-index">05</span>
-                    <p class="section-kicker">Фактические результаты</p>
-                    <h2>История прогнозов</h2>
-                </div>
-                <div class="history-filter-stack">
-                    <div class="history-filters" role="group" aria-label="Тип истории">
-                        <button class="filter-chip" data-history-scope="best" type="button">Лучшие ставки</button>
-                        <button class="filter-chip is-active" data-history-scope="all" type="button">Все прогнозы</button>
-                    </div>
-                    <div class="history-filters" role="group" aria-label="Статус прогноза">
-                        <button class="filter-chip" data-history-filter="all" type="button">Все</button>
-                        <button class="filter-chip is-active" data-history-filter="settled" type="button">Завершённые</button>
-                        <button class="filter-chip" data-history-filter="won" type="button">Прошло</button>
-                        <button class="filter-chip" data-history-filter="lost" type="button">Не прошло</button>
-                        <button class="filter-chip" data-history-filter="push" type="button">Возврат</button>
-                        <button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button>
-                        <button class="filter-chip" data-history-filter="unresolved" type="button">Не подтверждено</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="history-panel reveal">
-                <div class="history-summary" id="historySummary">История очищается и обновляется автоматически</div>
-                <div class="history-table" id="historyTable">
-                    <div class="analysis-loading">Загрузка истории…</div>
-                </div>
-            </div>
+        <section class="section shell compact-history" id="history">
+            <details class="history-disclosure">
+                <summary><span><small>06 · АРХИВ</small><strong>История прогнозов и результатов</strong></span><b>Открыть</b></summary>
+                <div class="history-filter-stack"><div class="history-filters"><button class="filter-chip" data-history-scope="best" type="button">Лучшие</button><button class="filter-chip is-active" data-history-scope="all" type="button">Все</button></div><div class="history-filters"><button class="filter-chip" data-history-filter="all" type="button">Все</button><button class="filter-chip is-active" data-history-filter="settled" type="button">Завершённые</button><button class="filter-chip" data-history-filter="won" type="button">Прошло</button><button class="filter-chip" data-history-filter="lost" type="button">Не прошло</button><button class="filter-chip" data-history-filter="pending" type="button">Ожидается</button></div></div>
+                <div class="history-panel"><div class="history-summary" id="historySummary">История обновляется автоматически</div><div class="history-table" id="historyTable"><div class="analysis-loading">Загрузка истории…</div></div></div>
+            </details>
         </section>
 
-        <section class="method-section shell reveal" id="method">
-            <div class="method-intro">
-                <span class="section-index">06</span>
-                <p class="section-kicker">Методология версии 10</p>
-                <h2>Результат матча — главный объект анализа</h2>
-                <p>
-                    Коэффициент не определяет прогноз. Система сначала строит вероятностную
-                    картину матча, затем сравнивает её с безмаржинальной оценкой рынка.
-                </p>
-            </div>
-            <div class="method-steps">
-                <article><span>01</span><strong>Глобальный поиск</strong><p>Все доступные футбольные лиги; хоккей подключается при нехватке событий.</p></article>
-                <article><span>02</span><strong>Сценарий игры</strong><p>Ожидаемый счёт, исходы, тоталы, форы, обе забьют и командные тоталы.</p></article>
-                <article><span>03</span><strong>Проверка цены</strong><p>Вероятность модели сравнивается с рынком без букмекерской маржи.</p></article>
-                <article><span>04</span><strong>15 → 4</strong><p>Из полной аналитики выбираются четыре сильнейших разных события для виртуального банка.</p></article>
-                <article><span>05</span><strong>Живой матч</strong><p>Текущий счёт и отдельная live-вероятность без изменения исходной ставки.</p></article>
-                <article><span>06</span><strong>Обучение</strong><p>Калибровка по всем завершённым прогнозам с защитой от выводов на малой выборке.</p></article>
-            </div>
-        </section>
-
-        <section class="disclaimer shell reveal">
-            <span class="disclaimer-icon">!</span>
-            <div>
-                <strong>Аналитическая модель не гарантирует выигрыш.</strong>
-                <p>
-                    Вероятности являются расчётными оценками. Виртуальный банк используется
-                    для тестирования стратегии и не является рекомендацией совершать ставки.
-                    Индекс аномальности отражает необычное поведение рынка, но не доказывает
-                    договорной характер матча.
-                </p>
-            </div>
-        </section>
     </main>
 
-    <footer class="footer shell">
-        <div class="footer-brand">
-            <span class="brand-mark brand-mark-small" aria-hidden="true">
-                <span class="brand-orbit"></span>
-                <span class="brand-core"></span>
-            </span>
-            <span><strong>Лаборатория спортивного ИИ</strong><small>Глобальная спортивная аналитика</small></span>
-        </div>
-        <div class="footer-status">
-            <span id="footerUpdated">Данные загружаются</span>
-            <span>Версия 10 R6</span>
-        </div>
-    </footer>
+    <footer class="footer shell"><div class="footer-brand"><span class="brand-mark brand-mark-small"><span class="brand-orbit"></span><span class="brand-core"></span></span><span><strong>Спортивный ИИ</strong><small>Когнитивный портфель R15F R3</small></span></div><div class="footer-status"><span id="footerUpdated">Данные загружаются</span><span>R15F R3 FINAL</span></div></footer>
 
     <nav class="mobile-nav" aria-label="Мобильная навигация">
-        <a href="#expresses" data-mobile-nav="expresses">Экспрессы</a>
+        <a href="#dashboard" data-mobile-nav="dashboard">Портфель</a>
         <a href="#daily-analysis" data-mobile-nav="daily-analysis">15 матчей</a>
         <a href="#bank" data-mobile-nav="bank">Банк</a>
         <a href="#learning" data-mobile-nav="learning">Обучение</a>
     </nav>
 
-    <dialog class="analysis-dialog" id="analysisDialog">
-        <button class="dialog-close" id="dialogClose" type="button" aria-label="Закрыть">×</button>
-        <div id="dialogContent"></div>
-    </dialog>
-
-    <div class="connection-toast" id="connectionToast" role="status" aria-live="polite">
-        <span></span>
-        <strong>Обновление данных</strong>
-    </div>
-
-    <script src="assets/app.js?v=15.0.0"></script>
+    <dialog class="analysis-dialog" id="analysisDialog"><button class="dialog-close" id="dialogClose" type="button" aria-label="Закрыть">×</button><div id="dialogContent"></div></dialog>
+    <div class="connection-toast" id="connectionToast" role="status" aria-live="polite"><span></span><strong>Обновление данных</strong></div>
+    <script src="assets/app.js?v=15.3.0"></script>
 </body>
 </html>

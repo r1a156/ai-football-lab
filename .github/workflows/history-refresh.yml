@@ -33,8 +33,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py
+          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/r15_daily_auditor.py
           python scripts/r15_free_mesh.py --self-test
+          python scripts/r15_daily_auditor.py --self-test
           python scripts/r15_free_mesh.py --refresh
           python scripts/r15_intelligence.py --history-refresh
           python -m json.tool data/football-history-cache.json >/dev/null

@@ -4,6 +4,7 @@
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 /* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
 /* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
+/* V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO */
 (() => {
     "use strict";
 
@@ -23,6 +24,7 @@
         refreshTimer: null,
         freshnessTimer: null,
         chartFrame: null,
+        phaseTimer: null,
     };
 
     document.addEventListener("DOMContentLoaded", initialize);
@@ -39,6 +41,7 @@
         await loadState({ notify: false });
         runtime.refreshTimer = window.setInterval(() => loadState({ notify: false }), REFRESH_INTERVAL_MS);
         runtime.freshnessTimer = window.setInterval(updateFreshnessLabels, 30_000);
+        runtime.phaseTimer = window.setInterval(updatePhaseClock, 1_000);
     }
 
     async function loadState({ notify }) {
@@ -98,6 +101,9 @@
               : [];
         normalized.history = Array.isArray(normalized.history) ? normalized.history : [];
         normalized.analysisHistory = Array.isArray(normalized.analysisHistory) ? normalized.analysisHistory : [];
+        normalized.dailyAudit = normalized.dailyAudit && typeof normalized.dailyAudit === "object" ? normalized.dailyAudit : {};
+        normalized.systemNarrative = normalized.systemNarrative && typeof normalized.systemNarrative === "object" ? normalized.systemNarrative : {};
+        normalized.nextPortfolio = normalized.nextPortfolio && typeof normalized.nextPortfolio === "object" ? normalized.nextPortfolio : {};
         return normalized;
     }
 
@@ -130,6 +136,11 @@
             state?.batch?.status || "",
             state?.batch?.terminalAnalysisCount || 0,
             state?.history?.length || 0,
+            state?.dailyAudit?.status || "",
+            state?.dailyAudit?.modelUsed || "",
+            state?.nextPortfolio?.status || "",
+            state?.nextPortfolio?.windowStart || "",
+            state?.systemNarrative?.updatedAt || "",
             liveState?.updatedAt || "",
             liveState?.events?.length || 0,
             liveState?.activeEventIds?.length || 0,
@@ -137,11 +148,16 @@
     }
 
     function renderApplication(state, liveState) {
+        const unified = isUnifiedPublication(state);
+        document.body.classList.toggle("has-unified-publication", unified);
+        document.body.classList.toggle("is-transition-publication", !unified);
         renderMeta(state, liveState);
+        renderSystemPhase(state, liveState);
+        renderSystemNarrative(state);
         renderLiveMatches(liveState);
+        renderDailyAnalysis(state.dailyAnalysis);
         renderExpresses(state.expresses, state.expressBank, state.meta, state.dataCoverage, state.statistics);
         renderBestBets(state.bestBets, state.meta, state.expressBank, state.statistics);
-        renderDailyAnalysis(state.dailyAnalysis);
         renderBank(state.expressBank, state.statistics);
         renderStatistics(state.statistics, state.learning);
         renderLearning(state.learning, state.statistics);
@@ -149,30 +165,145 @@
         updateFreshnessLabels();
     }
 
+    function isUnifiedPublication(state = runtime.state || {}) {
+        const daily = Array.isArray(state.dailyAnalysis) ? state.dailyAnalysis : [];
+        const expresses = Array.isArray(state.expresses) ? state.expresses : [];
+        const marker = String(state.meta?.sourceMarker || "");
+        const markedDaily = daily.length === 15 && daily.every((row) => String(row?.sourceMarker || marker).includes("R15"));
+        return markedDaily && expresses.length === 3 && expresses.every((row) => Array.isArray(row?.legs) && row.legs.length === 5);
+    }
+
     function renderMeta(state, liveState) {
         const { meta = {}, statistics = {}, dailyAnalysis = [], bestBets = [], expresses = [] } = state;
         const bank = state.expressBank || state.bank || {};
-        const soccerCount = Number(meta.soccerAnalyses ?? dailyAnalysis.filter((item) => item.sport === "soccer").length);
-        const hockeyCount = Number(meta.hockeyAnalyses ?? dailyAnalysis.filter((item) => item.sport === "ice_hockey").length);
+        const unified = isUnifiedPublication(state);
+        const quality = dailyAnalysis.length ? average(dailyAnalysis.map((item) => number(item.dataQuality))) : 0;
         const leagueCount = Number(meta.leaguesAnalyzed ?? new Set(dailyAnalysis.map((item) => item.league).filter(Boolean)).size);
+        const placed = number(bank.placedAmount ?? bank.activeExposure ?? 0);
 
-        setText("heroAnalysisCount", dailyAnalysis.length || meta.analysisPublished || 0);
-        setText("heroBestCount", expresses.length);
+        setText("heroAnalysisCount", unified ? dailyAnalysis.length : 0);
+        setText("heroBestCount", unified ? expresses.length : 0);
+        setText("singleCount", unified ? Math.min(3, bestBets.length) : 0);
+        setText("portfolioQuality", unified ? `${formatNumber(quality, 0)}/100` : "—");
         setText("heroLeagueCount", leagueCount);
-        setText("heroBank", formatCurrency(bank.current));
+        setText("heroBank", formatCurrency(bank.current || bank.starting || 10000));
+        setText("portfolioExposure", placed > 0 ? `${formatCurrency(placed)} в работе` : "банк свободен");
         setText("heroUpdated", formatCompactDateTime(meta.updatedAt));
-        setText("stripSoccer", soccerCount);
-        setText("stripHockey", expresses.length);
+        setText("portfolioUpdated", meta.updatedAt ? `Обновлено ${formatDateTime(meta.updatedAt)}` : "Ожидание обновления");
+        const preparing = String(state.nextPortfolio?.status || meta.nextPortfolioStatus || "").includes("PREPARING");
+        setText("portfolioStatus", unified ? "Портфель опубликован" : preparing ? "Готовим следующие полные сутки" : dailyAnalysis.length ? "Завершается предыдущая подборка" : "Сканирование операционных суток");
+        setText("stripSoccer", unified ? dailyAnalysis.length : 0);
+        setText("stripHockey", unified ? Math.min(3, bestBets.length) : 0);
         setText("stripLive", Array.isArray(liveState?.activeEventIds) ? liveState.activeEventIds.length : 0);
         setText("stripAccuracy", formatPercent(statistics?.expresses?.accuracy));
         setText("stripRoi", formatSignedPercent(bank.roi));
         setText("footerUpdated", `Обновлено ${formatDateTime(meta.updatedAt)}`);
 
+        const stateCard = document.getElementById("portfolioStateCard");
+        stateCard?.classList.toggle("is-ready", unified);
+        stateCard?.classList.toggle("is-waiting", !unified);
+
         const status = String(meta.status || "DEGRADED").toUpperCase();
         const statusNode = document.getElementById("topbarStatus");
-        statusNode?.classList.toggle("is-green", status === "GREEN");
+        statusNode?.classList.toggle("is-green", status === "GREEN" || preparing);
         statusNode?.classList.toggle("is-red", status === "RED");
-        setText("systemStatus", status === "GREEN" ? "Актуально" : status === "RED" ? "Ошибка" : "Ограничено");
+        setText("systemStatus", unified ? "Портфель активен" : preparing ? "Подготовка" : status === "RED" ? "Ошибка" : "Обновляется");
+    }
+
+
+    function countdownText(targetValue) {
+        const target = new Date(targetValue || 0).getTime();
+        if (!Number.isFinite(target)) return "—";
+        const delta = Math.max(0, target - Date.now());
+        const totalMinutes = Math.floor(delta / 60_000);
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
+        const seconds = Math.floor((delta % 60_000) / 1000);
+        if (days > 0) return `${days} дн. ${hours} ч. ${minutes} мин.`;
+        if (hours > 0) return `${hours} ч. ${minutes} мин. ${seconds} сек.`;
+        return `${minutes} мин. ${seconds} сек.`;
+    }
+
+    function determineSystemPhase(state, liveState) {
+        const active = (liveState?.events || []).filter((item) => item?.status === "LIVE");
+        if (active.length) return "LIVE";
+        if (isUnifiedPublication(state)) {
+            const pending = (state.dailyAnalysis || []).filter((item) => String(item?.status || "pending") === "pending");
+            return pending.length ? "PUBLISHED" : "LEARNING";
+        }
+        const nextStatus = String(state.nextPortfolio?.status || state.meta?.nextPortfolioStatus || "");
+        if (nextStatus.includes("PREPARING")) return "PREPARATION";
+        const audit = String(state.dailyAudit?.status || "");
+        if (audit && !["NOT_CONFIGURED", "DISABLED", "SKIPPED"].includes(audit)) return "AUDIT";
+        if (number(state.dataCoverage?.oddsEvents) > 0) return "MODELLING";
+        return "SCAN";
+    }
+
+    function phaseCopy(phase, state, liveState) {
+        const active = (liveState?.events || []).filter((item) => item?.status === "LIVE");
+        const nextPortfolio = state.nextPortfolio || {};
+        const firstStart = (state.dailyAnalysis || [])
+            .map((item) => new Date(item.commenceTime || 0))
+            .filter((date) => Number.isFinite(date.getTime()) && date.getTime() > Date.now())
+            .sort((a, b) => a - b)[0];
+        const map = {
+            PREPARATION: ["Готовлю следующий полный операционный день", "Обновляю историю команд, источники и календарь. Частичный день не публикуется.", nextPortfolio.windowStart || state.meta?.firstActiveWindowStart, "до первого полного сбора"],
+            SCAN: ["Сканирую все матчи суток", "Сопоставляю реальные события с историей команд и удаляю матчи вне окна 08:00–08:00 МСК.", state.meta?.operationalWindowEnd, "до закрытия окна"],
+            MODELLING: ["Сравниваю все допустимые рынки", "Рассчитываю исходы, тоталы, обе забьют и командные тоталы. Слабые данные не проходят в портфель.", null, "идёт расчёт"],
+            AUDIT: ["Проверяю портфель большой бесплатной моделью", "AI получает только рассчитанные факты, может снизить уверенность и найти слабые места, но не может придумать события.", null, "один аудит в сутки"],
+            PUBLISHED: ["Портфель зафиксирован", firstStart ? "Следующий этап — предматчевая проверка и live-сопровождение каждого плеча." : "Все матчи завершены, готовлю итоговое обучение.", firstStart?.toISOString(), firstStart ? "до ближайшего матча" : "до обучения"],
+            LIVE: ["Сопровождаю матчи в реальном времени", `${active.length} ${active.length === 1 ? "матч идёт" : "матча идут"}. Исходные прогнозы не подменяются, меняется только live-оценка.`, null, "live-контроль активен"],
+            LEARNING: ["Сверяю прогнозы с фактом", "Один матч даёт один независимый результат. Ошибки раскладываются по рынкам, лигам, качеству данных и диапазону коэффициентов.", state.meta?.firstActiveWindowStart, "до нового цикла"],
+        };
+        return map[phase] || map.SCAN;
+    }
+
+    function renderSystemPhase(state, liveState) {
+        const phase = determineSystemPhase(state, liveState);
+        const [title, description, target, label] = phaseCopy(phase, state, liveState);
+        document.body.dataset.systemPhase = phase.toLowerCase();
+        setText("systemPhaseTitle", title);
+        setText("systemPhaseDescription", description);
+        setText("systemPhaseClock", target ? countdownText(target) : phase === "LIVE" ? "LIVE" : "АКТИВНО");
+        setText("systemPhaseClockLabel", label);
+        const audit = state.dailyAudit || {};
+        setText("auditStatus", audit.schemaValid ? "Проверка выполнена" : audit.status === "NOT_CONFIGURED" ? "Ключ не найден" : audit.status === "FAILED_FALLBACK" ? "Статистический fallback" : "Ожидается");
+        setText("auditModel", audit.modelUsed || (audit.status === "FAILED_FALLBACK" ? "математическое ядро" : "openrouter/free"));
+        const fonbet = state.dataCoverage?.fonbetMode || "";
+        setText("marketGateStatus", fonbet === "REQUIRED_CONFIRMED_POOL" ? "Фонбет подтверждён" : number(state.dataCoverage?.oddsEvents) ? "Линия получена" : "Проверяется");
+        setText("marketGateDetails", `${number(state.dataCoverage?.fonbetConfirmedEvents)} подтверждено · ${number(state.dataCoverage?.oddsEvents)} с коэффициентами`);
+        const first = state.nextPortfolio?.windowStart || state.meta?.firstActiveWindowStart || state.meta?.operationalWindowStart;
+        setText("firstActiveDay", first ? formatShortDate(first) : "—");
+        document.querySelectorAll("[data-phase-step]").forEach((node) => {
+            const order = ["PREPARATION", "SCAN", "MODELLING", "AUDIT", "PUBLISHED", "LIVE", "LEARNING"];
+            const nodeIndex = order.indexOf(node.dataset.phaseStep || "");
+            const activeIndex = order.indexOf(phase);
+            node.classList.toggle("is-active", nodeIndex === activeIndex);
+            node.classList.toggle("is-complete", nodeIndex < activeIndex && activeIndex >= 0);
+        });
+    }
+
+    function renderSystemNarrative(state) {
+        const narrative = state.systemNarrative || {};
+        setText("systemNarrativeTitle", narrative.title || "Я учусь на подтверждённых результатах");
+        setText("systemNarrativeLead", narrative.lead || "Каждый прогноз проходит единый контроль данных, рынка и риска.");
+        setText("systemNarrativeBody", narrative.body || "После завершения матчей система сравнит прогноз с фактом и обновит калибровку.");
+        setText("systemNarrativeSource", narrative.modelUsed ? `AI-аудит · ${narrative.modelUsed}` : "Статистическое ядро");
+        const focus = Array.isArray(narrative.focus) && narrative.focus.length ? narrative.focus : ["Не завышать уверенность", "Искать повторяющиеся ошибки"];
+        const container = document.getElementById("systemNarrativeFocus");
+        if (container) container.innerHTML = focus.slice(0, 4).map((item) => `<span>${escapeHtml(item)}</span>`).join("");
+    }
+
+    function updatePhaseClock() {
+        if (!runtime.state) return;
+        const phase = determineSystemPhase(runtime.state, runtime.liveState);
+        const [, , target, label] = phaseCopy(phase, runtime.state, runtime.liveState);
+        setText("systemPhaseClock", target ? countdownText(target) : phase === "LIVE" ? "LIVE" : "АКТИВНО");
+        setText("systemPhaseClockLabel", label);
+        const waiting = document.querySelector("#liveWaitingCountdown");
+        const nextStart = runtime.state?.nextPortfolio?.windowStart || runtime.state?.meta?.firstActiveWindowStart;
+        if (waiting && nextStart) waiting.textContent = countdownText(nextStart);
     }
 
     function liveEventFor(record) {
@@ -182,7 +313,8 @@
 
     function renderLiveMatches(liveState = {}) {
         const grid = document.getElementById("liveMatchGrid");
-        if (!grid) return;
+        const section = document.getElementById("live-matches");
+        if (!grid || !section) return;
 
         const events = (Array.isArray(liveState.events) ? liveState.events : [])
             .filter((item) => item && ["LIVE", "SCHEDULED"].includes(String(item.status || "")));
@@ -190,32 +322,18 @@
         const scheduled = events
             .filter((item) => item.status === "SCHEDULED")
             .sort((left, right) => String(left.commenceTime || "").localeCompare(String(right.commenceTime || "")));
-        const relevant = (active.length ? active : scheduled.slice(0, 4)).slice(0, 6);
+        const relevant = (active.length ? active : scheduled.slice(0, 2)).slice(0, 3);
 
-        setText(
-            "liveUpdated",
-            liveState.updatedAt
-                ? `Обновлено ${formatDateTime(liveState.updatedAt)}`
-                : "Ожидание обновления",
-        );
-        setText(
-            "liveStatus",
-            active.length
-                ? `Сейчас идут: ${active.length}`
-                : scheduled.length
-                    ? `Ближайших матчей: ${Math.min(scheduled.length, 4)}`
-                    : "Нет активных матчей",
-        );
+        setText("liveUpdated", liveState.updatedAt ? `Обновлено ${formatDateTime(liveState.updatedAt)}` : "Ожидание обновления");
+        setText("liveStatus", active.length ? `Сейчас идут: ${active.length}` : scheduled.length ? `Ближайшие: ${Math.min(scheduled.length, 2)}` : "Нет активных матчей");
+        section.classList.toggle("has-live-events", Boolean(relevant.length));
 
         if (!relevant.length) {
-            grid.innerHTML = `
-                <div class="analysis-loading">
-                    Сейчас ни один из отслеживаемых матчей не идёт.
-                    Завершённые матчи автоматически перенесены в историю.
-                </div>`;
+            const nextPortfolio = runtime.state?.nextPortfolio || {};
+            const nextStart = nextPortfolio.windowStart || runtime.state?.meta?.firstActiveWindowStart;
+            grid.innerHTML = `<article class="waiting-live-card"><span class="waiting-radar" aria-hidden="true"><i></i><b></b></span><div><strong>${nextStart ? "Система готовит следующие сутки" : "Live-монитор готов"}</strong><p>${nextStart ? `Первый полный анализ начнётся ${formatDateTime(nextStart)}. До публикации банк не задействуется.` : "Когда начнётся первый матч портфеля, здесь появятся счёт, минута и влияние на экспрессы."}</p><small id="liveWaitingCountdown">${nextStart ? countdownText(nextStart) : "Ожидание ближайшего старта"}</small></div></article>`;
             return;
         }
-
         grid.innerHTML = relevant.map((item) => liveMatchTemplate(item)).join("");
     }
 
@@ -330,42 +448,54 @@
             </button>`;
     }
 
+    function topThreeStatistics() {
+        const records = (runtime.state?.history || [])
+            .filter((row) => row && String(row.recordType || "") === "BEST_BET" && number(row.rank) >= 1 && number(row.rank) <= 3);
+        const canonical = canonicalHistoryRecords(records, "best");
+        const settled = canonical.filter((row) => ["won", "lost", "push"].includes(String(row.status || "").toLowerCase()));
+        const won = settled.filter((row) => String(row.status).toLowerCase() === "won").length;
+        const lost = settled.filter((row) => String(row.status).toLowerCase() === "lost").length;
+        const push = settled.filter((row) => String(row.status).toLowerCase() === "push").length;
+        const decisive = won + lost;
+        return {
+            settled: settled.length,
+            won,
+            lost,
+            push,
+            accuracy: decisive ? (won / decisive) * 100 : 0,
+            profit: settled.reduce((sum, row) => sum + number(row.profit), 0),
+        };
+    }
+
     function renderBestBets(bestBets, meta, bank, statistics = {}) {
         const grid = document.getElementById("bestBetsGrid");
         if (!grid) return;
-
+        const unified = isUnifiedPublication();
+        const singles = unified ? (Array.isArray(bestBets) ? bestBets.slice(0, 3) : []) : [];
         const batch = runtime.state?.batch || {};
         const sequence = number(batch.sequence);
-        const batchLabel = String(batch.statusLabel || meta?.batchStatusLabel || "Подборка активна");
-        setText(
-            "bestBetsUpdated",
-            `${sequence ? `Подборка №${sequence} · ` : ""}${batchLabel} · ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`,
-        );
-        setText("bestBetsExposure", "Информационный рейтинг · без отдельной ставки");
-        const bestStatistics = statistics?.bestBets && typeof statistics.bestBets === "object"
-            ? statistics.bestBets
-            : {};
+        const batchLabel = unified ? "Единый портфель активен" : "Ожидается новая качественная подборка";
+        setText("bestBetsUpdated", `${sequence ? `Подборка №${sequence} · ` : ""}${batchLabel} · ${formatDateTime(meta?.analysisGeneratedAt || meta?.updatedAt)}`);
+        setText("bestBetsExposure", "Топ-3 общего рейтинга · без двойного списания банка");
+
+        const derivedTopThree = topThreeStatistics();
+        const bestStatistics = derivedTopThree.settled
+            ? derivedTopThree
+            : (statistics?.bestBets && typeof statistics.bestBets === "object" ? statistics.bestBets : {});
         setText("bestFourStatsAccuracy", formatPercent(bestStatistics.accuracy));
         setText("bestFourStatsSettled", number(bestStatistics.settled));
         setText("bestFourStatsWon", number(bestStatistics.won));
         setText("bestFourStatsLost", number(bestStatistics.lost));
         setText("bestFourStatsPush", number(bestStatistics.push));
         setText("bestFourStatsProfit", formatSignedCurrency(bestStatistics.profit));
-        document.getElementById("bestFourStatsProfit")?.classList.toggle(
-            "is-negative",
-            number(bestStatistics.profit) < 0,
-        );
+        document.getElementById("bestFourStatsProfit")?.classList.toggle("is-negative", number(bestStatistics.profit) < 0);
 
-        if (!bestBets.length) {
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <strong>Сегодня нет ставок, прошедших все фильтры</strong>
-                    <p>Система не заполняет четыре места искусственно. Аналитическая выборка остаётся доступной ниже, а виртуальный банк не подвергается необоснованному риску.</p>
-                </div>`;
+        if (!singles.length) {
+            grid.innerHTML = `<div class="empty-state"><strong>Три ординара ещё не зафиксированы</strong><p>Старая подборка не смешивается с новой стратегией. Ординары появятся одновременно с новыми 15 матчами и тремя экспрессами.</p></div>`;
             return;
         }
 
-        grid.innerHTML = bestBets.map((bet, index) => bestBetTemplate(bet, index)).join("");
+        grid.innerHTML = singles.map((bet, index) => bestBetTemplate(bet, index)).join("");
         grid.querySelectorAll("[data-analysis-id]").forEach((node) => {
             node.addEventListener("click", () => openAnalysisDialog(findRecord(node.dataset.analysisId)));
         });
@@ -377,7 +507,7 @@
         const ev = number(bet.expectedValue) * 100;
         const dataQuality = number(bet.dataQuality);
         const status = String(bet.status || "pending");
-        const rankLabel = bet.rankLabel || (index === 0 ? "Самый надёжный прогноз" : `Надёжность №${index + 1}`);
+        const rankLabel = index === 0 ? "Ординар №1 · лучший рейтинг" : `Ординар №${index + 1} · рейтинг ${index + 1}`;
         return `
             <article class="best-bet-card" data-sport="${escapeHtml(bet.sport || "soccer")}" data-analysis-id="${escapeHtml(bet.id)}" tabindex="0" role="button">
                 <div class="bet-card-top">
@@ -407,8 +537,8 @@
                 </div>
                 ${liveInlineTemplate(bet)}
                 <div class="bet-card-footer">
-                    <span>Финансовый режим</span>
-                    <strong>Информационный рейтинг</strong>
+                    <span>Роль в портфеле</span>
+                    <strong>Топ-3 общего рейтинга</strong>
                     <span class="status-chip ${statusClass(status)}">${escapeHtml(statusLabel(status))}</span>
                 </div>
             </article>`;
@@ -417,19 +547,30 @@
     function renderDailyAnalysis(records) {
         const list = document.getElementById("analysisList");
         if (!list) return;
+        const unified = isUnifiedPublication();
         const filtered = records.filter((item) => runtime.sportFilter === "all" || item.sport === runtime.sportFilter);
 
-        setText("analysisCount", records.length);
-        setText("countryCount", new Set(records.map((item) => item.country).filter(Boolean)).size);
-        setText("marketFamilyCount", new Set(records.map((item) => item.marketFamily).filter(Boolean)).size);
-        setText("averageDataQuality", records.length ? `${formatNumber(average(records.map((item) => number(item.dataQuality))), 0)}/100` : "—");
+        setText("analysisCount", unified ? records.length : 0);
+        setText("countryCount", unified ? new Set(records.map((item) => item.country).filter(Boolean)).size : 0);
+        setText("marketFamilyCount", unified ? new Set(records.map((item) => item.marketFamily).filter(Boolean)).size : 0);
+        setText("averageDataQuality", unified && records.length ? `${formatNumber(average(records.map((item) => number(item.dataQuality))), 0)}/100` : "—");
 
-        if (!filtered.length) {
-            list.innerHTML = `<div class="analysis-loading">Для выбранного вида спорта прогнозов нет.</div>`;
-            return;
+        if (!unified) {
+            const legacyRows = filtered.length ? `<details class="legacy-batch-disclosure"><summary>Показать предыдущие ${filtered.length} прогнозов</summary><div class="legacy-analysis-list">${filtered.map((item) => analysisRowTemplate(item, true)).join("")}</div></details>` : "";
+            list.innerHTML = `<div class="transition-state"><span>ОБНОВЛЕНИЕ СТРАТЕГИИ</span><strong>Новая единая подборка ещё не опубликована</strong><p>Предыдущие прогнозы остаются доступными только как переходный архив. Они не считаются текущими ординарами и не распределяются в новые экспрессы.</p>${legacyRows}</div>`;
+        } else {
+            const groups = ["Экспресс A", "Экспресс B", "Экспресс C"].map((label) => ({
+                label,
+                rows: filtered.filter((item) => String(item.expressLabel || "") === label).sort((a, b) => number(a.rank) - number(b.rank)),
+            }));
+            const ungrouped = filtered.filter((item) => !item.expressLabel);
+            list.innerHTML = groups.filter((group) => group.rows.length).map((group, index) => `
+                <section class="analysis-group group-${index + 1}">
+                    <header><div><span>${escapeHtml(group.label)}</span><strong>${group.rows.length} матчей</strong></div><small>Рейтинги ${group.rows.map((row) => row.rank).join(" · ")}</small></header>
+                    <div>${group.rows.map((item) => analysisRowTemplate(item, false)).join("")}</div>
+                </section>`).join("") + (ungrouped.length ? ungrouped.map((item) => analysisRowTemplate(item, false)).join("") : "");
         }
 
-        list.innerHTML = filtered.map((item) => analysisRowTemplate(item)).join("");
         list.querySelectorAll("[data-analysis-id]").forEach((node) => {
             node.addEventListener("click", () => openAnalysisDialog(findRecord(node.dataset.analysisId)));
             node.addEventListener("keydown", (event) => {
@@ -441,14 +582,14 @@
         });
     }
 
-    function analysisRowTemplate(item) {
+    function analysisRowTemplate(item, legacy = false) {
         const probability = number(item.conservativeProbability || item.modelProbability || item.probability) * 100;
         const edge = number(item.edge) * 100;
         const bestSelection = item.bestBetSelection;
         const pick = bestSelection?.pick || item.pick;
         const odds = bestSelection?.odds || item.bookmakerOdds || item.odds;
         return `
-            <div class="analysis-row ${item.isBestBet ? "is-best" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
+            <div class="analysis-row ${item.isBestBet ? "is-best" : ""} ${legacy ? "is-legacy" : ""}" data-analysis-id="${escapeHtml(item.id)}" tabindex="0" role="button">
                 <span class="analysis-rank">${escapeHtml(item.rank || "—")}</span>
                 <div class="analysis-match">
                     <small>${escapeHtml(item.sportLabel || sportName(item.sport))} · ${escapeHtml(displayCountry(item))}</small>
@@ -457,7 +598,7 @@
                     ${liveInlineTemplate(item)}
                 </div>
                 <div class="analysis-pick">
-                    <small>${escapeHtml(item.expressLabel ? `${item.expressLabel} · плечо ${item.expressLegNumber}` : (item.isBestBet ? "Топ-4 надёжности" : "Лучший рынок матча"))}</small>
+                    <small>${escapeHtml(legacy ? "Предыдущая подборка" : item.expressLabel ? `${item.expressLabel} · плечо ${item.expressLegNumber}` : (number(item.rank) <= 3 ? `Ординар №${item.rank}` : "Лучший рынок матча"))}</small>
                     <strong>${escapeHtml(russianDisplayText(pick || "—"))}</strong>
                 </div>
                 <div class="analysis-stats">
@@ -470,26 +611,23 @@
     }
 
     function renderBank(bank = {}, statistics = {}) {
-        const starting = number(bank.starting);
-        const current = number(bank.current);
+        const starting = number(bank.starting || 10000);
+        const current = number(bank.current || starting);
         const active = Math.max(0, number(bank.placedAmount ?? bank.activeExposure));
         const available = Math.max(0, number(bank.available ?? (current - active)));
-        const activeCount = Math.max(0, number(bank.activeBetsCount));
+        const activeCount = Math.max(0, number(bank.activeExpressCount ?? bank.activeBetsCount));
         const profit = current - starting;
         const roi = number(bank.roi);
+        const legacy = runtime.state?.bank && typeof runtime.state.bank === "object" ? runtime.state.bank : {};
         setText("currentBank", formatCurrency(current));
-        setText("startingBank", formatCurrency(starting));
+        setText("startingBank", formatCurrency(current));
+        setText("legacyBankCurrent", formatCurrency(legacy.current || legacy.starting || 0));
         setText("activeExposure", formatCurrency(active));
         setText("bankExposureInline", formatCurrency(active));
         setText("availableBank", formatCurrency(available));
         setText("availableBankCard", formatCurrency(available));
         setText("bankProfit", formatSignedCurrency(profit));
-        setText(
-            "activeExposurePercent",
-            current > 0
-                ? `${formatCount(activeCount, "ставка", "ставки", "ставок")} · ${formatNumber((active / current) * 100, 0)}% текущего банка`
-                : "—",
-        );
+        setText("activeExposurePercent", current > 0 ? `${formatCount(activeCount, "экспресс", "экспресса", "экспрессов")} · ${formatNumber((active / current) * 100, 0)}% текущего банка` : "—");
         setText("maxDrawdown", `${formatNumber(bank.maxDrawdown, 2)}%`);
         setText("bankRoi", formatSignedPercent(roi));
         document.getElementById("bankRoi")?.classList.toggle("is-negative", roi < 0);
@@ -890,6 +1028,13 @@
 
     function initializeMobileNavigation() {
         const links = [...document.querySelectorAll("[data-mobile-nav]")];
+        links.forEach((link) => link.addEventListener("click", (event) => {
+            const target = document.getElementById(link.dataset.mobileNav || "");
+            if (!target) return;
+            event.preventDefault();
+            target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+            links.forEach((node) => node.classList.toggle("is-active", node === link));
+        }));
         if (!links.length || !("IntersectionObserver" in window)) return;
         const sections = links
             .map((link) => document.getElementById(link.dataset.mobileNav || ""))

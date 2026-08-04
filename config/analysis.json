@@ -105,7 +105,7 @@
   "publicationPolicy": "UP_TO_FIFTEEN_QUALITY_FOOTBALL_MATCHES_STRICT_OPERATIONAL_DAY_AND_THREE_BALANCED_EXPRESSES",
   "predictionObjective": "FULL_MATCH_UNDERSTANDING_THEN_MOST_OBVIOUS_STANDARD_MARKET_WITH_ACCEPTABLE_ODDS",
   "virtualBankPolicy": "SEPARATE_EXPRESS_BANK_10000_THREE_TICKETS_TEN_PERCENT_EACH_LEGACY_BANK_PRESERVED",
-  "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
+  "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "topFourHardMinimumProbability": 0.48,
   "topFourHardMinimumDataQuality": 40,
   "topFourHardMaximumAnomaly": 62,
@@ -318,5 +318,21 @@
     "ESPN_PUBLIC_SCOREBOARD",
     "THESPORTSDB_PUBLIC_123"
   ],
-  "freeLiveScorePolicy": "PUBLIC_NO_KEY_SCORE_MESH_FIRST_EXISTING_ODDS_API_ONLY_THROTTLED_FINAL_FALLBACK"
+  "freeLiveScorePolicy": "PUBLIC_NO_KEY_SCORE_MESH_FIRST_EXISTING_ODDS_API_ONLY_THROTTLED_FINAL_FALLBACK",
+  "openRouterDailyAuditEnabled": true,
+  "openRouterDailyAuditModel": "openrouter/free",
+  "openRouterDailyAuditPolicy": "ONE_FREE_FACT_BOUND_AUDIT_PER_OPERATIONAL_DAY_DETERMINISTIC_FALLBACK",
+  "openRouterDailyAuditTechnicalAttempts": 3,
+  "openRouterDailyAuditTimeoutSeconds": 150,
+  "openRouterDailyAuditMaxOutputTokens": 5000,
+  "openRouterMaximumRiskPenalty": 0.08,
+  "openRouterExpressBalanceTolerance": 1.25,
+  "openRouterFreeOnly": true,
+  "firstRunActivationPolicy": "NEXT_COMPLETE_MOSCOW_08_TO_08_WINDOW_AFTER_INSTALL",
+  "partialOperationalDayPublicationAllowed": false,
+  "systemNarrativeEnabled": true,
+  "topSinglesTarget": 3,
+  "interfacePhaseAnimationEnabled": true,
+  "interfaceReducedMotionPolicy": "RESPECT_PREFERS_REDUCED_MOTION",
+  "portfolioInformationArchitecture": "ONE_LIVING_SYSTEM_PORTFOLIO_15_EXPRESSES_TOP3_BANK_LIVE_LEARNING"
 }

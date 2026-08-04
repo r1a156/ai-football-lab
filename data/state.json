@@ -2,10 +2,10 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-08-04T17:23:55Z",
+    "updatedAt": "2026-08-04T17:29:55.370783Z",
     "analysisDateLocal": "2026-08-03",
     "status": "GREEN",
-    "sourceMarker": "V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO",
+    "sourceMarker": "V10_R15F_R3R1_FINAL_PORTABLE_MOSCOW_TIME",
     "dataFreshness": "SETTLEMENT_REFRESH",
     "notice": "Каждый опубликованный прогноз получает виртуальную ставку 20% от текущего банка. Расчёт выигрыша выполняется по реальному коэффициенту букмекера, зафиксированному при публикации.",
     "analyzedMatches": 5,
@@ -145,7 +145,11 @@
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-08-04T17:23:55Z"
+    "r15SettlementAt": "2026-08-04T17:23:55Z",
+    "nextPortfolioStatus": "PREPARING_NEXT_OPERATIONAL_WINDOW",
+    "firstActiveOperationalDate": "2026-08-05",
+    "firstActiveWindowStart": "2026-08-05T05:00:00Z",
+    "firstActiveWindowEnd": "2026-08-06T05:00:00Z"
   },
   "dailyAnalysis": [
     {
@@ -29966,5 +29970,31 @@
     "roi": 0.0,
     "maxDrawdown": 0.0,
     "updatedAt": "2026-08-03T19:35:53Z"
+  },
+  "nextPortfolio": {
+    "status": "PREPARING_NEXT_OPERATIONAL_WINDOW",
+    "statusLabel": "Подготовка следующего полного портфеля",
+    "operationalDayId": "2026-08-05-MSK-0800",
+    "operationalDateLocal": "2026-08-05",
+    "windowStart": "2026-08-05T05:00:00Z",
+    "windowEnd": "2026-08-06T05:00:00Z",
+    "windowStartLocal": "2026-08-05T08:00:00+03:00",
+    "windowEndLocal": "2026-08-06T08:00:00+03:00",
+    "bankEngaged": false,
+    "partialDayPublicationAllowed": false,
+    "phase": "HISTORY_AND_SOURCE_PREWARM",
+    "updatedAt": "2026-08-04T17:29:55.370783Z"
+  },
+  "systemNarrative": {
+    "title": "Я готовлю следующий полный день",
+    "lead": "Система не публикует прогнозы на уже начавшиеся операционные сутки.",
+    "body": "История команд, источники и календарь подготавливаются заранее. После 08:00 МСК я заново проверю реальные события, рассчитаю все допустимые рынки и зафиксирую портфель только при полном качестве.",
+    "focus": [
+      "следующее окно 08:00–08:00",
+      "банк не задействован",
+      "частичная публикация запрещена"
+    ],
+    "tone": "CALM_PREPARATION",
+    "generatedBy": "DETERMINISTIC_SYSTEM"
   }
 }

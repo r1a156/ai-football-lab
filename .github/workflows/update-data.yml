@@ -1,5 +1,5 @@
-# V10_R15F_FREE_DATA_MESH_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO
-name: R15F morning match intelligence and express portfolio
+# V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO
+name: R15F R3 cognitive morning portfolio
 
 on:
   workflow_dispatch:
@@ -23,9 +23,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish-r15f:
+  publish-r15f-r3:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 70
     steps:
       - name: Checkout production source
         uses: actions/checkout@v4
@@ -41,7 +41,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/update_live.py
+          python -m py_compile \
+            scripts/update_predictions.py \
+            scripts/r15_free_mesh.py \
+            scripts/r15_intelligence.py \
+            scripts/r15_daily_auditor.py \
+            scripts/update_live.py
           python -m json.tool config/analysis.json >/dev/null
           python -m json.tool data/state.json >/dev/null
           python -m json.tool data/football-history-cache.json >/dev/null
@@ -50,8 +55,11 @@ jobs:
           python -m json.tool data/clubelo-ratings.json >/dev/null
           python -m json.tool data/russian-team-names.json >/dev/null
           python -m json.tool data/provider-health.json >/dev/null
+          python -m json.tool data/r15-runtime-control.json >/dev/null
+          python -m json.tool data/openrouter-daily-audit.json >/dev/null
           node --check assets/app.js
           python scripts/r15_free_mesh.py --self-test
+          python scripts/r15_daily_auditor.py --self-test
           python scripts/r15_intelligence.py --self-test
           python scripts/update_live.py --self-test
 
@@ -71,12 +79,15 @@ jobs:
           python scripts/update_live.py --update
           python scripts/r15_intelligence.py --settle
 
-      - name: Analyze every event and publish strict Moscow day
+      - name: Prepare or publish one complete Moscow day
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: openrouter/free
         run: |
           set -euo pipefail
+          python scripts/r15_daily_auditor.py --status
           python scripts/r15_intelligence.py --generate
           python scripts/r15_intelligence.py --validate
           python scripts/update_live.py --validate
@@ -99,11 +110,13 @@ jobs:
             data/clubelo-ratings.json \
             data/russian-team-names.json \
             data/fonbet-public-snapshot.json \
-            data/provider-health.json
+            data/provider-health.json \
+            data/r15-runtime-control.json \
+            data/openrouter-daily-audit.json
           if git diff --cached --quiet; then
-            echo "R15F_NO_PUBLIC_DATA_CHANGES=YES"
+            echo "R15F_R3_NO_PUBLIC_DATA_CHANGES=YES"
             exit 0
           fi
-          git commit -m "R15F publish no-key data mesh express portfolio [skip ci]"
+          git commit -m "R15F R3 publish cognitive portfolio [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
