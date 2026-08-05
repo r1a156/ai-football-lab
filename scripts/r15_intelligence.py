@@ -118,6 +118,10 @@ def json_fingerprint(value: Any) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+# V10_R15F_R3R7_PROGRESSIVE_PORTFOLIO_ACQUISITION
+# The Moscow operational day remains the publication/accounting identity. Match
+# discovery may progressively extend beyond that day only to assemble one full
+# quality portfolio; every event retains its real commence time.
 def operational_day(now: dt.datetime, config: dict[str, Any]) -> dict[str, Any]:
     timezone = core.configured_timezone(config)
     local = now.astimezone(timezone)
@@ -128,20 +132,22 @@ def operational_day(now: dt.datetime, config: dict[str, Any]) -> dict[str, Any]:
     end = start + dt.timedelta(hours=24)
     minimum_lead = dt.timedelta(minutes=safe_int(config.get("minimumLeadMinutes"), 45))
     query_start = max(now + minimum_lead, start.astimezone(UTC))
+    horizon_hours = max(24, min(120, safe_int(config.get("portfolioSearchHorizonHours"), 72)))
+    search_maximum_end = query_start + dt.timedelta(hours=horizon_hours)
     return {
         "operationalDayId": f"{start.date().isoformat()}-MSK-{hour:02d}00",
         "operationalDateLocal": start.date().isoformat(),
         "operationalWindowStart": iso(start.astimezone(UTC)),
         "operationalWindowEnd": iso(end.astimezone(UTC)),
         "queryWindowStart": iso(query_start),
-        "queryWindowEnd": iso(end.astimezone(UTC)),
+        "queryWindowEnd": iso(search_maximum_end),
+        "searchWindowMaximumEnd": iso(search_maximum_end),
         "windowStartLocal": start.isoformat(),
         "windowEndLocal": end.isoformat(),
         "durationHours": 24,
-        "policy": "STRICT_SINGLE_MOSCOW_OPERATIONAL_DAY_08_TO_08",
+        "searchHorizonHours": horizon_hours,
+        "policy": "MOSCOW_PUBLICATION_DAY_WITH_PROGRESSIVE_FUTURE_EVENT_SEARCH",
     }
-
-
 # ---------------------------------------------------------------------------
 # Provider client with cooldowns and quota accounting
 # ---------------------------------------------------------------------------
@@ -1010,47 +1016,83 @@ def discover_operational_events(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     window = operational_day(now, config)
     start = parse_time(window["queryWindowStart"])
-    end = parse_time(window["queryWindowEnd"])
-    if not start or not end or start >= end:
-        return [], {**window, "events": 0, "reason": "WINDOW_ALREADY_CLOSED"}
+    operational_end = parse_time(window["operationalWindowEnd"])
+    maximum_end = parse_time(window["searchWindowMaximumEnd"])
+    if not start or not operational_end or not maximum_end or start >= maximum_end:
+        return [], {**window, "events": 0, "reason": "SEARCH_WINDOW_ALREADY_CLOSED"}
     sports = core.fetch_active_sports(client, api_key)
     football = [item for item in sports if core.league_allowed(item, config)]
     maximum = max(1, safe_int(config.get("maximumDiscoverySports"), 300))
     football = football[:maximum]
-    events: list[dict[str, Any]] = []
-    errors: list[str] = []
+    target = max(safe_int(config.get("dailyAnalysisTarget"), 15), safe_int(config.get("portfolioSearchTargetEvents"), 60))
+    step_hours = max(6, min(48, safe_int(config.get("portfolioSearchStepHours"), 24)))
     spacing = max(0.05, safe_float(config.get("oddsDiscoverySpacingSeconds"), 0.12))
-    for index, sport in enumerate(football):
-        if index:
-            time.sleep(spacing)
-        try:
-            rows = core.fetch_sport_events(client, api_key, sport, start, end)
-        except Exception as exc:
-            errors.append(f"{sport.get('key')}: {exc}")
-            continue
-        for row in rows:
-            if core.event_allowed(row, config):
-                events.append(row)
     unique: dict[str, dict[str, Any]] = {}
-    for event in events:
-        event_id = str(event.get("id") or stable_id(event.get("sport_key"), event.get("home_team"), event.get("away_team"), event.get("commence_time")))
-        unique[event_id] = event
+    errors: list[str] = []
+    stages: list[dict[str, Any]] = []
+    stage_start = start
+    stage_index = 0
+    actual_end = start
+    while stage_start < maximum_end:
+        if stage_index == 0 and stage_start < operational_end:
+            stage_end = min(operational_end, maximum_end)
+            stage_name = "CURRENT_OPERATIONAL_REMAINDER"
+        else:
+            stage_end = min(maximum_end, stage_start + dt.timedelta(hours=step_hours))
+            stage_name = f"FUTURE_STAGE_{stage_index}"
+        before = len(unique)
+        stage_errors = 0
+        for index, sport in enumerate(football):
+            if index:
+                time.sleep(spacing)
+            try:
+                rows = core.fetch_sport_events(client, api_key, sport, stage_start, stage_end)
+            except Exception as exc:
+                errors.append(f"{stage_name}:{sport.get('key')}: {exc}")
+                stage_errors += 1
+                continue
+            for row in rows:
+                if not core.event_allowed(row, config):
+                    continue
+                event_id = str(row.get("id") or stable_id(row.get("sport_key"), row.get("home_team"), row.get("away_team"), row.get("commence_time")))
+                unique[event_id] = row
+        actual_end = stage_end
+        stages.append({
+            "stage": stage_index,
+            "name": stage_name,
+            "start": iso(stage_start),
+            "end": iso(stage_end),
+            "newEvents": len(unique) - before,
+            "cumulativeEvents": len(unique),
+            "providerErrors": stage_errors,
+        })
+        if len(unique) >= target:
+            break
+        if stage_end <= stage_start:
+            break
+        stage_start = stage_end
+        stage_index += 1
     ordered = sorted(unique.values(), key=lambda item: str(item.get("commence_time") or ""))
     by_sport: dict[str, int] = defaultdict(int)
     for event in ordered:
         by_sport[str(event.get("sport_key") or "")] += 1
     diagnostics = {
         **window,
+        "queryWindowEnd": iso(actual_end),
+        "selectionWindowStart": iso(start),
+        "selectionWindowEnd": iso(actual_end),
         "activeFootballCompetitions": len(football),
         "events": len(ordered),
+        "targetEvents": target,
+        "targetReached": len(ordered) >= target,
+        "stagesUsed": len(stages),
+        "progressiveStages": stages,
         "sportKeysWithEvents": len(by_sport),
         "eventsBySportKey": dict(by_sport),
-        "errors": errors[-20:],
-        "policy": "ALL_ODDS_SUPPORTED_NON_RUSSIAN_FOOTBALL_EVENTS_IN_CURRENT_08_TO_08_WINDOW",
+        "errors": errors[-40:],
+        "policy": "PROGRESSIVE_CURRENT_WINDOW_THEN_FUTURE_24H_STAGES_UNTIL_TARGET_OR_HORIZON",
     }
     return ordered, diagnostics
-
-
 def sport_history_coverage(events: list[dict[str, Any]], context: dict[str, Any]) -> float:
     matched = 0
     for event in events:
@@ -1070,17 +1112,19 @@ def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: 
     fair_share = max(1, remaining // days_left)
     configured = max(1, safe_int(config.get("oddsFreeDailyCreditBudget"), 16))
     used = safe_int(client.odds_quota.get("estimatedCreditsThisRun"), 0)
-    available = max(0, min(remaining, configured, fair_share + safe_int(config.get("oddsDailyCarryAllowance"), 2)) - used)
+    reserve = max(0, safe_int(config.get("oddsQuotaHardReserve"), 0))
+    daily_available = max(0, min(remaining, configured, fair_share + safe_int(config.get("oddsDailyCarryAllowance"), 2)) - used)
+    portfolio_available = max(0, remaining - reserve - used)
     return {
         "remaining": remaining,
         "daysLeft": days_left,
         "fairShare": fair_share,
         "configured": configured,
         "usedThisRun": used,
-        "availableThisRun": available,
+        "reserve": reserve,
+        "availableThisRun": daily_available,
+        "portfolioAvailableThisRun": portfolio_available,
     }
-
-
 def select_sport_keys_by_quota(
     events: list[dict[str, Any]],
     context: dict[str, Any],
@@ -1095,21 +1139,31 @@ def select_sport_keys_by_quota(
         if not key:
             continue
         coverage = sport_history_coverage(items, context)
-        # Every event is inspected from the free historical mesh before paid-
-        # quota odds calls. Competitions with many history-covered events are
-        # queried first so the free monthly allowance can still yield 15 legs.
         history_count = round(coverage * len(items))
         rows.append((history_count, coverage, len(items), key))
     rows.sort(key=lambda row: (row[0], row[1], row[2]), reverse=True)
-
     regions = [value for value in str(config.get("oddsRegions") or "eu").split(",") if value]
     featured_markets = [value for value in config.get("featuredMarkets") or ["h2h", "totals"]]
     cost = max(1, len(regions) * len(featured_markets))
     budget = free_odds_daily_budget(client, config)
-    maximum_calls = budget["availableThisRun"] // cost if cost else len(rows)
     configured_limit = max(1, safe_int(config.get("maximumOddsSportRequests"), 200))
-    maximum_calls = min(maximum_calls, configured_limit, len(rows))
+    normal_calls = min(budget["availableThisRun"] // cost, configured_limit, len(rows))
+    portfolio_calls = min(budget["portfolioAvailableThisRun"] // cost, configured_limit, len(rows))
     target_candidates = max(15, safe_int(config.get("oddsTargetCandidateEvents"), 32))
+    target_history = max(15, safe_int(config.get("dailyAnalysisTarget"), 15))
+
+    def projection(limit: int) -> tuple[int, int]:
+        subset = rows[:max(0, limit)]
+        return sum(row[2] for row in subset), sum(row[0] for row in subset)
+
+    normal_events, normal_history = projection(normal_calls)
+    burst_enabled = bool(config.get("oddsAllowPortfolioCompletionBurst", True))
+    burst_activated = bool(
+        burst_enabled
+        and portfolio_calls > normal_calls
+        and (normal_events < target_candidates or normal_history < target_history)
+    )
+    maximum_calls = portfolio_calls if burst_activated else normal_calls
     keys: list[str] = []
     projected_events = 0
     projected_history = 0
@@ -1119,26 +1173,32 @@ def select_sport_keys_by_quota(
         keys.append(key)
         projected_events += event_count
         projected_history += history_count
-        if projected_events >= target_candidates and projected_history >= 15:
+        if projected_events >= target_candidates and projected_history >= target_history:
             break
     return keys, {
         "freeMonthlyMode": True,
         "quotaRemainingBeforeOdds": budget["remaining"],
+        "quotaHardReserve": budget["reserve"],
         "daysLeftInQuotaPeriod": budget["daysLeft"],
         "dailyFairShare": budget["fairShare"],
         "dailyConfiguredBudget": budget["configured"],
         "dailyAvailableBeforeFeatured": budget["availableThisRun"],
+        "portfolioAvailableBeforeFeatured": budget["portfolioAvailableThisRun"],
+        "portfolioCompletionBurstEnabled": burst_enabled,
+        "portfolioCompletionBurstActivated": burst_activated,
+        "normalCompetitionCapacity": normal_calls,
+        "portfolioCompetitionCapacity": portfolio_calls,
         "featuredCostPerCompetition": cost,
         "competitionsWithEvents": len(rows),
         "competitionsSelected": len(keys),
-        "competitionsDeferredByDailyBudget": max(0, len(rows) - len(keys)),
+        "competitionsDeferredByQuota": max(0, len(rows) - len(keys)),
         "estimatedFeaturedCost": len(keys) * cost,
         "projectedEventsWithOdds": projected_events,
         "projectedHistoryCoveredEvents": projected_history,
+        "targetCandidateEvents": target_candidates,
+        "targetHistoryCoveredEvents": target_history,
         "allEventsHistoricallyInspected": len(events),
     }
-
-
 def fetch_featured_odds_quota_aware(
     client: ProviderClient,
     api_key: str,
@@ -1153,12 +1213,15 @@ def fetch_featured_odds_quota_aware(
     spacing = max(0.05, safe_float(config.get("oddsFeaturedSpacingSeconds"), 0.18))
     events: list[dict[str, Any]] = []
     errors: list[str] = []
+    request_cost = max(1, len([v for v in str(config.get("oddsRegions") or "eu").split(",") if v]) * len(config.get("featuredMarkets") or ["h2h", "totals"]))
+    burst_enabled = bool(config.get("oddsAllowPortfolioCompletionBurst", True))
     for index, key in enumerate(keys):
         if index:
             time.sleep(spacing)
         budget = free_odds_daily_budget(client, config)
-        if budget["availableThisRun"] < max(1, len([v for v in str(config.get("oddsRegions") or "eu").split(",") if v]) * len(config.get("featuredMarkets") or ["h2h", "totals"])):
-            errors.append("FREE_DAILY_ODDS_BUDGET_REACHED")
+        available = budget["portfolioAvailableThisRun"] if burst_enabled else budget["availableThisRun"]
+        if available < request_cost:
+            errors.append("PORTFOLIO_ODDS_BUDGET_REACHED" if burst_enabled else "FREE_DAILY_ODDS_BUDGET_REACHED")
             break
         url = f"{core.ODDS_API_BASE}/sports/{urllib.parse.quote(key)}/odds?{urllib.parse.urlencode(params)}"
         try:
@@ -1175,8 +1238,6 @@ def fetch_featured_odds_quota_aware(
             if commence and start <= commence < end:
                 events.append(item)
     return events, errors
-
-
 def preliminary_event_score(event: dict[str, Any], context: dict[str, Any], now: dt.datetime) -> float:
     home_id, home_score = match_team(str(event.get("home_team") or ""), context)
     away_id, away_score = match_team(str(event.get("away_team") or ""), context)
@@ -1376,6 +1437,9 @@ def build_strategy_analysis(
         "eventsQualified": 0,
         "marketCandidates": 0,
         "rejectedByQuality": 0,
+        "rejectedWithoutMarkets": 0,
+        "rejectionReasons": defaultdict(int),
+        "rejectedEvents": [],
         "dataTiers": defaultdict(int),
         "marketFamilies": defaultdict(int),
     }
@@ -1387,6 +1451,18 @@ def build_strategy_analysis(
         event["country"] = core.infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
         quotes = core.parse_event_quotes(event, now, config)
         if not quotes:
+            diagnostics["rejectedWithoutMarkets"] += 1
+            diagnostics["rejectionReasons"]["Нет пригодных рынков или котировок"] += 1
+            if len(diagnostics["rejectedEvents"]) < max(10, safe_int(config.get("rejectionDiagnosticsLimit"), 120)):
+                diagnostics["rejectedEvents"].append({
+                    "eventId": event_id,
+                    "sportKey": event.get("sport_key"),
+                    "league": event.get("sport_title"),
+                    "home": event.get("home_team"),
+                    "away": event.get("away_team"),
+                    "commenceTime": event.get("commence_time"),
+                    "failures": ["Нет пригодных рынков или котировок"],
+                })
             continue
         diagnostics["eventsWithMarkets"] += 1
         model = build_match_model(event, quotes, context, config, now)
@@ -1402,6 +1478,33 @@ def build_strategy_analysis(
         selected, alternatives = choose_obvious_candidate(candidates, config)
         if not selected:
             diagnostics["rejectedByQuality"] += 1
+            best_rejected = alternatives[0] if alternatives else {}
+            failures = []
+            for candidate in alternatives:
+                for failure in candidate.get("strategyFailures") or []:
+                    if failure not in failures:
+                        failures.append(failure)
+                    diagnostics["rejectionReasons"][failure] += 1
+            if not failures:
+                failures = ["Ни один рынок не прошёл стратегические фильтры"]
+                diagnostics["rejectionReasons"][failures[0]] += 1
+            if len(diagnostics["rejectedEvents"]) < max(10, safe_int(config.get("rejectionDiagnosticsLimit"), 120)):
+                diagnostics["rejectedEvents"].append({
+                    "eventId": event_id,
+                    "sportKey": event.get("sport_key"),
+                    "league": event.get("sport_title"),
+                    "home": event.get("home_team"),
+                    "away": event.get("away_team"),
+                    "commenceTime": event.get("commence_time"),
+                    "dataTier": model.get("dataTier"),
+                    "dataQuality": model.get("dataQuality"),
+                    "quoteCount": best_rejected.get("quoteCount"),
+                    "candidateCount": len(candidates),
+                    "bestCandidate": best_rejected.get("pickRu") or best_rejected.get("pick"),
+                    "bestProbability": best_rejected.get("conservativeProbability"),
+                    "bestOdds": best_rejected.get("bookmakerOdds"),
+                    "failures": failures,
+                })
             continue
         diagnostics["eventsQualified"] += 1
         diagnostics["marketFamilies"][str(selected.get("marketFamily"))] += 1
@@ -1440,6 +1543,7 @@ def build_strategy_analysis(
         })
         diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
         diagnostics["marketFamilies"] = dict(diagnostics["marketFamilies"])
+        diagnostics["rejectionReasons"] = dict(sorted(diagnostics["rejectionReasons"].items(), key=lambda item: (-item[1], item[0])))
         return [], diagnostics
 
     records: list[dict[str, Any]] = []
@@ -1479,6 +1583,7 @@ def build_strategy_analysis(
     })
     diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
     diagnostics["marketFamilies"] = dict(diagnostics["marketFamilies"])
+    diagnostics["rejectionReasons"] = dict(sorted(diagnostics["rejectionReasons"].items(), key=lambda item: (-item[1], item[0])))
     return records, diagnostics
 
 
@@ -2242,7 +2347,7 @@ def publish_generation() -> int:
     }
 
     if len(records) != 15:
-        clear_completed_current_batch(state, now, "INSUFFICIENT_QUALITY_EVENTS_IN_CURRENT_OPERATIONAL_DAY")
+        clear_completed_current_batch(state, now, "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON")
         state.setdefault("meta", {}).update({
             "sourceMarker": R15_MARKER,
             "status": "WAITING_FOR_QUALITY_SELECTION",
@@ -2251,6 +2356,10 @@ def publish_generation() -> int:
             "operationalDayId": day["operationalDayId"],
             "operationalWindowStart": day["operationalWindowStart"],
             "operationalWindowEnd": day["operationalWindowEnd"],
+            "selectionWindowStart": discovery.get("queryWindowStart"),
+            "selectionWindowEnd": discovery.get("queryWindowEnd"),
+            "selectionStagesUsed": discovery.get("stagesUsed"),
+            "selectionPolicy": discovery.get("policy"),
             "updatedAt": iso(now),
         })
         state["dataCoverage"] = {
@@ -2284,6 +2393,15 @@ def publish_generation() -> int:
     russian_names_result = free_mesh.apply_russian_names(records)
     fonbet_result = free_mesh.fonbet_gate(records)
     core.apply_operational_window_metadata(records, discovery, now)
+    for row in records:
+        row["publicationOperationalDayId"] = day["operationalDayId"]
+        row["publicationOperationalWindowStart"] = day["operationalWindowStart"]
+        row["publicationOperationalWindowEnd"] = day["operationalWindowEnd"]
+        row["operationalWindowStart"] = discovery.get("queryWindowStart")
+        row["operationalWindowEnd"] = discovery.get("queryWindowEnd")
+        row["selectionWindowStart"] = discovery.get("queryWindowStart")
+        row["selectionWindowEnd"] = discovery.get("queryWindowEnd")
+        row["selectionWindowPolicy"] = discovery.get("policy")
     audited_records, daily_audit = daily_auditor.audit_records(
         records,
         config,
@@ -2349,9 +2467,11 @@ def publish_generation() -> int:
         "operationalDayId": day["operationalDayId"],
         "operationalWindowStart": day["operationalWindowStart"],
         "operationalWindowEnd": day["operationalWindowEnd"],
-        "selectionWindowStart": day["queryWindowStart"],
-        "selectionWindowEnd": day["queryWindowEnd"],
+        "selectionWindowStart": discovery.get("queryWindowStart"),
+        "selectionWindowEnd": discovery.get("queryWindowEnd"),
+        "selectionStagesUsed": discovery.get("stagesUsed"),
         "operationalWindowPolicy": day["policy"],
+        "selectionPolicy": discovery.get("policy"),
         "analysisTarget": 15,
         "analysisPublished": 15,
         "bestBetsPublished": 3,
@@ -2365,7 +2485,7 @@ def publish_generation() -> int:
         "openRouterSchemaValid": bool(daily_audit.get("schemaValid")),
         "openRouterLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
-        "publicationPolicy": "STRICT_08_TO_08_FIFTEEN_QUALITY_MATCHES_THREE_EXPRESSES",
+        "publicationPolicy": "DAILY_MOSCOW_PUBLICATION_WITH_PROGRESSIVE_EVENT_HORIZON_FIFTEEN_QUALITY_MATCHES",
         "virtualBankPolicy": R15_EXPRESS_POLICY,
         "updatedAt": iso(now),
         "lastSuccessfulRefreshAt": iso(now),
@@ -2422,6 +2542,11 @@ def validate_config(config: dict[str, Any]) -> None:
         "footballHistoryTargetDays",
         "oddsFreeMonthlyCredits",
         "oddsFreeDailyCreditBudget",
+        "portfolioSearchHorizonHours",
+        "portfolioSearchStepHours",
+        "portfolioSearchTargetEvents",
+        "oddsAllowPortfolioCompletionBurst",
+        "rejectionDiagnosticsLimit",
     }
     missing = sorted(required - set(config))
     if missing:
