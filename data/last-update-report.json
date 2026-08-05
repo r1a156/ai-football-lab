@@ -1,10 +1,10 @@
 {
-  "status": "GREEN",
+  "status": "DEGRADED",
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "mode": "settle",
-  "startedAt": "2026-08-05T18:40:28Z",
-  "finishedAt": "2026-08-05T18:47:50Z",
+  "mode": "generate",
+  "startedAt": "2026-08-05T19:26:13Z",
+  "finishedAt": "2026-08-05T19:27:50Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -19,7 +19,7 @@
         },
         "ingested": 0,
         "duplicates": 0,
-        "historyMatches": 13415,
+        "historyMatches": 13416,
         "coverageStart": "2019-06-01T00:00:00Z",
         "coverageEnd": "2027-05-23T13:30:00Z"
       },
@@ -36,13 +36,13 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 13415,
+      "historyMatches": 13416,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-23T13:30:00Z"
     },
     "trackedHistory": {
       "added": 0,
-      "matches": 13415,
+      "matches": 13416,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-23T13:30:00Z"
     },
@@ -51,59 +51,1717 @@
       "operationalDateLocal": "2026-08-05",
       "operationalWindowStart": "2026-08-05T05:00:00Z",
       "operationalWindowEnd": "2026-08-06T05:00:00Z",
-      "queryWindowStart": "2026-08-05T19:25:28Z",
-      "queryWindowEnd": "2026-08-06T05:00:00Z",
+      "queryWindowStart": "2026-08-05T20:11:13Z",
+      "queryWindowEnd": "2026-08-08T20:11:13Z",
+      "searchWindowMaximumEnd": "2026-08-08T20:11:13Z",
       "windowStartLocal": "2026-08-05T08:00:00+03:00",
       "windowEndLocal": "2026-08-06T08:00:00+03:00",
       "durationHours": 24,
-      "policy": "ALL_ODDS_SUPPORTED_NON_RUSSIAN_FOOTBALL_EVENTS_IN_CURRENT_08_TO_08_WINDOW",
+      "searchHorizonHours": 72,
+      "policy": "PROGRESSIVE_CURRENT_WINDOW_THEN_FUTURE_24H_STAGES_UNTIL_TARGET_OR_HORIZON",
+      "selectionWindowStart": "2026-08-05T20:11:13Z",
+      "selectionWindowEnd": "2026-08-08T20:11:13Z",
       "activeFootballCompetitions": 44,
-      "events": 8,
-      "sportKeysWithEvents": 2,
+      "events": 141,
+      "targetEvents": 60,
+      "targetReached": true,
+      "stagesUsed": 4,
+      "progressiveStages": [
+        {
+          "stage": 0,
+          "name": "CURRENT_OPERATIONAL_REMAINDER",
+          "start": "2026-08-05T20:11:13Z",
+          "end": "2026-08-06T05:00:00Z",
+          "newEvents": 8,
+          "cumulativeEvents": 8,
+          "providerErrors": 0
+        },
+        {
+          "stage": 1,
+          "name": "FUTURE_STAGE_1",
+          "start": "2026-08-06T05:00:00Z",
+          "end": "2026-08-07T05:00:00Z",
+          "newEvents": 8,
+          "cumulativeEvents": 16,
+          "providerErrors": 0
+        },
+        {
+          "stage": 2,
+          "name": "FUTURE_STAGE_2",
+          "start": "2026-08-07T05:00:00Z",
+          "end": "2026-08-08T05:00:00Z",
+          "newEvents": 25,
+          "cumulativeEvents": 41,
+          "providerErrors": 0
+        },
+        {
+          "stage": 3,
+          "name": "FUTURE_STAGE_3",
+          "start": "2026-08-08T05:00:00Z",
+          "end": "2026-08-08T20:11:13Z",
+          "newEvents": 100,
+          "cumulativeEvents": 141,
+          "providerErrors": 0
+        }
+      ],
+      "sportKeysWithEvents": 25,
       "eventsBySportKey": {
-        "soccer_argentina_primera_division": 2,
-        "soccer_concacaf_leagues_cup": 6
+        "soccer_argentina_primera_division": 8,
+        "soccer_concacaf_leagues_cup": 12,
+        "soccer_england_efl_cup": 33,
+        "soccer_japan_j_league": 8,
+        "soccer_china_superleague": 5,
+        "soccer_finland_veikkausliiga": 2,
+        "soccer_denmark_superliga": 1,
+        "soccer_germany_liga3": 7,
+        "soccer_norway_eliteserien": 4,
+        "soccer_sweden_superettan": 5,
+        "soccer_austria_bundesliga": 3,
+        "soccer_netherlands_eredivisie": 5,
+        "soccer_germany_bundesliga2": 6,
+        "soccer_poland_ekstraklasa": 4,
+        "soccer_belgium_first_div": 4,
+        "soccer_league_of_ireland": 3,
+        "soccer_portugal_primeira_liga": 4,
+        "soccer_brazil_serie_b": 3,
+        "soccer_chile_campeonato": 2,
+        "soccer_korea_kleague1": 6,
+        "soccer_sweden_allsvenskan": 2,
+        "soccer_spl": 2,
+        "soccer_switzerland_superleague": 2,
+        "soccer_france_ligue_two": 9,
+        "soccer_brazil_campeonato": 1
       },
       "errors": []
     },
     "quotaPlan": {
       "freeMonthlyMode": true,
-      "quotaRemainingBeforeOdds": 18,
+      "quotaRemainingBeforeOdds": 14,
+      "quotaHardReserve": 0,
       "daysLeftInQuotaPeriod": 27,
       "dailyFairShare": 1,
       "dailyConfiguredBudget": 16,
       "dailyAvailableBeforeFeatured": 3,
+      "portfolioAvailableBeforeFeatured": 14,
+      "portfolioCompletionBurstEnabled": true,
+      "portfolioCompletionBurstActivated": false,
+      "normalCompetitionCapacity": 1,
+      "portfolioCompetitionCapacity": 7,
       "featuredCostPerCompetition": 2,
-      "competitionsWithEvents": 2,
+      "competitionsWithEvents": 25,
       "competitionsSelected": 1,
-      "competitionsDeferredByDailyBudget": 1,
+      "competitionsDeferredByQuota": 24,
       "estimatedFeaturedCost": 2,
-      "projectedEventsWithOdds": 2,
-      "projectedHistoryCoveredEvents": 2,
-      "allEventsHistoricallyInspected": 8
+      "projectedEventsWithOdds": 33,
+      "projectedHistoryCoveredEvents": 31,
+      "targetCandidateEvents": 32,
+      "targetHistoryCoveredEvents": 15,
+      "allEventsHistoricallyInspected": 141
     },
-    "featuredOddsEvents": 2,
+    "featuredOddsEvents": 33,
     "advancedOddsEvents": 0,
     "analysis": {
-      "oddsEvents": 2,
-      "eventsWithHistory": 2,
-      "eventsWithMarkets": 2,
-      "eventsQualified": 0,
-      "marketCandidates": 8,
-      "rejectedByQuality": 2,
-      "dataTiers": {
-        "HYBRID": 2
+      "oddsEvents": 33,
+      "eventsWithHistory": 31,
+      "eventsWithMarkets": 33,
+      "eventsQualified": 7,
+      "marketCandidates": 115,
+      "rejectedByQuality": 26,
+      "rejectedWithoutMarkets": 0,
+      "rejectionReasons": {
+        "Недостаточная консервативная вероятность": 89,
+        "История и модель голов противоречат направлению тотала": 48,
+        "Недостаточное качество данных": 9,
+        "Нет полноценной истории обеих команд": 9,
+        "Модели слишком сильно расходятся": 1
       },
-      "marketFamilies": {},
+      "rejectedEvents": [
+        {
+          "eventId": "559e76d5d9b249f9b753f164c3f4abc9",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Bristol City",
+          "away": "Walsall",
+          "commenceTime": "2026-08-06T18:45:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 17,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Бристол Сити",
+          "bestProbability": 0.500896,
+          "bestOdds": 1.42,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "89b2043533e977e8ea487e15c3415a55",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Wycombe Wanderers",
+          "away": "Stevenage",
+          "commenceTime": "2026-08-07T18:45:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 10,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.440192,
+          "bestOdds": 2.12,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "2199db4178585a026a7f0aec3c93253f",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Middlesbrough",
+          "away": "Wrexham AFC",
+          "commenceTime": "2026-08-07T19:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 17,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Миддлесброугх",
+          "bestProbability": 0.450564,
+          "bestOdds": 1.81,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "b8d19351fe3c98323d16822f0f8c6028",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Cambridge United",
+          "away": "Barnet",
+          "commenceTime": "2026-08-08T12:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 12,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.459797,
+          "bestOdds": 1.98,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "28b6b34ce9351152e2e665f47f0634ac",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Queens Park Rangers",
+          "away": "Millwall",
+          "commenceTime": "2026-08-08T13:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 12,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.438404,
+          "bestOdds": 1.94,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "d3a020575bbd3fbda29daf38376c4811",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Crewe Alexandra",
+          "away": "Accrington Stanley",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 17,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Креве Александра",
+          "bestProbability": 0.436226,
+          "bestOdds": 1.85,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "96d1c403314c580dbd797d2dacd08b71",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Barnsley",
+          "away": "Wigan Athletic",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 11,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.463348,
+          "bestOdds": 2.08,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "49a99b0170106df6eeb6cd40734406ae",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Swansea City",
+          "away": "Birmingham City",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 10,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.447751,
+          "bestOdds": 2.02,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "657b1b1e22ed6aa2bbe93c0235e390eb",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Burton Albion",
+          "away": "Blackburn Rovers",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 10,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.502834,
+          "bestOdds": 1.8,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "4040ed37692224a9289782ad79661a7e",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Grimsby Town",
+          "away": "Blackpool",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 12,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.445882,
+          "bestOdds": 1.98,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "c98960c12c31471c22784dc61b259a76",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Sheffield Wednesday",
+          "away": "Bolton Wanderers",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 8,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.474583,
+          "bestOdds": 1.72,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "b088c0798135cf859935def2b3c9ee41",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Bradford City",
+          "away": "Rochdale",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "MARKET",
+          "dataQuality": 34.0,
+          "quoteCount": 15,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Брадфорд Сити",
+          "bestProbability": 0.459811,
+          "bestOdds": 1.56,
+          "failures": [
+            "Нет полноценной истории обеих команд",
+            "Недостаточное качество данных",
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "6142e8bcbd4ab7f5cd749e896e7ffa2d",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Bristol Rovers",
+          "away": "Peterborough United",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "MARKET",
+          "dataQuality": 34.0,
+          "quoteCount": 3,
+          "candidateCount": 6,
+          "bestCandidate": "Тотал меньше 3.5",
+          "bestProbability": 0.508671,
+          "bestOdds": 1.43,
+          "failures": [
+            "Нет полноценной истории обеих команд",
+            "Недостаточное качество данных",
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "41699165472fa947290d0da04a6f2c94",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Bromley FC",
+          "away": "Reading",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 12,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.482872,
+          "bestOdds": 2.0,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "47f6b777b3a24b2fce2766ff8857729d",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Burnley",
+          "away": "Notts County",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 9,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.439389,
+          "bestOdds": 1.72,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала",
+            "Модели слишком сильно расходятся"
+          ]
+        },
+        {
+          "eventId": "7d5b0b9e1b0ee9df508d4947cce813cc",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Fleetwood Town",
+          "away": "Chesterfield FC",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 12,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.448378,
+          "bestOdds": 1.92,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "e4f072c0fc3ae459631da68a61dfbece",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Derby County",
+          "away": "Lincoln City",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 9,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.470842,
+          "bestOdds": 1.72,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "4c624f169d23e0a733b88efc143d6585",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Stockport County FC",
+          "away": "Doncaster Rovers",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 8,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.475199,
+          "bestOdds": 1.75,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "7230a78db921dd843a77c7a68044b854",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Gillingham",
+          "away": "Luton",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 17,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Лутон",
+          "bestProbability": 0.494271,
+          "bestOdds": 1.75,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "4e7b216c266fdeb8627d478bbdc2f552",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Preston North End",
+          "away": "Huddersfield Town",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 7,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.523197,
+          "bestOdds": 1.7,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "9fad2b38c6ba85ef14214f4e2796eb9a",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Leyton Orient",
+          "away": "Oxford United",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 12,
+          "candidateCount": 4,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.476311,
+          "bestOdds": 1.94,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "57003e4ddfa51ffb9e46772da15b43c1",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Norwich City",
+          "away": "Milton Keynes Dons",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 8,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.455921,
+          "bestOdds": 1.67,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "56d78f64bc56e930924d3b440c660125",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Wimbledon",
+          "away": "Newport County",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 10,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.457822,
+          "bestOdds": 1.8,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "1ffccad5416bc0e013e251e8b60a9bc0",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Salford City",
+          "away": "Shrewsbury Town",
+          "commenceTime": "2026-08-08T14:00:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.6,
+          "quoteCount": 10,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал меньше 2.5",
+          "bestProbability": 0.536461,
+          "bestOdds": 2.0,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "96cb650a369524b58ac6696e39cd95cb",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Cheltenham Town",
+          "away": "Charlton Athletic",
+          "commenceTime": "2026-08-08T16:30:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 8,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 2.5",
+          "bestProbability": 0.479225,
+          "bestOdds": 1.77,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        },
+        {
+          "eventId": "1f71fc018fce94801f6a1b736a6d6823",
+          "sportKey": "soccer_england_efl_cup",
+          "league": "EFL Cup",
+          "home": "Rotherham United",
+          "away": "West Bromwich Albion",
+          "commenceTime": "2026-08-08T16:30:00Z",
+          "dataTier": "HYBRID",
+          "dataQuality": 65.5,
+          "quoteCount": 15,
+          "candidateCount": 3,
+          "bestCandidate": "Победа Запад Бромвич Албион",
+          "bestProbability": 0.481981,
+          "bestOdds": 1.53,
+          "failures": [
+            "Недостаточная консервативная вероятность",
+            "История и модель голов противоречат направлению тотала"
+          ]
+        }
+      ],
+      "dataTiers": {
+        "HYBRID": 31,
+        "MARKET": 2
+      },
+      "marketFamilies": {
+        "TOTAL": 6,
+        "OUTCOME": 1
+      },
       "published": 0,
       "required": 15,
-      "shortage": 15,
+      "shortage": 8,
       "status": "INSUFFICIENT_QUALITY_EVENTS"
     },
-    "apiCalls": [],
+    "apiCalls": [
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_SPORTS",
+        "status": 200,
+        "elapsedSeconds": 0.137
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.178
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.166
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.162
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.148
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.127
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.138
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_concacaf_leagues_cup",
+        "status": 200,
+        "elapsedSeconds": 0.129
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.179
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.119
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.188
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.14
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.171
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.194
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.163
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.156
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_japan_j_league",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.15
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.244
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.12
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.225
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.124
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.125
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.119
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.098
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_concacaf_leagues_cup",
+        "status": 200,
+        "elapsedSeconds": 0.155
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.123
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.146
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.104
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.087
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.117
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.138
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.129
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.153
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_japan_j_league",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.117
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.149
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.087
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.088
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.166
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.123
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.134
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.136
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.118
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_concacaf_leagues_cup",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.091
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.119
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.128
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.125
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.122
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_japan_j_league",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.118
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.132
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.112
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.143
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.122
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.123
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.122
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_concacaf_leagues_cup",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.12
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.129
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.098
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.108
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.136
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.128
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.126
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_japan_j_league",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.104
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.152
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.132
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.133
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.091
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.121
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.12
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.122
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league_qualification",
+        "status": 200,
+        "elapsedSeconds": 0.11
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.119
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_FEATURED:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.216
+      }
+    ],
     "quota": {
-      "requestsRemaining": "16",
-      "requestsUsed": "484",
+      "requestsRemaining": "12",
+      "requestsUsed": "488",
       "requestsLast": "2",
       "estimatedCreditsThisRun": 2
     },
@@ -111,24 +1769,7 @@
       "status": "GREEN",
       "mode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
       "confirmedEvents": 0,
-      "sourceUpdatedAt": "2026-08-05T18:41:32Z"
-    },
-    "dueRecords": 0,
-    "providerFinalResults": 1,
-    "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 0
-    },
-    "overdueRelease": {
-      "analysis": 0,
-      "bestBets": 0
-    },
-    "expressSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
-      "push": 0
+      "sourceUpdatedAt": "2026-08-05T19:27:49Z"
     }
   },
   "warnings": [

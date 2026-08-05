@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-08-05T18:47:50Z",
+    "updatedAt": "2026-08-05T19:26:13Z",
     "analysisDateLocal": "2026-08-05",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -133,8 +133,8 @@
     "operationalDayId": "2026-08-05-MSK-0800",
     "operationalWindowStart": "2026-08-05T05:00:00Z",
     "operationalWindowEnd": "2026-08-06T05:00:00Z",
-    "selectionWindowStart": "2026-08-03T05:30:12Z",
-    "selectionWindowEnd": "2026-08-06T04:45:12Z",
+    "selectionWindowStart": "2026-08-05T20:11:13Z",
+    "selectionWindowEnd": "2026-08-08T20:11:13Z",
     "operationalWindowPolicy": "PROGRESSIVE_FUTURE_SEARCH_UNTIL_EXACT_FIFTEEN",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
     "futurePublicationPolicy": "FOOTBALL_ONLY_NO_ASIAN_MARKETS",
@@ -145,7 +145,7 @@
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-08-05T18:47:50Z",
+    "r15SettlementAt": "2026-08-05T19:26:12Z",
     "nextPortfolioStatus": "PREPARING_NEXT_OPERATIONAL_WINDOW",
     "firstActiveOperationalDate": "2026-08-05",
     "firstActiveWindowStart": "2026-08-05T05:00:00Z",
@@ -154,7 +154,9 @@
     "legacyBridgeArchivedAnalysisCount": 15,
     "legacyBridgeArchivedBestBetsCount": 4,
     "legacyBridgeArchiveVerification": "CANONICAL_SETTLEMENT_KEYS",
-    "legacyBridgeBankMutation": false
+    "legacyBridgeBankMutation": false,
+    "selectionStagesUsed": 4,
+    "selectionPolicy": "PROGRESSIVE_CURRENT_WINDOW_THEN_FUTURE_24H_STAGES_UNTIL_TARGET_OR_HORIZON"
   },
   "dailyAnalysis": [],
   "bestBets": [],
@@ -15542,8 +15544,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-05T03:40:27Z",
-      "settlementAttempts": 5
+      "settlementLastAttemptAt": "2026-08-05T19:26:12Z",
+      "settlementAttempts": 6
     },
     {
       "id": "analysis-54d5192f4c73e8327eec",
@@ -16526,10 +16528,10 @@
         ]
       },
       "alternatives": [],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "2:1",
       "publishedAt": "2026-08-03T04:45:12Z",
-      "settledAt": null,
+      "settledAt": "2026-08-05T19:26:12Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -16544,9 +16546,14 @@
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-05T03:40:27Z",
-      "settlementAttempts": 5
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-08-05T19:26:12Z",
+      "settlementAttempts": 6,
+      "homeScore": 2,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-08-05T19:26:12Z"
     },
     {
       "id": "analysis-d3743ce12000c66fd7d3",
@@ -16846,8 +16853,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-05T03:40:27Z",
-      "settlementAttempts": 5
+      "settlementLastAttemptAt": "2026-08-05T19:26:12Z",
+      "settlementAttempts": 6
     }
   ],
   "history": [
@@ -23071,8 +23078,8 @@
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-08-05T03:40:27Z",
-      "settlementAttempts": 5
+      "settlementLastAttemptAt": "2026-08-05T19:26:12Z",
+      "settlementAttempts": 6
     }
   ],
   "bank": {
@@ -23319,12 +23326,12 @@
     "closedBalance": 5785.13
   },
   "statistics": {
-    "analysisAccuracy": 58.2,
+    "analysisAccuracy": 58.8,
     "bestBetsAccuracy": 54.5,
     "averageOdds": 1.64,
     "currentStreak": "3 проигрышных подряд",
     "bestSegment": "HANDICAP · 61.5%",
-    "settledAnalyses": 67,
+    "settledAnalyses": 68,
     "settledBestBets": 22,
     "wonBestBets": 12,
     "lostBestBets": 10,
@@ -23332,15 +23339,15 @@
     "pendingBestBets": 1,
     "allPredictions": {
       "total": 70,
-      "settled": 67,
-      "decided": 67,
-      "won": 39,
+      "settled": 68,
+      "decided": 68,
+      "won": 40,
       "lost": 28,
       "push": 0,
       "void": 0,
       "unresolved": 0,
-      "pending": 3,
-      "accuracy": 58.2,
+      "pending": 2,
+      "accuracy": 58.8,
       "profit": 0.0
     },
     "bestBets": {
@@ -23360,15 +23367,15 @@
       "7": {
         "allPredictions": {
           "total": 51,
-          "settled": 48,
-          "decided": 48,
-          "won": 26,
+          "settled": 49,
+          "decided": 49,
+          "won": 27,
           "lost": 22,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 3,
-          "accuracy": 54.2,
+          "pending": 2,
+          "accuracy": 55.1,
           "profit": 0.0
         },
         "bestBets": {
@@ -23388,15 +23395,15 @@
       "30": {
         "allPredictions": {
           "total": 70,
-          "settled": 67,
-          "decided": 67,
-          "won": 39,
+          "settled": 68,
+          "decided": 68,
+          "won": 40,
           "lost": 28,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 3,
-          "accuracy": 58.2,
+          "pending": 2,
+          "accuracy": 58.8,
           "profit": 0.0
         },
         "bestBets": {
@@ -23416,15 +23423,15 @@
       "90": {
         "allPredictions": {
           "total": 70,
-          "settled": 67,
-          "decided": 67,
-          "won": 39,
+          "settled": 68,
+          "decided": 68,
+          "won": 40,
           "lost": 28,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 3,
-          "accuracy": 58.2,
+          "pending": 2,
+          "accuracy": 58.8,
           "profit": 0.0
         },
         "bestBets": {
@@ -23444,15 +23451,15 @@
       "all": {
         "allPredictions": {
           "total": 70,
-          "settled": 67,
-          "decided": 67,
-          "won": 39,
+          "settled": 68,
+          "decided": 68,
+          "won": 40,
           "lost": 28,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 3,
-          "accuracy": 58.2,
+          "pending": 2,
+          "accuracy": 58.8,
           "profit": 0.0
         },
         "bestBets": {
@@ -23474,15 +23481,15 @@
       {
         "key": "Футбол",
         "total": 70,
-        "settled": 67,
-        "decided": 67,
-        "won": 39,
+        "settled": 68,
+        "decided": 68,
+        "won": 40,
         "lost": 28,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 3,
-        "accuracy": 58.2,
+        "pending": 2,
+        "accuracy": 58.8,
         "profit": 0.0
       }
     ],
@@ -23518,15 +23525,15 @@
       {
         "key": "OUTCOME",
         "total": 9,
-        "settled": 7,
-        "decided": 7,
-        "won": 5,
+        "settled": 8,
+        "decided": 8,
+        "won": 6,
         "lost": 2,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 2,
-        "accuracy": 71.4,
+        "pending": 1,
+        "accuracy": 75.0,
         "profit": 0.0
       },
       {
@@ -23548,15 +23555,15 @@
       {
         "key": "Квалификация Лиги чемпионов УЕФА",
         "total": 18,
-        "settled": 16,
-        "decided": 16,
-        "won": 11,
+        "settled": 17,
+        "decided": 17,
+        "won": 12,
         "lost": 5,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 2,
-        "accuracy": 68.8,
+        "pending": 1,
+        "accuracy": 70.6,
         "profit": 0.0
       },
       {
@@ -23634,15 +23641,15 @@
       {
         "key": "1,55–1,79",
         "total": 55,
-        "settled": 53,
-        "decided": 53,
-        "won": 32,
+        "settled": 54,
+        "decided": 54,
+        "won": 33,
         "lost": 21,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 2,
-        "accuracy": 60.4,
+        "pending": 1,
+        "accuracy": 61.1,
         "profit": 0.0
       },
       {
@@ -23671,23 +23678,23 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-08-05T03:40:27Z",
+    "updatedAt": "2026-08-05T19:26:12Z",
     "segments": {
       "SPORT|soccer": {
-        "settled": 67,
-        "wins": 39,
+        "settled": 68,
+        "wins": 40,
         "losses": 28,
         "pushes": 0,
-        "predictedSum": 39.96756400000001,
-        "actualSum": 39.0,
-        "brierSum": 16.363691640136,
-        "logLossSum": 45.69467815154192,
+        "predictedSum": 40.54466200000001,
+        "actualSum": 40.0,
+        "brierSum": 16.542537741740002,
+        "logLossSum": 46.24442133441703,
         "profit": 0.0,
-        "hitRate": 0.5821,
-        "averagePredicted": 0.5965,
-        "probabilityBias": -0.014441,
-        "brierScore": 0.244234,
-        "logLoss": 0.68201
+        "hitRate": 0.5882,
+        "averagePredicted": 0.5962,
+        "probabilityBias": -0.00801,
+        "brierScore": 0.243273,
+        "logLoss": 0.680065
       },
       "MARKET|soccer|TOTAL": {
         "settled": 44,
@@ -23706,36 +23713,36 @@
         "logLoss": 0.691724
       },
       "LEAGUE|soccer|uefa champions league qualification": {
-        "settled": 16,
-        "wins": 11,
+        "settled": 17,
+        "wins": 12,
         "losses": 5,
         "pushes": 0,
-        "predictedSum": 9.430687,
-        "actualSum": 11.0,
-        "brierSum": 3.612408494817,
-        "logLossSum": 10.322017547182579,
+        "predictedSum": 10.007785,
+        "actualSum": 12.0,
+        "brierSum": 3.791254596421,
+        "logLossSum": 10.871760730057682,
         "profit": 0.0,
-        "hitRate": 0.6875,
-        "averagePredicted": 0.5894,
-        "probabilityBias": 0.098082,
-        "brierScore": 0.225776,
-        "logLoss": 0.645126
+        "hitRate": 0.7059,
+        "averagePredicted": 0.5887,
+        "probabilityBias": 0.117189,
+        "brierScore": 0.223015,
+        "logLoss": 0.639515
       },
       "ODDS|soccer|MID": {
-        "settled": 67,
-        "wins": 39,
+        "settled": 68,
+        "wins": 40,
         "losses": 28,
         "pushes": 0,
-        "predictedSum": 39.96756400000001,
-        "actualSum": 39.0,
-        "brierSum": 16.363691640136,
-        "logLossSum": 45.69467815154192,
+        "predictedSum": 40.54466200000001,
+        "actualSum": 40.0,
+        "brierSum": 16.542537741740002,
+        "logLossSum": 46.24442133441703,
         "profit": 0.0,
-        "hitRate": 0.5821,
-        "averagePredicted": 0.5965,
-        "probabilityBias": -0.014441,
-        "brierScore": 0.244234,
-        "logLoss": 0.68201
+        "hitRate": 0.5882,
+        "averagePredicted": 0.5962,
+        "probabilityBias": -0.00801,
+        "brierScore": 0.243273,
+        "logLoss": 0.680065
       },
       "LEAGUE_MARKET|soccer|uefa champions league qualification|TOTAL": {
         "settled": 7,
@@ -24042,36 +24049,36 @@
         "logLoss": 0.53201
       },
       "DATA_TIER|soccer|MARKET": {
-        "settled": 33,
-        "wins": 18,
+        "settled": 34,
+        "wins": 19,
         "losses": 15,
         "pushes": 0,
-        "predictedSum": 19.740163000000006,
-        "actualSum": 18.0,
-        "brierSum": 8.349629362679,
-        "logLossSum": 23.086340269711233,
+        "predictedSum": 20.317261000000006,
+        "actualSum": 19.0,
+        "brierSum": 8.528475464283,
+        "logLossSum": 23.636083452586337,
         "profit": 0.0,
-        "hitRate": 0.5455,
-        "averagePredicted": 0.5982,
-        "probabilityBias": -0.052732,
-        "brierScore": 0.253019,
-        "logLoss": 0.699586
+        "hitRate": 0.5588,
+        "averagePredicted": 0.5976,
+        "probabilityBias": -0.038743,
+        "brierScore": 0.250838,
+        "logLoss": 0.695179
       },
       "PROBABILITY|soccer|P50": {
-        "settled": 16,
-        "wins": 10,
+        "settled": 17,
+        "wins": 11,
         "losses": 6,
         "pushes": 0,
-        "predictedSum": 9.351030000000002,
-        "actualSum": 10.0,
-        "brierSum": 3.753998615693999,
-        "logLossSum": 10.594171224379075,
+        "predictedSum": 9.928128000000001,
+        "actualSum": 11.0,
+        "brierSum": 3.932844717297999,
+        "logLossSum": 11.143914407254178,
         "profit": 0.0,
-        "hitRate": 0.625,
-        "averagePredicted": 0.5844,
-        "probabilityBias": 0.040561,
-        "brierScore": 0.234625,
-        "logLoss": 0.662136
+        "hitRate": 0.6471,
+        "averagePredicted": 0.584,
+        "probabilityBias": 0.063051,
+        "brierScore": 0.231344,
+        "logLoss": 0.655524
       },
       "LEAGUE_MARKET|soccer|ekstraklasa poland|TOTAL": {
         "settled": 1,
@@ -24410,36 +24417,36 @@
         "logLoss": 0.917955
       },
       "MARKET|soccer|OUTCOME": {
-        "settled": 7,
-        "wins": 5,
+        "settled": 8,
+        "wins": 6,
         "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.1338289999999995,
-        "actualSum": 5.0,
-        "brierSum": 1.539794285391,
-        "logLossSum": 4.426905592316266,
+        "predictedSum": 4.710927,
+        "actualSum": 6.0,
+        "brierSum": 1.718640386995,
+        "logLossSum": 4.976648775191369,
         "profit": 0.0,
-        "hitRate": 0.7143,
-        "averagePredicted": 0.5905,
-        "probabilityBias": 0.123739,
-        "brierScore": 0.219971,
-        "logLoss": 0.632415
+        "hitRate": 0.75,
+        "averagePredicted": 0.5889,
+        "probabilityBias": 0.161134,
+        "brierScore": 0.21483,
+        "logLoss": 0.622081
       },
       "MARKET_DETAIL|soccer|HOME_WIN": {
-        "settled": 7,
-        "wins": 5,
+        "settled": 8,
+        "wins": 6,
         "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.1338289999999995,
-        "actualSum": 5.0,
-        "brierSum": 1.539794285391,
-        "logLossSum": 4.426905592316266,
+        "predictedSum": 4.710927,
+        "actualSum": 6.0,
+        "brierSum": 1.718640386995,
+        "logLossSum": 4.976648775191369,
         "profit": 0.0,
-        "hitRate": 0.7143,
-        "averagePredicted": 0.5905,
-        "probabilityBias": 0.123739,
-        "brierScore": 0.219971,
-        "logLoss": 0.632415
+        "hitRate": 0.75,
+        "averagePredicted": 0.5889,
+        "probabilityBias": 0.161134,
+        "brierScore": 0.21483,
+        "logLoss": 0.622081
       },
       "LEAGUE_MARKET|soccer|k league 1|OUTCOME": {
         "settled": 1,
@@ -24474,36 +24481,36 @@
         "logLoss": 0.479162
       },
       "MARKET_TIER|soccer|OUTCOME|MARKET": {
-        "settled": 7,
-        "wins": 5,
+        "settled": 8,
+        "wins": 6,
         "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.1338289999999995,
-        "actualSum": 5.0,
-        "brierSum": 1.539794285391,
-        "logLossSum": 4.426905592316266,
+        "predictedSum": 4.710927,
+        "actualSum": 6.0,
+        "brierSum": 1.718640386995,
+        "logLossSum": 4.976648775191369,
         "profit": 0.0,
-        "hitRate": 0.7143,
-        "averagePredicted": 0.5905,
-        "probabilityBias": 0.123739,
-        "brierScore": 0.219971,
-        "logLoss": 0.632415
+        "hitRate": 0.75,
+        "averagePredicted": 0.5889,
+        "probabilityBias": 0.161134,
+        "brierScore": 0.21483,
+        "logLoss": 0.622081
       },
       "MARKET_DETAIL_TIER|soccer|HOME_WIN|MARKET": {
-        "settled": 7,
-        "wins": 5,
+        "settled": 8,
+        "wins": 6,
         "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.1338289999999995,
-        "actualSum": 5.0,
-        "brierSum": 1.539794285391,
-        "logLossSum": 4.426905592316266,
+        "predictedSum": 4.710927,
+        "actualSum": 6.0,
+        "brierSum": 1.718640386995,
+        "logLossSum": 4.976648775191369,
         "profit": 0.0,
-        "hitRate": 0.7143,
-        "averagePredicted": 0.5905,
-        "probabilityBias": 0.123739,
-        "brierScore": 0.219971,
-        "logLoss": 0.632415
+        "hitRate": 0.75,
+        "averagePredicted": 0.5889,
+        "probabilityBias": 0.161134,
+        "brierScore": 0.21483,
+        "logLoss": 0.622081
       },
       "LEAGUE|soccer|denmark superliga": {
         "settled": 2,
@@ -25130,36 +25137,36 @@
         "logLoss": 0.967597
       },
       "LEAGUE_MARKET|soccer|uefa champions league qualification|OUTCOME": {
-        "settled": 2,
-        "wins": 1,
+        "settled": 3,
+        "wins": 2,
         "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.1716630000000001,
-        "actualSum": 1.0,
-        "brierSum": 0.5361843430969999,
-        "logLossSum": 1.4604444564081638,
+        "predictedSum": 1.748761,
+        "actualSum": 2.0,
+        "brierSum": 0.7150304447009999,
+        "logLossSum": 2.010187639283267,
         "profit": 0.0,
-        "hitRate": 0.5,
-        "averagePredicted": 0.5858,
-        "probabilityBias": -0.085832,
-        "brierScore": 0.268092,
-        "logLoss": 0.730222
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5829,
+        "probabilityBias": 0.083746,
+        "brierScore": 0.238343,
+        "logLoss": 0.670063
       },
       "LEAGUE_MARKET_DETAIL|soccer|uefa champions league qualification|HOME_WIN": {
-        "settled": 2,
-        "wins": 1,
+        "settled": 3,
+        "wins": 2,
         "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.1716630000000001,
-        "actualSum": 1.0,
-        "brierSum": 0.5361843430969999,
-        "logLossSum": 1.4604444564081638,
+        "predictedSum": 1.748761,
+        "actualSum": 2.0,
+        "brierSum": 0.7150304447009999,
+        "logLossSum": 2.010187639283267,
         "profit": 0.0,
-        "hitRate": 0.5,
-        "averagePredicted": 0.5858,
-        "probabilityBias": -0.085832,
-        "brierScore": 0.268092,
-        "logLoss": 0.730222
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5829,
+        "probabilityBias": 0.083746,
+        "brierScore": 0.238343,
+        "logLoss": 0.670063
       },
       "MARKET_DETAIL|soccer|TOTAL_OVER@2.5": {
         "settled": 1,
@@ -25267,11 +25274,11 @@
         "actualRate": 0.5862
       },
       "50-59": {
-        "count": 36,
-        "predictedSum": 20.791613999999996,
-        "actualSum": 22.0,
+        "count": 37,
+        "predictedSum": 21.368711999999995,
+        "actualSum": 23.0,
         "averagePredicted": 0.5775,
-        "actualRate": 0.6111
+        "actualRate": 0.6216
       },
       "40-49": {
         "count": 1,
@@ -25288,16 +25295,16 @@
         "actualRate": 0.0
       }
     },
-    "totalSettledAnalyses": 67,
+    "totalSettledAnalyses": 68,
     "totalSettledBestBets": 22,
     "modelNotes": [],
     "modelReadiness": {
       "stage": "Активная калибровка",
-      "settledSamples": 67,
+      "settledSamples": 68,
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-08-05T18:47:50Z"
+      "updatedAt": "2026-08-05T19:26:13Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -25314,8 +25321,8 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-08-05T18:40:28Z",
-    "reason": "INSUFFICIENT_QUALITY_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
+    "updatedAt": "2026-08-05T19:26:13Z",
+    "reason": "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON"
   },
   "batchHistory": [
     {
@@ -25486,7 +25493,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-08-05T18:47:50Z",
+    "updatedAt": "2026-08-05T19:26:12Z",
     "analysisHistory": {
       "input": 70,
       "output": 70,
@@ -25505,17 +25512,17 @@
   "expresses": [],
   "expressHistory": [],
   "dataCoverage": {
-    "discoveredEvents": 8,
-    "competitionsDiscovered": 2,
+    "discoveredEvents": 141,
+    "competitionsDiscovered": 25,
     "competitionsWithOdds": 1,
-    "oddsEvents": 2,
-    "historyMatchedEvents": 2,
-    "qualifiedEvents": 0,
+    "oddsEvents": 33,
+    "historyMatchedEvents": 31,
+    "qualifiedEvents": 7,
     "publishedEvents": 0,
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-08-05T18:39:34Z",
+        "updatedAt": "2026-08-05T19:25:19Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -25527,17 +25534,17 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-08-05T18:41:32Z",
+        "lastSuccessAt": "2026-08-05T19:27:49Z",
         "consecutiveFailures": 0
       }
     },
     "quota": {
-      "requestsRemaining": "16",
-      "requestsUsed": "484",
+      "requestsRemaining": "12",
+      "requestsUsed": "488",
       "requestsLast": "2",
       "estimatedCreditsThisRun": 2
     },
-    "historyMatches": 11184,
+    "historyMatches": 11185,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-23T13:30:00Z",
     "historyComplete": false,
@@ -25552,14 +25559,14 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 13415,
+      "historyMatches": 13416,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-23T13:30:00Z"
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-08-05T18:40:28Z"
+    "updatedAt": "2026-08-05T19:26:13Z"
   },
   "expressBank": {
     "starting": 10000.0,
