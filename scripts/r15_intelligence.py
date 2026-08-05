@@ -1125,6 +1125,10 @@ def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: 
         "availableThisRun": daily_available,
         "portfolioAvailableThisRun": portfolio_available,
     }
+# V10_R15F_R3R9_MULTI_COMPETITION_MARKET_RECOVERY
+# R3R9 estimates the candidate pool from the observed qualification yield, requires
+# several competitions where available, and spends the monthly allowance only in
+# incremental completion rounds. No threshold or probability is artificially changed.
 def select_sport_keys_by_quota(
     events: list[dict[str, Any]],
     context: dict[str, Any],
@@ -1134,7 +1138,7 @@ def select_sport_keys_by_quota(
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for event in events:
         grouped[str(event.get("sport_key") or "")].append(event)
-    rows = []
+    rows: list[tuple[int, float, int, str]] = []
     for key, items in grouped.items():
         if not key:
             continue
@@ -1142,6 +1146,7 @@ def select_sport_keys_by_quota(
         history_count = round(coverage * len(items))
         rows.append((history_count, coverage, len(items), key))
     rows.sort(key=lambda row: (row[0], row[1], row[2]), reverse=True)
+
     regions = [value for value in str(config.get("oddsRegions") or "eu").split(",") if value]
     featured_markets = [value for value in config.get("featuredMarkets") or ["h2h", "totals"]]
     cost = max(1, len(regions) * len(featured_markets))
@@ -1149,21 +1154,42 @@ def select_sport_keys_by_quota(
     configured_limit = max(1, safe_int(config.get("maximumOddsSportRequests"), 200))
     normal_calls = min(budget["availableThisRun"] // cost, configured_limit, len(rows))
     portfolio_calls = min(budget["portfolioAvailableThisRun"] // cost, configured_limit, len(rows))
-    target_candidates = max(15, safe_int(config.get("oddsTargetCandidateEvents"), 32))
-    target_history = max(15, safe_int(config.get("dailyAnalysisTarget"), 15))
+
+    analysis_target = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
+    expected_yield = clamp(safe_float(config.get("oddsExpectedQualificationRate"), 0.18), 0.08, 0.50)
+    yield_target = math.ceil(analysis_target / expected_yield)
+    configured_target = max(analysis_target, safe_int(config.get("oddsPortfolioCompletionCandidateTarget"), 84))
+    candidate_target = max(configured_target, yield_target)
+    minimum_competitions = min(
+        len(rows),
+        max(1, safe_int(config.get("oddsMinimumCompetitionsForPortfolio"), 3)),
+    )
+    maximum_competitions = min(
+        len(rows),
+        portfolio_calls,
+        max(minimum_competitions, safe_int(config.get("oddsMaximumCompetitionsForPortfolio"), 8)),
+    )
 
     def projection(limit: int) -> tuple[int, int]:
         subset = rows[:max(0, limit)]
         return sum(row[2] for row in subset), sum(row[0] for row in subset)
 
     normal_events, normal_history = projection(normal_calls)
+    normal_expected_qualified = math.floor(normal_events * expected_yield)
     burst_enabled = bool(config.get("oddsAllowPortfolioCompletionBurst", True))
-    burst_activated = bool(
-        burst_enabled
-        and portfolio_calls > normal_calls
-        and (normal_events < target_candidates or normal_history < target_history)
-    )
+    burst_reasons: list[str] = []
+    if normal_calls < minimum_competitions:
+        burst_reasons.append("MINIMUM_COMPETITION_DIVERSITY")
+    if normal_events < candidate_target:
+        burst_reasons.append("CANDIDATE_POOL_BELOW_COMPLETION_TARGET")
+    if normal_history < analysis_target:
+        burst_reasons.append("HISTORY_COVERAGE_BELOW_ANALYSIS_TARGET")
+    if normal_expected_qualified < analysis_target:
+        burst_reasons.append("EXPECTED_QUALIFIED_BELOW_ANALYSIS_TARGET")
+    burst_activated = bool(burst_enabled and portfolio_calls > normal_calls and burst_reasons)
     maximum_calls = portfolio_calls if burst_activated else normal_calls
+    maximum_calls = min(maximum_calls, maximum_competitions or maximum_calls)
+
     keys: list[str] = []
     projected_events = 0
     projected_history = 0
@@ -1173,8 +1199,13 @@ def select_sport_keys_by_quota(
         keys.append(key)
         projected_events += event_count
         projected_history += history_count
-        if projected_events >= target_candidates and projected_history >= target_history:
+        enough_diversity = len(keys) >= minimum_competitions
+        enough_pool = projected_events >= candidate_target
+        enough_history = projected_history >= analysis_target
+        if enough_diversity and enough_pool and enough_history:
             break
+
+    ranked_keys = [row[3] for row in rows]
     return keys, {
         "freeMonthlyMode": True,
         "quotaRemainingBeforeOdds": budget["remaining"],
@@ -1186,8 +1217,11 @@ def select_sport_keys_by_quota(
         "portfolioAvailableBeforeFeatured": budget["portfolioAvailableThisRun"],
         "portfolioCompletionBurstEnabled": burst_enabled,
         "portfolioCompletionBurstActivated": burst_activated,
+        "portfolioCompletionBurstReasons": burst_reasons,
         "normalCompetitionCapacity": normal_calls,
         "portfolioCompetitionCapacity": portfolio_calls,
+        "minimumCompetitionsForPortfolio": minimum_competitions,
+        "maximumCompetitionsForPortfolio": maximum_competitions,
         "featuredCostPerCompetition": cost,
         "competitionsWithEvents": len(rows),
         "competitionsSelected": len(keys),
@@ -1195,10 +1229,17 @@ def select_sport_keys_by_quota(
         "estimatedFeaturedCost": len(keys) * cost,
         "projectedEventsWithOdds": projected_events,
         "projectedHistoryCoveredEvents": projected_history,
-        "targetCandidateEvents": target_candidates,
-        "targetHistoryCoveredEvents": target_history,
+        "expectedQualificationRate": expected_yield,
+        "expectedQualifiedFromInitialPool": math.floor(projected_events * expected_yield),
+        "candidateCompletionTarget": candidate_target,
+        "targetHistoryCoveredEvents": analysis_target,
+        "rankedCompetitionKeys": ranked_keys,
+        "initialCompetitionKeys": list(keys),
+        "completionCompetitionKeys": [],
+        "completionRounds": [],
         "allEventsHistoricallyInspected": len(events),
     }
+
 def fetch_featured_odds_quota_aware(
     client: ProviderClient,
     api_key: str,
@@ -1238,6 +1279,130 @@ def fetch_featured_odds_quota_aware(
             if commence and start <= commence < end:
                 events.append(item)
     return events, errors
+
+def merge_unique_odds_events(existing: list[dict[str, Any]], incoming: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_id: dict[str, dict[str, Any]] = {}
+    for event in list(existing) + list(incoming):
+        if not isinstance(event, dict):
+            continue
+        event_id = str(event.get("id") or stable_id(event.get("sport_key"), event.get("home_team"), event.get("away_team"), event.get("commence_time")))
+        prior = by_id.get(event_id)
+        if prior is None or len(event.get("bookmakers") or []) >= len(prior.get("bookmakers") or []):
+            by_id[event_id] = event
+    return sorted(by_id.values(), key=lambda item: str(item.get("commence_time") or ""))
+
+def enrich_rejection_diagnostics(diagnostics: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    hard_names = {
+        "Нет полноценной истории обеих команд",
+        "Недостаточное качество данных",
+        "Недостаточно букмекеров",
+    }
+    hard: dict[str, int] = defaultdict(int)
+    market: dict[str, int] = defaultdict(int)
+    near: list[dict[str, Any]] = []
+    recovery: list[str] = []
+    min_probability = safe_float(config.get("strategyMinimumConservativeProbability"), 0.56)
+    min_quality = safe_float(config.get("strategyMinimumDataQuality"), 58)
+    min_books = safe_int(config.get("strategyMinimumBookmakers"), 3)
+    for row in diagnostics.get("rejectedEvents") or []:
+        failures = [str(value) for value in row.get("failures") or []]
+        hard_failures = [value for value in failures if value in hard_names]
+        market_failures = [value for value in failures if value not in hard_names]
+        for value in hard_failures:
+            hard[value] += 1
+        for value in market_failures:
+            market[value] += 1
+        probability = safe_float(row.get("bestProbability"), 0.0)
+        quality = safe_float(row.get("dataQuality"), 0.0)
+        books = safe_int(row.get("quoteCount"), 0)
+        near.append({
+            "eventId": row.get("eventId"),
+            "league": row.get("league"),
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "bestCandidate": row.get("bestCandidate"),
+            "bestProbability": probability,
+            "bestOdds": row.get("bestOdds"),
+            "dataQuality": quality,
+            "quoteCount": books,
+            "probabilityGap": round(max(0.0, min_probability - probability), 4),
+            "qualityGap": round(max(0.0, min_quality - quality), 2),
+            "bookmakerGap": max(0, min_books - books),
+            "hardFailures": hard_failures,
+            "marketFailures": market_failures,
+        })
+        if row.get("eventId") and not hard_failures:
+            recovery.append(str(row.get("eventId")))
+    near.sort(key=lambda item: (item["probabilityGap"], item["qualityGap"], item["bookmakerGap"], -item["bestProbability"]))
+    diagnostics["hardRejectionReasons"] = dict(sorted(hard.items(), key=lambda item: (-item[1], item[0])))
+    diagnostics["marketRejectionReasons"] = dict(sorted(market.items(), key=lambda item: (-item[1], item[0])))
+    diagnostics["nearMissCandidates"] = near[:max(10, safe_int(config.get("nearMissDiagnosticsLimit"), 30))]
+    diagnostics["advancedRecoveryEventIds"] = recovery[:max(0, safe_int(config.get("maximumAdvancedCompletionEvents"), 8))]
+    return diagnostics
+
+def collect_featured_odds_for_completion(
+    client: ProviderClient,
+    api_key: str,
+    initial_keys: list[str],
+    quota_plan: dict[str, Any],
+    config: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+    context: dict[str, Any],
+    state: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], list[str], dict[str, Any], dict[str, Any]]:
+    selected = list(initial_keys)
+    all_events: list[dict[str, Any]] = []
+    errors: list[str] = []
+    first, first_errors = fetch_featured_odds_quota_aware(client, api_key, selected, config, start, end)
+    all_events = merge_unique_odds_events(all_events, first)
+    errors.extend(first_errors)
+    _, diagnostics = build_strategy_analysis(all_events, {}, context, state, config, now)
+    diagnostics = enrich_rejection_diagnostics(diagnostics, config)
+
+    target = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
+    ranked = [str(value) for value in quota_plan.get("rankedCompetitionKeys") or []]
+    maximum = max(len(selected), safe_int(config.get("oddsMaximumCompetitionsForPortfolio"), 8))
+    batch_size = max(1, safe_int(config.get("oddsCompletionCompetitionBatch"), 1))
+    rounds: list[dict[str, Any]] = []
+    while safe_int(diagnostics.get("eventsQualified"), 0) < target and len(selected) < maximum:
+        deferred = [key for key in ranked if key not in selected]
+        if not deferred:
+            break
+        next_keys = deferred[:batch_size]
+        before_events = len(all_events)
+        before_qualified = safe_int(diagnostics.get("eventsQualified"), 0)
+        incoming, incoming_errors = fetch_featured_odds_quota_aware(client, api_key, next_keys, config, start, end)
+        errors.extend(incoming_errors)
+        selected.extend(next_keys)
+        all_events = merge_unique_odds_events(all_events, incoming)
+        _, diagnostics = build_strategy_analysis(all_events, {}, context, state, config, now)
+        diagnostics = enrich_rejection_diagnostics(diagnostics, config)
+        rounds.append({
+            "round": len(rounds) + 1,
+            "competitionKeys": next_keys,
+            "eventsBefore": before_events,
+            "eventsAfter": len(all_events),
+            "qualifiedBefore": before_qualified,
+            "qualifiedAfter": safe_int(diagnostics.get("eventsQualified"), 0),
+            "quotaRemaining": client.odds_quota.get("requestsRemaining"),
+            "estimatedCreditsThisRun": client.odds_quota.get("estimatedCreditsThisRun"),
+        })
+        if len(all_events) == before_events and incoming_errors:
+            break
+
+    completion_keys = [key for key in selected if key not in initial_keys]
+    quota_plan["competitionsSelected"] = len(selected)
+    quota_plan["competitionKeysSelected"] = selected
+    quota_plan["completionCompetitionKeys"] = completion_keys
+    quota_plan["completionRounds"] = rounds
+    quota_plan["portfolioCompletionBurstActivated"] = bool(quota_plan.get("portfolioCompletionBurstActivated") or completion_keys)
+    quota_plan["portfolioCompletionBurstActual"] = bool(completion_keys)
+    quota_plan["featuredEventsCollected"] = len(all_events)
+    quota_plan["featuredQualifiedBeforeAdvanced"] = safe_int(diagnostics.get("eventsQualified"), 0)
+    quota_plan["competitionsDeferredByQuota"] = max(0, len(ranked) - len(selected))
+    return all_events, errors, quota_plan, diagnostics
 def preliminary_event_score(event: dict[str, Any], context: dict[str, Any], now: dt.datetime) -> float:
     home_id, home_score = match_team(str(event.get("home_team") or ""), context)
     away_id, away_score = match_team(str(event.get("away_team") or ""), context)
@@ -1259,21 +1424,37 @@ def fetch_advanced_markets_quota_aware(
     context: dict[str, Any],
     config: dict[str, Any],
     now: dt.datetime,
+    priority_event_ids: list[str] | None = None,
+    completion_mode: bool = False,
 ) -> tuple[dict[str, dict[str, Any]], list[str]]:
-    markets = [str(value) for value in config.get("advancedSoccerMarkets") or []]
+    configured = [str(value) for value in config.get("advancedSoccerMarkets") or []]
+    completion = [str(value) for value in config.get("advancedCompletionMarkets") or ["double_chance", "btts"]]
+    markets = completion if completion_mode else configured
     allowed = [value for value in markets if value in {"btts", "double_chance", "team_totals"}]
     if not allowed:
         return {}, []
-    max_events = max(0, safe_int(config.get("maximumAdvancedEvents"), 6))
-    ranked = sorted(featured_events, key=lambda event: preliminary_event_score(event, context, now), reverse=True)
+    limit_key = "maximumAdvancedCompletionEvents" if completion_mode else "maximumAdvancedEvents"
+    max_events = max(0, safe_int(config.get(limit_key), 8 if completion_mode else 6))
+    priority = {str(value): index for index, value in enumerate(priority_event_ids or [])}
+    ranked = sorted(
+        featured_events,
+        key=lambda event: (
+            str(event.get("id") or "") in priority,
+            -priority.get(str(event.get("id") or ""), 10**6),
+            preliminary_event_score(event, context, now),
+        ),
+        reverse=True,
+    )
     result: dict[str, dict[str, Any]] = {}
     errors: list[str] = []
     spacing = max(0.05, safe_float(config.get("oddsAdvancedSpacingSeconds"), 0.22))
     request_cost = max(1, len(allowed) * len([value for value in str(config.get("oddsRegions") or "eu").split(",") if value]))
     for index, event in enumerate(ranked[:max_events]):
         budget = free_odds_daily_budget(client, config)
-        if budget["availableThisRun"] < request_cost:
-            errors.append("ADVANCED_FREE_DAILY_BUDGET_REACHED")
+        use_portfolio = completion_mode and bool(config.get("oddsAllowPortfolioCompletionBurst", True))
+        available = budget["portfolioAvailableThisRun"] if use_portfolio else budget["availableThisRun"]
+        if available < request_cost:
+            errors.append("ADVANCED_PORTFOLIO_BUDGET_REACHED" if use_portfolio else "ADVANCED_FREE_DAILY_BUDGET_REACHED")
             break
         if index:
             time.sleep(spacing)
@@ -1302,8 +1483,6 @@ def fetch_advanced_markets_quota_aware(
         if isinstance(payload, dict):
             result[event_id] = payload
     return result, errors
-
-
 # ---------------------------------------------------------------------------
 # Candidate ranking, 15-match strategy and express construction
 # ---------------------------------------------------------------------------
@@ -1329,7 +1508,9 @@ def candidate_is_qualified(candidate: dict[str, Any], config: dict[str, Any]) ->
         failures.append("Нестабильная букмекерская линия")
     if safe_float(candidate.get("anomaly")) > safe_float(config.get("strategyMaximumAnomaly"), 58):
         failures.append("Высокая аномальность линии")
-    if bool(candidate.get("goalDirectionConflict")):
+    family = str(candidate.get("marketFamily") or candidate.get("marketKey") or "").lower()
+    is_total_market = "total" in family or str(candidate.get("marketKey") or "").lower() in {"totals", "team_totals"}
+    if bool(candidate.get("goalDirectionConflict")) and is_total_market:
         failures.append("История и модель голов противоречат направлению тотала")
     odds = safe_float(candidate.get("bookmakerOdds"))
     if odds < safe_float(config.get("minimumBookmakerOdds"), 1.35):
@@ -2286,7 +2467,10 @@ def publish_generation() -> int:
     end = parse_time(discovery.get("queryWindowEnd"))
     if not start or not end:
         raise RuntimeError("R15 operational window unresolved")
-    odds_events, featured_errors = fetch_featured_odds_quota_aware(client, odds_key, keys, config, start, end)
+    odds_events, featured_errors, quota_plan, preliminary_diag = collect_featured_odds_for_completion(
+        client, odds_key, keys, quota_plan, config, start, end, context, state, now
+    )
+    keys = list(quota_plan.get("competitionKeysSelected") or keys)
     for event in odds_events:
         event["sport_type"] = "soccer"
         event["country"] = core.infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
@@ -2314,8 +2498,18 @@ def publish_generation() -> int:
     else:
         fonbet_mode = "OBSERVATIONAL_SOURCE_INCOMPLETE"
 
-    advanced, advanced_errors = fetch_advanced_markets_quota_aware(client, odds_key, odds_events, context, config, now)
+    recovery_ids = list(preliminary_diag.get("advancedRecoveryEventIds") or [])
+    completion_mode = safe_int(preliminary_diag.get("eventsQualified"), 0) < safe_int(config.get("dailyAnalysisTarget"), 15)
+    advanced, advanced_errors = fetch_advanced_markets_quota_aware(
+        client, odds_key, odds_events, context, config, now,
+        priority_event_ids=recovery_ids, completion_mode=completion_mode,
+    )
     records, analysis_diag = build_strategy_analysis(odds_events, advanced, context, state, config, now)
+    analysis_diag = enrich_rejection_diagnostics(analysis_diag, config)
+    quota_plan["advancedCompletionMode"] = completion_mode
+    quota_plan["advancedRecoveryRequestedEvents"] = len(recovery_ids)
+    quota_plan["advancedRecoveryReceivedEvents"] = len(advanced)
+    quota_plan["qualifiedAfterAdvanced"] = safe_int(analysis_diag.get("eventsQualified"), 0)
 
     report = {
         "status": "GREEN" if len(records) == 15 else "DEGRADED",

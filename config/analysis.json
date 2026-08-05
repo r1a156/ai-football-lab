@@ -291,7 +291,7 @@
   "oddsFreeMonthlyCredits": 500,
   "oddsFreeDailyCreditBudget": 16,
   "oddsDailyCarryAllowance": 2,
-  "oddsTargetCandidateEvents": 32,
+  "oddsTargetCandidateEvents": 84,
   "freeMeshMaximumMatches": 60000,
   "freeMeshSources": [
     "FOOTBALL_DATA_CO_UK",
@@ -339,5 +339,18 @@
   "portfolioSearchStepHours": 24,
   "portfolioSearchTargetEvents": 60,
   "oddsAllowPortfolioCompletionBurst": true,
-  "rejectionDiagnosticsLimit": 120
+  "rejectionDiagnosticsLimit": 120,
+  "oddsPortfolioCompletionCandidateTarget": 84,
+  "oddsExpectedQualificationRate": 0.18,
+  "oddsMinimumCompetitionsForPortfolio": 3,
+  "oddsMaximumCompetitionsForPortfolio": 8,
+  "oddsCompletionCompetitionBatch": 1,
+  "maximumAdvancedCompletionEvents": 8,
+  "advancedCompletionMarkets": [
+    "double_chance",
+    "btts"
+  ],
+  "nearMissDiagnosticsLimit": 30,
+  "portfolioCompletionPolicy": "MULTI_COMPETITION_INCREMENTAL_FEATURED_ODDS_THEN_TARGETED_ADVANCED_MARKET_RECOVERY_WITHOUT_THRESHOLD_RELAXATION",
+  "marketConflictPolicy": "REJECT_CONFLICTING_MARKET_ONLY_KEEP_EVENT_ELIGIBLE_FOR_OTHER_QUALIFIED_MARKETS"
 }
