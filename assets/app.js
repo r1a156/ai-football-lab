@@ -171,7 +171,12 @@
         const expresses = Array.isArray(state.expresses) ? state.expresses : [];
         const marker = String(state.meta?.sourceMarker || "");
         const markedDaily = daily.length === 15 && daily.every((row) => String(row?.sourceMarker || marker).includes("R15"));
-        return markedDaily && expresses.length === 3 && expresses.every((row) => Array.isArray(row?.legs) && row.legs.length === 5);
+        const productionQuality = daily.length === 15 && daily.every((row) => {
+            const tier = String(row?.dataTier || "").toUpperCase();
+            const quality = number(row?.dataQuality);
+            return tier !== "MARKET" && quality >= 58;
+        });
+        return markedDaily && productionQuality && expresses.length === 3 && expresses.every((row) => Array.isArray(row?.legs) && row.legs.length === 5);
     }
 
     function renderMeta(state, liveState) {
@@ -542,7 +547,7 @@
                     <div class="metric-block"><span>Вероятность</span><strong>${formatNumber(probability, 1)}%</strong></div>
                     <div class="metric-block"><span>Преимущество</span><strong class="${edge >= 0 ? "is-positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
                     <div class="metric-block"><span>Ожидаемая доходность</span><strong class="${ev >= 0 ? "is-positive" : ""}">${formatSignedNumber(ev, 1)}%</strong></div>
-                    <div class="metric-block"><span>Данные</span><strong>${formatNumber(dataQuality, 0)}/100</strong></div>
+                    <div class="metric-block"><span>Качество данных</span><strong>${formatNumber(dataQuality, 0)}/100</strong></div>
                 </div>
                 ${liveInlineTemplate(bet)}
                 <div class="bet-card-footer">
@@ -620,7 +625,7 @@
                     <div class="analysis-stat"><small>Вероятность</small><strong>${formatNumber(probability, 1)}%</strong></div>
                     <div class="analysis-stat"><small>Коэффициент</small><strong>${formatNumber(odds, 2)}</strong></div>
                     <div class="analysis-stat"><small>Преимущество</small><strong class="${edge >= 0 ? "positive" : ""}">${formatSignedNumber(edge, 1)} п.п.</strong></div>
-                    <div class="analysis-stat"><small>Данные</small><strong>${formatNumber(quality, 0)}/100</strong></div>
+                    <div class="analysis-stat"><small>Качество данных</small><strong>${formatNumber(quality, 0)}/100</strong></div>
                 </div>
                 <span class="analysis-chevron">›</span>
             </article>`;
@@ -1127,7 +1132,7 @@
                     <div class="dialog-metric"><span>Рынок</span><strong>${formatNumber(marketProbability, 1)}%</strong></div>
                     <div class="dialog-metric"><span>Преимущество</span><strong>${formatSignedNumber(edge, 1)} п.п.</strong></div>
                     <div class="dialog-metric"><span>Ожидаемая доходность</span><strong>${formatSignedNumber(ev, 1)}%</strong></div>
-                    <div class="dialog-metric"><span>Данные</span><strong>${formatNumber(record.dataQuality, 0)}/100</strong></div>
+                    <div class="dialog-metric"><span>Качество данных</span><strong>${formatNumber(record.dataQuality, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Согласие</span><strong>${formatNumber(record.agreement, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Аномальность</span><strong>${formatNumber(record.anomaly, 0)}/100</strong></div>
                     <div class="dialog-metric"><span>Букмекеры</span><strong>${formatNumber(record.quoteCount, 0)}</strong></div>

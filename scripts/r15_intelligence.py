@@ -1943,6 +1943,168 @@ def settle_current() -> int:
     return 0
 
 
+
+# V10_R15F_R3R5R1_CANONICAL_ARCHIVE_FIX
+# A migrated R14 publication may carry the R15 meta marker while all visible
+# rows are still MARKET-only (42/100) and no R15 expresses exist. Archive those
+# rows into the normal settlement collections, preserve banks/stakes, and free
+# only the current publication slot for the first real R15 portfolio.
+#
+# R3R5R1 validates the transfer by the same canonical settlement key used by
+# update_predictions.py. Public ids may be normalized or merged during history
+# maintenance and therefore are not a valid transfer contract.
+def archive_legacy_publication_bridge(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    daily = [row for row in state.get("dailyAnalysis") or [] if isinstance(row, dict)]
+    best = [row for row in state.get("bestBets") or [] if isinstance(row, dict)]
+    expresses = [row for row in state.get("expresses") or [] if isinstance(row, dict)]
+    result = {"archived": False, "analysis": 0, "bestBets": 0, "reason": "NOT_LEGACY_BRIDGE"}
+    if not daily or expresses:
+        return result
+
+    meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    market_only_rows = sum(
+        1 for row in daily
+        if str(row.get("dataTier") or "").upper() == "MARKET"
+        and safe_float(row.get("dataQuality"), 0.0) <= 42.01
+    )
+    legacy_policy_rows = sum(
+        1 for row in daily
+        if str(row.get("marketPolicy") or "").upper().startswith("R14")
+    )
+    legacy_freshness = str(meta.get("dataFreshness") or "").upper() in {
+        "SETTLEMENT_REFRESH", "LEGACY_BRIDGE", "MIGRATED_LEGACY_PUBLICATION"
+    }
+    if not (legacy_freshness or market_only_rows == len(daily) or legacy_policy_rows > 0):
+        return result
+
+    bank_before = copy.deepcopy(state.get("bank"))
+    express_bank_before = copy.deepcopy(state.get("expressBank"))
+    daily_snapshot = copy.deepcopy(daily)
+    best_snapshot = copy.deepcopy(best)
+
+    def canonical_keys(rows: list[dict[str, Any]], collection_name: str) -> set[str]:
+        keys: set[str] = set()
+        invalid: list[str] = []
+        for index, source in enumerate(rows):
+            prepared = core.migrate_public_prediction(copy.deepcopy(source))
+            prepared["recordType"] = "BEST_BET" if collection_name == "history" else "ANALYSIS"
+            if not core.history_record_valid(prepared):
+                invalid.append(str(source.get("id") or source.get("eventId") or index))
+                continue
+            key = core.history_record_key(prepared, collection_name)
+            if not key.strip("|"):
+                invalid.append(str(source.get("id") or source.get("eventId") or index))
+                continue
+            keys.add(key)
+        if invalid:
+            raise RuntimeError(
+                "R3R5R1_LEGACY_SOURCE_RECORD_INVALID;"
+                f"COLLECTION={collection_name};ROWS={invalid}"
+            )
+        if len(keys) != len(rows):
+            raise RuntimeError(
+                "R3R5R1_LEGACY_SOURCE_CANONICAL_DUPLICATE;"
+                f"COLLECTION={collection_name};ROWS={len(rows)};KEYS={len(keys)}"
+            )
+        return keys
+
+    expected_analysis_keys = canonical_keys(daily_snapshot, "analysisHistory")
+    expected_best_keys = canonical_keys(best_snapshot, "history")
+
+    core.append_new_records_to_history(state, daily_snapshot, best_snapshot, config)
+
+    actual_analysis_keys = {
+        core.history_record_key(row, "analysisHistory")
+        for row in state.get("analysisHistory") or []
+        if isinstance(row, dict) and core.history_record_valid(row)
+    }
+    actual_best_keys = {
+        core.history_record_key(row, "history")
+        for row in state.get("history") or []
+        if isinstance(row, dict) and core.history_record_valid(row)
+    }
+    missing_analysis = sorted(expected_analysis_keys - actual_analysis_keys)
+    missing_best = sorted(expected_best_keys - actual_best_keys)
+    if missing_analysis or missing_best:
+        raise RuntimeError(
+            "R3R5R1_LEGACY_ARCHIVE_INCOMPLETE;"
+            f"ANALYSIS_KEYS={missing_analysis};BEST_KEYS={missing_best}"
+        )
+    if state.get("bank") != bank_before:
+        raise RuntimeError("R3R5R1_LEGACY_ARCHIVE_CHANGED_ORDINARY_BANK")
+    if state.get("expressBank") != express_bank_before:
+        raise RuntimeError("R3R5R1_LEGACY_ARCHIVE_CHANGED_EXPRESS_BANK")
+
+    old_batch = copy.deepcopy(state.get("batch") or {})
+    bridge_history = state.setdefault("legacyBridgeHistory", [])
+    bridge_history.append({
+        "version": 2,
+        "archivedAt": iso(now),
+        "reason": "R14_MARKET_ONLY_PUBLICATION_RELEASED_FOR_FIRST_R15_PORTFOLIO",
+        "analysisCount": len(daily_snapshot),
+        "bestBetsCount": len(best_snapshot),
+        "canonicalAnalysisKeys": len(expected_analysis_keys),
+        "canonicalBestBetKeys": len(expected_best_keys),
+        "marketOnlyRows": market_only_rows,
+        "legacyPolicyRows": legacy_policy_rows,
+        "oldOperationalDayId": meta.get("operationalDayId"),
+        "oldAnalysisDateLocal": meta.get("analysisDateLocal"),
+        "oldBatch": old_batch,
+        "bankMutation": False,
+        "verification": "CANONICAL_SETTLEMENT_KEYS",
+    })
+    state["legacyBridgeHistory"] = bridge_history[-20:]
+
+    state["dailyAnalysis"] = []
+    state["bestBets"] = []
+    state["predictions"] = []
+    state["expresses"] = []
+    state["batch"] = {
+        "version": 1,
+        "id": "",
+        "sequence": safe_int(old_batch.get("sequence"), 0),
+        "status": "WAITING_FOR_NEXT_SELECTION",
+        "statusLabel": "Формируется первый полноценный портфель R15",
+        "createdAt": None,
+        "updatedAt": iso(now),
+        "analysisCount": 0,
+        "bestBetsCount": 0,
+        "terminalAnalysisCount": 0,
+        "terminalBestBetsCount": 0,
+        "pendingAnalysisCount": 0,
+        "pendingBestBetsCount": 0,
+        "completed": True,
+        "placedAmount": 0.0,
+        "availableAmount": safe_float(
+            (state.get("expressBank") or {}).get("available"),
+            safe_float((state.get("expressBank") or {}).get("current"), 10000.0),
+        ),
+        "startingBank": safe_float((state.get("expressBank") or {}).get("starting"), 10000.0),
+        "transitionReason": "R3R5R1_LEGACY_BRIDGE_ARCHIVED",
+    }
+    state.setdefault("meta", {}).update({
+        "sourceMarker": R15_MARKER,
+        "legacyBridgeArchivedAt": iso(now),
+        "legacyBridgeArchivedAnalysisCount": len(daily_snapshot),
+        "legacyBridgeArchivedBestBetsCount": len(best_snapshot),
+        "legacyBridgeArchiveVerification": "CANONICAL_SETTLEMENT_KEYS",
+        "legacyBridgeBankMutation": False,
+        "dataFreshness": "R15_LEGACY_ARCHIVED_GENERATING_CURRENT_PORTFOLIO",
+        "status": "GENERATING_R15_PORTFOLIO",
+        "updatedAt": iso(now),
+    })
+    result.update({
+        "archived": True,
+        "analysis": len(daily_snapshot),
+        "bestBets": len(best_snapshot),
+        "reason": "R14_MARKET_ONLY_BRIDGE_ARCHIVED",
+    })
+    return result
+
 def publish_generation() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
@@ -1959,6 +2121,19 @@ def publish_generation() -> int:
     day = operational_day(now, config)
     current_day = str(state.get("meta", {}).get("operationalDayId") or "")
     current_records = state.get("dailyAnalysis") or []
+
+    # R3R5R1: keep the legacy package settleable in canonical history, but do
+    # not let it occupy the current R15 publication slot.
+    bridge = archive_legacy_publication_bridge(state, config, now)
+    if bridge.get("archived"):
+        current_day = ""
+        current_records = []
+        print("R15_R3R5R1_LEGACY_BRIDGE_ARCHIVED=YES")
+        print(f"R15_R3R5R1_ARCHIVED_ANALYSIS={bridge.get('analysis', 0)}")
+        print(f"R15_R3R5R1_ARCHIVED_BEST_BETS={bridge.get('bestBets', 0)}")
+        print("R15_R3R5R1_ARCHIVE_VERIFICATION=CANONICAL_SETTLEMENT_KEYS")
+        print("R15_R3R5R1_BANK_MUTATION=NO")
+
     if current_day == day["operationalDayId"] and current_records:
         print("R15_CURRENT_OPERATIONAL_DAY_ALREADY_PUBLISHED=YES")
         return 0
