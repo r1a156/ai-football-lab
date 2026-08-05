@@ -1,4 +1,5 @@
 # V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO
+# V10_R15F_R3R8_SOURCE_INTEGRITY_GENERATION_GUARD
 name: R15F R3 cognitive morning portfolio
 
 on:
@@ -32,6 +33,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Synchronize newest main source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --prune
+          git checkout -B main origin/main
+          echo "R3R8_SOURCE_HEAD=$(git rev-parse HEAD)"
       - name: Configure Python
         uses: actions/setup-python@v5
         with:
@@ -41,6 +49,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          grep -Fq "V10_R15F_R3R7_PROGRESSIVE_PORTFOLIO_ACQUISITION" scripts/r15_intelligence.py
+          python -c "import json,pathlib; c=json.loads(pathlib.Path('config/analysis.json').read_text(encoding='utf-8')); assert int(c.get('portfolioSearchHorizonHours',0)) >= 72; assert bool(c.get('oddsAllowPortfolioCompletionBurst')); assert int(c.get('rejectionDiagnosticsLimit',0)) >= 120"
           python -m py_compile \
             scripts/update_predictions.py \
             scripts/r15_free_mesh.py \
@@ -96,8 +106,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          EXPECTED_ENGINE_BLOB="$(git rev-parse HEAD:scripts/r15_intelligence.py)"
+          EXPECTED_CONFIG_BLOB="$(git rev-parse HEAD:config/analysis.json)"
+          echo "R3R8_EXPECTED_ENGINE_BLOB=$EXPECTED_ENGINE_BLOB"
+          echo "R3R8_EXPECTED_CONFIG_BLOB=$EXPECTED_CONFIG_BLOB"
+
           git add \
             data/state.json \
             data/ai_daily_analysis.json \
@@ -113,10 +126,44 @@ jobs:
             data/provider-health.json \
             data/r15-runtime-control.json \
             data/openrouter-daily-audit.json
+
           if git diff --cached --quiet; then
             echo "R15F_R3_NO_PUBLIC_DATA_CHANGES=YES"
             exit 0
           fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "R15F R3 publish cognitive portfolio [skip ci]"
-          git pull --rebase origin main
-          git push origin HEAD:main
+
+          for attempt in 1 2 3; do
+            echo "R3R8_PUSH_ATTEMPT=$attempt"
+            git fetch origin main --prune
+
+            REMOTE_ENGINE_BLOB="$(git rev-parse origin/main:scripts/r15_intelligence.py)"
+            REMOTE_CONFIG_BLOB="$(git rev-parse origin/main:config/analysis.json)"
+            if [[ "$REMOTE_ENGINE_BLOB" != "$EXPECTED_ENGINE_BLOB" || "$REMOTE_CONFIG_BLOB" != "$EXPECTED_CONFIG_BLOB" ]]; then
+              echo "R3R8_SOURCE_DRIFT_ABORT=YES"
+              echo "R3R8_REMOTE_ENGINE_BLOB=$REMOTE_ENGINE_BLOB"
+              echo "R3R8_REMOTE_CONFIG_BLOB=$REMOTE_CONFIG_BLOB"
+              exit 78
+            fi
+
+            git rebase origin/main
+
+            HEAD_ENGINE_BLOB="$(git rev-parse HEAD:scripts/r15_intelligence.py)"
+            HEAD_CONFIG_BLOB="$(git rev-parse HEAD:config/analysis.json)"
+            if [[ "$HEAD_ENGINE_BLOB" != "$EXPECTED_ENGINE_BLOB" || "$HEAD_CONFIG_BLOB" != "$EXPECTED_CONFIG_BLOB" ]]; then
+              echo "R3R8_REBASE_SOURCE_DRIFT_ABORT=YES"
+              exit 79
+            fi
+
+            if git push origin HEAD:main; then
+              echo "R3R8_PUBLIC_DATA_PUSH=GREEN"
+              exit 0
+            fi
+            sleep $((attempt * 5))
+          done
+
+          echo "R3R8_PUBLIC_DATA_PUSH=FAILED"
+          exit 1
