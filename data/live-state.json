@@ -1,15 +1,57 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-08-05T00:13:40Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-08-05T15:22:56Z",
   "refreshMinutes": 10,
-  "events": [],
+  "events": [
+    {
+      "eventId": "d44929c99b98bb6333de83bef7b6f65d",
+      "analysisId": "analysis-e275d77034d793055217",
+      "isBestBet": false,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_uefa_champs_league_qualification",
+      "league": "UEFA Champions League Qualification",
+      "leagueRu": "Квалификация Лиги чемпионов УЕФА",
+      "country": "Европа",
+      "countryRu": "Европа",
+      "home": "AGF Aarhus",
+      "away": "Sabah FK",
+      "homeRu": "Агф Аархус",
+      "awayRu": "Сабах ФК",
+      "commenceTime": "2026-08-05T16:30:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Победа AGF Aarhus",
+      "pickRu": "Победа Агф Аархус",
+      "market": "HOME_WIN",
+      "marketFamily": "OUTCOME",
+      "point": null,
+      "preMatchProbability": 0.577098,
+      "liveProbability": 0.577098,
+      "liveProbabilityPercent": 57.7,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "ESPN_PUBLIC_SCOREBOARD",
+      "providerEventId": "401902678",
+      "updatedAt": "2026-08-05T15:22:56Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 8,
-    "results": 101,
+    "calls": 4,
+    "results": 64,
     "oddsQuota": {
       "requestsRemaining": null,
       "requestsUsed": null,
@@ -17,13 +59,12 @@
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-08-04: SOFASCORE_PUBLIC:2026-08-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "SofaScore 2026-08-05: SOFASCORE_PUBLIC:2026-08-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 95,
-      "theSportsDB": 6,
+      "espn": 61,
+      "theSportsDB": 3,
       "footballDataOptional": 0
     }
   },
@@ -31,7 +72,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 2
+    "unconfirmedRemoved": 0
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
