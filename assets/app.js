@@ -4,7 +4,7 @@
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 /* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
 /* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
-/* V10_R15F_R3R3_PREMIUM_TERMINAL */
+/* V10_R15F_R3R4_LAYOUT_POLISH */
 (() => {
     "use strict";
 
@@ -570,8 +570,10 @@
         setText("averageDataQuality", unified && records.length ? `${formatNumber(average(records.map((item) => number(item.dataQuality))), 0)}/100` : "—");
 
         if (!unified) {
-            const legacyRows = filtered.length ? `<details class="legacy-batch-disclosure"><summary>Показать предыдущие ${filtered.length} прогнозов</summary><div class="legacy-analysis-list">${filtered.map((item) => analysisRowTemplate(item, true)).join("")}</div></details>` : "";
-            list.innerHTML = `<div class="transition-state"><span>ОБНОВЛЕНИЕ СТРАТЕГИИ</span><strong>Новая единая подборка ещё не опубликована</strong><p>Предыдущие прогнозы сохранены как переходный архив. Они не считаются текущими ординарами и не распределяются в новые экспрессы.</p>${legacyRows}</div>`;
+            const legacyRows = filtered.length
+                ? `<div class="legacy-analysis-list is-visible-archive">${filtered.map((item) => analysisRowTemplate(item, true)).join("")}</div>`
+                : "";
+            list.innerHTML = `<div class="transition-state transition-state-compact"><span>ПОСЛЕДНИЙ СОХРАНЁННЫЙ ВЫПУСК</span><strong>${filtered.length ? `Показываем ${filtered.length} последних матчей` : "Новая единая подборка ещё не опубликована"}</strong><p>${filtered.length ? "Матчи доступны для просмотра, но помечены как предыдущая подборка и не считаются текущими ординарами или новыми экспрессами." : "Система ожидает новый полный пакет внутри текущего операционного окна."}</p></div>${legacyRows}`;
         } else {
             list.innerHTML = filtered.map((item) => analysisRowTemplate(item, false)).join("");
         }
@@ -1205,7 +1207,7 @@
         if (label) label.textContent = message || "";
         toast.dataset.state = state;
         if (message && state === "ready") {
-            window.setTimeout(() => toast.classList.remove("is-visible"), 2200);
+            window.setTimeout(() => toast.classList.remove("is-visible"), 1700);
         }
     }
 
