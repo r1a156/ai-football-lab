@@ -4,7 +4,7 @@
 /* V10_R8_ATOMIC_BATCH_AND_LINKED_BANK */
 /* V10_R9_BEST_FOUR_STATS_AND_FRESH_SELECTION */
 /* V10_R15_MATCH_INTELLIGENCE_EXPRESS_PORTFOLIO */
-/* V10_R15F_R3R2_VISUAL_SYSTEM */
+/* V10_R15F_R3R3_PREMIUM_TERMINAL */
 (() => {
     "use strict";
 
@@ -72,6 +72,7 @@
             runtime.liveState = liveState;
             runtime.signature = signature;
             renderApplication(runtime.state, runtime.liveState);
+            document.body.classList.add("app-ready");
             setConnectionState("ready", notify || changed ? "Данные актуализированы" : "");
         } catch (error) {
             console.error("Не удалось загрузить состояние", error);
