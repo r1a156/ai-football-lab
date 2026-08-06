@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-08-05T20:12:53Z",
-  "finishedAt": "2026-08-06T01:03:28Z",
+  "finishedAt": "2026-08-06T04:28:40Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -1676,8 +1676,9 @@
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.207
+        "status": 401,
+        "retryAfter": 0,
+        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
       }
     ],
     "quota": {
@@ -1693,14 +1694,14 @@
       "sourceUpdatedAt": "2026-08-05T20:14:36Z"
     },
     "dueRecords": 1,
-    "providerFinalResults": 6,
+    "providerFinalResults": 1,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
       "unresolved": 1
     },
     "overdueRelease": {
-      "analysis": 0,
+      "analysis": 1,
       "bestBets": 0
     },
     "expressSettlement": {
@@ -1713,7 +1714,8 @@
   "warnings": [
     "PORTFOLIO_ODDS_BUDGET_REACHED",
     "PORTFOLIO_ODDS_BUDGET_REACHED",
-    "ADVANCED_PORTFOLIO_BUDGET_REACHED"
+    "ADVANCED_PORTFOLIO_BUDGET_REACHED",
+    "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
   ],
   "errors": []
 }

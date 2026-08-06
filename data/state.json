@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-08-06T01:03:28Z",
+    "updatedAt": "2026-08-06T04:28:40Z",
     "analysisDateLocal": "2026-08-05",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -139,13 +139,13 @@
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
     "futurePublicationPolicy": "FOOTBALL_ONLY_NO_ASIAN_MARKETS",
     "translationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-    "batchUnresolvedReleaseAt": "2026-08-01T17:43:47Z",
+    "batchUnresolvedReleaseAt": "2026-08-06T04:28:40Z",
     "batchUnresolvedRelease": {
       "analysis": 1,
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-08-06T01:03:28Z",
+    "r15SettlementAt": "2026-08-06T04:28:40Z",
     "nextPortfolioStatus": "PREPARING_NEXT_OPERATIONAL_WINDOW",
     "firstActiveOperationalDate": "2026-08-05",
     "firstActiveWindowStart": "2026-08-05T05:00:00Z",
@@ -15525,10 +15525,10 @@
           }
         }
       ],
-      "status": "pending",
+      "status": "unresolved",
       "score": "",
       "publishedAt": "2026-08-03T04:45:12Z",
-      "settledAt": null,
+      "settledAt": "2026-08-06T04:28:40Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -15543,9 +15543,11 @@
       "batchSequence": 4,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-08-06T01:03:28Z",
-      "settlementAttempts": 8
+      "statusLabel": "Результат не подтверждён",
+      "settlementLastAttemptAt": "2026-08-06T04:28:40Z",
+      "settlementAttempts": 9,
+      "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
+      "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
     {
       "id": "analysis-54d5192f4c73e8327eec",
@@ -23366,8 +23368,8 @@
       "lost": 28,
       "push": 0,
       "void": 0,
-      "unresolved": 0,
-      "pending": 1,
+      "unresolved": 1,
+      "pending": 0,
       "accuracy": 59.4,
       "profit": 0.0
     },
@@ -23394,8 +23396,8 @@
           "lost": 22,
           "push": 0,
           "void": 0,
-          "unresolved": 0,
-          "pending": 1,
+          "unresolved": 1,
+          "pending": 0,
           "accuracy": 56.0,
           "profit": 0.0
         },
@@ -23422,8 +23424,8 @@
           "lost": 28,
           "push": 0,
           "void": 0,
-          "unresolved": 0,
-          "pending": 1,
+          "unresolved": 1,
+          "pending": 0,
           "accuracy": 59.4,
           "profit": 0.0
         },
@@ -23450,8 +23452,8 @@
           "lost": 28,
           "push": 0,
           "void": 0,
-          "unresolved": 0,
-          "pending": 1,
+          "unresolved": 1,
+          "pending": 0,
           "accuracy": 59.4,
           "profit": 0.0
         },
@@ -23478,8 +23480,8 @@
           "lost": 28,
           "push": 0,
           "void": 0,
-          "unresolved": 0,
-          "pending": 1,
+          "unresolved": 1,
+          "pending": 0,
           "accuracy": 59.4,
           "profit": 0.0
         },
@@ -23508,8 +23510,8 @@
         "lost": 28,
         "push": 0,
         "void": 0,
-        "unresolved": 0,
-        "pending": 1,
+        "unresolved": 1,
+        "pending": 0,
         "accuracy": 59.4,
         "profit": 0.0
       }
@@ -23524,8 +23526,8 @@
         "lost": 20,
         "push": 0,
         "void": 0,
-        "unresolved": 0,
-        "pending": 1,
+        "unresolved": 1,
+        "pending": 0,
         "accuracy": 54.5,
         "profit": 0.0
       },
@@ -23596,8 +23598,8 @@
         "lost": 7,
         "push": 0,
         "void": 0,
-        "unresolved": 0,
-        "pending": 1,
+        "unresolved": 1,
+        "pending": 0,
         "accuracy": 50.0,
         "profit": 0.0
       },
@@ -23668,8 +23670,8 @@
         "lost": 21,
         "push": 0,
         "void": 0,
-        "unresolved": 0,
-        "pending": 1,
+        "unresolved": 1,
+        "pending": 0,
         "accuracy": 61.1,
         "profit": 0.0
       },
@@ -23713,7 +23715,7 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-08-06T01:03:28Z",
+    "updatedAt": "2026-08-06T04:28:40Z",
     "segments": {
       "SPORT|soccer": {
         "settled": 69,
@@ -25355,7 +25357,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-08-06T01:03:28Z"
+      "updatedAt": "2026-08-06T04:28:40Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -25544,7 +25546,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-08-06T01:03:28Z",
+    "updatedAt": "2026-08-06T04:28:40Z",
     "analysisHistory": {
       "input": 70,
       "output": 70,
