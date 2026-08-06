@@ -1,8 +1,8 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-08-06T04:28:40Z",
-  "analysisDateLocal": "2026-08-05",
+  "updatedAt": "2026-08-06T06:44:52Z",
+  "analysisDateLocal": "2026-08-06",
   "batch": {
     "id": "",
     "status": "WAITING_FOR_NEXT_SELECTION",
@@ -12,21 +12,21 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-08-05T20:12:53Z",
+    "updatedAt": "2026-08-06T06:44:52Z",
     "reason": "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON"
   },
   "dataCoverage": {
     "discoveredEvents": 142,
     "competitionsDiscovered": 26,
-    "competitionsWithOdds": 6,
-    "oddsEvents": 49,
-    "historyMatchedEvents": 45,
-    "qualifiedEvents": 8,
+    "competitionsWithOdds": 0,
+    "oddsEvents": 0,
+    "historyMatchedEvents": 0,
+    "qualifiedEvents": 0,
     "publishedEvents": 0,
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-08-05T20:11:59Z",
+        "updatedAt": "2026-08-06T06:43:57Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -34,21 +34,25 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "historyMatches": 13416
+        "historyMatches": 13417
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-08-05T20:14:35Z",
-        "consecutiveFailures": 0
+        "lastSuccessAt": "2026-08-06T06:46:22Z",
+        "consecutiveFailures": 0,
+        "lastFailureAt": "2026-08-06T06:44:51Z",
+        "lastStatus": 401,
+        "lastError": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+        "retryAfterSeconds": 0
       }
     },
     "quota": {
-      "requestsRemaining": "4",
-      "requestsUsed": "496",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 6
+      "requestsRemaining": "0",
+      "requestsUsed": "500",
+      "requestsLast": "0",
+      "estimatedCreditsThisRun": 0
     },
-    "historyMatches": 11185,
+    "historyMatches": 11186,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-23T13:30:00Z",
     "historyComplete": false,
@@ -63,14 +67,14 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 13416,
+      "historyMatches": 13417,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-23T13:30:00Z"
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-08-05T20:12:53Z"
+    "updatedAt": "2026-08-06T06:44:52Z"
   },
   "expressBank": {
     "starting": 10000.0,
