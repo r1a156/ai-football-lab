@@ -1,5 +1,6 @@
 # V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO
 # V10_R15F_R3R8_SOURCE_INTEGRITY_GENERATION_GUARD
+# V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK
 name: R15F R3 cognitive morning portfolio
 
 on:
@@ -123,6 +124,8 @@ jobs:
             data/clubelo-ratings.json \
             data/russian-team-names.json \
             data/fonbet-public-snapshot.json \
+            data/r15-odds-cache.json \
+            data/football-data-fixtures-odds.json \
             data/provider-health.json \
             data/r15-runtime-control.json \
             data/openrouter-daily-audit.json

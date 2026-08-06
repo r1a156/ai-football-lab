@@ -10,6 +10,9 @@ from __future__ import annotations
 
 import argparse
 import copy
+import csv
+import email.utils
+import io
 import datetime as dt
 import hashlib
 import json
@@ -40,6 +43,7 @@ PROVIDER_HEALTH_PATH = ROOT / "data" / "provider-health.json"
 LIVE_STATE_PATH = ROOT / "data" / "live-state.json"
 LIVE_LEARNING_PATH = ROOT / "data" / "live-learning.json"
 ODDS_CACHE_PATH = ROOT / "data" / "r15-odds-cache.json"
+FOOTBALL_DATA_FIXTURE_ODDS_PATH = ROOT / "data" / "football-data-fixtures-odds.json"
 
 UTC = dt.timezone.utc
 R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
@@ -1304,6 +1308,348 @@ def odds_quota_is_exhausted(client: ProviderClient, config: dict[str, Any]) -> b
     budget = free_odds_daily_budget(client, config)
     return safe_int(budget.get("portfolioAvailableThisRun"), 0) <= 0
 
+# V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK
+# This fallback accepts only real bookmaker prices from Football-Data's published
+# fixture CSV. Rows are bound to events already discovered by the primary schedule
+# provider; the CSV never invents an event time or identity. Asian handicap columns
+# and market averages are ignored. A stale or structurally invalid feed is fail-closed.
+_R3R12_FIXTURE_BOOKMAKERS = (
+    ("1xb", "1XBet", "1XB", None),
+    ("bet365", "Bet365", "B365", "B365"),
+    ("betfair", "Betfair", "BF", None),
+    ("betfred", "Betfred", "BFD", None),
+    ("betmgm", "BetMGM", "BMGM", None),
+    ("betvictor", "BetVictor", "BV", None),
+    ("bwin", "Bwin", "BW", None),
+    ("coral", "Coral", "CL", None),
+    ("gamebookers", "Gamebookers", "GB", "GB"),
+    ("interwetten", "Interwetten", "IW", None),
+    ("ladbrokes", "Ladbrokes", "LB", None),
+    ("paddypower", "Paddy Power", "PP", None),
+    ("pinnacle", "Pinnacle", "PS", "P"),
+    ("skybet", "Sky Bet", "SK", None),
+    ("sportingodds", "Sporting Odds", "SO", None),
+    ("sportingbet", "Sportingbet", "SB", None),
+    ("stanjames", "Stan James", "SJ", None),
+    ("stanleybet", "Stanleybet", "SY", None),
+    ("vcbet", "VC Bet", "VC", None),
+    ("williamhill", "William Hill", "WH", None),
+)
+
+
+def _r3r12_float(value: Any) -> float | None:
+    try:
+        result = float(str(value or "").strip().replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    return result if math.isfinite(result) and result > 1.0 else None
+
+
+def _r3r12_parse_http_time(value: Any) -> dt.datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = email.utils.parsedate_to_datetime(text)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _r3r12_source_fresh(source_updated: dt.datetime | None, config: dict[str, Any], now: dt.datetime) -> bool:
+    if source_updated is None:
+        return False
+    maximum_hours = max(1, min(168, safe_int(config.get("footballDataFixtureOddsMaximumAgeHours"), 72)))
+    age = now - source_updated
+    return dt.timedelta(minutes=-5) <= age <= dt.timedelta(hours=maximum_hours)
+
+
+def _r3r12_fixture_date(value: Any) -> dt.date | None:
+    text = str(value or "").strip()
+    for pattern in ("%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d"):
+        try:
+            return dt.datetime.strptime(text, pattern).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _r3r12_name_similarity(left: Any, right: Any) -> float:
+    a = normalize(left)
+    b = normalize(right)
+    if not a or not b:
+        return 0.0
+    if a == b:
+        return 1.0
+    at = {token for token in a.split() if len(token) >= 2 or token.isdigit()}
+    bt = {token for token in b.split() if len(token) >= 2 or token.isdigit()}
+    if not at or not bt:
+        return 0.0
+    return len(at & bt) / len(at | bt)
+
+
+def _r3r12_bookmakers_from_row(
+    row: dict[str, Any],
+    source_updated: dt.datetime,
+    home: str,
+    away: str,
+) -> list[dict[str, Any]]:
+    bookmakers: list[dict[str, Any]] = []
+    updated = iso(source_updated)
+    for key, title, h2h_prefix, totals_prefix in _R3R12_FIXTURE_BOOKMAKERS:
+        markets: list[dict[str, Any]] = []
+        home_price = _r3r12_float(row.get(h2h_prefix + "H"))
+        draw_price = _r3r12_float(row.get(h2h_prefix + "D"))
+        away_price = _r3r12_float(row.get(h2h_prefix + "A"))
+        if home_price and draw_price and away_price:
+            markets.append({
+                "key": "h2h",
+                "last_update": updated,
+                "outcomes": [
+                    {"name": home, "price": home_price},
+                    {"name": "Draw", "price": draw_price},
+                    {"name": away, "price": away_price},
+                ],
+            })
+        if totals_prefix:
+            over = _r3r12_float(row.get(totals_prefix + ">2.5"))
+            under = _r3r12_float(row.get(totals_prefix + "<2.5"))
+            if over and under:
+                markets.append({
+                    "key": "totals",
+                    "last_update": updated,
+                    "outcomes": [
+                        {"name": "Over", "price": over, "point": 2.5},
+                        {"name": "Under", "price": under, "point": 2.5},
+                    ],
+                })
+        if markets:
+            bookmakers.append({
+                "key": "football_data_" + key,
+                "title": title + " via Football-Data",
+                "last_update": updated,
+                "markets": markets,
+            })
+    return bookmakers
+
+
+def _r3r12_match_fixture_row(
+    row: dict[str, Any],
+    discovered_events: list[dict[str, Any]],
+    start: dt.datetime,
+    end: dt.datetime,
+) -> dict[str, Any] | None:
+    row_date = _r3r12_fixture_date(row.get("Date"))
+    home = str(row.get("HomeTeam") or "").strip()
+    away = str(row.get("AwayTeam") or "").strip()
+    if row_date is None or not home or not away:
+        return None
+    best: tuple[float, dict[str, Any]] | None = None
+    for event in discovered_events:
+        commence = parse_time(event.get("commence_time") or event.get("commenceTime"))
+        if commence is None or not (start <= commence <= end):
+            continue
+        date_gap = abs((commence.date() - row_date).days)
+        if date_gap > 1:
+            continue
+        home_score = _r3r12_name_similarity(home, event.get("home_team"))
+        away_score = _r3r12_name_similarity(away, event.get("away_team"))
+        if home_score < 0.68 or away_score < 0.68:
+            continue
+        score = home_score + away_score + (0.15 if date_gap == 0 else 0.0)
+        if best is None or score > best[0]:
+            best = (score, event)
+    return copy.deepcopy(best[1]) if best and best[0] >= 1.55 else None
+
+
+def parse_football_data_fixture_csv(
+    payload: bytes,
+    source_updated: dt.datetime,
+    discovered_events: list[dict[str, Any]],
+    config: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    diagnostics = {
+        "rows": 0,
+        "matchedRows": 0,
+        "events": 0,
+        "eventsWithThreeBookmakers": 0,
+        "sourceUpdatedAt": iso(source_updated),
+        "stale": not _r3r12_source_fresh(source_updated, config, now),
+        "invalidHeaders": False,
+        "asianMarketsImported": 0,
+    }
+    if diagnostics["stale"]:
+        return [], diagnostics
+    text = None
+    for encoding in ("utf-8-sig", "cp1252", "latin-1"):
+        try:
+            text = payload.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    if text is None or text.lstrip().startswith("<"):
+        diagnostics["invalidHeaders"] = True
+        return [], diagnostics
+    reader = csv.DictReader(io.StringIO(text))
+    headers = set(reader.fieldnames or [])
+    if not {"Date", "HomeTeam", "AwayTeam"}.issubset(headers):
+        diagnostics["invalidHeaders"] = True
+        return [], diagnostics
+    by_event: dict[str, dict[str, Any]] = {}
+    minimum_lead = dt.timedelta(minutes=max(0, safe_int(config.get("minimumLeadMinutes"), 45)))
+    excluded_divisions = {str(value).casefold() for value in config.get("footballDataFixtureOddsExcludedDivisions") or ["rus"]}
+    for row in reader:
+        diagnostics["rows"] += 1
+        division = str(row.get("Div") or "").strip()
+        if division.casefold() in excluded_divisions:
+            continue
+        event = _r3r12_match_fixture_row(row, discovered_events, start, end)
+        if not event:
+            continue
+        commence = parse_time(event.get("commence_time"))
+        if commence is None or commence < now + minimum_lead:
+            continue
+        bookmakers = _r3r12_bookmakers_from_row(
+            row,
+            source_updated,
+            str(event.get("home_team") or ""),
+            str(event.get("away_team") or ""),
+        )
+        if not bookmakers:
+            continue
+        event_id = str(event.get("id") or stable_id(
+            event.get("sport_key"), event.get("home_team"), event.get("away_team"), event.get("commence_time")
+        ))
+        event["id"] = event_id
+        event["bookmakers"] = bookmakers
+        event["last_update"] = iso(source_updated)
+        event["_r15NoKeyFixtureOdds"] = True
+        event["_r15FixtureDivision"] = division
+        event["_r15FixtureSourceUpdatedAt"] = iso(source_updated)
+        prior = by_event.get(event_id)
+        if prior is None or len(bookmakers) > len(prior.get("bookmakers") or []):
+            by_event[event_id] = event
+        diagnostics["matchedRows"] += 1
+    events = sorted(by_event.values(), key=lambda item: str(item.get("commence_time") or ""))
+    diagnostics["events"] = len(events)
+    diagnostics["eventsWithThreeBookmakers"] = sum(
+        1 for event in events if len(event.get("bookmakers") or []) >= 3
+    )
+    return events, diagnostics
+
+
+def load_football_data_fixture_odds(
+    discovered_events: list[dict[str, Any]],
+    config: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    diagnostics = {
+        "enabled": bool(config.get("footballDataFixtureOddsEnabled", True)),
+        "status": "DISABLED",
+        "url": str(config.get("footballDataFixtureOddsUrl") or "https://www.football-data.co.uk/matches/resources/fixtures.csv"),
+        "cachePath": str(FOOTBALL_DATA_FIXTURE_ODDS_PATH),
+        "events": 0,
+        "eventsWithThreeBookmakers": 0,
+        "sourceUpdatedAt": None,
+        "usedCache": False,
+        "error": None,
+    }
+    if not diagnostics["enabled"]:
+        return [], diagnostics
+
+    url = diagnostics["url"]
+    timeout = max(5, min(60, safe_int(config.get("footballDataFixtureOddsTimeoutSeconds"), 25)))
+    try:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "text/csv,text/plain;q=0.9,*/*;q=0.3",
+                "Accept-Encoding": "identity",
+                "Cache-Control": "no-cache",
+                "User-Agent": "AI-Football-Lab-R15-R3R12/1.0",
+            },
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = response.read()
+            headers = {str(key).lower(): str(value) for key, value in response.headers.items()}
+            source_updated = _r3r12_parse_http_time(headers.get("last-modified"))
+        if source_updated is None:
+            raise RuntimeError("FIXTURE_FEED_LAST_MODIFIED_MISSING")
+        events, parsed = parse_football_data_fixture_csv(
+            payload, source_updated, discovered_events, config, start, end, now
+        )
+        diagnostics.update(parsed)
+        diagnostics["sourceUpdatedAt"] = iso(source_updated)
+        diagnostics["events"] = len(events)
+        diagnostics["eventsWithThreeBookmakers"] = parsed.get("eventsWithThreeBookmakers", 0)
+        diagnostics["status"] = (
+            "GREEN" if events
+            else "STALE" if parsed.get("stale")
+            else "INVALID_PAYLOAD" if parsed.get("invalidHeaders")
+            else "NO_MATCHED_EVENTS"
+        )
+        write_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {
+            "version": 1,
+            "sourceMarker": "V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK",
+            "updatedAt": iso(now),
+            "sourceUpdatedAt": iso(source_updated),
+            "sourceUrl": url,
+            "status": diagnostics["status"],
+            "events": events,
+            "diagnostics": diagnostics,
+        })
+        return events, diagnostics
+    except Exception as exc:
+        diagnostics["error"] = f"{type(exc).__name__}:{exc}"
+
+    cached = load_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {})
+    cached_updated = parse_time(cached.get("sourceUpdatedAt")) if isinstance(cached, dict) else None
+    if isinstance(cached, dict) and _r3r12_source_fresh(cached_updated, config, now):
+        usable: list[dict[str, Any]] = []
+        discovered_ids = {str(event.get("id") or "") for event in discovered_events}
+        minimum_lead = dt.timedelta(minutes=max(0, safe_int(config.get("minimumLeadMinutes"), 45)))
+        for event in cached.get("events") or []:
+            event_id = str(event.get("id") or "")
+            commence = parse_time(event.get("commence_time"))
+            if (
+                event_id
+                and event_id in discovered_ids
+                and commence is not None
+                and start <= commence <= end
+                and commence >= now + minimum_lead
+                and event.get("bookmakers")
+            ):
+                usable.append(copy.deepcopy(event))
+        diagnostics["status"] = "CACHE_GREEN" if usable else "CACHE_EMPTY"
+        diagnostics["usedCache"] = True
+        diagnostics["sourceUpdatedAt"] = iso(cached_updated)
+        diagnostics["events"] = len(usable)
+        diagnostics["eventsWithThreeBookmakers"] = sum(
+            1 for event in usable if len(event.get("bookmakers") or []) >= 3
+        )
+        return usable, diagnostics
+
+    if not FOOTBALL_DATA_FIXTURE_ODDS_PATH.exists():
+        write_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {
+            "version": 1,
+            "sourceMarker": "V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK",
+            "updatedAt": iso(now),
+            "sourceUpdatedAt": None,
+            "sourceUrl": url,
+            "status": "UNAVAILABLE",
+            "events": [],
+            "diagnostics": diagnostics,
+        })
+    diagnostics["status"] = "UNAVAILABLE"
+    return [], diagnostics
+
 def advanced_recovery_reserve_credits(
     client: ProviderClient,
     config: dict[str, Any],
@@ -1711,6 +2057,7 @@ def complete_portfolio_acquisition(
     api_key: str,
     initial_keys: list[str],
     quota_plan: dict[str, Any],
+    discovered_events: list[dict[str, Any]],
     config: dict[str, Any],
     start: dt.datetime,
     end: dt.datetime,
@@ -1722,7 +2069,12 @@ def complete_portfolio_acquisition(
     cached_featured, cached_advanced, cache_load_diag = load_recent_odds_snapshot_cache(
         config, start, end, now
     )
-    featured_events: list[dict[str, Any]] = merge_unique_odds_events([], cached_featured)
+    fixture_events, fixture_odds_diag = load_football_data_fixture_odds(
+        discovered_events, config, start, end, now
+    )
+    featured_events: list[dict[str, Any]] = merge_unique_odds_events(
+        cached_featured, fixture_events
+    )
     advanced: dict[str, dict[str, Any]] = dict(cached_advanced)
     errors: list[str] = []
     attempted_pairs: set[tuple[str, str]] = set()
@@ -1850,6 +2202,15 @@ def complete_portfolio_acquisition(
     quota_plan["competitionsDeferredByQuota"] = max(0, len(ranked) - len(selected))
     cache_save_diag = save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
     quota_exhausted_after = odds_quota_is_exhausted(client, config)
+    quota_plan["noKeyFixtureOddsEnabled"] = bool(config.get("footballDataFixtureOddsEnabled", True))
+    quota_plan["noKeyFixtureOddsStatus"] = fixture_odds_diag.get("status")
+    quota_plan["noKeyFixtureOddsEvents"] = safe_int(fixture_odds_diag.get("events"), 0)
+    quota_plan["noKeyFixtureOddsEventsWithThreeBookmakers"] = safe_int(
+        fixture_odds_diag.get("eventsWithThreeBookmakers"), 0
+    )
+    quota_plan["noKeyFixtureOddsSourceUpdatedAt"] = fixture_odds_diag.get("sourceUpdatedAt")
+    quota_plan["noKeyFixtureOddsUsedCache"] = bool(fixture_odds_diag.get("usedCache"))
+    quota_plan["noKeyFixtureOddsError"] = fixture_odds_diag.get("error")
     quota_plan["oddsCacheEnabled"] = bool(config.get("oddsCacheEnabled", True))
     quota_plan["oddsCacheLoadedFeatured"] = safe_int(cache_load_diag.get("loadedFeatured"), 0)
     quota_plan["oddsCacheLoadedAdvanced"] = safe_int(cache_load_diag.get("loadedAdvanced"), 0)
@@ -1864,9 +2225,17 @@ def complete_portfolio_acquisition(
     quota_plan["quotaExhaustedAfterAcquisition"] = quota_exhausted_after
     quota_plan["automaticResumeOnQuotaRecovery"] = bool(config.get("oddsAutomaticResumeOnQuotaRecovery", True))
     if safe_int(diagnostics.get("eventsQualified"), 0) >= target:
-        quota_plan["quotaLifecycleStatus"] = "PORTFOLIO_READY"
+        quota_plan["quotaLifecycleStatus"] = (
+            "PORTFOLIO_READY_WITH_NO_KEY_FIXTURE_ODDS"
+            if safe_int(fixture_odds_diag.get("events"), 0) > 0
+            else "PORTFOLIO_READY"
+        )
     elif quota_exhausted_after:
-        quota_plan["quotaLifecycleStatus"] = "WAITING_FOR_ODDS_QUOTA_RESET"
+        quota_plan["quotaLifecycleStatus"] = (
+            "NO_KEY_FIXTURE_ODDS_INSUFFICIENT_WAITING_FOR_REFRESH_OR_QUOTA"
+            if safe_int(fixture_odds_diag.get("events"), 0) > 0
+            else "WAITING_FOR_ODDS_QUOTA_RESET"
+        )
     else:
         quota_plan["quotaLifecycleStatus"] = "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE"
     return featured_events, advanced, errors, quota_plan, diagnostics, total_recovery
@@ -2857,7 +3226,7 @@ def publish_generation() -> int:
     if not start or not end:
         raise RuntimeError("R15 operational window unresolved")
     odds_events, advanced, acquisition_errors, quota_plan, preliminary_diag, advanced_recovery_diag = complete_portfolio_acquisition(
-        client, odds_key, keys, quota_plan, config, start, end, context, state, now
+        client, odds_key, keys, quota_plan, events, config, start, end, context, state, now
     )
     featured_errors = list(acquisition_errors)
     keys = list(quota_plan.get("competitionKeysSelected") or keys)

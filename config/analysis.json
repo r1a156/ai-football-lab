@@ -351,7 +351,7 @@
     "btts"
   ],
   "nearMissDiagnosticsLimit": 30,
-  "portfolioCompletionPolicy": "R3R10_RESERVED_ADVANCED_RECOVERY_WITH_R3R11_FRESH_ODDS_CACHE_AND_AUTOMATIC_QUOTA_RESUME",
+  "portfolioCompletionPolicy": "R3R10_RESERVED_ADVANCED_PLUS_R3R11_CACHE_PLUS_R3R12_NO_KEY_FIXTURE_ODDS_WITHOUT_THRESHOLD_RELAXATION",
   "marketConflictPolicy": "REJECT_CONFLICTING_MARKET_ONLY_KEEP_EVENT_ELIGIBLE_FOR_OTHER_QUALIFIED_MARKETS",
   "oddsAdvancedRecoveryReserveCredits": 4,
   "oddsAdvancedRecoveryReserveRatio": 0.45,
@@ -373,7 +373,24 @@
   "oddsCacheMaximumEvents": 500,
   "oddsCacheFile": "data/r15-odds-cache.json",
   "oddsCacheReusePolicy": "ONLY_PROVIDER_RETURNED_FUTURE_EVENTS_WITH_QUOTE_AGE_INSIDE_MAXIMUM_NO_STALE_PUBLICATION",
-  "oddsQuotaExhaustedPolicy": "FAIL_CLOSED_WAIT_FOR_REAL_QUOTA_RESET_KEEP_SITE_WITHOUT_FALSE_CURRENT_PICKS",
+  "oddsQuotaExhaustedPolicy": "TRY_FRESH_NO_KEY_FIXTURE_ODDS_THEN_FAIL_CLOSED_WAIT_FOR_REAL_QUOTA_RESET",
   "oddsAutomaticResumeOnQuotaRecovery": true,
-  "oddsAutomaticResumePolicy": "NEXT_SCHEDULED_WORKFLOW_DETECTS_POSITIVE_PROVIDER_HEADER_AND_RESUMES_R3R10_PIPELINE"
+  "oddsAutomaticResumePolicy": "NEXT_SCHEDULED_WORKFLOW_DETECTS_POSITIVE_PROVIDER_HEADER_AND_RESUMES_R3R10_PIPELINE",
+  "footballDataFixtureOddsEnabled": true,
+  "footballDataFixtureOddsUrl": "https://www.football-data.co.uk/matches/resources/fixtures.csv",
+  "footballDataFixtureOddsMaximumAgeHours": 72,
+  "footballDataFixtureOddsTimeoutSeconds": 25,
+  "footballDataFixtureOddsExcludedDivisions": [
+    "RUS"
+  ],
+  "footballDataFixtureOddsAllowedMarkets": [
+    "h2h",
+    "totals"
+  ],
+  "footballDataFixtureOddsMinimumBookmakers": 3,
+  "footballDataFixtureOddsEventBindingPolicy": "MATCH_ONLY_TO_PRIMARY_DISCOVERED_EVENT_BY_DATE_HOME_AWAY_NEVER_CREATE_SCHEDULE",
+  "footballDataFixtureOddsFreshnessPolicy": "REQUIRE_HTTP_LAST_MODIFIED_WITHIN_72_HOURS_OR_FRESH_PERSISTED_CACHE",
+  "footballDataFixtureOddsAsianMarketPolicy": "FORBIDDEN",
+  "footballDataFixtureOddsMarketAveragePolicy": "DO_NOT_COUNT_AVERAGE_OR_MAXIMUM_COLUMNS_AS_BOOKMAKERS",
+  "footballDataFixtureOddsCacheFile": "data/football-data-fixtures-odds.json"
 }
