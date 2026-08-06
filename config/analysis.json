@@ -351,7 +351,7 @@
     "btts"
   ],
   "nearMissDiagnosticsLimit": 30,
-  "portfolioCompletionPolicy": "INITIAL_MULTI_COMPETITION_FEATURED_POOL_THEN_RESERVED_NEAR_MISS_ADVANCED_RECOVERY_THEN_INCREMENTAL_COMPETITION_WITHOUT_THRESHOLD_RELAXATION",
+  "portfolioCompletionPolicy": "R3R10_RESERVED_ADVANCED_RECOVERY_WITH_R3R11_FRESH_ODDS_CACHE_AND_AUTOMATIC_QUOTA_RESUME",
   "marketConflictPolicy": "REJECT_CONFLICTING_MARKET_ONLY_KEEP_EVENT_ELIGIBLE_FOR_OTHER_QUALIFIED_MARKETS",
   "oddsAdvancedRecoveryReserveCredits": 4,
   "oddsAdvancedRecoveryReserveRatio": 0.45,
@@ -367,5 +367,13 @@
   "oddsAdvancedRecoveryBeforeCompetitionBurst": true,
   "oddsAdvancedRecoveryRecalculateAfterEachResponse": true,
   "oddsFeaturedCompletionAfterAdvanced": true,
-  "advancedRecoveryPolicy": "RESERVE_REAL_CREDITS_BEFORE_FEATURED_BURST_QUERY_ONE_MARKET_AT_A_TIME_RECALCULATE_AFTER_EACH_RESPONSE_THEN_ADD_COMPETITION"
+  "advancedRecoveryPolicy": "RESERVE_REAL_CREDITS_BEFORE_FEATURED_BURST_QUERY_ONE_MARKET_AT_A_TIME_RECALCULATE_AFTER_EACH_RESPONSE_THEN_ADD_COMPETITION",
+  "oddsCacheEnabled": true,
+  "oddsCacheMaximumAgeMinutes": 180,
+  "oddsCacheMaximumEvents": 500,
+  "oddsCacheFile": "data/r15-odds-cache.json",
+  "oddsCacheReusePolicy": "ONLY_PROVIDER_RETURNED_FUTURE_EVENTS_WITH_QUOTE_AGE_INSIDE_MAXIMUM_NO_STALE_PUBLICATION",
+  "oddsQuotaExhaustedPolicy": "FAIL_CLOSED_WAIT_FOR_REAL_QUOTA_RESET_KEEP_SITE_WITHOUT_FALSE_CURRENT_PICKS",
+  "oddsAutomaticResumeOnQuotaRecovery": true,
+  "oddsAutomaticResumePolicy": "NEXT_SCHEDULED_WORKFLOW_DETECTS_POSITIVE_PROVIDER_HEADER_AND_RESUMES_R3R10_PIPELINE"
 }

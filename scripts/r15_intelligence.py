@@ -39,6 +39,7 @@ TEAM_REGISTRY_PATH = ROOT / "data" / "team-registry.json"
 PROVIDER_HEALTH_PATH = ROOT / "data" / "provider-health.json"
 LIVE_STATE_PATH = ROOT / "data" / "live-state.json"
 LIVE_LEARNING_PATH = ROOT / "data" / "live-learning.json"
+ODDS_CACHE_PATH = ROOT / "data" / "r15-odds-cache.json"
 
 UTC = dt.timezone.utc
 R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
@@ -1130,6 +1131,179 @@ def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: 
 # spends advanced credits one market at a time on hard-filter-clean near misses,
 # recalculates the full portfolio after every useful response, and only then
 # considers another competition. Strategy thresholds and probabilities are unchanged.
+# V10_R15F_R3R11_QUOTA_CACHE_AUTOMATIC_RESUME
+# R3R11 never invents or stretches odds. It persists only provider-returned payloads,
+# reuses them only while the event is still future and the quote remains inside the
+# configured freshness window, and waits fail-closed when the real quota is zero.
+def _odds_cache_quote_time(event: dict[str, Any]) -> dt.datetime | None:
+    values: list[dt.datetime] = []
+    direct = parse_time(event.get("last_update") or event.get("lastUpdate") or event.get("_r15CachedAt"))
+    if direct is not None:
+        values.append(direct)
+    for bookmaker in event.get("bookmakers") or []:
+        if not isinstance(bookmaker, dict):
+            continue
+        value = parse_time(bookmaker.get("last_update") or bookmaker.get("lastUpdate"))
+        if value is not None:
+            values.append(value)
+    return max(values) if values else None
+
+
+def _odds_cache_event_usable(
+    event: dict[str, Any],
+    config: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+    now: dt.datetime,
+) -> tuple[bool, str]:
+    if not isinstance(event, dict) or not str(event.get("id") or ""):
+        return False, "INVALID_EVENT"
+    commence = parse_time(event.get("commence_time") or event.get("commenceTime"))
+    if commence is None:
+        return False, "MISSING_COMMENCE_TIME"
+    minimum_lead = dt.timedelta(minutes=max(0, safe_int(config.get("minimumLeadMinutes"), 45)))
+    if commence < now + minimum_lead:
+        return False, "EVENT_ALREADY_STARTED_OR_TOO_CLOSE"
+    if commence < start or commence > end:
+        return False, "OUTSIDE_ACTIVE_SELECTION_HORIZON"
+    quote_time = _odds_cache_quote_time(event)
+    if quote_time is None:
+        return False, "MISSING_QUOTE_TIME"
+    maximum_age = dt.timedelta(minutes=max(1, safe_int(
+        config.get("oddsCacheMaximumAgeMinutes"),
+        config.get("maximumQuoteAgeMinutes", 180),
+    )))
+    age = now - quote_time
+    if age < dt.timedelta(minutes=-5):
+        return False, "QUOTE_TIME_IN_FUTURE"
+    if age > maximum_age:
+        return False, "QUOTE_EXPIRED"
+    if not any(isinstance(row, dict) for row in event.get("bookmakers") or []):
+        return False, "NO_BOOKMAKER_PAYLOAD"
+    return True, "GREEN"
+
+
+def load_recent_odds_snapshot_cache(
+    config: dict[str, Any],
+    start: dt.datetime,
+    end: dt.datetime,
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, Any]]:
+    diagnostics = {
+        "enabled": bool(config.get("oddsCacheEnabled", True)),
+        "path": str(ODDS_CACHE_PATH),
+        "loadedFeatured": 0,
+        "loadedAdvanced": 0,
+        "expired": 0,
+        "rejectedReasons": {},
+    }
+    if not diagnostics["enabled"]:
+        return [], {}, diagnostics
+    payload = load_json(ODDS_CACHE_PATH, {})
+    if not isinstance(payload, dict):
+        return [], {}, diagnostics
+    featured: list[dict[str, Any]] = []
+    advanced: dict[str, dict[str, Any]] = {}
+    reasons: defaultdict[str, int] = defaultdict(int)
+    maximum_events = max(15, safe_int(config.get("oddsCacheMaximumEvents"), 500))
+    for event in payload.get("featuredEvents") or []:
+        ok, reason = _odds_cache_event_usable(event, config, start, end, now)
+        if ok:
+            item = copy.deepcopy(event)
+            item["_r15OddsCacheHit"] = True
+            featured.append(item)
+        else:
+            reasons[reason] += 1
+    raw_advanced = payload.get("advancedEvents") or {}
+    if isinstance(raw_advanced, dict):
+        rows = raw_advanced.items()
+    else:
+        rows = (
+            (str(item.get("id") or ""), item)
+            for item in raw_advanced
+            if isinstance(item, dict)
+        )
+    for event_id, event in rows:
+        ok, reason = _odds_cache_event_usable(event, config, start, end, now)
+        if ok and event_id:
+            item = copy.deepcopy(event)
+            item["_r15OddsCacheHit"] = True
+            advanced[str(event_id)] = item
+        else:
+            reasons[reason] += 1
+    featured = merge_unique_odds_events([], featured)[:maximum_events]
+    if len(advanced) > maximum_events:
+        advanced = dict(list(advanced.items())[:maximum_events])
+    diagnostics["loadedFeatured"] = len(featured)
+    diagnostics["loadedAdvanced"] = len(advanced)
+    diagnostics["expired"] = sum(reasons.values())
+    diagnostics["rejectedReasons"] = dict(reasons)
+    diagnostics["cacheUpdatedAt"] = payload.get("updatedAt")
+    return featured, advanced, diagnostics
+
+
+def save_recent_odds_snapshot_cache(
+    featured_events: list[dict[str, Any]],
+    advanced: dict[str, dict[str, Any]],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    diagnostics = {
+        "enabled": bool(config.get("oddsCacheEnabled", True)),
+        "savedFeatured": 0,
+        "savedAdvanced": 0,
+        "path": str(ODDS_CACHE_PATH),
+    }
+    if not diagnostics["enabled"]:
+        return diagnostics
+    maximum_events = max(15, safe_int(config.get("oddsCacheMaximumEvents"), 500))
+    maximum_horizon = dt.timedelta(hours=max(24, safe_int(config.get("portfolioSearchHorizonHours"), 72)) + 24)
+    start = now
+    end = now + maximum_horizon
+    prepared_featured: list[dict[str, Any]] = []
+    for event in merge_unique_odds_events([], featured_events):
+        item = copy.deepcopy(event)
+        if not item.get("_r15CachedAt"):
+            item["_r15CachedAt"] = iso(now)
+        item.pop("_r15OddsCacheHit", None)
+        ok, _ = _odds_cache_event_usable(item, config, start, end, now)
+        if ok:
+            prepared_featured.append(item)
+    prepared_advanced: dict[str, dict[str, Any]] = {}
+    for event_id, event in (advanced or {}).items():
+        item = copy.deepcopy(event)
+        if not item.get("_r15CachedAt"):
+            item["_r15CachedAt"] = iso(now)
+        item.pop("_r15OddsCacheHit", None)
+        ok, _ = _odds_cache_event_usable(item, config, start, end, now)
+        if ok and event_id:
+            prepared_advanced[str(event_id)] = item
+    prepared_featured = prepared_featured[:maximum_events]
+    if len(prepared_advanced) > maximum_events:
+        prepared_advanced = dict(list(prepared_advanced.items())[:maximum_events])
+    write_json(ODDS_CACHE_PATH, {
+        "version": 1,
+        "sourceMarker": "V10_R15F_R3R11_QUOTA_CACHE_AUTOMATIC_RESUME",
+        "updatedAt": iso(now),
+        "maximumAgeMinutes": max(1, safe_int(
+            config.get("oddsCacheMaximumAgeMinutes"),
+            config.get("maximumQuoteAgeMinutes", 180),
+        )),
+        "featuredEvents": prepared_featured,
+        "advancedEvents": prepared_advanced,
+    })
+    diagnostics["savedFeatured"] = len(prepared_featured)
+    diagnostics["savedAdvanced"] = len(prepared_advanced)
+    return diagnostics
+
+
+def odds_quota_is_exhausted(client: ProviderClient, config: dict[str, Any]) -> bool:
+    raw = client.odds_quota.get("requestsRemaining")
+    if raw is not None and str(raw).strip() != "":
+        return safe_int(raw, 0) <= 0
+    budget = free_odds_daily_budget(client, config)
+    return safe_int(budget.get("portfolioAvailableThisRun"), 0) <= 0
+
 def advanced_recovery_reserve_credits(
     client: ProviderClient,
     config: dict[str, Any],
@@ -1545,16 +1719,25 @@ def complete_portfolio_acquisition(
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], list[str], dict[str, Any], dict[str, Any], dict[str, Any]]:
     selected = list(initial_keys)
-    featured_events: list[dict[str, Any]] = []
-    advanced: dict[str, dict[str, Any]] = {}
+    cached_featured, cached_advanced, cache_load_diag = load_recent_odds_snapshot_cache(
+        config, start, end, now
+    )
+    featured_events: list[dict[str, Any]] = merge_unique_odds_events([], cached_featured)
+    advanced: dict[str, dict[str, Any]] = dict(cached_advanced)
     errors: list[str] = []
     attempted_pairs: set[tuple[str, str]] = set()
     reserve = max(0, safe_int(quota_plan.get("advancedRecoveryReserveCredits"), 0))
-    first, first_errors = fetch_featured_odds_quota_aware(
-        client, api_key, selected, config, start, end, reserve_credits=reserve
-    )
-    featured_events = merge_unique_odds_events(featured_events, first)
-    errors.extend(first_errors)
+    quota_exhausted_at_start = odds_quota_is_exhausted(client, config)
+    first: list[dict[str, Any]] = []
+    first_errors: list[str] = []
+    if selected and not quota_exhausted_at_start:
+        first, first_errors = fetch_featured_odds_quota_aware(
+            client, api_key, selected, config, start, end, reserve_credits=reserve
+        )
+        featured_events = merge_unique_odds_events(featured_events, first)
+        errors.extend(first_errors)
+        if first:
+            save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
     _, diagnostics = build_strategy_analysis(featured_events, advanced, context, state, config, now)
     diagnostics = enrich_rejection_diagnostics(diagnostics, config)
     target = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
@@ -1575,7 +1758,11 @@ def complete_portfolio_acquisition(
     def run_recovery() -> None:
         nonlocal advanced, diagnostics, total_recovery, errors
         recovery_ids = list(diagnostics.get("advancedRecoveryEventIds") or [])
-        if not recovery_ids or safe_int(diagnostics.get("eventsQualified"), 0) >= target:
+        if (
+            not recovery_ids
+            or safe_int(diagnostics.get("eventsQualified"), 0) >= target
+            or odds_quota_is_exhausted(client, config)
+        ):
             return
         advanced, advanced_errors, recovery_diag, diagnostics = fetch_advanced_markets_quota_aware(
             client, api_key, featured_events, context, config, now,
@@ -1601,6 +1788,8 @@ def complete_portfolio_acquisition(
         total_recovery["qualifiedAfter"] = safe_int(diagnostics.get("eventsQualified"), 0)
         total_recovery["quotaRemaining"] = client.odds_quota.get("requestsRemaining")
         total_recovery["errors"] = (list(total_recovery.get("errors") or []) + list(recovery_diag.get("errors") or []))[-20:]
+        if safe_int(recovery_diag.get("returned"), 0) > 0:
+            save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
 
     # Reserved advanced recovery always runs before adding another competition.
     run_recovery()
@@ -1625,6 +1814,8 @@ def complete_portfolio_acquisition(
         errors.extend(incoming_errors)
         selected.append(next_key)
         featured_events = merge_unique_odds_events(featured_events, incoming)
+        if incoming:
+            save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
         _, diagnostics = build_strategy_analysis(featured_events, advanced, context, state, config, now)
         diagnostics = enrich_rejection_diagnostics(diagnostics, config)
         completion_rounds.append({
@@ -1657,6 +1848,27 @@ def complete_portfolio_acquisition(
     quota_plan["advancedRecoveryRecoveredEvents"] = total_recovery["recoveredEvents"]
     quota_plan["qualifiedAfterAdvanced"] = safe_int(diagnostics.get("eventsQualified"), 0)
     quota_plan["competitionsDeferredByQuota"] = max(0, len(ranked) - len(selected))
+    cache_save_diag = save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
+    quota_exhausted_after = odds_quota_is_exhausted(client, config)
+    quota_plan["oddsCacheEnabled"] = bool(config.get("oddsCacheEnabled", True))
+    quota_plan["oddsCacheLoadedFeatured"] = safe_int(cache_load_diag.get("loadedFeatured"), 0)
+    quota_plan["oddsCacheLoadedAdvanced"] = safe_int(cache_load_diag.get("loadedAdvanced"), 0)
+    quota_plan["oddsCacheExpired"] = safe_int(cache_load_diag.get("expired"), 0)
+    quota_plan["oddsCacheSavedFeatured"] = safe_int(cache_save_diag.get("savedFeatured"), 0)
+    quota_plan["oddsCacheSavedAdvanced"] = safe_int(cache_save_diag.get("savedAdvanced"), 0)
+    quota_plan["oddsCacheMaximumAgeMinutes"] = max(1, safe_int(
+        config.get("oddsCacheMaximumAgeMinutes"),
+        config.get("maximumQuoteAgeMinutes", 180),
+    ))
+    quota_plan["quotaExhaustedAtStart"] = quota_exhausted_at_start
+    quota_plan["quotaExhaustedAfterAcquisition"] = quota_exhausted_after
+    quota_plan["automaticResumeOnQuotaRecovery"] = bool(config.get("oddsAutomaticResumeOnQuotaRecovery", True))
+    if safe_int(diagnostics.get("eventsQualified"), 0) >= target:
+        quota_plan["quotaLifecycleStatus"] = "PORTFOLIO_READY"
+    elif quota_exhausted_after:
+        quota_plan["quotaLifecycleStatus"] = "WAITING_FOR_ODDS_QUOTA_RESET"
+    else:
+        quota_plan["quotaLifecycleStatus"] = "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE"
     return featured_events, advanced, errors, quota_plan, diagnostics, total_recovery
 # ---------------------------------------------------------------------------
 # Candidate ranking, 15-match strategy and express construction
