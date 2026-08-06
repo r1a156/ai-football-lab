@@ -351,6 +351,21 @@
     "btts"
   ],
   "nearMissDiagnosticsLimit": 30,
-  "portfolioCompletionPolicy": "MULTI_COMPETITION_INCREMENTAL_FEATURED_ODDS_THEN_TARGETED_ADVANCED_MARKET_RECOVERY_WITHOUT_THRESHOLD_RELAXATION",
-  "marketConflictPolicy": "REJECT_CONFLICTING_MARKET_ONLY_KEEP_EVENT_ELIGIBLE_FOR_OTHER_QUALIFIED_MARKETS"
+  "portfolioCompletionPolicy": "INITIAL_MULTI_COMPETITION_FEATURED_POOL_THEN_RESERVED_NEAR_MISS_ADVANCED_RECOVERY_THEN_INCREMENTAL_COMPETITION_WITHOUT_THRESHOLD_RELAXATION",
+  "marketConflictPolicy": "REJECT_CONFLICTING_MARKET_ONLY_KEEP_EVENT_ELIGIBLE_FOR_OTHER_QUALIFIED_MARKETS",
+  "oddsAdvancedRecoveryReserveCredits": 4,
+  "oddsAdvancedRecoveryReserveRatio": 0.45,
+  "oddsAdvancedRecoveryMaximumReserveCredits": 12,
+  "oddsAdvancedRecoveryMaximumEvents": 16,
+  "oddsAdvancedRecoveryMaximumRequests": 12,
+  "oddsAdvancedRecoveryMarketOrder": [
+    "double_chance",
+    "btts",
+    "team_totals"
+  ],
+  "oddsAdvancedRecoverySingleMarketRequests": true,
+  "oddsAdvancedRecoveryBeforeCompetitionBurst": true,
+  "oddsAdvancedRecoveryRecalculateAfterEachResponse": true,
+  "oddsFeaturedCompletionAfterAdvanced": true,
+  "advancedRecoveryPolicy": "RESERVE_REAL_CREDITS_BEFORE_FEATURED_BURST_QUERY_ONE_MARKET_AT_A_TIME_RECALCULATE_AFTER_EACH_RESPONSE_THEN_ADD_COMPETITION"
 }
