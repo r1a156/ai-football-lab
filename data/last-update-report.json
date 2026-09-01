@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-08-06T07:48:02Z",
-  "finishedAt": "2026-08-31T23:44:42Z",
+  "finishedAt": "2026-09-01T02:05:30Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -242,9 +242,8 @@
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
-        "status": 401,
-        "retryAfter": 0,
-        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
+        "status": 200,
+        "elapsedSeconds": 0.18
       }
     ],
     "quota": {
@@ -260,7 +259,7 @@
       "sourceUpdatedAt": "2026-08-06T07:50:18Z"
     },
     "dueRecords": 1,
-    "providerFinalResults": 1,
+    "providerFinalResults": 12,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
