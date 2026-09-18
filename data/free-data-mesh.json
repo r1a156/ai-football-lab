@@ -1,40 +1,34 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15F_NO_KEY_FREE_DATA_MESH",
-  "updatedAt": "2026-09-17T06:13:41Z",
+  "updatedAt": "2026-09-18T05:59:54Z",
   "sources": {
     "FOOTBALL_DATA_CO_UK": {
-      "lastAttemptAt": "2026-09-17T06:13:41Z",
-      "status": "RED",
+      "lastAttemptAt": "2026-09-18T05:58:04Z",
+      "status": "PARTIAL",
       "errors": [
-        "D1/2526:URLError",
-        "D2/2526:URLError",
-        "I1/2526:URLError",
-        "I2/2526:URLError",
-        "SP1/2526:URLError",
-        "SP2/2526:URLError",
-        "F1/2526:URLError",
-        "F2/2526:URLError",
-        "N1/2526:URLError",
-        "P1/2526:URLError",
-        "B1/2526:URLError",
-        "T1/2526:URLError",
-        "G1/2526:URLError",
-        "AUT/2526:URLError",
-        "SWZ/2526:URLError",
-        "DNK/2526:URLError",
-        "NOR/2526:URLError",
-        "SWE/2526:URLError",
-        "POL/2526:URLError",
-        "ROU/2526:URLError"
+        "AUT/2627:HTTPError",
+        "SWZ/2627:HTTPError",
+        "DNK/2627:HTTPError",
+        "NOR/2627:HTTPError",
+        "SWE/2627:HTTPError",
+        "POL/2627:HTTPError",
+        "ROU/2627:HTTPError",
+        "AUT/2526:HTTPError",
+        "SWZ/2526:HTTPError",
+        "DNK/2526:HTTPError",
+        "NOR/2526:HTTPError",
+        "SWE/2526:HTTPError",
+        "POL/2526:HTTPError",
+        "ROU/2526:HTTPError"
       ],
-      "requests": 0,
-      "matches": 0,
-      "updatedAt": "2026-09-17T06:13:41Z",
-      "lastSuccessfulAt": "2026-09-16T06:05:05Z"
+      "requests": 38,
+      "matches": 7658,
+      "updatedAt": "2026-09-18T05:58:04Z",
+      "lastSuccessfulAt": "2026-09-18T05:58:04Z"
     },
     "OPENFOOTBALL": {
-      "lastAttemptAt": "2026-09-17T06:10:34Z",
+      "lastAttemptAt": "2026-09-18T05:58:04Z",
       "status": "PARTIAL",
       "errors": [
         "de.2/2026-27:HTTPError",
@@ -49,17 +43,17 @@
       ],
       "requests": 23,
       "matches": 7969,
-      "updatedAt": "2026-09-17T06:10:34Z",
-      "lastSuccessfulAt": "2026-09-17T06:10:34Z"
+      "updatedAt": "2026-09-18T05:58:04Z",
+      "lastSuccessfulAt": "2026-09-18T05:58:04Z"
     },
     "OPENLIGADB": {
-      "lastAttemptAt": "2026-09-17T06:10:34Z",
+      "lastAttemptAt": "2026-09-18T05:58:04Z",
       "status": "GREEN",
       "errors": [],
       "requests": 8,
       "matches": 2095,
-      "updatedAt": "2026-09-17T06:10:34Z",
-      "lastSuccessfulAt": "2026-09-17T06:10:34Z"
+      "updatedAt": "2026-09-18T05:58:04Z",
+      "lastSuccessfulAt": "2026-09-18T05:58:04Z"
     },
     "STATSBOMB_OPEN_DATA": {
       "lastAttemptAt": "2026-09-16T06:05:05Z",
@@ -71,7 +65,7 @@
       "lastSuccessfulAt": "2026-09-16T06:05:05Z"
     },
     "CLUBELO": {
-      "lastAttemptAt": "2026-09-17T06:13:41Z",
+      "lastAttemptAt": "2026-09-18T05:59:54Z",
       "status": "RED",
       "errors": [
         "http://api.clubelo.com/:HTTPError",
@@ -79,14 +73,14 @@
       ],
       "requests": 0,
       "matches": 0,
-      "updatedAt": "2026-09-17T06:13:41Z"
+      "updatedAt": "2026-09-18T05:59:54Z"
     }
   },
   "sourceDocuments": {},
   "matchesIngested": 0,
   "duplicatesRemoved": 0,
   "lastRefreshStatus": "GREEN",
-  "historyMatches": 17256,
+  "historyMatches": 17269,
   "noRegistrationRequired": true,
   "noUserApiKeysRequired": true
 }
