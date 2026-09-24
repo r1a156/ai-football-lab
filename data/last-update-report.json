@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-08-06T07:48:02Z",
-  "finishedAt": "2026-09-24T06:18:04Z",
+  "finishedAt": "2026-09-24T11:58:04Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -242,8 +242,9 @@
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.243
+        "status": 401,
+        "retryAfter": 0,
+        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
       }
     ],
     "quota": {
@@ -259,7 +260,7 @@
       "sourceUpdatedAt": "2026-08-06T07:50:18Z"
     },
     "dueRecords": 1,
-    "providerFinalResults": 4,
+    "providerFinalResults": 1,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
@@ -277,6 +278,7 @@
     }
   },
   "warnings": [
+    "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
     "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
     "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
     "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
