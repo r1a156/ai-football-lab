@@ -500,6 +500,8 @@ def audit_records(
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    "User-Agent": "AI-Football-Lab-R15F/15.0 (+https://ai-football-lab.pages.dev/)",
                     "HTTP-Referer": "https://ai-football-lab.pages.dev/",
                     "X-Title": "AI Football Lab R15F R3",
                 },
