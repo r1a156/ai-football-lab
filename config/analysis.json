@@ -119,7 +119,7 @@
   "localizationPolicy": "ALL_VISIBLE_TEXT_AND_TEAM_NAMES_RUSSIAN",
   "teamNamePolicy": "OFFICIAL_RUSSIAN_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
   "liveEnabled": true,
-  "liveRefreshMinutes": 5,
+  "liveRefreshMinutes": 10,
   "liveLookaheadMinutes": 90,
   "livePastHoursSoccer": 12,
   "livePastHoursHockey": 12,
@@ -311,8 +311,8 @@
   "freeOddsPolicy": "THE_ODDS_API_EXISTING_FREE_KEY_ONLY_DAILY_FAIR_SHARE_NO_ARTIFICIAL_RESERVE",
   "fonbetGatePolicy": "REQUIRE_CONFIRMED_POOL_ONLY_WHEN_PUBLIC_SNAPSHOT_CONFIRMS_AT_LEAST_FIFTEEN_OTHERWISE_VISIBLE_OBSERVATIONAL_STATUS",
   "translationPolicy": "WIKIDATA_RU_THEN_RU_WIKIPEDIA_THEN_EXISTING_FOOTBALL_TRANSLITERATION_CACHE_FOREVER",
-  "livePaidScoreMinimumMinutesAfterKickoff": 115,
-  "livePaidScoreFallbackIntervalMinutes": 240,
+  "livePaidScoreMinimumMinutesAfterKickoff": 125,
+  "livePaidScoreFallbackIntervalMinutes": 360,
   "freeLiveScoreSources": [
     "SOFASCORE_PUBLIC_WEB",
     "ESPN_PUBLIC_SCOREBOARD",
@@ -393,5 +393,6 @@
   "footballDataFixtureOddsMarketAveragePolicy": "DO_NOT_COUNT_AVERAGE_OR_MAXIMUM_COLUMNS_AS_BOOKMAKERS",
   "footballDataFixtureOddsCacheFile": "data/football-data-fixtures-odds.json",
   "cloudflareAiWorkerBoundModelOnly": true,
-  "oddsBackupActivationThreshold": 4
+  "oddsBackupActivationThreshold": 4,
+  "livePaidScoreDailyCreditBudget": 2
 }
