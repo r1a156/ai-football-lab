@@ -1,7 +1,13 @@
 {
   "version": "V10_R15F_CF_AI_R1",
-  "status": "MIGRATED_EMPTY",
-  "logicalRunConsumed": false,
+  "operationalDayId": "2026-10-04-MSK-0800",
+  "inputFingerprint": "6e70e82b9849d8a213c505e29a65e812ab7eceb38a3bcce7aff397306d7d3b0b",
+  "createdAt": "2026-10-04T18:07:59.592955Z",
+  "logicalRunConsumed": true,
+  "technicalAttempts": 1,
   "schemaValid": false,
-  "provider": "CLOUDFLARE_WORKERS_AI"
+  "status": "FAILED_FALLBACK",
+  "modelRequested": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "modelUsed": null,
+  "error": "HTTP_403:error code: 1010\n"
 }
