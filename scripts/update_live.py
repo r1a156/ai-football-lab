@@ -1215,10 +1215,19 @@ def run_update() -> int:
         if best_result(record, free_results) is None
         and paid_score_fallback_due(record, now, config)
     ]
+    odds_key = None
+    if unresolved_records:
+        try:
+            odds_key, odds_key_selection = core.select_odds_api_key(
+                activation_threshold=core.safe_int(config.get("oddsBackupActivationThreshold"), 4),
+            )
+            print(f"LIVE_ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
+        except RuntimeError as exc:
+            print(f"LIVE_ODDS_KEY_UNAVAILABLE={type(exc).__name__}")
     odds_results, odds_errors = fetch_odds_scores(
         client,
         unresolved_records,
-        os.getenv("ODDS_API_KEY", "").strip() or None,
+        odds_key,
         config,
         now,
     )
