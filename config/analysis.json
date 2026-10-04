@@ -252,7 +252,7 @@
   "morningRolloverPolicy": "STRICT_MOSCOW_OPERATIONAL_DAY_GENERATION_WITH_IDEMPOTENT_WATCHDOG_RETRIES",
   "scheduleTimezone": "Europe/Moscow",
   "preferredMaximumTotalUnderBestBets": 1,
-  "totalUnderPortfolioPenalty": 8.0,
+  "totalUnderPortfolioPenalty": 8,
   "exactFourPortfolioPolicy": "INFORMATIONAL_ONLY_NO_LEGACY_FINANCIAL_EXPOSURE",
   "footballDataRateLimitPolicy": "PERSISTENT_INCREMENTAL_CACHE_MAX_TEN_PER_MINUTE_STOP_ON_429_AND_CONTINUE_FROM_CACHE",
   "footballHistoryTargetDays": 730,
@@ -392,5 +392,6 @@
   "footballDataFixtureOddsAsianMarketPolicy": "FORBIDDEN",
   "footballDataFixtureOddsMarketAveragePolicy": "DO_NOT_COUNT_AVERAGE_OR_MAXIMUM_COLUMNS_AS_BOOKMAKERS",
   "footballDataFixtureOddsCacheFile": "data/football-data-fixtures-odds.json",
-  "cloudflareAiWorkerBoundModelOnly": true
+  "cloudflareAiWorkerBoundModelOnly": true,
+  "oddsBackupActivationThreshold": 4
 }
