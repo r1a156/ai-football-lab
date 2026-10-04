@@ -4,119 +4,119 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#090c12">
-  <meta name="description" content="РЎРїРѕСЂС‚РёРІРЅС‹Р№ РР вЂ” Р°РєРєСѓСЂР°С‚РЅС‹Р№ СЃСѓС‚РѕС‡РЅС‹Р№ РїРѕСЂС‚С„РµР»СЊ РјР°С‚С‡РµР№, СЌРєСЃРїСЂРµСЃСЃРѕРІ Рё СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ.">
-  <title>РЎРїРѕСЂС‚РёРІРЅС‹Р№ РР вЂ” РїРѕСЂС‚С„РµР»СЊ РјР°С‚С‡РµР№</title>
+  <meta name="description" content="Спортивный ИИ — аккуратный суточный портфель матчей, экспрессов и результатов.">
+  <title>Спортивный ИИ — портфель матчей</title>
   <link rel="stylesheet" href="assets/styles.css?v=15.6.0-production">
 </head>
 <body>
   <!-- V10_R15F_R3R6_PRODUCTION_REDESIGN -->
   <header class="topbar">
-    <a class="brand" href="#overview" aria-label="РЎРїРѕСЂС‚РёРІРЅС‹Р№ РР">
+    <a class="brand" href="#overview" aria-label="Спортивный ИИ">
       <span class="brand-symbol" aria-hidden="true"><i></i></span>
-      <span><strong>РЎРїРѕСЂС‚РёРІРЅС‹Р№ РР</strong><small>РїРѕСЂС‚С„РµР»СЊ РјР°С‚С‡РµР№</small></span>
+      <span><strong>Спортивный ИИ</strong><small>портфель матчей</small></span>
     </a>
-    <nav class="desktop-nav" aria-label="Р Р°Р·РґРµР»С‹">
-      <a href="#matches">РњР°С‚С‡Рё</a>
-      <a href="#expresses">Р­РєСЃРїСЂРµСЃСЃС‹</a>
-      <a href="#singles">РўРѕРївЂ‘3</a>
-      <a href="#results">Р РµР·СѓР»СЊС‚Р°С‚С‹</a>
+    <nav class="desktop-nav" aria-label="Разделы">
+      <a href="#matches">Матчи</a>
+      <a href="#expresses">Экспрессы</a>
+      <a href="#singles">Топ‑3</a>
+      <a href="#results">Результаты</a>
     </nav>
-    <div class="connection" id="connectionState"><span></span><b>Р—Р°РіСЂСѓР·РєР°</b></div>
+    <div class="connection" id="connectionState"><span></span><b>Загрузка</b></div>
   </header>
 
   <main>
     <section class="hero shell" id="overview">
       <div class="hero-copy">
-        <span class="eyebrow">РџРћР РўР¤Р•Р›Р¬ РќРђ РЎРЈРўРљР</span>
-        <h1>Р“Р»Р°РІРЅРѕРµ РїРѕ РјР°С‚С‡Р°Рј.<br><em>Р‘РµР· Р»РёС€РЅРµРіРѕ С€СѓРјР°.</em></h1>
-        <p>РџСЏС‚РЅР°РґС†Р°С‚СЊ РѕС‚РѕР±СЂР°РЅРЅС‹С… СЃРѕР±С‹С‚РёР№, С‚СЂРё СЌРєСЃРїСЂРµСЃСЃР° Рё С‚СЂРё СЃРёР»СЊРЅРµР№С€РёС… РѕРґРёРЅРѕС‡РЅС‹С… РїСЂРѕРіРЅРѕР·Р° вЂ” РІ РѕРґРЅРѕР№ СЂРѕРІРЅРѕР№ СЃРёСЃС‚РµРјРµ.</p>
+        <span class="eyebrow">ПОРТФЕЛЬ НА СУТКИ</span>
+        <h1>Главное по матчам.<br><em>Без лишнего шума.</em></h1>
+        <p>Пятнадцать отобранных событий, три экспресса и три сильнейших одиночных прогноза — в одной ровной системе.</p>
         <div class="hero-status" id="heroStatus">
           <span class="status-light"></span>
-          <div><strong id="portfolioStatus">РџСЂРѕРІРµСЂСЏРµРј РґР°РЅРЅС‹Рµ</strong><small id="portfolioUpdated">вЂ”</small></div>
+          <div><strong id="portfolioStatus">Проверяем данные</strong><small id="portfolioUpdated">—</small></div>
         </div>
         <div class="hero-actions">
-          <a class="button button-primary" href="#matches">РћС‚РєСЂС‹С‚СЊ РјР°С‚С‡Рё</a>
-          <a class="button button-quiet" href="#results">РџРѕСЃРјРѕС‚СЂРµС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚С‹</a>
+          <a class="button button-primary" href="#matches">Открыть матчи</a>
+          <a class="button button-quiet" href="#results">Посмотреть результаты</a>
         </div>
       </div>
-      <div class="summary-card" aria-label="РЎРІРѕРґРєР°">
-        <div class="summary-head"><span>РЎРµРіРѕРґРЅСЏ</span><time id="summaryDate">вЂ”</time></div>
+      <div class="summary-card" aria-label="Сводка">
+        <div class="summary-head"><span>Сегодня</span><time id="summaryDate">—</time></div>
         <div class="summary-grid">
-          <article><small>РњР°С‚С‡Рё</small><strong id="summaryMatches">вЂ”</strong><span>РІ СЂРµР№С‚РёРЅРіРµ</span></article>
-          <article><small>Р­РєСЃРїСЂРµСЃСЃС‹</small><strong id="summaryExpresses">вЂ”</strong><span>РїРѕ 5 СЃРѕР±С‹С‚РёР№</span></article>
-          <article><small>РўРѕРївЂ‘3</small><strong id="summarySingles">вЂ”</strong><span>Р»СѓС‡С€РёРµ РїРѕР·РёС†РёРё</span></article>
-          <article><small>РљР°С‡РµСЃС‚РІРѕ</small><strong id="summaryQuality">вЂ”</strong><span>СЃСЂРµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ</span></article>
+          <article><small>Матчи</small><strong id="summaryMatches">—</strong><span>в рейтинге</span></article>
+          <article><small>Экспрессы</small><strong id="summaryExpresses">—</strong><span>по 5 событий</span></article>
+          <article><small>Топ‑3</small><strong id="summarySingles">—</strong><span>лучшие позиции</span></article>
+          <article><small>Качество</small><strong id="summaryQuality">—</strong><span>среднее значение</span></article>
         </div>
-        <div class="bank-strip"><span>РўРµРєСѓС‰РёР№ Р±Р°РЅРє</span><strong id="summaryBank">вЂ”</strong><small id="summaryExposure">вЂ”</small></div>
+        <div class="bank-strip"><span>Текущий банк</span><strong id="summaryBank">—</strong><small id="summaryExposure">—</small></div>
       </div>
     </section>
 
     <section class="shell notice" id="staleNotice" hidden>
-      <span class="notice-icon" aria-hidden="true">в†»</span>
-      <div><strong>Р¤РѕСЂРјРёСЂСѓРµС‚СЃСЏ РЅРѕРІР°СЏ РїРѕРґР±РѕСЂРєР°</strong><p id="staleMessage">РџСЂРµРґС‹РґСѓС‰РёРµ РјР°С‚С‡Рё СѓР±СЂР°РЅС‹ РёР· С‚РµРєСѓС‰РµРіРѕ СЌРєСЂР°РЅР°. Р—РґРµСЃСЊ РїРѕСЏРІСЏС‚СЃСЏ С‚РѕР»СЊРєРѕ СЃРІРµР¶РёРµ РїСЂРѕРІРµСЂРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ.</p></div>
+      <span class="notice-icon" aria-hidden="true">↻</span>
+      <div><strong>Формируется новая подборка</strong><p id="staleMessage">Предыдущие матчи убраны из текущего экрана. Здесь появятся только свежие проверенные данные.</p></div>
     </section>
 
     <section class="section shell" id="matches">
       <header class="section-head">
-        <div><span class="section-kicker">01</span><h2>15 РјР°С‚С‡РµР№</h2><p>Р РµР№С‚РёРЅРі РѕС‚ РЅР°РёР±РѕР»РµРµ СЃРёР»СЊРЅРѕР№ РїРѕР·РёС†РёРё Рє РїСЏС‚РЅР°РґС†Р°С‚РѕР№.</p></div>
-        <div class="section-stat"><span>РћР±РЅРѕРІР»РµРЅРѕ</span><strong id="matchesUpdated">вЂ”</strong></div>
+        <div><span class="section-kicker">01</span><h2>15 матчей</h2><p>Рейтинг от наиболее сильной позиции к пятнадцатой.</p></div>
+        <div class="section-stat"><span>Обновлено</span><strong id="matchesUpdated">—</strong></div>
       </header>
-      <div class="match-list" id="matchList"><div class="loading-card">Р—Р°РіСЂСѓР¶Р°РµРј РїРѕРґР±РѕСЂРєСѓвЂ¦</div></div>
+      <div class="match-list" id="matchList"><div class="loading-card">Загружаем подборку…</div></div>
     </section>
 
     <section class="section shell" id="expresses">
       <header class="section-head">
-        <div><span class="section-kicker">02</span><h2>РўСЂРё СЌРєСЃРїСЂРµСЃСЃР°</h2><p>РљР°Р¶РґС‹Р№ РјР°С‚С‡ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РѕРґРёРЅ СЂР°Р·, Р±РµР· РїРѕРІС‚РѕСЂРѕРІ РјРµР¶РґСѓ РєСѓРїРѕРЅР°РјРё.</p></div>
-        <div class="section-stat"><span>Р¤РѕСЂРјР°С‚</span><strong>3 Г— 5</strong></div>
+        <div><span class="section-kicker">02</span><h2>Три экспресса</h2><p>Каждый матч используется один раз, без повторов между купонами.</p></div>
+        <div class="section-stat"><span>Формат</span><strong>3 × 5</strong></div>
       </header>
       <div class="express-grid" id="expressGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
 
     <section class="section shell" id="singles">
       <header class="section-head">
-        <div><span class="section-kicker">03</span><h2>РўРѕРївЂ‘3</h2><p>РўСЂРё РїРµСЂРІС‹Рµ РїРѕР·РёС†РёРё РѕР±С‰РµРіРѕ СЂРµР№С‚РёРЅРіР°, Р±РµР· РѕС‚РґРµР»СЊРЅРѕРіРѕ СЃРїРёСЃР°РЅРёСЏ Р±Р°РЅРєР°.</p></div>
-        <div class="section-stat"><span>Р РµР¶РёРј</span><strong>РљРѕРЅС‚СЂРѕР»СЊ</strong></div>
+        <div><span class="section-kicker">03</span><h2>Топ‑3</h2><p>Три первые позиции общего рейтинга, без отдельного списания банка.</p></div>
+        <div class="section-stat"><span>Режим</span><strong>Контроль</strong></div>
       </header>
       <div class="single-grid" id="singleGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
 
     <section class="section shell" id="results">
       <header class="section-head">
-        <div><span class="section-kicker">04</span><h2>Р‘Р°РЅРє Рё СЂРµР·СѓР»СЊС‚Р°С‚С‹</h2><p>РљРѕСЂРѕС‚РєР°СЏ СЃРІРѕРґРєР° Р±РµР· СЃРјРµС€РёРІР°РЅРёСЏ С‚РµРєСѓС‰РёС… РїСЂРѕРіРЅРѕР·РѕРІ Рё РёСЃС‚РѕСЂРёРё.</p></div>
+        <div><span class="section-kicker">04</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
       </header>
       <div class="results-layout">
         <article class="bank-card">
-          <span>Р­РєСЃРїСЂРµСЃСЃвЂ‘Р±Р°РЅРє</span><strong id="bankCurrent">вЂ”</strong><small id="bankChange">вЂ”</small>
+          <span>Экспресс‑банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
           <div class="bank-grid">
-            <div><span>РЎС‚Р°СЂС‚</span><b id="bankStarting">вЂ”</b></div>
-            <div><span>Р’ СЂР°Р±РѕС‚Рµ</span><b id="bankPlaced">вЂ”</b></div>
-            <div><span>РЎРІРѕР±РѕРґРЅРѕ</span><b id="bankAvailable">вЂ”</b></div>
-            <div><span>Р РµР·СѓР»СЊС‚Р°С‚</span><b id="bankProfit">вЂ”</b></div>
+            <div><span>Старт</span><b id="bankStarting">—</b></div>
+            <div><span>В работе</span><b id="bankPlaced">—</b></div>
+            <div><span>Свободно</span><b id="bankAvailable">—</b></div>
+            <div><span>Результат</span><b id="bankProfit">—</b></div>
           </div>
         </article>
         <article class="history-card">
-          <div class="history-head"><div><span>РџРѕСЃР»РµРґРЅРёРµ СЂР°СЃС‡С‘С‚С‹</span><strong>РСЃС‚РѕСЂРёСЏ</strong></div><b id="historyCount">0</b></div>
-          <div class="history-list" id="historyList"><div class="empty-mini">Р—Р°РІРµСЂС€С‘РЅРЅС‹С… СЃРѕР±С‹С‚РёР№ РїРѕРєР° РЅРµС‚</div></div>
+          <div class="history-head"><div><span>Последние расчёты</span><strong>История</strong></div><b id="historyCount">0</b></div>
+          <div class="history-list" id="historyList"><div class="empty-mini">Завершённых событий пока нет</div></div>
         </article>
       </div>
     </section>
   </main>
 
   <footer class="footer shell">
-    <div class="footer-brand"><span class="brand-symbol brand-symbol-small"><i></i></span><div><strong>РЎРїРѕСЂС‚РёРІРЅС‹Р№ РР</strong><small>Р°РЅР°Р»РёС‚РёС‡РµСЃРєР°СЏ СЃРёСЃС‚РµРјР°</small></div></div>
-    <span id="footerUpdated">Р”Р°РЅРЅС‹Рµ Р·Р°РіСЂСѓР¶Р°СЋС‚СЃСЏ</span>
+    <div class="footer-brand"><span class="brand-symbol brand-symbol-small"><i></i></span><div><strong>Спортивный ИИ</strong><small>аналитическая система</small></div></div>
+    <span id="footerUpdated">Данные загружаются</span>
   </footer>
 
-  <nav class="mobile-nav" aria-label="РњРѕР±РёР»СЊРЅР°СЏ РЅР°РІРёРіР°С†РёСЏ">
-    <a href="#overview">РћР±Р·РѕСЂ</a><a href="#matches">РњР°С‚С‡Рё</a><a href="#expresses">Р­РєСЃРїСЂРµСЃСЃС‹</a><a href="#results">РС‚РѕРіРё</a>
+  <nav class="mobile-nav" aria-label="Мобильная навигация">
+    <a href="#overview">Обзор</a><a href="#matches">Матчи</a><a href="#expresses">Экспрессы</a><a href="#results">Итоги</a>
   </nav>
 
   <dialog class="detail-dialog" id="detailDialog">
-    <button class="dialog-close" id="dialogClose" type="button" aria-label="Р—Р°РєСЂС‹С‚СЊ">Г—</button>
+    <button class="dialog-close" id="dialogClose" type="button" aria-label="Закрыть">×</button>
     <div id="dialogBody"></div>
   </dialog>
 
-  <script src="assets/runtime-config.js?v=cf-r3"></script>
+  <script src="assets/runtime-config.js?v=cf-final-utf8"></script>
   <script src="assets/app.js?v=15.6.0-production"></script>
 </body>
 </html>
