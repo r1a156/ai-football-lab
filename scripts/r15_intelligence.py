@@ -2995,9 +2995,10 @@ def settle_current() -> int:
     raw_state = load_json(STATE_PATH, {})
     state = ensure_r15_state(raw_state, config, now)
     before = json_fingerprint(state)
-    odds_key = os.getenv("ODDS_API_KEY", "").strip()
-    if not odds_key:
-        raise RuntimeError("ODDS_API_KEY is required for settlement")
+    odds_key, odds_key_selection = core.select_odds_api_key(
+        activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
+    )
+    print(f"R15_ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
 
     live_results = core.load_live_final_results()
     due = core.due_pending_records(state, config, now, set(live_results))
@@ -3264,11 +3265,20 @@ def publish_generation() -> int:
         print("R15_GENERATION_BLOCKED_ACTIVE_PREVIOUS_BATCH=YES")
         return 0
 
-    odds_key = os.getenv("ODDS_API_KEY", "").strip()
+    odds_key, odds_key_selection = core.select_odds_api_key(
+        activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
+    )
     football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
     cloudflare_ai_key = os.getenv("CLOUDFLARE_AI_ACCESS_TOKEN", "").strip() or None
-    if not odds_key:
-        raise RuntimeError("ODDS_API_KEY is required for current bookmaker events; R15F adds no new key requirements")
+    print(f"R15_ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
+    print(
+        "R15_ODDS_PRIMARY_REMAINING="
+        f"{safe_int((odds_key_selection.get('primary') or {}).get('remaining'), -1)}"
+    )
+    print(
+        "R15_ODDS_BACKUP_REMAINING="
+        f"{safe_int((odds_key_selection.get('backup') or {}).get('remaining'), -1)}"
+    )
 
     prior_health = load_json(PROVIDER_HEALTH_PATH, {})
     client = ProviderClient(prior_health)
