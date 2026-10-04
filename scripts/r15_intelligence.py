@@ -2999,6 +2999,22 @@ def settle_current() -> int:
         activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
     )
     print(f"R15_ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
+    print(
+        "R15_ODDS_PRIMARY_REMAINING="
+        f"{safe_int((odds_key_selection.get('primary') or {}).get('remaining'), -1)}"
+    )
+    print(
+        "R15_ODDS_PRIMARY_USED="
+        f"{safe_int((odds_key_selection.get('primary') or {}).get('used'), -1)}"
+    )
+    print(
+        "R15_ODDS_BACKUP_REMAINING="
+        f"{safe_int((odds_key_selection.get('backup') or {}).get('remaining'), -1)}"
+    )
+    print(
+        "R15_ODDS_BACKUP_USED="
+        f"{safe_int((odds_key_selection.get('backup') or {}).get('used'), -1)}"
+    )
 
     live_results = core.load_live_final_results()
     due = core.due_pending_records(state, config, now, set(live_results))
