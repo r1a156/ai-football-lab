@@ -5,6 +5,12 @@ name: R15F R3 cognitive morning portfolio
 
 on:
   workflow_dispatch:
+    inputs:
+      bootstrap_preview:
+        description: 'Publish one temporary full preview before the first normal 08:00 MSK window'
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: '7 8 * * *'
       timezone: 'Europe/Moscow'
@@ -94,6 +100,7 @@ jobs:
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           ODDS_API_KEY_BACKUP: ${{ secrets.ODDS_API_KEY_BACKUP }}
+          R15_BOOTSTRAP_PREVIEW: ${{ inputs.bootstrap_preview }}
           CLOUDFLARE_AI_ACCESS_TOKEN: ${{ secrets.CLOUDFLARE_AI_ACCESS_TOKEN }}
           CLOUDFLARE_AI_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
           CLOUDFLARE_AI_URL: https://ai-football-free.shevtsov001.workers.dev/internal/ai
