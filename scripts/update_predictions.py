@@ -1093,6 +1093,134 @@ def event_allowed(event: dict[str, Any], config: dict[str, Any]) -> bool:
         config,
     )
 
+def probe_odds_api_key(api_key: str, timeout: int = 20) -> dict[str, Any]:
+    """Probe subscription quota with the zero-cost /sports endpoint.
+
+    Secret values are never returned or logged. The result contains only a
+    logical label's health/quota metadata and can safely be surfaced in logs.
+    """
+    key = str(api_key or "").strip()
+    if not key:
+        return {
+            "valid": False,
+            "status": 0,
+            "remaining": -1,
+            "used": -1,
+            "last": -1,
+            "error": "MISSING",
+        }
+    url = f"{ODDS_API_BASE}/sports/?" + urllib.parse.urlencode({"apiKey": key})
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "AI-Football-Lab-R15/15.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=max(5, int(timeout))) as response:
+            response.read()
+            headers = {k.lower(): v for k, v in response.headers.items()}
+            return {
+                "valid": 200 <= int(response.status) < 300,
+                "status": int(response.status),
+                "remaining": safe_int(headers.get("x-requests-remaining"), -1),
+                "used": safe_int(headers.get("x-requests-used"), -1),
+                "last": safe_int(headers.get("x-requests-last"), -1),
+                "error": "",
+            }
+    except urllib.error.HTTPError as exc:
+        return {
+            "valid": False,
+            "status": int(exc.code),
+            "remaining": -1,
+            "used": -1,
+            "last": -1,
+            "error": f"HTTP_{int(exc.code)}",
+        }
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        return {
+            "valid": False,
+            "status": 0,
+            "remaining": -1,
+            "used": -1,
+            "last": -1,
+            "error": type(exc).__name__,
+        }
+
+
+def select_odds_api_key(
+    primary: str | None = None,
+    backup: str | None = None,
+    *,
+    activation_threshold: int = 4,
+) -> tuple[str, dict[str, Any]]:
+    """Choose primary first; activate backup only when primary is nearly empty.
+
+    The probe itself is quota-free. If both keys share the same subscription,
+    they will expose the same quota and the backup provides no extra capacity.
+    """
+    primary_key = str(primary if primary is not None else os.getenv("ODDS_API_KEY", "")).strip()
+    backup_key = str(backup if backup is not None else os.getenv("ODDS_API_KEY_BACKUP", "")).strip()
+    threshold = max(0, int(activation_threshold))
+
+    if not primary_key and not backup_key:
+        raise RuntimeError("ODDS_API_KEY or ODDS_API_KEY_BACKUP is required")
+
+    primary_probe = probe_odds_api_key(primary_key) if primary_key else {
+        "valid": False, "status": 0, "remaining": -1, "used": -1, "last": -1, "error": "MISSING"
+    }
+
+    backup_probe = None
+
+    primary_remaining = safe_int(primary_probe.get("remaining"), -1)
+    primary_healthy = bool(primary_probe.get("valid"))
+
+    # Preserve backup capacity while primary has a meaningful working balance.
+    if primary_healthy and (primary_remaining < 0 or primary_remaining > threshold):
+        return primary_key, {
+            "selected": "PRIMARY",
+            "primary": primary_probe,
+            "backup": {"checked": False},
+            "activationThreshold": threshold,
+        }
+
+    if backup_key:
+        backup_probe = probe_odds_api_key(backup_key)
+        backup_remaining = safe_int(backup_probe.get("remaining"), -1)
+        if bool(backup_probe.get("valid")) and (backup_remaining < 0 or backup_remaining > 0):
+            return backup_key, {
+                "selected": "BACKUP",
+                "primary": primary_probe,
+                "backup": backup_probe,
+                "activationThreshold": threshold,
+            }
+
+    # If no usable backup exists, retain a valid primary even when nearly or
+    # fully exhausted so downstream fail-closed quota handling remains intact.
+    if primary_healthy:
+        return primary_key, {
+            "selected": "PRIMARY_LOW_OR_EXHAUSTED",
+            "primary": primary_probe,
+            "backup": backup_probe or {"checked": bool(backup_key), "valid": False},
+            "activationThreshold": threshold,
+        }
+
+    if backup_key and backup_probe and bool(backup_probe.get("valid")):
+        return backup_key, {
+            "selected": "BACKUP_ONLY_VALID",
+            "primary": primary_probe,
+            "backup": backup_probe,
+            "activationThreshold": threshold,
+        }
+
+    raise RuntimeError(
+        "No valid The Odds API key is available "
+        f"(primaryStatus={primary_probe.get('status')}, "
+        f"backupStatus={(backup_probe or {}).get('status')})"
+    )
+
+
 def fetch_active_sports(client: ApiClient, api_key: str) -> list[dict[str, Any]]:
     url = f"{ODDS_API_BASE}/sports/?" + urllib.parse.urlencode({"apiKey": api_key})
     payload = client.request_json(url, label="ODDS_SPORTS")
@@ -5525,9 +5653,18 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
     client = ApiClient()
     report = report_base(now, mode)
 
-    odds_key = os.getenv("ODDS_API_KEY", "").strip()
-    if not odds_key:
-        raise RuntimeError("ODDS_API_KEY is required for production update")
+    odds_key, odds_key_selection = select_odds_api_key(
+        activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
+    )
+    print(f"ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
+    print(
+        "ODDS_PRIMARY_REMAINING="
+        f"{safe_int((odds_key_selection.get('primary') or {}).get('remaining'), -1)}"
+    )
+    print(
+        "ODDS_BACKUP_REMAINING="
+        f"{safe_int((odds_key_selection.get('backup') or {}).get('remaining'), -1)}"
+    )
     football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
     cloudflare_ai_key = os.getenv("CLOUDFLARE_AI_ACCESS_TOKEN", "").strip() or None
 
