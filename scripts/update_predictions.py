@@ -1171,23 +1171,32 @@ def select_odds_api_key(
         "valid": False, "status": 0, "remaining": -1, "used": -1, "last": -1, "error": "MISSING"
     }
 
-    backup_probe = None
+    backup_probe = probe_odds_api_key(backup_key) if backup_key else {
+        "valid": False,
+        "status": 0,
+        "remaining": -1,
+        "used": -1,
+        "last": -1,
+        "error": "MISSING",
+    }
 
     primary_remaining = safe_int(primary_probe.get("remaining"), -1)
     primary_healthy = bool(primary_probe.get("valid"))
+    backup_remaining = safe_int(backup_probe.get("remaining"), -1)
 
-    # Preserve backup capacity while primary has a meaningful working balance.
+    # Probe both keys with the zero-cost /sports endpoint so operations can
+    # observe reserve capacity without exposing either secret. Preserve backup
+    # capacity while primary has a meaningful working balance.
     if primary_healthy and (primary_remaining < 0 or primary_remaining > threshold):
         return primary_key, {
             "selected": "PRIMARY",
             "primary": primary_probe,
-            "backup": {"checked": False},
+            "backup": backup_probe,
             "activationThreshold": threshold,
         }
 
     if backup_key:
-        backup_probe = probe_odds_api_key(backup_key)
-        backup_remaining = safe_int(backup_probe.get("remaining"), -1)
+
         if bool(backup_probe.get("valid")) and (backup_remaining < 0 or backup_remaining > 0):
             return backup_key, {
                 "selected": "BACKUP",
