@@ -1107,6 +1107,66 @@ def sport_history_coverage(events: list[dict[str, Any]], context: dict[str, Any]
     return matched / len(events) if events else 0.0
 
 
+def _persistent_odds_daily_spend(
+    client: ProviderClient,
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> int:
+    """Track The Odds API credits across repeated workflow runs in one Moscow day.
+
+    The provider's x-requests-used header is monthly and monotonic until the
+    subscription resets. We persist the monthly baseline for the active
+    operational day in r15-runtime-control.json. This makes the configured
+    daily budget a real cross-run ceiling instead of a per-process ceiling.
+    """
+    current_raw = client.odds_quota.get("requestsUsed")
+    estimated_this_run = max(
+        0,
+        safe_int(client.odds_quota.get("estimatedCreditsThisRun"), 0),
+    )
+    if current_raw is None or str(current_raw).strip() == "":
+        return estimated_this_run
+
+    current_used = max(0, safe_int(current_raw, 0))
+    day_id = str(operational_day(now, config).get("operationalDayId") or "")
+    control = load_json(daily_auditor.CONTROL_PATH, {})
+    ledger = control.get("oddsQuotaLedger")
+    if not isinstance(ledger, dict):
+        ledger = {}
+
+    ledger_day = str(ledger.get("operationalDayId") or "")
+    baseline = safe_int(ledger.get("baselineMonthlyUsed"), current_used)
+
+    # A new operational day or a provider monthly reset starts a new baseline.
+    if ledger_day != day_id or current_used < baseline:
+        baseline = current_used
+        ledger = {
+            "operationalDayId": day_id,
+            "baselineMonthlyUsed": current_used,
+            "lastMonthlyUsed": current_used,
+            "creditsUsed": 0,
+            "updatedAt": iso(now),
+            "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING",
+        }
+        control["oddsQuotaLedger"] = ledger
+        write_json(daily_auditor.CONTROL_PATH, control)
+        return 0
+
+    spent = max(0, current_used - baseline)
+    if (
+        safe_int(ledger.get("lastMonthlyUsed"), -1) != current_used
+        or safe_int(ledger.get("creditsUsed"), -1) != spent
+    ):
+        ledger["lastMonthlyUsed"] = current_used
+        ledger["creditsUsed"] = spent
+        ledger["updatedAt"] = iso(now)
+        ledger["policy"] = "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING"
+        control["oddsQuotaLedger"] = ledger
+        write_json(daily_auditor.CONTROL_PATH, control)
+
+    return spent
+
+
 def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, int]:
     now = now or now_utc()
     remaining_raw = client.odds_quota.get("requestsRemaining")
@@ -1116,16 +1176,35 @@ def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: 
     days_left = max(1, (next_month.date() - now.date()).days)
     fair_share = max(1, remaining // days_left)
     configured = max(1, safe_int(config.get("oddsFreeDailyCreditBudget"), 16))
-    used = safe_int(client.odds_quota.get("estimatedCreditsThisRun"), 0)
+    used_this_run = max(0, safe_int(client.odds_quota.get("estimatedCreditsThisRun"), 0))
+    daily_spent = _persistent_odds_daily_spend(client, config, now)
     reserve = max(0, safe_int(config.get("oddsQuotaHardReserve"), 0))
-    daily_available = max(0, min(remaining, configured, fair_share + safe_int(config.get("oddsDailyCarryAllowance"), 2)) - used)
-    portfolio_available = max(0, remaining - reserve - used)
+
+    configured_left = max(0, configured - daily_spent)
+    fair_share_left = max(
+        0,
+        fair_share + safe_int(config.get("oddsDailyCarryAllowance"), 2) - daily_spent,
+    )
+    daily_available = max(
+        0,
+        min(
+            remaining,
+            configured_left,
+            fair_share_left,
+        ),
+    )
+
+    # Every paid acquisition path must use this value. It is intentionally
+    # identical to the cross-run daily allowance, never the whole monthly pool.
+    portfolio_available = max(0, min(daily_available, remaining - reserve))
+
     return {
         "remaining": remaining,
         "daysLeft": days_left,
         "fairShare": fair_share,
         "configured": configured,
-        "usedThisRun": used,
+        "usedThisRun": used_this_run,
+        "dailyUsedPersistent": daily_spent,
         "reserve": reserve,
         "availableThisRun": daily_available,
         "portfolioAvailableThisRun": portfolio_available,
