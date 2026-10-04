@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""R15F R3 daily OpenRouter audit and first-run activation control.
+"""R15F R3 daily Cloudflare Workers AI audit and first-run activation control.
 
 Facts and probabilities are produced by the deterministic football engine.
 This module can only reduce confidence, reorder qualified events, select an
@@ -25,7 +25,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "data" / "state.json"
 SNAPSHOT_PATH = ROOT / "data" / "ai_daily_analysis.json"
 CONTROL_PATH = ROOT / "data" / "r15-runtime-control.json"
-AUDIT_PATH = ROOT / "data" / "openrouter-daily-audit.json"
+AUDIT_PATH = ROOT / "data" / "cloudflare-ai-daily-audit.json"
 CONFIG_PATH = ROOT / "config" / "analysis.json"
 
 UTC = dt.timezone.utc
@@ -34,8 +34,8 @@ UTC = dt.timezone.utc
 # the 08:00–08:00 production boundary deterministic on every runner.
 MOSCOW = dt.timezone(dt.timedelta(hours=3), name="MSK")
 MOSCOW_TIMEZONE_SOURCE = "FIXED_UTC_PLUS_03_NO_TZDATA_REQUIRED"
-VERSION = "V10_R15F_R3R1_FINAL_PORTABLE_MOSCOW_TIME"
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+VERSION = "V10_R15F_CF_AI_R1"
+CLOUDFLARE_AI_URL = os.getenv("CLOUDFLARE_AI_URL", "https://ai-football-free.shevtsov001.workers.dev/internal/ai").strip()
 
 
 def now_utc() -> dt.datetime:
@@ -327,11 +327,9 @@ def _audit_schema() -> dict[str, Any]:
     }
 
 
-def _valid_free_model(value: str) -> str:
+def _configured_ai_model(value: str) -> str:
     model = value.strip()
-    if model == "openrouter/free" or model.endswith(":free"):
-        return model
-    return "openrouter/free"
+    return model or "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
 
 def _validate_response(parsed: dict[str, Any], records: list[dict[str, Any]]) -> None:
@@ -339,30 +337,30 @@ def _validate_response(parsed: dict[str, Any], records: list[dict[str, Any]]) ->
     expected = set(ids)
     ordered = [str(value) for value in parsed.get("orderedEventIds") or []]
     if len(ordered) != 15 or len(set(ordered)) != 15 or set(ordered) != expected:
-        raise RuntimeError("OPENROUTER_ORDERED_EVENT_IDS_INVALID")
+        raise RuntimeError("CLOUDFLARE_AI_ORDERED_EVENT_IDS_INVALID")
     decisions = parsed.get("decisions") or []
     if len(decisions) != 15 or {str(row.get("eventId") or "") for row in decisions} != expected:
-        raise RuntimeError("OPENROUTER_DECISIONS_INVALID")
+        raise RuntimeError("CLOUDFLARE_AI_DECISIONS_INVALID")
     market_keys = {str(row.get("eventId") or ""): {option["marketKey"] for option in _record_market_options(row)} for row in records}
     for decision in decisions:
         event_id = str(decision.get("eventId") or "")
         if str(decision.get("selectedMarketKey") or "") not in market_keys[event_id]:
-            raise RuntimeError(f"OPENROUTER_UNKNOWN_MARKET={event_id}")
+            raise RuntimeError(f"CLOUDFLARE_AI_UNKNOWN_MARKET={event_id}")
         penalty = safe_float(decision.get("riskPenalty"), -1)
         if penalty < 0 or penalty > 0.0800001:
-            raise RuntimeError(f"OPENROUTER_RISK_PENALTY_INVALID={event_id}")
+            raise RuntimeError(f"CLOUDFLARE_AI_RISK_PENALTY_INVALID={event_id}")
     singles = [str(value) for value in parsed.get("topSingles") or []]
     if len(singles) != 3 or len(set(singles)) != 3 or not set(singles).issubset(expected):
-        raise RuntimeError("OPENROUTER_TOP_SINGLES_INVALID")
+        raise RuntimeError("CLOUDFLARE_AI_TOP_SINGLES_INVALID")
     express_ids: list[str] = []
     expresses = parsed.get("expresses") or {}
     for label in ("A", "B", "C"):
         values = [str(value) for value in expresses.get(label) or []]
         if len(values) != 5 or len(set(values)) != 5:
-            raise RuntimeError(f"OPENROUTER_EXPRESS_{label}_INVALID")
+            raise RuntimeError(f"CLOUDFLARE_AI_EXPRESS_{label}_INVALID")
         express_ids.extend(values)
     if len(express_ids) != 15 or len(set(express_ids)) != 15 or set(express_ids) != expected:
-        raise RuntimeError("OPENROUTER_EXPRESS_DISTRIBUTION_INVALID")
+        raise RuntimeError("CLOUDFLARE_AI_EXPRESS_DISTRIBUTION_INVALID")
 
 
 def _copy_alternative_to_primary(record: dict[str, Any], selected_market_key: str) -> None:
@@ -447,7 +445,7 @@ def audit_records(
                 "error": str(exc),
                 "fallback": "DETERMINISTIC_PORTFOLIO",
             }
-    elif not api_key or not bool(config.get("openRouterDailyAuditEnabled", True)):
+    elif not api_key or not bool(config.get("cloudflareAiDailyAuditEnabled", True)):
         return records, {
             "status": "NOT_CONFIGURED" if not api_key else "DISABLED",
             "logicalRuns": 0,
@@ -456,7 +454,7 @@ def audit_records(
             "fallback": "DETERMINISTIC_PORTFOLIO",
         }
     else:
-        model = _valid_free_model(os.getenv("OPENROUTER_MODEL", "") or str(config.get("openRouterDailyAuditModel") or "openrouter/free"))
+        model = _configured_ai_model(os.getenv("CLOUDFLARE_AI_MODEL", "") or str(config.get("cloudflareAiDailyAuditModel") or "@cf/meta/llama-3.3-70b-instruct-fp8-fast"))
         payload_data = {
             "operationalDayId": operational_day_id,
             "rules": {
@@ -482,14 +480,14 @@ def audit_records(
         request_payload = {
             "model": model,
             "temperature": 0.05,
-            "max_tokens": int(config.get("openRouterDailyAuditMaxOutputTokens") or 5000),
+            "max_tokens": int(config.get("cloudflareAiDailyAuditMaxOutputTokens") or 5000),
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": json.dumps(payload_data, ensure_ascii=False, separators=(",", ":"))},
             ],
             "response_format": {"type": "json_schema", "json_schema": _audit_schema()},
         }
-        attempts = max(1, min(3, int(config.get("openRouterDailyAuditTechnicalAttempts") or 3)))
+        attempts = max(1, min(3, int(config.get("cloudflareAiDailyAuditTechnicalAttempts") or 3)))
         last_error: Exception | None = None
         result: dict[str, Any] | None = None
         started = time.monotonic()
@@ -497,18 +495,18 @@ def audit_records(
         for attempt in range(attempts):
             technical_attempts += 1
             request = urllib.request.Request(
-                OPENROUTER_URL,
+                CLOUDFLARE_AI_URL,
                 data=json.dumps(request_payload).encode("utf-8"),
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://r1a156.github.io/ai-football-lab/",
+                    "HTTP-Referer": "https://ai-football-lab.pages.dev/",
                     "X-Title": "AI Football Lab R15F R3",
                 },
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(request, timeout=int(config.get("openRouterDailyAuditTimeoutSeconds") or 150)) as response:
+                with urllib.request.urlopen(request, timeout=int(config.get("cloudflareAiDailyAuditTimeoutSeconds") or 150)) as response:
                     result = json.loads(response.read().decode("utf-8"))
                 break
             except urllib.error.HTTPError as exc:
@@ -553,7 +551,7 @@ def audit_records(
         try:
             choices = result.get("choices") or []
             if not choices:
-                raise ValueError("OPENROUTER_CHOICES_EMPTY")
+                raise ValueError("CLOUDFLARE_AI_CHOICES_EMPTY")
             content = choices[0].get("message", {}).get("content")
             if isinstance(content, list):
                 content = "".join(str(part.get("text") or "") if isinstance(part, dict) else str(part) for part in content)
@@ -587,7 +585,7 @@ def audit_records(
                 "error": str(exc),
                 "fallback": "DETERMINISTIC_PORTFOLIO",
             }
-        source = "OPENROUTER"
+        source = "CLOUDFLARE_AI"
         cached = {
             "version": VERSION,
             "operationalDayId": operational_day_id,
@@ -685,8 +683,8 @@ def self_test() -> int:
     print("R15F_R3R1_PORTABLE_MOSCOW_TIME=GREEN")
     print("R15F_R3R1_TZDATA_DEPENDENCY=NONE")
     print("R15F_R3_FIRST_RUN_NEXT_DAY=GREEN")
-    print("R15F_R3_OPENROUTER_SCHEMA=GREEN")
-    print("R15F_R3_FREE_MODEL_GUARD=GREEN")
+    print("R15F_R3_CLOUDFLARE_AI_SCHEMA=GREEN")
+    print("R15F_R3_WORKER_BOUND_MODEL_GUARD=GREEN")
     print("R15F_R3_AUDIT_NO_CONFIDENCE_INCREASE=GREEN")
     print("R15F_R3_ONE_LOGICAL_RUN_PER_DAY=GREEN")
     print("R15F_R3_INVALID_AI_RESPONSE_FALLBACK=GREEN")

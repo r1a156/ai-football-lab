@@ -65,12 +65,12 @@ LIVE_SCRIPT_PATH = ROOT / "scripts" / "update_live.py"
 ODDS_API_BASE = "https://api.the-odds-api.com/v4"
 FOOTBALL_DATA_BASE = "https://api.football-data.org/v4"
 NHL_API_BASE = "https://api-web.nhle.com/v1"
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+CLOUDFLARE_AI_URL = os.getenv("CLOUDFLARE_AI_URL", "https://ai-football-free.shevtsov001.workers.dev/internal/ai").strip()
 
 STATE_VERSION = "10.0.0"
 PIPELINE_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
-SITE_MARKER = "V10_SITE_PREMIUM_DASHBOARD"
-WORKFLOW_MARKER = "V10_AUTO_REFRESH_PIPELINE"
+SITE_MARKER = "V10_R15F_R3R6_PRODUCTION_REDESIGN"
+WORKFLOW_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
 LIVE_WORKFLOW_MARKER = "V10_R6_LIVE_AUTO_REFRESH"
 LIVE_MARKER = "V10_R6_LIVE_MATCH_INTELLIGENCE"
 RESET_MARKER = "V10_CLEAN_MODEL_RESET"
@@ -5183,15 +5183,15 @@ def update_statistics(state: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def enrich_narratives_with_openrouter(
+def enrich_narratives_with_cloudflare_ai(
     records: list[dict[str, Any]],
     api_key: str | None,
     config: dict[str, Any],
     client: ApiClient,
 ) -> None:
-    if not api_key or not config.get("openRouterNarrativeEnabled", True) or not records:
+    if not api_key or not config.get("cloudflareAiNarrativeEnabled", True) or not records:
         return
-    model = os.getenv("OPENROUTER_MODEL") or str(config.get("openRouterModel") or "google/gemini-2.5-flash-lite")
+    model = os.getenv("CLOUDFLARE_AI_MODEL") or str(config.get("cloudflareAiModel") or "google/gemini-2.5-flash-lite")
     compact = [
         {
             "id": item["id"],
@@ -5225,12 +5225,12 @@ def enrich_narratives_with_openrouter(
         "response_format": {"type": "json_object"},
     }
     request = urllib.request.Request(
-        OPENROUTER_URL,
+        CLOUDFLARE_AI_URL,
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://r1a156.github.io/ai-football-lab/",
+            "HTTP-Referer": "https://ai-football-lab.pages.dev/",
             "X-Title": "AI Football Lab V10",
         },
         method="POST",
@@ -5250,8 +5250,8 @@ def enrich_narratives_with_openrouter(
                 record["reason"] = reasons[record["id"]]
                 record["reasonRu"] = russian_display_text(reasons[record["id"]])
     except Exception as exc:
-        client.calls.append({"label": "OPENROUTER_NARRATIVE", "status": "ERROR", "error": str(exc)})
-        log(f"OpenRouter narrative fallback used: {exc}")
+        client.calls.append({"label": "CLOUDFLARE_AI_NARRATIVE", "status": "ERROR", "error": str(exc)})
+        log(f"Cloudflare Workers AI narrative fallback used: {exc}")
 
 
 # ---------------------------------------------------------------------------
@@ -5529,7 +5529,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
     if not odds_key:
         raise RuntimeError("ODDS_API_KEY is required for production update")
     football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
-    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip() or None
+    cloudflare_ai_key = os.getenv("CLOUDFLARE_AI_ACCESS_TOKEN", "").strip() or None
 
     football_matches: list[dict[str, Any]] = []
     football_context = build_football_context([])
@@ -5674,8 +5674,8 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             discovery_diagnostics,
             now,
         )
-        enrich_narratives_with_openrouter(
-            daily_analysis, openrouter_key, config, client
+        enrich_narratives_with_cloudflare_ai(
+            daily_analysis, cloudflare_ai_key, config, client
         )
         best_bets, new_best = select_best_bets(daily_analysis, state, config, now)
         if len(best_bets) != safe_int(config.get("bestBetsTarget"), 4):
@@ -5982,12 +5982,19 @@ def validate_repository_files() -> int:
         raise RuntimeError("R14 football-only standard-market marker missing")
     if any(value in set(config.get("featuredMarkets") or []) for value in ("spreads", "alternate_spreads", "alternate_totals")):
         raise RuntimeError("R14 forbidden market leaked into featuredMarkets")
-    if "ALL_FIFTEEN_SETTLEMENT_VISIBLE" not in WORKFLOW_PATH.read_text(encoding="utf-8"):
-        raise RuntimeError("R12 all-fifteen workflow acceptance marker missing")
+    workflow_source = WORKFLOW_PATH.read_text(encoding="utf-8")
+    if "python scripts/update_live.py --update" not in workflow_source:
+        raise RuntimeError("Current live-score refresh workflow command missing")
+    if "python scripts/r15_intelligence.py --settle" not in workflow_source:
+        raise RuntimeError("Current all-fifteen settlement workflow command missing")
     if "LIVE_CYCLE_DIRECT_SETTLEMENT=START" not in source_text:
         raise RuntimeError("R9 direct live-cycle settlement bridge missing")
-    if "V10_R7_CLEAN_HISTORY_AND_LIVE_EXPIRY" not in app_source:
-        raise RuntimeError("R7 clean history UI marker missing")
+    if (
+        "function renderHistory(state)" not in app_source
+        or "state.analysisHistory" not in app_source
+        or "settledAt" not in app_source
+    ):
+        raise RuntimeError("Current settled-history UI contract missing")
     if config.get("historyDefaultFilter") != "settled":
         raise RuntimeError("R7 history default filter mismatch")
     if load_json(LIVE_STATE_PATH, {}).get("sourceMarker") != LIVE_MARKER:

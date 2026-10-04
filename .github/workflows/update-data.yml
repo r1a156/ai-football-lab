@@ -67,7 +67,7 @@ jobs:
           python -m json.tool data/russian-team-names.json >/dev/null
           python -m json.tool data/provider-health.json >/dev/null
           python -m json.tool data/r15-runtime-control.json >/dev/null
-          python -m json.tool data/openrouter-daily-audit.json >/dev/null
+          python -m json.tool data/cloudflare-ai-daily-audit.json >/dev/null
           node --check assets/app.js
           python scripts/r15_free_mesh.py --self-test
           python scripts/r15_daily_auditor.py --self-test
@@ -94,8 +94,9 @@ jobs:
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER_MODEL: openrouter/free
+          CLOUDFLARE_AI_ACCESS_TOKEN: ${{ secrets.CLOUDFLARE_AI_ACCESS_TOKEN }}
+          CLOUDFLARE_AI_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+          CLOUDFLARE_AI_URL: https://ai-football-free.shevtsov001.workers.dev/internal/ai
         run: |
           set -euo pipefail
           python scripts/r15_daily_auditor.py --status
@@ -128,7 +129,7 @@ jobs:
             data/football-data-fixtures-odds.json \
             data/provider-health.json \
             data/r15-runtime-control.json \
-            data/openrouter-daily-audit.json
+            data/cloudflare-ai-daily-audit.json
 
           if git diff --cached --quiet; then
             echo "R15F_R3_NO_PUBLIC_DATA_CHANGES=YES"

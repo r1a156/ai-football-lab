@@ -182,8 +182,8 @@ class ProviderClient:
             return "FOOTBALL_DATA"
         if "the-odds-api.com" in url or label.startswith(("ODDS", "EVENTS", "SCORES", "ADVANCED")):
             return "THE_ODDS_API"
-        if "openrouter.ai" in url or label.startswith("OPENROUTER"):
-            return "OPENROUTER"
+        if "ai-football-free.shevtsov001.workers.dev" in url or label.startswith("CLOUDFLARE_AI"):
+            return "CLOUDFLARE_AI"
         return "OTHER"
 
     def request_json(
@@ -2662,7 +2662,7 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
         if valid and len(candidate_ids) == 15 and len(set(candidate_ids)) == 15:
             deterministic_score = express_balance_score(deterministic_groups)
             candidate_score = express_balance_score(candidate_groups)
-            if candidate_score <= deterministic_score * safe_float(config.get("openRouterExpressBalanceTolerance"), 1.25):
+            if candidate_score <= deterministic_score * safe_float(config.get("cloudflareAiExpressBalanceTolerance"), 1.25):
                 groups = candidate_groups
     result = []
     labels = ["Экспресс A", "Экспресс B", "Экспресс C"]
@@ -3187,7 +3187,7 @@ def publish_generation() -> int:
 
     odds_key = os.getenv("ODDS_API_KEY", "").strip()
     football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
-    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip() or None
+    cloudflare_ai_key = os.getenv("CLOUDFLARE_AI_ACCESS_TOKEN", "").strip() or None
     if not odds_key:
         raise RuntimeError("ODDS_API_KEY is required for current bookmaker events; R15F adds no new key requirements")
 
@@ -3356,7 +3356,7 @@ def publish_generation() -> int:
     audited_records, daily_audit = daily_auditor.audit_records(
         records,
         config,
-        openrouter_key,
+        cloudflare_ai_key,
         day["operationalDayId"],
         now,
     )
@@ -3404,7 +3404,7 @@ def publish_generation() -> int:
     state["systemNarrative"] = {
         **daily_auditor.deterministic_system_narrative(state, "PUBLISHED", str(daily_audit.get("status") or "FALLBACK")),
         **audit_system_message,
-        "generatedBy": "OPENROUTER_FREE_AUDIT" if daily_audit.get("schemaValid") else "DETERMINISTIC_SYSTEM",
+        "generatedBy": "CLOUDFLARE_AI_FREE_AUDIT" if daily_audit.get("schemaValid") else "DETERMINISTIC_SYSTEM",
         "modelUsed": daily_audit.get("modelUsed"),
         "updatedAt": iso(now),
     }
@@ -3431,10 +3431,10 @@ def publish_generation() -> int:
         "soccerAnalyses": 15,
         "hockeyAnalyses": 0,
         "candidateMatchesAnalyzed": analysis_diag.get("eventsWithMarkets"),
-        "openRouterAuditStatus": daily_audit.get("status"),
-        "openRouterModelUsed": daily_audit.get("modelUsed"),
-        "openRouterSchemaValid": bool(daily_audit.get("schemaValid")),
-        "openRouterLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
+        "cloudflareAiAuditStatus": daily_audit.get("status"),
+        "cloudflareAiModelUsed": daily_audit.get("modelUsed"),
+        "cloudflareAiSchemaValid": bool(daily_audit.get("schemaValid")),
+        "cloudflareAiLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
         "publicationPolicy": "DAILY_MOSCOW_PUBLICATION_WITH_PROGRESSIVE_EVENT_HORIZON_FIFTEEN_QUALITY_MATCHES",
         "virtualBankPolicy": R15_EXPRESS_POLICY,
@@ -3458,7 +3458,7 @@ def publish_generation() -> int:
         "expressBank": state.get("expressBank"),
         "russianNames": russian_names_result,
         "fonbetGate": fonbet_result,
-        "dailyOpenRouterAudit": daily_audit,
+        "dailyCloudflare Workers AIAudit": daily_audit,
         "topSingles": 3,
     })
     state.pop("nextPortfolio", None)
@@ -3568,7 +3568,7 @@ def validate_state() -> int:
             raise RuntimeError("R15 informational top three carries a separate stake")
         audit = state.get("dailyAudit") if isinstance(state.get("dailyAudit"), dict) else {}
         if audit.get("schemaValid") and safe_int(audit.get("logicalRuns"), 0) > 1:
-            raise RuntimeError("R15 OpenRouter logical audit ran more than once")
+            raise RuntimeError("R15 Cloudflare Workers AI logical audit ran more than once")
         if any(safe_float(row.get("auditRiskPenalty"), 0.0) < 0 for row in daily):
             raise RuntimeError("R15 audit increased confidence")
     update_express_bank_metrics(state, now)
