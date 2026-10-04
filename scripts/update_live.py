@@ -708,18 +708,65 @@ def fetch_espn_public(
     return results, errors
 
 
-def paid_score_fallback_due(record: dict[str, Any], now: dt.datetime, config: dict[str, Any]) -> bool:
+def paid_score_fallback_due(
+    record: dict[str, Any],
+    now: dt.datetime,
+    config: dict[str, Any],
+    learning: dict[str, Any],
+) -> bool:
     commence = core.parse_datetime(record.get("commenceTime") or record.get("utcDate"))
     if not commence:
         return False
-    minimum_after = max(90, core.safe_int(config.get("livePaidScoreMinimumMinutesAfterKickoff"), 115))
+    minimum_after = max(90, core.safe_int(config.get("livePaidScoreMinimumMinutesAfterKickoff"), 125))
     if now < commence + dt.timedelta(minutes=minimum_after):
         return False
-    last_attempt = core.parse_datetime(record.get("settlementLastAttemptAt"))
-    interval = max(120, core.safe_int(config.get("livePaidScoreFallbackIntervalMinutes"), 240))
+    event_id = str(record.get("eventId") or "")
+    attempts = learning.get("paidScoreFallbackAttempts")
+    if not isinstance(attempts, dict):
+        attempts = {}
+    last_attempt = core.parse_datetime((attempts.get(event_id) or {}).get("at"))
+    interval = max(120, core.safe_int(config.get("livePaidScoreFallbackIntervalMinutes"), 360))
     if last_attempt and now - last_attempt < dt.timedelta(minutes=interval):
         return False
     return True
+
+
+def live_paid_score_budget_available(
+    learning: dict[str, Any],
+    now: dt.datetime,
+    config: dict[str, Any],
+) -> bool:
+    ledger = learning.get("paidScoreFallbackLedger")
+    day_id = now.date().isoformat()
+    if not isinstance(ledger, dict) or str(ledger.get("dayId") or "") != day_id:
+        ledger = {"dayId": day_id, "creditsUsed": 0, "updatedAt": core.iso_z(now)}
+        learning["paidScoreFallbackLedger"] = ledger
+    limit = max(0, core.safe_int(config.get("livePaidScoreDailyCreditBudget"), 2))
+    return core.safe_int(ledger.get("creditsUsed"), 0) < limit
+
+
+def mark_live_paid_score_attempts(
+    learning: dict[str, Any],
+    records: list[dict[str, Any]],
+    now: dt.datetime,
+    credits: int,
+) -> None:
+    attempts = learning.get("paidScoreFallbackAttempts")
+    if not isinstance(attempts, dict):
+        attempts = {}
+    for record in records:
+        event_id = str(record.get("eventId") or "")
+        if event_id:
+            attempts[event_id] = {"at": core.iso_z(now)}
+    learning["paidScoreFallbackAttempts"] = attempts
+
+    day_id = now.date().isoformat()
+    ledger = learning.get("paidScoreFallbackLedger")
+    if not isinstance(ledger, dict) or str(ledger.get("dayId") or "") != day_id:
+        ledger = {"dayId": day_id, "creditsUsed": 0}
+    ledger["creditsUsed"] = core.safe_int(ledger.get("creditsUsed"), 0) + max(0, credits)
+    ledger["updatedAt"] = core.iso_z(now)
+    learning["paidScoreFallbackLedger"] = ledger
 
 def result_similarity(record: dict[str, Any], result: dict[str, Any]) -> float:
     if str(result.get("eventId") or "") == str(record.get("eventId") or ""):
@@ -1213,8 +1260,11 @@ def run_update() -> int:
         record
         for record in records
         if best_result(record, free_results) is None
-        and paid_score_fallback_due(record, now, config)
+        and paid_score_fallback_due(record, now, config, learning)
     ]
+    if unresolved_records and not live_paid_score_budget_available(learning, now, config):
+        print("LIVE_PAID_SCORE_DAILY_BUDGET_EXHAUSTED=YES")
+        unresolved_records = []
     odds_key = None
     if unresolved_records:
         try:
@@ -1231,6 +1281,14 @@ def run_update() -> int:
         config,
         now,
     )
+    if unresolved_records and odds_key:
+        paid_cost = max(0, core.safe_int(client.odds_quota.get("estimatedCreditsThisRun"), 0))
+        mark_live_paid_score_attempts(learning, unresolved_records, now, paid_cost)
+        print(f"LIVE_PAID_SCORE_CREDITS_THIS_RUN={paid_cost}")
+        print(
+            "LIVE_PAID_SCORE_DAILY_CREDITS_USED="
+            f"{core.safe_int((learning.get('paidScoreFallbackLedger') or {}).get('creditsUsed'), 0)}"
+        )
     all_results = free_results + odds_results
     previous_by_event = {
         str(item.get("eventId") or ""): item
