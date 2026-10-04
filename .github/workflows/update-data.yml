@@ -83,6 +83,7 @@ jobs:
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          ODDS_API_KEY_BACKUP: ${{ secrets.ODDS_API_KEY_BACKUP }}
         run: |
           set -euo pipefail
           python scripts/update_live.py --update
