@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-08-05T18:08:50Z",
+  "updatedAt": "2026-10-04T21:57:35Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -2284,6 +2284,48 @@
         }
       ],
       "completed": false
+    },
+    "04ec46217ab498eea210d1e96ead781c": {
+      "eventId": "04ec46217ab498eea210d1e96ead781c",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 2.5",
+      "homeRu": "Жирона",
+      "awayRu": "Мальорка",
+      "preMatchProbability": 0.56868,
+      "startedAt": "2026-10-04T19:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-10-04T21:57:35Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.56868
+        }
+      ],
+      "completed": false
+    },
+    "fd73ff6279d08f38434fb0c4fca0f065": {
+      "eventId": "fd73ff6279d08f38434fb0c4fca0f065",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал больше 1.5",
+      "homeRu": "Аргентинос Хуниорс",
+      "awayRu": "Тигре",
+      "preMatchProbability": 0.686903,
+      "startedAt": "2026-10-04T22:15:00Z",
+      "snapshots": [
+        {
+          "at": "2026-10-04T21:57:35Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.686903
+        }
+      ],
+      "completed": false
     }
   },
   "calibration": {
@@ -2313,7 +2355,17 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 176,
+    "snapshotCount": 178,
     "calibratedBuckets": 0
+  },
+  "paidScoreFallbackLedger": {
+    "dayId": "2026-10-04",
+    "creditsUsed": 0,
+    "updatedAt": "2026-10-04T21:57:35Z"
+  },
+  "paidScoreFallbackAttempts": {
+    "04ec46217ab498eea210d1e96ead781c": {
+      "at": "2026-10-04T21:57:35Z"
+    }
   }
 }

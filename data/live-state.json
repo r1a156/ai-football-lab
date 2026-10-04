@@ -1,27 +1,70 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-08-05T18:08:50Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-10-04T21:57:35Z",
   "refreshMinutes": 10,
-  "events": [],
+  "events": [
+    {
+      "eventId": "fd73ff6279d08f38434fb0c4fca0f065",
+      "analysisId": "ranked-1b76b43d1a8072538e7d",
+      "isBestBet": true,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_argentina_primera_division",
+      "league": "Primera División - Argentina",
+      "leagueRu": "Примера Аргентины",
+      "country": "Аргентина",
+      "countryRu": "Аргентина",
+      "home": "Argentinos Juniors",
+      "away": "CA Tigre BA",
+      "homeRu": "Аргентинос Хуниорс",
+      "awayRu": "Тигре",
+      "commenceTime": "2026-10-04T22:15:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Тотал больше 1.5",
+      "pickRu": "Тотал больше 1.5",
+      "market": "TOTAL_OVER",
+      "marketFamily": "TOTAL",
+      "point": 1.5,
+      "preMatchProbability": 0.686903,
+      "liveProbability": 0.686903,
+      "liveProbabilityPercent": 68.7,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "Ожидание источника",
+      "providerEventId": null,
+      "updatedAt": "2026-10-04T21:57:35Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 4,
-    "results": 64,
+    "calls": 5,
+    "results": 3,
     "oddsQuota": {
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
+      "requestsRemaining": "394",
+      "requestsUsed": "106",
+      "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-08-05: SOFASCORE_PUBLIC:2026-08-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+      "SofaScore 2026-10-04: SOFASCORE_PUBLIC:2026-10-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
+      "ESPN 20261004: ESPN_PUBLIC:20261004 failed after retries: HTTP Error 502: Bad Gateway"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 61,
+      "espn": 0,
       "theSportsDB": 3,
       "footballDataOptional": 0
     }
@@ -30,7 +73,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 2
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
