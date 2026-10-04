@@ -2605,6 +2605,222 @@ def build_strategy_analysis(
     return records, diagnostics
 
 
+def build_bootstrap_preview_analysis(
+    odds_events: list[dict[str, Any]],
+    advanced: dict[str, dict[str, Any]],
+    context: dict[str, Any],
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Build a transparent temporary portfolio without weakening production policy.
+
+    Preview requires real bookmaker markets and history for both teams, but its
+    thresholds are intentionally lower than production. Actual quality and
+    probability values are preserved verbatim and every record is marked as a
+    bootstrap preview.
+    """
+    minimum_quality = safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
+    minimum_probability = safe_float(config.get("bootstrapPreviewMinimumConservativeProbability"), 0.42)
+    minimum_books = max(1, safe_int(config.get("bootstrapPreviewMinimumBookmakers"), 2))
+    target = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
+    max_league = max(1, safe_int(config.get("bootstrapPreviewMaximumSameLeague"), 7))
+
+    evaluated: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]] = []
+    diagnostics = {
+        "mode": "BOOTSTRAP_PREVIEW",
+        "oddsEvents": len(odds_events),
+        "eventsWithHistory": 0,
+        "eventsEligible": 0,
+        "minimumDataQuality": minimum_quality,
+        "minimumConservativeProbability": minimum_probability,
+        "minimumBookmakers": minimum_books,
+        "productionThresholdsUnchanged": True,
+        "excludedMarketOnly": 0,
+        "excludedInsufficientQuality": 0,
+        "excludedInsufficientProbability": 0,
+        "excludedInsufficientBookmakers": 0,
+        "excludedWithoutSafeMarket": 0,
+    }
+
+    for raw in odds_events:
+        if core.infer_sport_from_key(raw.get("sport_key")) != "soccer" or not core.event_allowed(raw, config):
+            continue
+        event_id = str(raw.get("id") or "")
+        event = merge_event(raw, advanced.get(event_id))
+        event["country"] = core.infer_country(
+            str(event.get("sport_key") or ""),
+            str(event.get("sport_title") or ""),
+        )
+        quotes = core.parse_event_quotes(event, now, config)
+        if not quotes:
+            continue
+        model = build_match_model(event, quotes, context, config, now)
+        history_available = bool((model.get("components") or {}).get("historyAvailable"))
+        if not history_available or str(model.get("dataTier") or "").upper() == "MARKET":
+            diagnostics["excludedMarketOnly"] += 1
+            continue
+        diagnostics["eventsWithHistory"] += 1
+        data_quality = safe_float(model.get("dataQuality"), 0.0)
+        if data_quality < minimum_quality:
+            diagnostics["excludedInsufficientQuality"] += 1
+            continue
+
+        candidates = core.evaluate_event_markets(
+            event,
+            quotes,
+            model,
+            state.get("learning", {}),
+            config,
+            now,
+        )
+        safe_candidates: list[dict[str, Any]] = []
+        for source in candidates:
+            item = copy.deepcopy(source)
+            item["eventId"] = event_id
+            item["modelComponents"] = copy.deepcopy(model.get("components") or {})
+            item["sourceNotes"] = list(model.get("sourceNotes") or [])
+            item["dataTier"] = model.get("dataTier")
+            item["dataQuality"] = data_quality
+            item["obviousMarketScore"] = obvious_market_score(item, config)
+            probability = safe_float(
+                item.get("conservativeProbability"),
+                safe_float(item.get("modelProbability"), 0.0),
+            )
+            books = safe_int(item.get("quoteCount"), 0)
+            if probability < minimum_probability:
+                continue
+            if books < minimum_books:
+                continue
+            if safe_float(item.get("bookmakerOdds"), 0.0) < safe_float(config.get("minimumBookmakerOdds"), 1.35):
+                continue
+            if not core.standard_market_allowed(
+                item.get("marketKey"),
+                item.get("market"),
+                item.get("point"),
+            ):
+                continue
+            item["strategyQualified"] = False
+            item["previewQualified"] = True
+            item["previewThresholdProfile"] = "HISTORY_REQUIRED_Q40_P42_BOOKS2_STANDARD_MARKETS"
+            safe_candidates.append(item)
+
+        if not safe_candidates:
+            best_probability = max(
+                [
+                    safe_float(row.get("conservativeProbability"), safe_float(row.get("modelProbability"), 0.0))
+                    for row in candidates
+                ] or [0.0]
+            )
+            best_books = max([safe_int(row.get("quoteCount"), 0) for row in candidates] or [0])
+            if best_probability < minimum_probability:
+                diagnostics["excludedInsufficientProbability"] += 1
+            elif best_books < minimum_books:
+                diagnostics["excludedInsufficientBookmakers"] += 1
+            else:
+                diagnostics["excludedWithoutSafeMarket"] += 1
+            continue
+
+        safe_candidates.sort(
+            key=lambda row: (
+                not bool(row.get("goalDirectionConflict")),
+                safe_float(row.get("conservativeProbability")),
+                safe_float(row.get("obviousMarketScore")),
+                safe_float(row.get("dataQuality")),
+                safe_int(row.get("quoteCount")),
+            ),
+            reverse=True,
+        )
+        selected = safe_candidates[0]
+        alternatives = safe_candidates[1:]
+        diagnostics["eventsEligible"] += 1
+        evaluated.append((event, selected, alternatives, model))
+
+    evaluated.sort(
+        key=lambda row: (
+            not bool(row[1].get("goalDirectionConflict")),
+            safe_float(row[1].get("conservativeProbability")),
+            safe_float(row[1].get("dataQuality")),
+            safe_float(row[1].get("obviousMarketScore")),
+        ),
+        reverse=True,
+    )
+
+    chosen: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]] = []
+    deferred = []
+    league_counts: dict[str, int] = defaultdict(int)
+    for row in evaluated:
+        league = str(row[1].get("league") or row[0].get("sport_title") or "")
+        if league_counts[league] < max_league and len(chosen) < target:
+            chosen.append(row)
+            league_counts[league] += 1
+        else:
+            deferred.append(row)
+    for row in deferred:
+        if len(chosen) >= target:
+            break
+        chosen.append(row)
+
+    if len(chosen) < target:
+        diagnostics.update({
+            "status": "INSUFFICIENT_PREVIEW_EVENTS",
+            "published": 0,
+            "required": target,
+            "shortage": target - len(chosen),
+        })
+        return [], diagnostics
+
+    records: list[dict[str, Any]] = []
+    for rank, (event, selected, alternatives, model) in enumerate(chosen[:target], start=1):
+        record = core.event_to_analysis_record(event, selected, alternatives, rank, now)
+        record.update({
+            "rank": rank,
+            "marketPolicy": R15_MARKET_POLICY,
+            "sourceMarker": R15_MARKER,
+            "financialMode": "PREVIEW_EXPRESS_LEG",
+            "publicationMode": "BOOTSTRAP_PREVIEW",
+            "conservativeProbability": selected.get("conservativeProbability"),
+            "obviousMarketScore": selected.get("obviousMarketScore"),
+            "strategyQualified": False,
+            "previewQualified": True,
+            "previewThresholdProfile": selected.get("previewThresholdProfile"),
+            "dataTier": model.get("dataTier"),
+            "dataQuality": model.get("dataQuality"),
+            "matchDossier": {
+                "dataTier": model.get("dataTier"),
+                "dataQuality": model.get("dataQuality"),
+                "expectedHomeGoals": model.get("homeLambda"),
+                "expectedAwayGoals": model.get("awayLambda"),
+                "expectedTotalGoals": round(
+                    safe_float(model.get("homeLambda")) + safe_float(model.get("awayLambda")),
+                    3,
+                ),
+                "homeWinProbability": model.get("homeWinProbability"),
+                "drawProbability": model.get("drawProbability"),
+                "awayWinProbability": model.get("awayWinProbability"),
+                "mostLikelyScores": model.get("mostLikelyScores"),
+                "components": copy.deepcopy(model.get("components") or {}),
+                "sources": list(model.get("sourceNotes") or []),
+            },
+            "selectionRationale": {
+                **selection_explanation(selected, alternatives),
+                "previewNotice": (
+                    "Временный предпросмотр: использованы реальные данные и коэффициенты, "
+                    "но пороги ниже штатного production-режима."
+                ),
+            },
+        })
+        records.append(record)
+
+    diagnostics.update({
+        "status": "GREEN_BOOTSTRAP_PREVIEW",
+        "published": len(records),
+        "required": target,
+        "productionThresholdsUnchanged": True,
+    })
+    return records, diagnostics
+
+
 def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, preferred_event_ids: list[str] | None = None) -> list[dict[str, Any]]:
     by_event = {str(row.get("eventId") or ""): row for row in records}
     preferred = [by_event[value] for value in (preferred_event_ids or []) if value in by_event]
@@ -3435,13 +3651,29 @@ def publish_generation() -> int:
     advanced_errors = list(advanced_recovery_diag.get("errors") or [])
     records, analysis_diag = build_strategy_analysis(odds_events, advanced, context, state, config, now)
     analysis_diag = enrich_rejection_diagnostics(analysis_diag, config)
+    if bootstrap_preview and len(records) != safe_int(config.get("dailyAnalysisTarget"), 15):
+        strict_analysis_diag = copy.deepcopy(analysis_diag)
+        preview_records, preview_diag = build_bootstrap_preview_analysis(
+            odds_events, advanced, context, state, config, now
+        )
+        if len(preview_records) == safe_int(config.get("dailyAnalysisTarget"), 15):
+            records = preview_records
+            analysis_diag = preview_diag
+            analysis_diag["strictProductionDiagnostics"] = strict_analysis_diag
+            print("R15_BOOTSTRAP_PREVIEW_RELAXED_PROFILE=USED")
+            print(f"R15_BOOTSTRAP_PREVIEW_ELIGIBLE={preview_diag.get('eventsEligible', 0)}")
+        else:
+            analysis_diag["bootstrapPreviewAttempt"] = preview_diag
     quota_plan["advancedCompletionMode"] = safe_int(analysis_diag.get("eventsQualified"), 0) < safe_int(config.get("dailyAnalysisTarget"), 15)
     quota_plan["advancedRecoveryRequestedEvents"] = safe_int(advanced_recovery_diag.get("requested"), 0)
     quota_plan["advancedRecoveryReceivedEvents"] = safe_int(advanced_recovery_diag.get("returned"), 0)
     quota_plan["advancedRecoveryRecoveredEvents"] = safe_int(advanced_recovery_diag.get("recoveredEvents"), 0)
     quota_plan["advancedRecoveryAttemptedPairs"] = safe_int(advanced_recovery_diag.get("attemptedPairs"), 0)
     quota_plan["advancedRecoveryUnsupportedMarkets"] = advanced_recovery_diag.get("unsupportedMarkets") or {}
-    quota_plan["qualifiedAfterAdvanced"] = safe_int(analysis_diag.get("eventsQualified"), 0)
+    quota_plan["qualifiedAfterAdvanced"] = safe_int(
+        analysis_diag.get("eventsQualified"),
+        safe_int(analysis_diag.get("eventsEligible"), 0),
+    )
 
     report = {
         "status": "GREEN" if len(records) == 15 else "DEGRADED",
@@ -3786,7 +4018,12 @@ def validate_state() -> int:
                 raise RuntimeError("R15 contains non-football event")
             if str(row.get("dataTier") or "MARKET") == "MARKET":
                 raise RuntimeError("R15 strategy contains MARKET-only event")
-            if safe_float(row.get("dataQuality")) < safe_float(config.get("strategyMinimumDataQuality"), 58):
+            minimum_quality = (
+                safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
+                if bootstrap_preview
+                else safe_float(config.get("strategyMinimumDataQuality"), 58)
+            )
+            if safe_float(row.get("dataQuality")) < minimum_quality:
                 raise RuntimeError("R15 strategy contains weak data")
             if core.competition_is_excluded(row.get("sportKey"), row.get("league"), "", row.get("country"), config):
                 raise RuntimeError("R15 contains excluded competition")
