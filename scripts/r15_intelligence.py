@@ -2995,6 +2995,11 @@ def settle_current() -> int:
     raw_state = load_json(STATE_PATH, {})
     state = ensure_r15_state(raw_state, config, now)
     before = json_fingerprint(state)
+    if bool((state.get("meta") or {}).get("bootstrapPreview")):
+        print("R15_BOOTSTRAP_PREVIEW_SETTLEMENT=SKIPPED")
+        print("R15_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
+        print("FINAL_STATUS=GREEN_R15_BOOTSTRAP_PREVIEW_SETTLEMENT_SKIPPED")
+        return 0
     odds_key, odds_key_selection = core.select_odds_api_key(
         activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
     )
@@ -3245,19 +3250,84 @@ def archive_legacy_publication_bridge(
     })
     return result
 
+def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> bool:
+    meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    if not bool(meta.get("bootstrapPreview")):
+        return False
+    previous_batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
+    sequence = safe_int(previous_batch.get("sequence"), safe_int(meta.get("batchSequence"), 0))
+    state["dailyAnalysis"] = []
+    state["bestBets"] = []
+    state["predictions"] = []
+    state["expresses"] = []
+    state["batch"] = {
+        "version": 1,
+        "id": "",
+        "sequence": sequence,
+        "status": "WAITING_FOR_NEXT_SELECTION",
+        "statusLabel": "Предпросмотр завершён — формируется штатный портфель",
+        "createdAt": None,
+        "updatedAt": iso(now),
+        "analysisCount": 0,
+        "bestBetsCount": 0,
+        "terminalAnalysisCount": 0,
+        "terminalBestBetsCount": 0,
+        "pendingAnalysisCount": 0,
+        "pendingBestBetsCount": 0,
+        "completed": True,
+        "placedAmount": 0.0,
+        "availableAmount": safe_float(
+            (state.get("expressBank") or {}).get("current"),
+            safe_float(config.get("expressStartingBank"), 10000.0),
+        ),
+        "startingBank": safe_float(
+            (state.get("expressBank") or {}).get("starting"),
+            safe_float(config.get("expressStartingBank"), 10000.0),
+        ),
+        "transitionReason": "BOOTSTRAP_PREVIEW_RETIRED_FOR_NORMAL_WINDOW",
+    }
+    for key in (
+        "bootstrapPreview",
+        "bootstrapPreviewPublishedAt",
+        "bootstrapPreviewReplaceAt",
+        "bootstrapPreviewBankEngaged",
+    ):
+        meta.pop(key, None)
+    meta.update({
+        "status": "GENERATING_R15_PORTFOLIO",
+        "dataFreshness": "BOOTSTRAP_PREVIEW_RETIRED",
+        "batchStatus": "WAITING_FOR_NEXT_SELECTION",
+        "batchStatusLabel": "Формируется штатный портфель",
+        "updatedAt": iso(now),
+    })
+    state["meta"] = meta
+    state.pop("dailyAudit", None)
+    update_express_bank_metrics(state, now)
+    return True
+
+
 def publish_generation() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     now = now_utc()
     state = ensure_r15_state(load_json(STATE_PATH, {}), config, now)
     activation = daily_auditor.activation_gate(now)
-    if not activation.get("ready"):
+    bootstrap_preview = str(os.getenv("R15_BOOTSTRAP_PREVIEW", "")).strip().lower() in {"1", "true", "yes", "on"}
+    if not activation.get("ready") and not bootstrap_preview:
         prepared = daily_auditor.prepare_next_window_state()
         print(f"R15F_R3_FIRST_ACTIVE_OPERATIONAL_DATE={prepared.get('operationalDateLocal')}")
         print("R15F_R3_PARTIAL_DAY_PUBLICATION=NO")
         print("R15F_R3_BANK_MUTATION=NO")
         print("FINAL_STATUS=GREEN_R15F_R3_PREPARING_NEXT_WINDOW")
         return 0
+    if bootstrap_preview and activation.get("ready"):
+        print("R15_BOOTSTRAP_PREVIEW_IGNORED=ALREADY_IN_NORMAL_WINDOW")
+        bootstrap_preview = False
+    if activation.get("ready") and discard_bootstrap_preview(state, config, now):
+        print("R15_BOOTSTRAP_PREVIEW_RETIRED=YES")
+    if bootstrap_preview:
+        print("R15_BOOTSTRAP_PREVIEW=ENABLED")
+        print("R15_BOOTSTRAP_PREVIEW_BANK_ENGAGED=NO")
     day = operational_day(now, config)
     current_day = str(state.get("meta", {}).get("operationalDayId") or "")
     current_records = state.get("dailyAnalysis") or []
@@ -3331,7 +3401,7 @@ def publish_generation() -> int:
     if not start or not end:
         raise RuntimeError("R15 operational window unresolved")
     odds_events, advanced, acquisition_errors, quota_plan, preliminary_diag, advanced_recovery_diag = complete_portfolio_acquisition(
-        client, odds_key, keys, quota_plan, events, config, start, end, context, state, now
+        client, odds_key, keys, quota_plan, discovered, config, start, end, context, state, now
     )
     featured_errors = list(acquisition_errors)
     keys = list(quota_plan.get("competitionKeysSelected") or keys)
@@ -3377,7 +3447,7 @@ def publish_generation() -> int:
         "status": "GREEN" if len(records) == 15 else "DEGRADED",
         "version": core.STATE_VERSION,
         "sourceMarker": R15_MARKER,
-        "mode": "generate",
+        "mode": "bootstrap-preview" if bootstrap_preview else "generate",
         "startedAt": iso(now),
         "finishedAt": iso(now_utc()),
         "diagnostics": {
@@ -3474,13 +3544,43 @@ def publish_generation() -> int:
         row["stake"] = 0.0
         row["stakePercent"] = 0.0
         row["financialMode"] = "EXPRESS_LEG"
-    archive_previous_expresses(state)
-    core.publish_new_batch(state, records, best, best, config, now)
-    core.append_new_records_to_history(state, records, best, config)
+    if not bootstrap_preview:
+        archive_previous_expresses(state)
+    batch = core.publish_new_batch(state, records, best, best, config, now)
+    if not bootstrap_preview:
+        core.append_new_records_to_history(state, records, best, config)
     state["dailyAnalysis"] = records
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
     expresses = build_expresses(records, state, config, now, daily_audit.get("expresses") if isinstance(daily_audit, dict) else None)
+    if bootstrap_preview:
+        for row in records:
+            row["publicationMode"] = "BOOTSTRAP_PREVIEW"
+            row["financialMode"] = "PREVIEW_EXPRESS_LEG"
+        for row in best:
+            row["publicationMode"] = "BOOTSTRAP_PREVIEW"
+        for express in expresses:
+            express["previewStakePercent"] = express.get("stakePercent")
+            express["previewStake"] = express.get("stake")
+            express["previewPotentialPayout"] = express.get("potentialPayout")
+            express["previewPotentialProfit"] = express.get("potentialProfit")
+            express["stakePercent"] = 0.0
+            express["stake"] = 0.0
+            express["potentialPayout"] = 0.0
+            express["potentialProfit"] = 0.0
+            express["financialMode"] = "BOOTSTRAP_PREVIEW_NO_BANK_MUTATION"
+            express["statusLabel"] = "Предпросмотр"
+        batch.update({
+            "status": "PREVIEW",
+            "statusLabel": "Временный предпросмотр до штатного окна 08:00 МСК",
+            "placedAmount": 0.0,
+            "availableAmount": safe_float(
+                (state.get("expressBank") or {}).get("current"),
+                safe_float(config.get("expressStartingBank"), 10000.0),
+            ),
+            "rolloverExecutionPolicy": "AUTO_REPLACE_AT_FIRST_ACTIVE_08_MSK_WINDOW",
+        })
+        update_express_bank_metrics(state, now)
     core.update_statistics(state)
     update_express_statistics(state)
     state["dataCoverage"] = {
@@ -3568,7 +3668,23 @@ def publish_generation() -> int:
     })
     state.pop("nextPortfolio", None)
     state.setdefault("meta", {})["nextPortfolioStatus"] = "PUBLISHED"
-    daily_auditor.mark_activated(day["operationalDayId"])
+    if bootstrap_preview:
+        control = daily_auditor.load_control()
+        state["meta"].update({
+            "status": "BOOTSTRAP_PREVIEW",
+            "bootstrapPreview": True,
+            "bootstrapPreviewPublishedAt": iso(now),
+            "bootstrapPreviewReplaceAt": control.get("firstActiveWindowStart"),
+            "bootstrapPreviewBankEngaged": False,
+            "publicationPolicy": "TEMPORARY_FULL_PREVIEW_AUTO_REPLACED_AT_FIRST_ACTIVE_08_MSK_WINDOW",
+        })
+        report["diagnostics"]["bootstrapPreview"] = {
+            "enabled": True,
+            "bankEngaged": False,
+            "replaceAt": control.get("firstActiveWindowStart"),
+        }
+    else:
+        daily_auditor.mark_activated(day["operationalDayId"])
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
     print("R15F_ANALYSIS=15")
@@ -3576,7 +3692,12 @@ def publish_generation() -> int:
     print("R15F_EXPRESSES=3")
     print("R15F_EXPRESS_LEGS=15")
     print(f"R15F_EXPRESS_BANK={state.get('expressBank', {}).get('current')}")
-    print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_EXPRESS_PUBLISHED")
+    if bootstrap_preview:
+        print("R15F_BOOTSTRAP_PREVIEW=GREEN")
+        print("R15F_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
+        print("FINAL_STATUS=GREEN_R15F_BOOTSTRAP_PREVIEW_PUBLISHED")
+    else:
+        print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_EXPRESS_PUBLISHED")
     return 0
 
 
@@ -3635,6 +3756,7 @@ def validate_state() -> int:
         # It is validated by the mature core and is replaced only at the next
         # successful R15 morning publication; no hidden rewrite is allowed.
         print("R15_LEGACY_PUBLICATION_BRIDGE=ACTIVE")
+    bootstrap_preview = bool((state.get("meta") or {}).get("bootstrapPreview"))
     if is_r15_publication:
         if len(daily) != 15:
             raise RuntimeError(f"R15 daily analysis must be 15, got {len(daily)}")
@@ -3651,7 +3773,8 @@ def validate_state() -> int:
             if len(legs) != 5:
                 raise RuntimeError("Every R15 express must contain five legs")
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
-            if abs(safe_float(express.get("stakePercent")) - 10.0) > 0.001:
+            expected_stake_percent = 0.0 if bootstrap_preview else 10.0
+            if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
                 raise RuntimeError("R15 express stake percent changed")
         if len(leg_ids) != 15 or len(set(leg_ids)) != 15:
             raise RuntimeError("R15 express legs must use every analysis exactly once")
