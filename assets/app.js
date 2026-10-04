@@ -76,7 +76,9 @@
     if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const marker = String(state.meta.sourceMarker || "");
     if (!marker.includes("R15")) return false;
-    if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= MIN_QUALITY)) return false;
+    const preview = Boolean(state.meta.bootstrapPreview);
+    const minimumQuality = preview ? 40 : MIN_QUALITY;
+    if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= minimumQuality)) return false;
     const end = Date.parse(state.meta.operationalWindowEnd || "");
     if (Number.isFinite(end)) return end > Date.now() - 15 * 60_000;
     const updated = Date.parse(state.meta.updatedAt || "");
@@ -94,7 +96,10 @@
     setText("summaryBank", currency(bank.current ?? bank.starting ?? 10000));
     const placed = number(bank.placedAmount ?? bank.activeExposure);
     setText("summaryExposure", placed > 0 ? `${currency(placed)} в работе` : "банк свободен");
-    setText("portfolioStatus", current ? "Свежая подборка опубликована" : "Новая подборка формируется");
+    const preview = Boolean(state.meta.bootstrapPreview);
+    setText("portfolioStatus", current
+      ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
+      : "Новая подборка формируется");
     setText("portfolioUpdated", state.meta.updatedAt ? `Обновлено ${formatDateTime(state.meta.updatedAt)}` : "Ожидаем обновление");
     setText("matchesUpdated", current && state.meta.updatedAt ? formatShortDateTime(state.meta.updatedAt) : "ожидание");
     setText("footerUpdated", state.meta.updatedAt ? `Данные: ${formatDateTime(state.meta.updatedAt)}` : "Данные загружаются");
