@@ -948,8 +948,20 @@ def apply_russian_names(records: list[dict[str, Any]]) -> dict[str, Any]:
     mapping = resolve_russian_names(teams)
     applied = 0
     for row in records:
-        home = mapping.get(normalize(row.get("home")))
-        away = mapping.get(normalize(row.get("away")))
+        home_original = str(row.get("home") or "")
+        away_original = str(row.get("away") or "")
+        home_key = core.normalized_name_key(home_original)
+        away_key = core.normalized_name_key(away_original)
+
+        # Canonical deterministic names have highest authority. External
+        # search is only enrichment for names not explicitly known by core.
+        home = core.RUSSIAN_EXACT_NAMES.get(home_key)
+        away = core.RUSSIAN_EXACT_NAMES.get(away_key)
+        if not home:
+            home = mapping.get(normalize(home_original)) or core.russian_display_text(home_original)
+        if not away:
+            away = mapping.get(normalize(away_original)) or core.russian_display_text(away_original)
+
         if home:
             row["homeRu"] = home
             applied += 1
