@@ -113,23 +113,32 @@ jobs:
           echo "R3R8_EXPECTED_ENGINE_BLOB=$EXPECTED_ENGINE_BLOB"
           echo "R3R8_EXPECTED_CONFIG_BLOB=$EXPECTED_CONFIG_BLOB"
 
-          git add \
-            data/state.json \
-            data/ai_daily_analysis.json \
-            data/last-update-report.json \
-            data/live-state.json \
-            data/live-learning.json \
-            data/football-history-cache.json \
-            data/team-registry.json \
-            data/free-data-mesh.json \
-            data/clubelo-ratings.json \
-            data/russian-team-names.json \
-            data/fonbet-public-snapshot.json \
-            data/r15-odds-cache.json \
-            data/football-data-fixtures-odds.json \
-            data/provider-health.json \
-            data/r15-runtime-control.json \
+          PUBLIC_STATE_FILES=(
+            data/state.json
+            data/ai_daily_analysis.json
+            data/last-update-report.json
+            data/live-state.json
+            data/live-learning.json
+            data/football-history-cache.json
+            data/team-registry.json
+            data/free-data-mesh.json
+            data/clubelo-ratings.json
+            data/russian-team-names.json
+            data/fonbet-public-snapshot.json
+            data/r15-odds-cache.json
+            data/football-data-fixtures-odds.json
+            data/provider-health.json
+            data/r15-runtime-control.json
             data/cloudflare-ai-daily-audit.json
+          )
+
+          for path in "${PUBLIC_STATE_FILES[@]}"; do
+            if [[ -e "$path" ]] || git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+              git add -A -- "$path"
+            else
+              echo "R3R8_OPTIONAL_STATE_FILE_SKIPPED=$path"
+            fi
+          done
 
           if git diff --cached --quiet; then
             echo "R15F_R3_NO_PUBLIC_DATA_CHANGES=YES"
