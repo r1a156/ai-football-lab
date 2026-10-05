@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-10-05T06:09:56Z",
+    "updatedAt": "2026-10-05T06:20:07Z",
     "analysisDateLocal": "2026-10-05",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -132,8 +132,8 @@
     "operationalDayId": "2026-10-05-MSK-0800",
     "operationalWindowStart": "2026-10-05T05:00:00Z",
     "operationalWindowEnd": "2026-10-06T05:00:00Z",
-    "selectionWindowStart": "2026-10-05T06:54:56Z",
-    "selectionWindowEnd": "2026-10-08T06:54:56Z",
+    "selectionWindowStart": "2026-10-05T07:05:07Z",
+    "selectionWindowEnd": "2026-10-08T07:05:07Z",
     "operationalWindowPolicy": "MOSCOW_PUBLICATION_DAY_WITH_PROGRESSIVE_FUTURE_EVENT_SEARCH",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
     "futurePublicationPolicy": "FOOTBALL_ONLY_NO_ASIAN_MARKETS",
@@ -144,7 +144,7 @@
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-10-05T06:09:56Z",
+    "r15SettlementAt": "2026-10-05T06:20:06Z",
     "nextPortfolioStatus": "PUBLISHED",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -15550,8 +15550,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-05T06:09:56Z",
-      "settlementAttempts": 933,
+      "settlementLastAttemptAt": "2026-10-05T06:20:06Z",
+      "settlementAttempts": 934,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -23721,7 +23721,7 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-10-05T06:09:56Z",
+    "updatedAt": "2026-10-05T06:20:06Z",
     "segments": {
       "SPORT|soccer": {
         "settled": 69,
@@ -25363,7 +25363,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-10-05T06:09:56Z"
+      "updatedAt": "2026-10-05T06:20:07Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -25380,7 +25380,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-05T06:09:56Z",
+    "updatedAt": "2026-10-05T06:20:07Z",
     "reason": "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON"
   },
   "batchHistory": [
@@ -25551,7 +25551,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-10-05T06:09:56Z",
+    "updatedAt": "2026-10-05T06:20:06Z",
     "analysisHistory": {
       "input": 70,
       "output": 70,
@@ -25574,13 +25574,13 @@
     "competitionsDiscovered": 7,
     "competitionsWithOdds": 0,
     "oddsEvents": 39,
-    "historyMatchedEvents": 16,
+    "historyMatchedEvents": 32,
     "qualifiedEvents": 4,
     "publishedEvents": 0,
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-10-05T06:09:02Z",
+        "updatedAt": "2026-10-05T06:19:11Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -25588,11 +25588,11 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "historyMatches": 17604
+        "historyMatches": 17630
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-05T06:11:23Z",
+        "lastSuccessAt": "2026-10-05T06:21:42Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -25601,12 +25601,12 @@
       }
     },
     "quota": {
-      "requestsRemaining": "376",
-      "requestsUsed": "124",
+      "requestsRemaining": "374",
+      "requestsUsed": "126",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
-    "historyMatches": 12908,
+    "historyMatches": 12938,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -25621,32 +25621,29 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 17604,
+      "historyMatches": 17630,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 30,
-      "matchesAdded": 30,
-      "historyMatches": 17630,
+      "requests": 59,
+      "matchesAdded": 59,
+      "historyMatches": 17660,
       "errors": [
+        "136462:HTTPError",
         "136469:HTTPError",
         "134510:HTTPError",
-        "133901:HTTPError",
         "149900:HTTPError",
         "137782:HTTPError",
-        "144737:HTTPError",
         "136449:HTTPError",
-        "136466:HTTPError",
-        "135981:HTTPError",
         "136452:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-05T06:09:56Z"
+    "updatedAt": "2026-10-05T06:20:07Z"
   },
   "expressBank": {
     "starting": 10000,
