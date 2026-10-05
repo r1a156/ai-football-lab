@@ -3211,7 +3211,8 @@ def settle_current() -> int:
     raw_state = load_json(STATE_PATH, {})
     state = ensure_r15_state(raw_state, config, now)
     before = json_fingerprint(state)
-    if bool((state.get("meta") or {}).get("bootstrapPreview")):
+    state_meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    if bool(state_meta.get("bootstrapPreview")) and not bool(state_meta.get("recoveryDay")):
         print("R15_BOOTSTRAP_PREVIEW_SETTLEMENT=SKIPPED")
         print("R15_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
         print("FINAL_STATUS=GREEN_R15_BOOTSTRAP_PREVIEW_SETTLEMENT_SKIPPED")
@@ -3529,6 +3530,10 @@ def publish_generation() -> int:
     state = ensure_r15_state(load_json(STATE_PATH, {}), config, now)
     activation = daily_auditor.activation_gate(now)
     bootstrap_preview = str(os.getenv("R15_BOOTSTRAP_PREVIEW", "")).strip().lower() in {"1", "true", "yes", "on"}
+    recovery_day = str(os.getenv("R15_RECOVERY_DAY", "")).strip().lower() in {"1", "true", "yes", "on"}
+    if recovery_day and not activation.get("ready"):
+        print("R15_RECOVERY_DAY_IGNORED=ACTIVATION_NOT_READY")
+        recovery_day = False
     if not activation.get("ready") and not bootstrap_preview:
         prepared = daily_auditor.prepare_next_window_state()
         print(f"R15F_R3_FIRST_ACTIVE_OPERATIONAL_DATE={prepared.get('operationalDateLocal')}")
@@ -3539,7 +3544,12 @@ def publish_generation() -> int:
     if bootstrap_preview and activation.get("ready"):
         print("R15_BOOTSTRAP_PREVIEW_IGNORED=ALREADY_IN_NORMAL_WINDOW")
         bootstrap_preview = False
-    previous_preview_state = copy.deepcopy(state) if bool((state.get("meta") or {}).get("bootstrapPreview")) else None
+    previous_meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    previous_preview_state = (
+        copy.deepcopy(state)
+        if bool(previous_meta.get("bootstrapPreview")) and not bool(previous_meta.get("recoveryDay"))
+        else None
+    )
     if previous_preview_state and activation.get("ready"):
         print("R15_BOOTSTRAP_PREVIEW_PRESERVED_UNTIL_REPLACEMENT=YES")
     if bootstrap_preview:
@@ -3688,6 +3698,43 @@ def publish_generation() -> int:
             print(f"R15_BOOTSTRAP_PREVIEW_ELIGIBLE={preview_diag.get('eventsEligible', 0)}")
         else:
             analysis_diag["bootstrapPreviewAttempt"] = preview_diag
+
+    if recovery_day and len(records) != safe_int(config.get("dailyAnalysisTarget"), 15):
+        strict_analysis_diag = copy.deepcopy(analysis_diag)
+        recovery_config = copy.deepcopy(config)
+        recovery_config.update({
+            "bootstrapPreviewMinimumDataQuality": 40.0,
+            "bootstrapPreviewMinimumConservativeProbability": 0.48,
+            "bootstrapPreviewMinimumBookmakers": 3,
+            "bootstrapPreviewMaximumSameLeague": 7,
+        })
+        recovery_records, recovery_diag = build_bootstrap_preview_analysis(
+            odds_events, advanced, context, state, recovery_config, now
+        )
+        if len(recovery_records) == safe_int(config.get("dailyAnalysisTarget"), 15):
+            for row in recovery_records:
+                row["publicationMode"] = "RECOVERY_DAY"
+                row["financialMode"] = "EXPRESS_LEG"
+                row["strategyQualified"] = False
+                row["recoveryQualified"] = True
+                row["recoveryThresholdProfile"] = "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS"
+                row.pop("previewQualified", None)
+                rationale = row.get("selectionRationale") if isinstance(row.get("selectionRationale"), dict) else {}
+                rationale.pop("previewNotice", None)
+                rationale["recoveryNotice"] = (
+                    "Восстановительный суточный портфель: реальные HYBRID-данные, "
+                    "качество >=40, консервативная вероятность >=48%, минимум 3 букмекера."
+                )
+                row["selectionRationale"] = rationale
+            records = recovery_records
+            analysis_diag = recovery_diag
+            analysis_diag["mode"] = "RECOVERY_DAY"
+            analysis_diag["strictProductionDiagnostics"] = strict_analysis_diag
+            analysis_diag["recoveryThresholdProfile"] = "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS"
+            print("R15_RECOVERY_DAY_PROFILE=USED")
+            print(f"R15_RECOVERY_DAY_ELIGIBLE={recovery_diag.get('eventsEligible', 0)}")
+        else:
+            analysis_diag["recoveryDayAttempt"] = recovery_diag
     quota_plan["advancedCompletionMode"] = safe_int(analysis_diag.get("eventsQualified"), 0) < safe_int(config.get("dailyAnalysisTarget"), 15)
     quota_plan["advancedRecoveryRequestedEvents"] = safe_int(advanced_recovery_diag.get("requested"), 0)
     quota_plan["advancedRecoveryReceivedEvents"] = safe_int(advanced_recovery_diag.get("returned"), 0)
@@ -3703,7 +3750,7 @@ def publish_generation() -> int:
         "status": "GREEN" if len(records) == 15 else "DEGRADED",
         "version": core.STATE_VERSION,
         "sourceMarker": R15_MARKER,
-        "mode": "bootstrap-preview" if bootstrap_preview else "generate",
+        "mode": "bootstrap-preview" if bootstrap_preview else ("recovery-day" if recovery_day else "generate"),
         "startedAt": iso(now),
         "finishedAt": iso(now_utc()),
         "diagnostics": {
@@ -3966,7 +4013,29 @@ def publish_generation() -> int:
             "bankEngaged": False,
             "replaceAt": control.get("firstActiveWindowStart"),
         }
+    elif recovery_day:
+        state["meta"].update({
+            "status": "RECOVERY_DAY",
+            "recoveryDay": True,
+            "recoveryDayPublishedAt": iso(now),
+            "recoveryThresholdProfile": "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS",
+            "recoveryStrictProductionThresholdsChanged": False,
+            "bootstrapPreview": True,
+            "bootstrapPreviewBankEngaged": True,
+            "publicationPolicy": "ONE_DAY_RECOVERY_PORTFOLIO_STRICT_PRODUCTION_RETURNS_NEXT_OPERATIONAL_DAY",
+        })
+        report["diagnostics"]["recoveryDay"] = {
+            "enabled": True,
+            "bankEngaged": True,
+            "thresholdProfile": "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS",
+            "strictProductionThresholdsChanged": False,
+        }
+        daily_auditor.mark_activated(day["operationalDayId"])
     else:
+        state["meta"].pop("recoveryDay", None)
+        state["meta"].pop("recoveryDayPublishedAt", None)
+        state["meta"].pop("recoveryThresholdProfile", None)
+        state["meta"].pop("recoveryStrictProductionThresholdsChanged", None)
         daily_auditor.mark_activated(day["operationalDayId"])
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
@@ -3979,6 +4048,10 @@ def publish_generation() -> int:
         print("R15F_BOOTSTRAP_PREVIEW=GREEN")
         print("R15F_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
         print("FINAL_STATUS=GREEN_R15F_BOOTSTRAP_PREVIEW_PUBLISHED")
+    elif recovery_day:
+        print("R15F_RECOVERY_DAY=GREEN")
+        print("R15F_RECOVERY_DAY_BANK_ENGAGED=YES")
+        print("FINAL_STATUS=GREEN_R15F_RECOVERY_DAY_PUBLISHED")
     else:
         print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_EXPRESS_PUBLISHED")
     return 0
@@ -4039,7 +4112,9 @@ def validate_state() -> int:
         # It is validated by the mature core and is replaced only at the next
         # successful R15 morning publication; no hidden rewrite is allowed.
         print("R15_LEGACY_PUBLICATION_BRIDGE=ACTIVE")
-    bootstrap_preview = bool((state.get("meta") or {}).get("bootstrapPreview"))
+    validation_meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    bootstrap_preview = bool(validation_meta.get("bootstrapPreview"))
+    recovery_day = bool(validation_meta.get("recoveryDay"))
     if is_r15_publication:
         if len(daily) != 15:
             raise RuntimeError(f"R15 daily analysis must be 15, got {len(daily)}")
@@ -4056,7 +4131,7 @@ def validate_state() -> int:
             if len(legs) != 5:
                 raise RuntimeError("Every R15 express must contain five legs")
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
-            expected_stake_percent = 0.0 if bootstrap_preview else 10.0
+            expected_stake_percent = 0.0 if (bootstrap_preview and not recovery_day) else 10.0
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
                 raise RuntimeError("R15 express stake percent changed")
         if len(leg_ids) != 15 or len(set(leg_ids)) != 15:
@@ -4070,9 +4145,13 @@ def validate_state() -> int:
             if str(row.get("dataTier") or "MARKET") == "MARKET":
                 raise RuntimeError("R15 strategy contains MARKET-only event")
             minimum_quality = (
-                safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
-                if bootstrap_preview
-                else safe_float(config.get("strategyMinimumDataQuality"), 58)
+                40.0
+                if recovery_day
+                else (
+                    safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
+                    if bootstrap_preview
+                    else safe_float(config.get("strategyMinimumDataQuality"), 58)
+                )
             )
             if safe_float(row.get("dataQuality")) < minimum_quality:
                 raise RuntimeError("R15 strategy contains weak data")
