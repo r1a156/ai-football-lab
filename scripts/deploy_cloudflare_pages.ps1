@@ -21,48 +21,78 @@ if (-not $npx) {
     throw "npx.cmd was not found. Install Node.js or make npm/npx available in PATH."
 }
 
-& npx.cmd wrangler@latest pages deploy $Out --project-name $ProjectName --branch main --commit-dirty=true
-if ($LASTEXITCODE -ne 0) {
-    throw "Wrangler Pages deploy failed with exit code $LASTEXITCODE"
+$wranglerOutput = @(
+    & npx.cmd wrangler@latest pages deploy $Out --project-name $ProjectName --branch main --commit-dirty=true 2>&1 |
+        Tee-Object -Variable wranglerStream
+)
+$deployExit = $LASTEXITCODE
+if ($deployExit -ne 0) {
+    throw "Wrangler Pages deploy failed with exit code $deployExit"
+}
+
+$deploymentUrl = $null
+$allWranglerLines = @($wranglerStream) + @($wranglerOutput)
+foreach ($line in $allWranglerLines) {
+    $text = [string]$line
+    $match = [regex]::Match($text, 'https://[A-Za-z0-9-]+\.ai-football-lab\.pages\.dev')
+    if ($match.Success) {
+        $deploymentUrl = $match.Value
+    }
+}
+if (-not $deploymentUrl) {
+    $deploymentUrl = "https://ai-football-lab.pages.dev"
 }
 
 Write-Host "CLOUDFLARE_PAGES_DEPLOY=GREEN"
 Write-Host "PROJECT=$ProjectName"
+Write-Host "DEPLOYMENT_URL=$deploymentUrl"
 
-$PublicBase = "https://ai-football-lab.pages.dev"
+$PublicBases = @(
+    $deploymentUrl,
+    "https://ai-football-lab.pages.dev"
+) | Select-Object -Unique
+
 $verifyOk = $false
 $lastVerifyError = $null
+$verifiedBase = $null
 
-for ($attempt = 1; $attempt -le 5; $attempt++) {
-    try {
-        $stamp = [DateTime]::UtcNow.Ticks
-        $publicState = Invoke-RestMethod -UseBasicParsing -Uri "$PublicBase/data/state.json?v=$stamp" -Headers @{ "Cache-Control" = "no-cache" }
-        $publicIndex = (Invoke-WebRequest -UseBasicParsing -Uri "$PublicBase/?v=$stamp" -Headers @{ "Cache-Control" = "no-cache" }).Content
+foreach ($PublicBase in $PublicBases) {
+    for ($attempt = 1; $attempt -le 5; $attempt++) {
+        try {
+            $stamp = [DateTime]::UtcNow.Ticks
+            $publicState = Invoke-RestMethod -UseBasicParsing -Uri "$PublicBase/data/state.json?v=$stamp" -Headers @{ "Cache-Control" = "no-cache" }
+            $publicIndex = (Invoke-WebRequest -UseBasicParsing -Uri "$PublicBase/?v=$stamp" -Headers @{ "Cache-Control" = "no-cache" }).Content
 
-        $publicAnalysis = @($publicState.dailyAnalysis).Count
-        $publicExpresses = @($publicState.expresses).Count
-        $newLoader = $publicIndex -match "15\.6\.1-state-failsafe"
+            $publicAnalysis = @($publicState.dailyAnalysis).Count
+            $publicExpresses = @($publicState.expresses).Count
+            $newLoader = $publicIndex -match "15\.6\.1-state-failsafe"
 
-        if ($publicAnalysis -eq 15 -and $publicExpresses -eq 3 -and $newLoader) {
-            $verifyOk = $true
-            Write-Host "PUBLIC_VERIFY=GREEN"
-            Write-Host "PUBLIC_ANALYSIS=$publicAnalysis"
-            Write-Host "PUBLIC_EXPRESSES=$publicExpresses"
-            Write-Host "PUBLIC_LOADER=15.6.1-state-failsafe"
-            break
+            if ($publicAnalysis -eq 15 -and $publicExpresses -eq 3 -and $newLoader) {
+                $verifyOk = $true
+                $verifiedBase = $PublicBase
+                Write-Host "PUBLIC_VERIFY=GREEN"
+                Write-Host "PUBLIC_BASE=$verifiedBase"
+                Write-Host "PUBLIC_ANALYSIS=$publicAnalysis"
+                Write-Host "PUBLIC_EXPRESSES=$publicExpresses"
+                Write-Host "PUBLIC_LOADER=15.6.1-state-failsafe"
+                break
+            }
+
+            $lastVerifyError = "$PublicBase analysis=$publicAnalysis expresses=$publicExpresses loader=$newLoader"
+        }
+        catch {
+            $lastVerifyError = "$PublicBase $($_.Exception.Message)"
         }
 
-        $lastVerifyError = "analysis=$publicAnalysis expresses=$publicExpresses loader=$newLoader"
+        if ($attempt -lt 5) {
+            Start-Sleep -Seconds 3
+        }
     }
-    catch {
-        $lastVerifyError = $_.Exception.Message
-    }
-
-    if ($attempt -lt 5) {
-        Start-Sleep -Seconds 3
+    if ($verifyOk) {
+        break
     }
 }
 
 if (-not $verifyOk) {
-    throw "Cloudflare Pages deployed but public verification failed: $lastVerifyError"
+    throw "Cloudflare Pages deployed but public verification failed on deployment and canonical URLs: $lastVerifyError"
 }
