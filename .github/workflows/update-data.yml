@@ -11,15 +11,16 @@ on:
         required: false
         default: false
         type: boolean
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-data.yml'
   schedule:
-    - cron: '7 8 * * *'
-      timezone: 'Europe/Moscow'
-    - cron: '22 8 * * *'
-      timezone: 'Europe/Moscow'
-    - cron: '37 8 * * *'
-      timezone: 'Europe/Moscow'
-    - cron: '2 9 * * *'
-      timezone: 'Europe/Moscow'
+    # Moscow is UTC+03 year-round: these are 08:07, 08:22, 08:37 and 09:02 MSK.
+    - cron: '7 5 * * *'
+    - cron: '22 5 * * *'
+    - cron: '37 5 * * *'
+    - cron: '2 6 * * *'
 
 permissions:
   contents: write
