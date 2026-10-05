@@ -3,6 +3,7 @@
 # V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK
 # CURRENT_TEAM_HISTORY_RECOVERY_R1
 # CURRENT_TEAM_HISTORY_RECOVERY_R2
+# ONE_DAY_RECOVERY_2026_10_05
 name: R15F R3 cognitive morning portfolio
 
 on:
@@ -10,6 +11,11 @@ on:
     inputs:
       bootstrap_preview:
         description: 'Publish one temporary full preview before the first normal 08:00 MSK window'
+        required: false
+        default: false
+        type: boolean
+      recovery_today:
+        description: 'Publish one-day HYBRID recovery portfolio when strict 15 is unavailable'
         required: false
         default: false
         type: boolean
@@ -104,6 +110,7 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           ODDS_API_KEY_BACKUP: ${{ secrets.ODDS_API_KEY_BACKUP }}
           R15_BOOTSTRAP_PREVIEW: ${{ inputs.bootstrap_preview }}
+          R15_RECOVERY_DAY: ${{ github.event_name == 'push' && 'true' || inputs.recovery_today }}
           CLOUDFLARE_AI_ACCESS_TOKEN: ${{ secrets.CLOUDFLARE_AI_ACCESS_TOKEN }}
           CLOUDFLARE_AI_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
           CLOUDFLARE_AI_URL: https://ai-football-free.shevtsov001.workers.dev/internal/ai
