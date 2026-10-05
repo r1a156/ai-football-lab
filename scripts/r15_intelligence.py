@@ -3539,14 +3539,18 @@ def publish_generation() -> int:
     if bootstrap_preview and activation.get("ready"):
         print("R15_BOOTSTRAP_PREVIEW_IGNORED=ALREADY_IN_NORMAL_WINDOW")
         bootstrap_preview = False
-    if activation.get("ready") and discard_bootstrap_preview(state, config, now):
-        print("R15_BOOTSTRAP_PREVIEW_RETIRED=YES")
+    previous_preview_state = copy.deepcopy(state) if bool((state.get("meta") or {}).get("bootstrapPreview")) else None
+    if previous_preview_state and activation.get("ready"):
+        print("R15_BOOTSTRAP_PREVIEW_PRESERVED_UNTIL_REPLACEMENT=YES")
     if bootstrap_preview:
         print("R15_BOOTSTRAP_PREVIEW=ENABLED")
         print("R15_BOOTSTRAP_PREVIEW_BANK_ENGAGED=NO")
     day = operational_day(now, config)
     current_day = str(state.get("meta", {}).get("operationalDayId") or "")
     current_records = state.get("dailyAnalysis") or []
+    if previous_preview_state and activation.get("ready"):
+        current_day = ""
+        current_records = []
 
     # R3R5R1: keep the legacy package settleable in canonical history, but do
     # not let it occupy the current R15 publication slot.
@@ -3611,6 +3615,26 @@ def publish_generation() -> int:
     registry = load_json(TEAM_REGISTRY_PATH, empty_registry())
     context = free_mesh.merge_external_elo(build_history_context(cache, registry, now))
     discovered, discovery = discover_operational_events(client, odds_key, config, now)
+
+    current_team_names: list[str] = []
+    for event in discovered:
+        current_team_names.extend([
+            str(event.get("home_team") or ""),
+            str(event.get("away_team") or ""),
+        ])
+    thesportsdb_history = free_mesh.refresh_thesportsdb_recent_history(
+        current_team_names,
+        maximum_teams=max(20, safe_int(config.get("theSportsDbCurrentHistoryMaximumTeams"), 40)),
+    )
+    print(
+        "R15_THESPORTSDB_HISTORY_ADDED="
+        f"{safe_int(thesportsdb_history.get('matchesAdded'), 0)}"
+    )
+    if safe_int(thesportsdb_history.get("matchesAdded"), 0) > 0:
+        cache = load_json(HISTORY_CACHE_PATH, empty_history_cache())
+        registry = load_json(TEAM_REGISTRY_PATH, empty_registry())
+        context = free_mesh.merge_external_elo(build_history_context(cache, registry, now))
+
     keys, quota_plan = select_sport_keys_by_quota(discovered, context, client, config)
     start = parse_time(discovery.get("queryWindowStart"))
     end = parse_time(discovery.get("queryWindowEnd"))
@@ -3685,6 +3709,7 @@ def publish_generation() -> int:
         "diagnostics": {
             "history": history_result,
             "freeDataMesh": free_mesh_result,
+            "theSportsDbCurrentHistory": thesportsdb_history,
             "trackedHistory": tracked_history,
             "discovery": discovery,
             "quotaPlan": quota_plan,
@@ -3735,6 +3760,7 @@ def publish_generation() -> int:
             "historyCoverageEnd": context.get("cacheMeta", {}).get("coverageEnd"),
             "historyComplete": context.get("cacheMeta", {}).get("complete"),
             "freeDataMesh": free_mesh_result,
+            "theSportsDbCurrentHistory": thesportsdb_history,
             "fonbetMode": fonbet_mode,
             "fonbetConfirmedEvents": len(fonbet_confirmed),
             "status": "INSUFFICIENT_QUALITY_EVENTS",
@@ -3742,11 +3768,35 @@ def publish_generation() -> int:
         }
         update_express_statistics(state)
         write_json(PROVIDER_HEALTH_PATH, client.health)
-        write_public_files(state, report)
+        if previous_preview_state:
+            fallback = previous_preview_state
+            fallback.setdefault("meta", {}).update({
+                "status": "PREVIOUS_PORTFOLIO_HELD_WHILE_NEW_SELECTION_BUILDS",
+                "dataFreshness": "STALE_PREVIOUS_PORTFOLIO_VISIBLE",
+                "nextPortfolioStatus": "WAITING_FOR_QUALITY_SELECTION",
+                "replacementAttemptAt": iso(now),
+                "replacementOperationalDayId": day["operationalDayId"],
+                "replacementQualifiedEvents": safe_int(analysis_diag.get("eventsQualified"), 0),
+            })
+            fallback["systemNarrative"] = {
+                "title": "Новая подборка ещё формируется",
+                "lead": "Предыдущая подборка временно остаётся видимой, пока новая не проходит полный контроль качества.",
+                "body": "Новый портфель заменит предыдущий только после готовности полного набора.",
+                "generatedBy": "DETERMINISTIC_SYSTEM",
+                "updatedAt": iso(now),
+            }
+            write_public_files(fallback, report)
+            print("R15_PREVIOUS_PORTFOLIO_HELD=YES")
+        else:
+            write_public_files(state, report)
         print(f"R15_QUALITY_EVENTS={analysis_diag.get('eventsQualified', 0)}")
         print("R15_PUBLICATION_SKIPPED=INSUFFICIENT_QUALITY")
         print("FINAL_STATUS=GREEN_R15_WAITING_FOR_QUALITY")
         return 0
+
+    if previous_preview_state and activation.get("ready"):
+        discard_bootstrap_preview(state, config, now)
+        print("R15_BOOTSTRAP_PREVIEW_RETIRED_AT_SUCCESSFUL_REPLACEMENT=YES")
 
     russian_names_result = free_mesh.apply_russian_names(records)
     fonbet_result = free_mesh.fonbet_gate(records)
@@ -3831,6 +3881,7 @@ def publish_generation() -> int:
         "historyComplete": context.get("cacheMeta", {}).get("complete"),
         "clubEloApplied": context.get("cacheMeta", {}).get("clubEloApplied"),
         "freeDataMesh": free_mesh_result,
+        "theSportsDbCurrentHistory": thesportsdb_history,
         "fonbetMode": fonbet_mode,
         "fonbetConfirmedEvents": len(fonbet_confirmed),
         "providerHealth": copy.deepcopy(client.health),
