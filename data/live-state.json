@@ -2,29 +2,27 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "IDLE",
-  "updatedAt": "2026-10-05T05:54:52Z",
+  "updatedAt": "2026-10-05T22:01:02Z",
   "refreshMinutes": 10,
   "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 9,
-    "results": 65,
+    "calls": 5,
+    "results": 62,
     "oddsQuota": {
-      "requestsRemaining": "394",
-      "requestsUsed": "106",
+      "requestsRemaining": "362",
+      "requestsUsed": "138",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-10-04: SOFASCORE_PUBLIC:2026-10-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
-      "SofaScore 2026-10-05: SOFASCORE_PUBLIC:2026-10-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
-      "ESPN 20261004: ESPN_PUBLIC:20261004 failed after retries: HTTP Error 502: Bad Gateway"
+      "SofaScore 2026-10-05: SOFASCORE_PUBLIC:2026-10-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
       "espn": 59,
-      "theSportsDB": 6,
+      "theSportsDB": 3,
       "footballDataOptional": 0
     }
   },
@@ -32,7 +30,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 3
+    "unconfirmedRemoved": 5
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }

@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-05T06:41:18Z",
-  "finishedAt": "2026-10-05T15:03:18Z",
+  "finishedAt": "2026-10-05T22:01:04Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -58,8 +58,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 17272,
+      "added": 4,
+      "matches": 17276,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -1618,7 +1618,13 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.057
+        "elapsedSeconds": 0.264
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.122
       }
     ],
     "quota": {
@@ -1735,21 +1741,21 @@
       "thresholdProfile": "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS",
       "strictProductionThresholdsChanged": false
     },
-    "dueRecords": 1,
-    "providerFinalResults": 11,
+    "dueRecords": 5,
+    "providerFinalResults": 36,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 19
+      "analysisSettled": 4,
+      "bestBetsSettled": 1,
+      "unresolved": 14
     },
     "overdueRelease": {
       "analysis": 0,
       "bestBets": 0
     },
     "expressSettlement": {
-      "settled": 0,
+      "settled": 2,
       "won": 0,
-      "lost": 0,
+      "lost": 2,
       "push": 0
     }
   },
