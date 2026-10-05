@@ -866,6 +866,117 @@ def resolve_thesportsdb_teams(team_names: Iterable[str], *, maximum_new: int = 3
         write_json(THESPORTSDB_PATH, cache)
     return {key: value for key, value in teams.items() if isinstance(value, dict)}
 
+def _parse_thesportsdb_recent_event(row: dict[str, Any]) -> dict[str, Any] | None:
+    if not isinstance(row, dict):
+        return None
+    sport = str(row.get("strSport") or "Soccer").casefold()
+    if sport not in {"soccer", "football"}:
+        return None
+    home = str(row.get("strHomeTeam") or "").strip()
+    away = str(row.get("strAwayTeam") or "").strip()
+    when = parse_dt(row.get("strTimestamp") or row.get("dateEvent") or row.get("dateEventLocal"))
+    if not when:
+        return None
+    home_score = _int_or_none(row.get("intHomeScore"))
+    away_score = _int_or_none(row.get("intAwayScore"))
+    if home_score is None or away_score is None:
+        return None
+    status_text = str(row.get("strStatus") or "").upper()
+    if status_text and not any(token in status_text for token in ("FINISH", "FT", "AET", "PEN")):
+        return None
+    return as_match(
+        source="THESPORTSDB_PUBLIC_123",
+        source_id=row.get("idEvent"),
+        when=when,
+        competition=str(row.get("strLeague") or row.get("strEvent") or "TheSportsDB"),
+        competition_code=str(row.get("idLeague") or "THESPORTSDB"),
+        home=home,
+        away=away,
+        home_score=home_score,
+        away_score=away_score,
+        half_home=_int_or_none(row.get("intHomeScoreHT")),
+        half_away=_int_or_none(row.get("intAwayScoreHT")),
+        status="FINISHED",
+        extra={
+            "season": row.get("strSeason"),
+            "round": row.get("intRound"),
+            "venue": row.get("strVenue"),
+            "theSportsDbEventId": row.get("idEvent"),
+        },
+    )
+
+
+def refresh_thesportsdb_recent_history(
+    team_names: Iterable[str],
+    *,
+    maximum_teams: int = 40,
+) -> dict[str, Any]:
+    """Enrich current teams with recent finished matches from free v1 key 123."""
+    now = utc_now()
+    config = load_json(CONFIG_PATH, {})
+    resolved = resolve_thesportsdb_teams(team_names, maximum_new=maximum_teams)
+    unique_ids: dict[str, dict[str, Any]] = {}
+    for info in resolved.values():
+        team_id = str(info.get("idTeam") or "").strip()
+        if team_id:
+            unique_ids.setdefault(team_id, info)
+
+    additions: list[dict[str, Any]] = []
+    errors: list[str] = []
+    requests = 0
+    for team_id in list(unique_ids)[:maximum_teams]:
+        try:
+            body, _, status = _request(
+                f"https://www.thesportsdb.com/api/v1/json/123/eventslast.php?id={urllib.parse.quote(team_id)}",
+                timeout=15,
+                retries=1,
+            )
+            requests += 1
+            payload = json.loads(body.decode("utf-8")) if body and status == 200 else {}
+            rows = payload.get("results") or payload.get("events") or [] if isinstance(payload, dict) else []
+            for raw in rows if isinstance(rows, list) else []:
+                parsed = _parse_thesportsdb_recent_event(raw)
+                if parsed:
+                    additions.append(parsed)
+        except Exception as exc:
+            errors.append(f"{team_id}:{type(exc).__name__}")
+        time.sleep(0.05)
+
+    history = load_json(HISTORY_PATH, empty_history())
+    if not isinstance(history, dict):
+        history = empty_history()
+    merged = merge_history(
+        history,
+        additions,
+        now,
+        maximum=int(config.get("freeMeshMaximumMatches", 60000)),
+    )
+    history = merged["history"]
+    elo_data = load_json(ELO_PATH, {})
+    registry = rebuild_registry(
+        history,
+        load_json(REGISTRY_PATH, {}),
+        elo_data if isinstance(elo_data, dict) else {},
+        now,
+    )
+    history.setdefault("sourceHealth", {})["THESPORTSDB_PUBLIC_123"] = {
+        "status": "GREEN" if additions else ("PARTIAL" if requests else "DEGRADED"),
+        "updatedAt": iso(now),
+        "requests": requests,
+        "matchesAdded": len(additions),
+        "errors": errors[-20:],
+    }
+    write_json(HISTORY_PATH, history)
+    write_json(REGISTRY_PATH, registry)
+    return {
+        "status": history["sourceHealth"]["THESPORTSDB_PUBLIC_123"]["status"],
+        "requests": requests,
+        "matchesAdded": len(additions),
+        "historyMatches": merged["matches"],
+        "errors": errors[-20:],
+    }
+
+
 def _wikidata_ru(name: str) -> str | None:
     params = urllib.parse.urlencode({
         "action": "wbsearchentities",
