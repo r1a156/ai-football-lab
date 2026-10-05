@@ -2,8 +2,10 @@
 (() => {
   "use strict";
   const API_BASE = String(globalThis.FOOTBALL_API_BASE || "").replace(/\/+$/, "");
-  const STATE_URL = API_BASE ? `${API_BASE}/data/state.json` : "data/state.json";
-  const LIVE_URL = API_BASE ? `${API_BASE}/data/live-state.json` : "data/live-state.json";
+  const LOCAL_STATE_URL = "data/state.json";
+  const LOCAL_LIVE_URL = "data/live-state.json";
+  const STATE_URL = API_BASE ? `${API_BASE}/data/state.json` : LOCAL_STATE_URL;
+  const LIVE_URL = API_BASE ? `${API_BASE}/data/live-state.json` : LOCAL_LIVE_URL;
   const MIN_QUALITY = 58;
   const MOSCOW = "Europe/Moscow";
   const runtime = { state: null, live: null, records: new Map() };
@@ -20,19 +22,66 @@
     setConnection("loading", "Обновление");
     try {
       const stamp = Date.now();
-      const [stateResponse, liveResponse] = await Promise.all([
-        fetch(`${STATE_URL}?v=${stamp}`, { cache: "no-store" }),
-        fetch(`${LIVE_URL}?v=${stamp}`, { cache: "no-store" }).catch(() => null),
-      ]);
-      if (!stateResponse.ok) throw new Error(`state ${stateResponse.status}`);
-      runtime.state = normalize(await stateResponse.json());
-      runtime.live = liveResponse && liveResponse.ok ? await liveResponse.json() : {};
+      runtime.state = await loadBestState(stamp);
+      runtime.live = await loadLiveState(stamp);
       render(runtime.state);
       setConnection("ready", "Актуально");
     } catch (error) {
       console.error(error);
       setConnection("error", "Нет связи");
       renderUnavailable();
+    }
+  }
+
+  async function fetchJson(url, stamp) {
+    const separator = url.includes("?") ? "&" : "?";
+    const response = await fetch(`${url}${separator}v=${stamp}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${url} ${response.status}`);
+    return response.json();
+  }
+
+  async function loadBestState(stamp) {
+    let primary = null;
+    let local = null;
+    let primaryError = null;
+    try {
+      primary = normalize(await fetchJson(STATE_URL, stamp));
+    } catch (error) {
+      primaryError = error;
+    }
+    if (!API_BASE) {
+      if (primary) return primary;
+      throw primaryError || new Error("state unavailable");
+    }
+    try {
+      local = normalize(await fetchJson(LOCAL_STATE_URL, stamp));
+    } catch (error) {
+      if (!primaryError) primaryError = error;
+    }
+    if (primary && local) {
+      const primaryCurrent = isCurrentPortfolio(primary);
+      const localCurrent = isCurrentPortfolio(local);
+      if (localCurrent && !primaryCurrent) return local;
+      if (primaryCurrent && !localCurrent) return primary;
+      const primaryUpdated = Date.parse(primary.meta.updatedAt || "") || 0;
+      const localUpdated = Date.parse(local.meta.updatedAt || "") || 0;
+      return localUpdated > primaryUpdated ? local : primary;
+    }
+    if (primary) return primary;
+    if (local) return local;
+    throw primaryError || new Error("state unavailable");
+  }
+
+  async function loadLiveState(stamp) {
+    try {
+      return await fetchJson(LIVE_URL, stamp);
+    } catch (error) {
+      if (!API_BASE) return {};
+      try {
+        return await fetchJson(LOCAL_LIVE_URL, stamp);
+      } catch {
+        return {};
+      }
     }
   }
 
@@ -76,8 +125,9 @@
     if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const marker = String(state.meta.sourceMarker || "");
     if (!marker.includes("R15")) return false;
+    const recovery = Boolean(state.meta.recoveryDay);
     const preview = Boolean(state.meta.bootstrapPreview);
-    const minimumQuality = preview ? 40 : MIN_QUALITY;
+    const minimumQuality = (preview || recovery) ? 40 : MIN_QUALITY;
     if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= minimumQuality)) return false;
     const end = Date.parse(state.meta.operationalWindowEnd || "");
     if (Number.isFinite(end)) return end > Date.now() - 15 * 60_000;
