@@ -35,6 +35,8 @@ import urllib.request
 from collections import defaultdict
 from typing import Any, Iterable
 
+import update_predictions as core
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "analysis.json"
 HISTORY_PATH = ROOT / "data" / "football-history-cache.json"
