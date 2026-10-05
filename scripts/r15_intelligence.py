@@ -3624,7 +3624,7 @@ def publish_generation() -> int:
         ])
     thesportsdb_history = free_mesh.refresh_thesportsdb_recent_history(
         current_team_names,
-        maximum_teams=max(20, safe_int(config.get("theSportsDbCurrentHistoryMaximumTeams"), 40)),
+        maximum_teams=max(40, safe_int(config.get("theSportsDbCurrentHistoryMaximumTeams"), 80)),
     )
     print(
         "R15_THESPORTSDB_HISTORY_ADDED="
