@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-05T05:54:55Z",
+  "updatedAt": "2026-10-05T06:09:56Z",
   "analysisDateLocal": "2026-10-05",
   "batch": {
     "id": "",
@@ -12,21 +12,21 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-05T05:54:55Z",
+    "updatedAt": "2026-10-05T06:09:56Z",
     "reason": "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON"
   },
   "dataCoverage": {
     "discoveredEvents": 39,
     "competitionsDiscovered": 7,
-    "competitionsWithOdds": 7,
+    "competitionsWithOdds": 0,
     "oddsEvents": 39,
-    "historyMatchedEvents": 12,
-    "qualifiedEvents": 0,
+    "historyMatchedEvents": 16,
+    "qualifiedEvents": 4,
     "publishedEvents": 0,
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-10-05T05:53:59Z",
+        "updatedAt": "2026-10-05T06:09:02Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-05T05:56:49Z",
+        "lastSuccessAt": "2026-10-05T06:11:23Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -47,12 +47,12 @@
       }
     },
     "quota": {
-      "requestsRemaining": "378",
-      "requestsUsed": "122",
-      "requestsLast": "2",
-      "estimatedCreditsThisRun": 16
+      "requestsRemaining": "376",
+      "requestsUsed": "124",
+      "requestsLast": "0",
+      "estimatedCreditsThisRun": 0
     },
-    "historyMatches": 12853,
+    "historyMatches": 12908,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -71,10 +71,28 @@
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
+    "theSportsDbCurrentHistory": {
+      "status": "GREEN",
+      "requests": 30,
+      "matchesAdded": 30,
+      "historyMatches": 17630,
+      "errors": [
+        "136469:HTTPError",
+        "134510:HTTPError",
+        "133901:HTTPError",
+        "149900:HTTPError",
+        "137782:HTTPError",
+        "144737:HTTPError",
+        "136449:HTTPError",
+        "136466:HTTPError",
+        "135981:HTTPError",
+        "136452:HTTPError"
+      ]
+    },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-05T05:54:55Z"
+    "updatedAt": "2026-10-05T06:09:56Z"
   },
   "expressBank": {
     "starting": 10000,
