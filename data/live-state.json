@@ -2,22 +2,21 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "IDLE",
-  "updatedAt": "2026-10-05T00:45:05Z",
+  "updatedAt": "2026-10-05T05:54:52Z",
   "refreshMinutes": 10,
   "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 8,
+    "calls": 9,
     "results": 65,
     "oddsQuota": {
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
+      "requestsRemaining": "394",
+      "requestsUsed": "106",
+      "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-10-04: SOFASCORE_PUBLIC:2026-10-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "SofaScore 2026-10-05: SOFASCORE_PUBLIC:2026-10-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "ESPN 20261004: ESPN_PUBLIC:20261004 failed after retries: HTTP Error 502: Bad Gateway"
