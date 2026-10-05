@@ -1,13 +1,177 @@
 {
   "version": "V10_R15F_CF_AI_R1",
-  "operationalDayId": "2026-10-04-MSK-0800",
-  "inputFingerprint": "6e70e82b9849d8a213c505e29a65e812ab7eceb38a3bcce7aff397306d7d3b0b",
-  "createdAt": "2026-10-04T18:07:59.592955Z",
+  "operationalDayId": "2026-10-05-MSK-0800",
+  "inputFingerprint": "6d95cac790efa8bfbfcb42839c8696d28bee27385799da48e6d0f6a1195eac5a",
+  "createdAt": "2026-10-05T06:41:18.608045Z",
   "logicalRunConsumed": true,
   "technicalAttempts": 1,
-  "schemaValid": false,
-  "status": "FAILED_FALLBACK",
   "modelRequested": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  "modelUsed": null,
-  "error": "HTTP_403:error code: 1010\n"
+  "modelUsed": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "requestId": "61e876f5-776d-48bd-b109-df91cf341daa",
+  "usage": {
+    "prompt_tokens": 14789,
+    "completion_tokens": 1857,
+    "total_tokens": 16646,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "neurons": 774.711669921875
+  },
+  "latencySeconds": 70.278,
+  "schemaValid": true,
+  "response": {
+    "decisions": [
+      {
+        "eventId": "5d9aac1a239e87ecc555aba2fe4426cf",
+        "reason": "Хорватия - Испания: Тотал больше 2.5",
+        "riskPenalty": 0.02,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "6619e1fedfdf11ec54f2ff721efd209f",
+        "reason": "Франция - Бельгия: Тотал меньше 3.5",
+        "riskPenalty": 0.01,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "b482dc6936da27dfacadb83fdcaf898d",
+        "reason": "Томори - Фьорентино: Тотал меньше 4.5",
+        "riskPenalty": 0.03,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "e979f252ee424cd29028d8f8aa21934a",
+        "reason": "Румыния - Швеция: Тотал больше 2.5",
+        "riskPenalty": 0.04,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "8012c0d9c6c0b99e57d9465837c5ae94",
+        "reason": "Англия - Чехия: Тотал больше 2.5",
+        "riskPenalty": 0.05,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "d2f1973a0c6e22f7846864e97db3e78d",
+        "reason": "Италия - Турция: Тотал меньше 3.5",
+        "riskPenalty": 0.01,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "f8c1c020db879bcbb74b47f9c7bc023a",
+        "reason": "Гояс - Атлетик Клуб Минейро: Тотал меньше 2.5",
+        "riskPenalty": 0.02,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "0061a41775516b876960b60e18dee634",
+        "reason": "Черногория - Армения: Победа Монтенегро",
+        "riskPenalty": 0.06,
+        "selectedMarketKey": "h2h"
+      },
+      {
+        "eventId": "33af8135a9ccf582a2419dab5443185f",
+        "reason": "Америка Минейро - Форталеза: Тотал меньше 2.5",
+        "riskPenalty": 0.03,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "9241420b127929f2a3797fe6ea2fb9c6",
+        "reason": "Аваи - Лондрина: Тотал меньше 2.5",
+        "riskPenalty": 0.04,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "8c828219431dbc2cf98601993f8de842",
+        "reason": "Вила-Нова - Куяба: Тотал меньше 2.5",
+        "riskPenalty": 0.05,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "24acf540ec0fb31c95969ac3a2f7fad7",
+        "reason": "Интернасьонал - Коринтианс: Тотал меньше 2.5",
+        "riskPenalty": 0.01,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "d319757a9b81c976a0677b8cc6c7abad",
+        "reason": "Ботафого - Васко да Гама: Тотал больше 2.5",
+        "riskPenalty": 0.02,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "570408816c1cec5681409e38c4d04f59",
+        "reason": "Эстудиантес - Химнасия Мендоса: Тотал меньше 2.5",
+        "riskPenalty": 0.03,
+        "selectedMarketKey": "totals"
+      },
+      {
+        "eventId": "887722a9c77581f0bb94ffde30026253",
+        "reason": "Банфилд - Росарио Сентраль: Тотал меньше 2.5",
+        "riskPenalty": 0.04,
+        "selectedMarketKey": "totals"
+      }
+    ],
+    "expresses": {
+      "A": [
+        "5d9aac1a239e87ecc555aba2fe4426cf",
+        "6619e1fedfdf11ec54f2ff721efd209f",
+        "b482dc6936da27dfacadb83fdcaf898d",
+        "e979f252ee424cd29028d8f8aa21934a",
+        "8012c0d9c6c0b99e57d9465837c5ae94"
+      ],
+      "B": [
+        "d2f1973a0c6e22f7846864e97db3e78d",
+        "f8c1c020db879bcbb74b47f9c7bc023a",
+        "0061a41775516b876960b60e18dee634",
+        "33af8135a9ccf582a2419dab5443185f",
+        "9241420b127929f2a3797fe6ea2fb9c6"
+      ],
+      "C": [
+        "8c828219431dbc2cf98601993f8de842",
+        "24acf540ec0fb31c95969ac3a2f7fad7",
+        "d319757a9b81c976a0677b8cc6c7abad",
+        "570408816c1cec5681409e38c4d04f59",
+        "887722a9c77581f0bb94ffde30026253"
+      ]
+    },
+    "globalWarnings": [
+      "Проверено 15 событий",
+      "Выбрано 3 лучших ординара",
+      "Распределены события по A/B/C без повторов"
+    ],
+    "orderedEventIds": [
+      "5d9aac1a239e87ecc555aba2fe4426cf",
+      "6619e1fedfdf11ec54f2ff721efd209f",
+      "b482dc6936da27dfacadb83fdcaf898d",
+      "e979f252ee424cd29028d8f8aa21934a",
+      "8012c0d9c6c0b99e57d9465837c5ae94",
+      "d2f1973a0c6e22f7846864e97db3e78d",
+      "f8c1c020db879bcbb74b47f9c7bc023a",
+      "0061a41775516b876960b60e18dee634",
+      "33af8135a9ccf582a2419dab5443185f",
+      "9241420b127929f2a3797fe6ea2fb9c6",
+      "8c828219431dbc2cf98601993f8de842",
+      "24acf540ec0fb31c95969ac3a2f7fad7",
+      "d319757a9b81c976a0677b8cc6c7abad",
+      "570408816c1cec5681409e38c4d04f59",
+      "887722a9c77581f0bb94ffde30026253"
+    ],
+    "status": "PASS",
+    "systemMessage": {
+      "body": "Система проверила и распределила события по A/B/C без повторов.",
+      "focus": [
+        "Проверено 15 событий",
+        "Выбрано 3 лучших ординара",
+        "Распределены события по A/B/C без повторов"
+      ],
+      "lead": "Система проверила и распределила события по A/B/C без повторов.",
+      "title": "Система проверила и распределила события по A/B/C без повторов."
+    },
+    "topSingles": [
+      "5d9aac1a239e87ecc555aba2fe4426cf",
+      "6619e1fedfdf11ec54f2ff721efd209f",
+      "b482dc6936da27dfacadb83fdcaf898d"
+    ]
+  }
 }

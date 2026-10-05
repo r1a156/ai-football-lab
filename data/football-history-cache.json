@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-05T06:21:42Z",
-  "lastSuccessfulAt": "2026-10-05T06:21:42Z",
+  "updatedAt": "2026-10-05T06:42:47Z",
+  "lastSuccessfulAt": "2026-10-05T06:42:47Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -500322,6 +500322,39 @@
       "theSportsDbEventId": "2442777"
     },
     {
+      "id": "thesportsdb_public_123:2442775",
+      "utcDate": "2026-09-29T18:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "San Marino",
+        "shortName": "San Marino",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Albania",
+        "shortName": "Albania",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 3,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-05T06:44:52Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "2",
+      "venue": "San Marino Stadium",
+      "theSportsDbEventId": "2442775"
+    },
+    {
       "id": "thesportsdb_public_123:2598264",
       "utcDate": "2026-10-02T00:15:00Z",
       "status": "FINISHED",
@@ -610968,22 +611001,24 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-05T06:21:42Z",
-      "matches": 17660
+      "updatedAt": "2026-10-05T06:42:47Z",
+      "matches": 17661
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-05T06:21:42Z",
-      "requests": 59,
-      "matchesAdded": 59,
+      "updatedAt": "2026-10-05T06:42:47Z",
+      "requests": 57,
+      "matchesAdded": 57,
       "errors": [
-        "136462:HTTPError",
         "136469:HTTPError",
         "134510:HTTPError",
+        "133901:HTTPError",
         "149900:HTTPError",
         "137782:HTTPError",
+        "144737:HTTPError",
         "136449:HTTPError",
-        "136452:HTTPError"
+        "136466:HTTPError",
+        "135981:HTTPError"
       ]
     }
   }
