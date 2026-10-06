@@ -156,15 +156,14 @@
 
   function renderMeta(state, current) {
     const quality = current ? average(state.dailyAnalysis.map(row => number(row.dataQuality))) : 0;
-    const bank = state.expressBank;
+    const modelBank = modelBankSnapshot(state);
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
     setText("summaryMatches", current ? String(state.dailyAnalysis.length) : "—");
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryQuality", current ? `${formatNumber(quality, 0)}/100` : "—");
-    setText("summaryBank", currency(bank.current ?? bank.starting ?? 10000));
-    const placed = number(bank.placedAmount ?? bank.activeExposure);
-    setText("summaryExposure", placed > 0 ? `${currency(placed)} в работе` : "банк свободен");
+    setText("summaryBank", currency(modelBank.current));
+    setText("summaryExposure", `ROI ${signedPercent(modelBank.roi * 100)} · ${modelBank.count} расчётов`);
     const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
@@ -387,7 +386,7 @@
     root.querySelectorAll("[data-record]").forEach(node => node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record))));
   }
 
-  function renderModelBank(state) {
+  function modelBankSnapshot(state) {
     const starting = 10000;
     const stake = 100;
     const rows = array(state.analysisHistory)
@@ -411,13 +410,25 @@
     }
 
     const profit = current - starting;
-    const roi = totalStaked > 0 ? profit / totalStaked : 0;
-    setText("modelBankCurrent", currency(current));
-    setText("modelBankStarting", currency(starting));
-    setText("modelBankBets", String(rows.length));
-    setText("modelBankRoi", signedPercent(roi * 100));
-    setText("modelBankDrawdown", `${formatNumber(maxDrawdown * 100,1)}%`);
-    setText("modelBankChange", `${signedCurrency(profit)} · ${rows.length} рассчитанных прогнозов`);
+    return {
+      starting,
+      current,
+      profit,
+      totalStaked,
+      roi: totalStaked > 0 ? profit / totalStaked : 0,
+      maxDrawdown,
+      count: rows.length,
+    };
+  }
+
+  function renderModelBank(state) {
+    const model = modelBankSnapshot(state);
+    setText("modelBankCurrent", currency(model.current));
+    setText("modelBankStarting", currency(model.starting));
+    setText("modelBankBets", String(model.count));
+    setText("modelBankRoi", signedPercent(model.roi * 100));
+    setText("modelBankDrawdown", `${formatNumber(model.maxDrawdown * 100,1)}%`);
+    setText("modelBankChange", `${signedCurrency(model.profit)} · ${model.count} рассчитанных прогнозов`);
   }
 
   function renderBank(state) {
@@ -587,7 +598,7 @@
   function teamsText(row) { return `${home(row)} — ${away(row)}`; }
   function league(row) { return String(row.leagueRu || row.league || row.competition || row.sportTitle || "Футбол"); }
   function odds(row) { return number(row.odds ?? row.bookmakerOdds ?? row.price ?? row.fairOdds); }
-  function probability(row) { const raw = number(row.probabilityPercent ?? row.confidence ?? row.conservativeProbability ?? row.modelProbability ?? row.probability); return raw <= 1 && raw > 0 ? raw*100 : raw; }
+  function probability(row) { const raw = number(row.conservativeProbability ?? row.confidence ?? row.probabilityPercent ?? row.modelProbability ?? row.probability); return raw <= 1 && raw > 0 ? raw*100 : raw; }
   function pick(row) {
     if (row.pickRu || row.selectionLabelRu || row.marketLabelRu || row.pick) return String(row.pickRu || row.selectionLabelRu || row.marketLabelRu || row.pick);
     const code = String(row.market || row.marketCode || row.selectionCode || "").toUpperCase();
