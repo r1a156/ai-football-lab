@@ -4348,7 +4348,7 @@ def publish_generation() -> int:
             "recoveryDayPublishedAt": iso(now),
             "recoveryThresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
             "recoveryStrictProductionThresholdsChanged": False,
-            "bootstrapPreview": True,
+            "bootstrapPreview": False,
             "bootstrapPreviewBankEngaged": False,
             "publicationPolicy": "STRICT_24H_CURRENT_DAY_RECOVERY_WITH_REAL_EVENTS_ONLY",
         })
