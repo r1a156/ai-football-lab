@@ -138,7 +138,7 @@
     setText("summaryBank", currency(bank.current ?? bank.starting ?? 10000));
     const placed = number(bank.placedAmount ?? bank.activeExposure);
     setText("summaryExposure", placed > 0 ? `${currency(placed)} в работе` : "банк свободен");
-    const preview = Boolean(state.meta.bootstrapPreview);
+    const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
       : "Новая подборка формируется");
