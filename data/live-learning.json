@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-10-05T22:01:02Z",
+  "updatedAt": "2026-10-06T02:13:14Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -2394,6 +2394,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.0111,
           "liveProbability": 0.626663
+        },
+        {
+          "at": "2026-10-06T02:13:14Z",
+          "status": "UNCONFIRMED",
+          "score": "3:0",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.626663
         }
       ],
       "completed": false
@@ -2460,6 +2468,27 @@
         }
       ],
       "completed": false
+    },
+    "887722a9c77581f0bb94ffde30026253": {
+      "eventId": "887722a9c77581f0bb94ffde30026253",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 2.5",
+      "homeRu": "Банфиелд",
+      "awayRu": "Росарио Централь",
+      "preMatchProbability": 0.607121,
+      "startedAt": "2026-10-06T00:15:00Z",
+      "snapshots": [
+        {
+          "at": "2026-10-06T02:13:14Z",
+          "status": "UNCONFIRMED",
+          "score": "1:1",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.607121
+        }
+      ],
+      "completed": false
     }
   },
   "calibration": {
@@ -2489,7 +2518,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 185,
+    "snapshotCount": 187,
     "calibratedBuckets": 0
   },
   "paidScoreFallbackLedger": {
