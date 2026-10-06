@@ -209,7 +209,7 @@
     setText("spotlightStability", stability ? `${formatNumber(stability,0)}/100` : "—");
     setText("spotlightOdds", formatNumber(odds(row),2));
     setText("spotlightEv", signedPercent(ev * 100));
-    setText("spotlightBankroll", informational ? "Отключён" : "Разрешён");
+    setText("spotlightBankroll", informational ? "Пауза" : "Разрешён");
     setText("spotlightMode", informational ? "Информационный" : "Допущен");
     setBar("spotlightProbabilityBar", p);
     setBar("spotlightQualityBar", q);
@@ -217,8 +217,10 @@
 
     const reasons = reasonItems(row).slice(0,3);
     const economicReason = informational
-      ? (ev < 0 ? "Ставка на банк отключена: консервативное EV отрицательное." : "Ставка на банк отключена calibration guard.")
-      : "Положительное консервативное EV прошло финансовый фильтр.";
+      ? (ev < 0
+          ? "Экспресс‑риск поставлен на паузу: консервативное EV отрицательное. Аналитический банк продолжает считать результат одиночных прогнозов."
+          : "Экспресс‑риск поставлен на паузу calibration guard. Аналитический банк продолжает считать прибыльность модели.")
+      : "Экспресс‑риск разрешён: положительное консервативное EV прошло финансовый фильтр.";
     setHtml("spotlightReasons", [...reasons, economicReason].map(item => `<li>${escapeHtml(item)}</li>`).join(""));
   }
 
@@ -279,9 +281,9 @@
     setText("guardStatus", guard.mode || "LEARNING");
     setText("guardMargin", guard.additionalUncertaintyMargin != null ? `+${formatNumber(number(guard.additionalUncertaintyMargin)*100,1)} п.п.` : "—");
     setText("totalHaircut", total.TOTAL != null ? `−${formatNumber(number(total.TOTAL)*100,1)} п.п.` : "0 п.п.");
-    setText("bankrollGuard", guard.bankrollAllowed === false ? "Отключены" : "По EV-фильтру");
+    setText("bankrollGuard", guard.bankrollAllowed === false ? "Пауза risk‑guard" : "По EV‑фильтру");
     setText("guardExplanation", guard.policy
-      ? "Автоконтур может только ужесточать риск при плохой калибровке. Ослабление порогов и искусственное повышение вероятности запрещены."
+      ? "Автоконтур ограничивает только новые рискованные экспрессы. Аналитический банк одиночных прогнозов продолжает считать ROI, прибыль и просадку ежедневно."
       : "Система сравнивает фактический результат с заявленной вероятностью и не подгоняет модель под один день.");
   }
 
@@ -333,11 +335,13 @@
           <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
           <div class="match-why">${escapeHtml(reasonSummary(row))}</div>
         </div>
-        <div class="pick"><small>Прогноз</small><strong>${escapeHtml(pick(row))}</strong><span class="pick-odds">× ${formatNumber(odds(row),2)}</span></div>
-        <div class="signal-cluster">
-          ${signalHtml("Вероятность", prob, prob)}
-          ${signalHtml("Качество", quality, quality)}
-          ${signalHtml("Стабильность", stability, stability)}
+        <div class="match-side">
+          <div class="pick"><small>Прогноз</small><strong>${escapeHtml(pick(row))}</strong><span class="pick-odds">× ${formatNumber(odds(row),2)}</span></div>
+          <div class="signal-cluster">
+            ${signalHtml("Вероятность", prob, prob)}
+            ${signalHtml("Качество", quality, quality)}
+            ${signalHtml("Стабильность", stability, stability)}
+          </div>
         </div>
         <div class="chevron">›</div>
       </article>`;
@@ -383,7 +387,41 @@
     root.querySelectorAll("[data-record]").forEach(node => node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record))));
   }
 
+  function renderModelBank(state) {
+    const starting = 10000;
+    const stake = 100;
+    const rows = array(state.analysisHistory)
+      .filter(row => ["won","lost","push"].includes(String(row.status || "").toLowerCase()))
+      .filter(row => odds(row) > 1)
+      .sort((a,b) => Date.parse(a.settledAt || a.commenceTime || 0) - Date.parse(b.settledAt || b.commenceTime || 0));
+
+    let current = starting;
+    let totalStaked = 0;
+    let peak = starting;
+    let maxDrawdown = 0;
+
+    for (const row of rows) {
+      const status = String(row.status || "").toLowerCase();
+      const price = odds(row);
+      totalStaked += stake;
+      if (status === "won") current += stake * (price - 1);
+      else if (status === "lost") current -= stake;
+      peak = Math.max(peak, current);
+      if (peak > 0) maxDrawdown = Math.max(maxDrawdown, (peak - current) / peak);
+    }
+
+    const profit = current - starting;
+    const roi = totalStaked > 0 ? profit / totalStaked : 0;
+    setText("modelBankCurrent", currency(current));
+    setText("modelBankStarting", currency(starting));
+    setText("modelBankBets", String(rows.length));
+    setText("modelBankRoi", signedPercent(roi * 100));
+    setText("modelBankDrawdown", `${formatNumber(maxDrawdown * 100,1)}%`);
+    setText("modelBankChange", `${signedCurrency(profit)} · ${rows.length} рассчитанных прогнозов`);
+  }
+
   function renderBank(state) {
+    renderModelBank(state);
     const bank = state.expressBank;
     const current = number(bank.current ?? bank.starting ?? 10000);
     const starting = number(bank.starting ?? 10000);
