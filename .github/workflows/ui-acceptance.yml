@@ -1,0 +1,103 @@
+name: UI premium acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "scripts/cloudflare_pages_build.sh"
+      - ".github/workflows/ui-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ui-premium-acceptance
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/app.js
+          node --check sw.js
+
+      - name: Validate premium DOM and PWA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib, re
+          root = pathlib.Path(".")
+          html = (root/"index.html").read_text(encoding="utf-8")
+          app = (root/"assets/app.js").read_text(encoding="utf-8")
+          css = (root/"assets/styles.css").read_text(encoding="utf-8")
+          manifest = json.loads((root/"manifest.webmanifest").read_text(encoding="utf-8"))
+
+          required_ids = {
+              "spotlightTeams","spotlightPick","spotlightProbability","spotlightQuality",
+              "spotlightStability","spotlightOdds","spotlightEv","spotlightBankroll",
+              "spotlightReasons","checkedCount","qualifiedCount","publishedCount",
+              "topRejectionReason","healthOverall","healthGrid","stat7Hit","stat7Brier",
+              "stat30Hit","stat30Brier","guardStatus","bankrollGuard","installApp",
+              "matchList","expressGrid","singleGrid","historyList"
+          }
+          present = set(re.findall(r'id="([^"]+)"', html))
+          missing = sorted(required_ids - present)
+          assert not missing, f"Missing premium DOM ids: {missing}"
+
+          assert "V16_PREMIUM_INTERFACE" in html
+          assert "16.1.0-intelligence" in html
+          assert "renderSpotlight" in app
+          assert "renderModelStats" in app
+          assert "setupPwa" in app
+          assert "intelligence" in css and "model-grid" in css and "signal-cluster" in css
+          assert manifest["display"] == "standalone"
+          assert manifest["start_url"] == "./"
+          assert (root/"assets/app-icon.svg").is_file()
+          assert (root/"sw.js").is_file()
+          print("PREMIUM_DOM=GREEN")
+          print("PWA=GREEN")
+          PY
+
+      - name: Validate live data schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          state=json.loads(pathlib.Path("data/state.json").read_text(encoding="utf-8"))
+          assert isinstance(state.get("meta"), dict)
+          assert isinstance(state.get("dailyAnalysis"), list)
+          assert isinstance(state.get("analysisHistory"), list)
+          assert isinstance(state.get("expresses"), list)
+          for row in state.get("dailyAnalysis") or []:
+              assert row.get("commenceTime")
+              assert row.get("dataQuality") is not None
+              assert row.get("conservativeProbability") is not None
+          print("STATE_SCHEMA=GREEN")
+          print("CURRENT_ANALYSIS=", len(state.get("dailyAnalysis") or []))
+          PY
+
+      - name: Static build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/cloudflare_pages_build.sh
+          test -f dist/index.html
+          test -f dist/assets/app.js
+          test -f dist/assets/styles.css
+          test -f dist/data/state.json
+          echo "STATIC_BUILD=GREEN"
