@@ -2334,7 +2334,7 @@ def merge_event(featured: dict[str, Any], advanced: dict[str, Any] | None) -> di
 def candidate_is_qualified(candidate: dict[str, Any], config: dict[str, Any]) -> tuple[bool, list[str]]:
     failures: list[str] = []
     core_qualification = candidate.get("qualification") if isinstance(candidate.get("qualification"), dict) else {}
-    if core_qualification and core_qualification.get("qualified") is False:
+    if bool(config.get("requireCoreQualification", True)) and core_qualification and core_qualification.get("qualified") is False:
         core_failures = [
             str(reason).strip()
             for reason in (core_qualification.get("failures") or [])
@@ -2710,7 +2710,7 @@ def build_bootstrap_preview_analysis(
             item["dataQuality"] = data_quality
             item["obviousMarketScore"] = obvious_market_score(item, config)
             core_qualification = item.get("qualification") if isinstance(item.get("qualification"), dict) else {}
-            if core_qualification and core_qualification.get("qualified") is False:
+            if bool(config.get("requireCoreQualification", True)) and core_qualification and core_qualification.get("qualified") is False:
                 diagnostics["excludedCoreQualification"] = safe_int(diagnostics.get("excludedCoreQualification"), 0) + 1
                 continue
             probability = safe_float(
@@ -4646,10 +4646,17 @@ def self_test() -> int:
     if low_odds_ok:
         raise RuntimeError("SELF_TEST hard minimum odds guard failed")
 
+    # Structural synthetic fixtures predate the core qualification layer and are
+    # intentionally unrealistic. The explicit guard checks above exercise the
+    # production rule; the remaining synthetic tests isolate diversification,
+    # express construction and settlement invariants.
+    structural_config = copy.deepcopy(config)
+    structural_config["requireCoreQualification"] = False
+
     # First prove the diversification guard: this synthetic fixture intentionally
-    # makes every best market OUTCOME, so production must cap that family.
-    guarded_records, guarded_diag = build_strategy_analysis(events, {}, context, state, config, now)
-    family_cap = max(1, safe_int(config.get("strategyMaximumSameMarketFamily"), 8))
+    # makes every best market OUTCOME, so the strategy must cap that family.
+    guarded_records, guarded_diag = build_strategy_analysis(events, {}, context, state, structural_config, now)
+    family_cap = max(1, safe_int(structural_config.get("strategyMaximumSameMarketFamily"), 8))
     if not guarded_records or len(guarded_records) > family_cap:
         raise RuntimeError(
             f"SELF_TEST diversification guard failed: {len(guarded_records)} {guarded_diag}"
@@ -4657,7 +4664,7 @@ def self_test() -> int:
 
     # Then lift only the synthetic family cap to exercise the 15-leg express
     # construction and settlement invariants independently from diversification.
-    full_test_config = copy.deepcopy(config)
+    full_test_config = copy.deepcopy(structural_config)
     full_test_config["strategyMaximumSameMarketFamily"] = 15
     records, diag = build_strategy_analysis(events, {}, context, state, full_test_config, now)
     if len(records) != 15:
