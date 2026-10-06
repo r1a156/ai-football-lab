@@ -55,15 +55,30 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add \
-            data/state.json \
-            data/ai_daily_analysis.json \
-            data/last-update-report.json \
-            data/live-state.json \
-            data/live-learning.json \
-            data/football-history-cache.json \
-            data/team-registry.json \
+          WATCHDOG_STATE_FILES=(
+            data/state.json
+            data/ai_daily_analysis.json
+            data/last-update-report.json
+            data/live-state.json
+            data/live-learning.json
+            data/football-history-cache.json
+            data/team-registry.json
+            data/free-data-mesh.json
+            data/clubelo-ratings.json
+            data/russian-team-names.json
+            data/fonbet-public-snapshot.json
+            data/thesportsdb-team-cache.json
+            data/r15-odds-cache.json
+            data/football-data-fixtures-odds.json
             data/provider-health.json
+            data/r15-runtime-control.json
+            data/cloudflare-ai-daily-audit.json
+          )
+          for path in "${WATCHDOG_STATE_FILES[@]}"; do
+            if [[ -e "$path" ]] || git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+              git add -A -- "$path"
+            fi
+          done
           if git diff --cached --quiet; then
             echo "R15F_NO_LIVE_CHANGES=YES"
             exit 0
