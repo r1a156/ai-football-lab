@@ -4603,10 +4603,24 @@ def self_test() -> int:
     context, _ = synthetic_context(now)
     state = ensure_r15_state({}, config, now)
     events = [synthetic_event(index, now) for index in range(15)]
-    records, diag = build_strategy_analysis(events, {}, context, state, config, now)
+
+    # First prove the diversification guard: this synthetic fixture intentionally
+    # makes every best market OUTCOME, so production must cap that family.
+    guarded_records, guarded_diag = build_strategy_analysis(events, {}, context, state, config, now)
+    family_cap = max(1, safe_int(config.get("strategyMaximumSameMarketFamily"), 8))
+    if not guarded_records or len(guarded_records) > family_cap:
+        raise RuntimeError(
+            f"SELF_TEST diversification guard failed: {len(guarded_records)} {guarded_diag}"
+        )
+
+    # Then lift only the synthetic family cap to exercise the 15-leg express
+    # construction and settlement invariants independently from diversification.
+    full_test_config = copy.deepcopy(config)
+    full_test_config["strategyMaximumSameMarketFamily"] = 15
+    records, diag = build_strategy_analysis(events, {}, context, state, full_test_config, now)
     if len(records) != 15:
-        raise RuntimeError(f"SELF_TEST strategy produced {len(records)}: {diag}")
-    day = operational_day(now, config)
+        raise RuntimeError(f"SELF_TEST full synthetic strategy produced {len(records)}: {diag}")
+    day = operational_day(now, full_test_config)
     core.apply_operational_window_metadata(records, day, now)
     best = informational_best_three(records, now)
     core.apply_best_bets_to_daily_analysis(records, best)
@@ -4615,7 +4629,7 @@ def self_test() -> int:
         row["stakePercent"] = 0.0
     state["dailyAnalysis"] = records
     state["bestBets"] = best
-    state["expresses"] = build_expresses(records, state, config, now)
+    state["expresses"] = build_expresses(records, state, full_test_config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
     if safe_float(state["expressBank"].get("placedAmount")) > 600.01:
@@ -4643,12 +4657,13 @@ def self_test() -> int:
     records2[0]["status"] = "lost"
     state2["dailyAnalysis"] = records2
     state2["bestBets"] = informational_best_three(records2, now)
-    state2["expresses"] = build_expresses(records2, state2, config, now)
+    state2["expresses"] = build_expresses(records2, state2, full_test_config, now)
     legacy_before = safe_float(state2.get("bank", {}).get("current"))
     sync_and_settle_expresses(state2, now + dt.timedelta(days=1))
     if safe_float(state2.get("bank", {}).get("current")) != legacy_before:
         raise RuntimeError("SELF_TEST legacy bank was changed")
     print("R15_SELF_TEST=GREEN")
+    print(f"R15_DIVERSIFICATION_GUARD_ANALYSIS={len(guarded_records)}")
     print("R15_SYNTHETIC_ANALYSIS=15")
     print("R15_SYNTHETIC_EXPRESSES=3")
     print("R15_SYNTHETIC_LEGS=15")
