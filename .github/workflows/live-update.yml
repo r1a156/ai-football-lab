@@ -5,7 +5,9 @@ name: R15F live scores and express settlement
 on:
   workflow_dispatch:
   schedule:
-    - cron: '3,13,23,33,43,53 * * * *'
+    # Keep 05:00-06:59 UTC clear for the dedicated morning writer.
+    # Outside that window this also acts as a missing-portfolio watchdog.
+    - cron: '3,13,23,33,43,53 0-4,7-23 * * *'
 
 permissions:
   contents: write
@@ -29,20 +31,25 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Track only current fifteen and settle expresses
+      - name: Settle current state and recover a missing Moscow-day portfolio
         shell: bash
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           ODDS_API_KEY_BACKUP: ${{ secrets.ODDS_API_KEY_BACKUP }}
+          R15_RECOVERY_DAY: "true"
+          CLOUDFLARE_AI_ACCESS_TOKEN: ${{ secrets.CLOUDFLARE_AI_ACCESS_TOKEN }}
+          CLOUDFLARE_AI_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+          CLOUDFLARE_AI_URL: https://ai-football-free.shevtsov001.workers.dev/internal/ai
         run: |
           set -euo pipefail
           python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/r15_daily_auditor.py scripts/update_live.py
           python scripts/update_live.py --update
           python scripts/r15_intelligence.py --settle
+          python scripts/r15_intelligence.py --generate
           python scripts/r15_intelligence.py --validate
           python scripts/update_live.py --validate
 
-      - name: Commit score and result changes
+      - name: Commit score, result, or watchdog portfolio changes
         shell: bash
         run: |
           set -euo pipefail
