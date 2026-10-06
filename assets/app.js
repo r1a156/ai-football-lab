@@ -44,8 +44,8 @@
 
   async function loadBestState(stamp) {
     const urls = API_BASE
-      ? [STATE_URL, RAW_STATE_URL, LOCAL_STATE_URL]
-      : [RAW_STATE_URL, LOCAL_STATE_URL];
+      ? [LOCAL_STATE_URL, RAW_STATE_URL, STATE_URL]
+      : [LOCAL_STATE_URL, RAW_STATE_URL];
     const candidates = [];
     let lastError = null;
     for (const url of urls) {
@@ -68,8 +68,8 @@
 
   async function loadLiveState(stamp) {
     const urls = API_BASE
-      ? [LIVE_URL, RAW_LIVE_URL, LOCAL_LIVE_URL]
-      : [RAW_LIVE_URL, LOCAL_LIVE_URL];
+      ? [LOCAL_LIVE_URL, RAW_LIVE_URL, LIVE_URL]
+      : [LOCAL_LIVE_URL, RAW_LIVE_URL];
     for (const url of urls) {
       try {
         return await fetchJson(url, stamp);
@@ -274,7 +274,7 @@
   function teamsText(row) { return `${home(row)} — ${away(row)}`; }
   function league(row) { return String(row.leagueRu || row.league || row.competition || row.sportTitle || "Футбол"); }
   function odds(row) { return number(row.odds ?? row.bookmakerOdds ?? row.price ?? row.fairOdds); }
-  function probability(row) { const raw = number(row.probabilityPercent ?? row.confidence ?? row.modelProbability ?? row.probability); return raw <= 1 && raw > 0 ? raw*100 : raw; }
+  function probability(row) { const raw = number(row.probabilityPercent ?? row.confidence ?? row.conservativeProbability ?? row.modelProbability ?? row.probability); return raw <= 1 && raw > 0 ? raw*100 : raw; }
   function pick(row) {
     if (row.pickRu || row.selectionLabelRu || row.marketLabelRu || row.pick) return String(row.pickRu || row.selectionLabelRu || row.marketLabelRu || row.pick);
     const code = String(row.market || row.marketCode || row.selectionCode || "").toUpperCase();
