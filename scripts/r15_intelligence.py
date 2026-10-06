@@ -2765,12 +2765,22 @@ def build_bootstrap_preview_analysis(
             break
         chosen.append(row)
 
-    if len(chosen) < target:
+    allow_partial = bool(config.get("bootstrapPreviewAllowPartial", False))
+    if len(chosen) < target and not allow_partial:
         diagnostics.update({
             "status": "INSUFFICIENT_PREVIEW_EVENTS",
             "published": 0,
             "required": target,
             "shortage": target - len(chosen),
+        })
+        return [], diagnostics
+
+    if not chosen:
+        diagnostics.update({
+            "status": "NO_PREVIEW_EVENTS",
+            "published": 0,
+            "required": target,
+            "shortage": target,
         })
         return [], diagnostics
 
@@ -2817,9 +2827,11 @@ def build_bootstrap_preview_analysis(
         records.append(record)
 
     diagnostics.update({
-        "status": "GREEN_BOOTSTRAP_PREVIEW",
+        "status": "GREEN_PARTIAL_PREVIEW" if len(records) < target else "GREEN_BOOTSTRAP_PREVIEW",
         "published": len(records),
         "required": target,
+        "shortage": max(0, target - len(records)),
+        "partialPublication": len(records) < target,
         "productionThresholdsUnchanged": True,
     })
     return records, diagnostics
@@ -3823,6 +3835,7 @@ def publish_generation() -> int:
             "bootstrapPreviewMinimumConservativeProbability": 0.48,
             "bootstrapPreviewMinimumBookmakers": 3,
             "bootstrapPreviewMaximumSameLeague": 7,
+            "bootstrapPreviewAllowPartial": True,
         })
         recovery_records, recovery_diag = build_bootstrap_preview_analysis(
             odds_events, advanced, context, state, recovery_config, now
