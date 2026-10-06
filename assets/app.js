@@ -120,10 +120,7 @@
     if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const marker = String(state.meta.sourceMarker || "");
     if (!marker.includes("R15")) return false;
-    const recovery = Boolean(state.meta.recoveryDay);
-    const preview = Boolean(state.meta.bootstrapPreview);
-    const minimumQuality = (preview || recovery) ? 40 : MIN_QUALITY;
-    if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= minimumQuality)) return false;
+    if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= MIN_QUALITY)) return false;
     const end = Date.parse(state.meta.operationalWindowEnd || "");
     if (Number.isFinite(end)) return end > Date.now() - 15 * 60_000;
     const updated = Date.parse(state.meta.updatedAt || "");
