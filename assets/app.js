@@ -121,7 +121,9 @@
   function isCurrentPortfolio(state) {
     const daily = state.dailyAnalysis;
     const expresses = state.expresses;
-    if (daily.length !== 15 || expresses.length !== 3) return false;
+    if (daily.length < 1 || daily.length > 15) return false;
+    const expectedExpresses = Math.min(3, Math.floor(daily.length / 5));
+    if (expresses.length !== expectedExpresses) return false;
     if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const marker = String(state.meta.sourceMarker || "");
     if (!marker.includes("R15")) return false;
