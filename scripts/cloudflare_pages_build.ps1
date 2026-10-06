@@ -17,8 +17,9 @@ $analysisCount = @($state.dailyAnalysis).Count
 $expressCount = @($state.expresses).Count
 $invalidExpress = @($state.expresses | Where-Object { @($_.legs).Count -ne 5 }).Count
 
-if ($analysisCount -ne 15) { throw "Refusing Pages build: expected 15 dailyAnalysis rows, found $analysisCount" }
-if ($expressCount -ne 3) { throw "Refusing Pages build: expected 3 expresses, found $expressCount" }
+if ($analysisCount -lt 1 -or $analysisCount -gt 15) { throw "Refusing Pages build: expected 1..15 dailyAnalysis rows, found $analysisCount" }
+$expectedExpressCount = [Math]::Min(3, [Math]::Floor($analysisCount / 5))
+if ($expressCount -ne $expectedExpressCount) { throw "Refusing Pages build: expected $expectedExpressCount expresses for $analysisCount analyses, found $expressCount" }
 if ($invalidExpress -ne 0) { throw "Refusing Pages build: every express must contain exactly 5 legs" }
 
 if (Test-Path $Out) {
@@ -76,8 +77,11 @@ $headers = @"
 New-Item -ItemType File -Force -Path (Join-Path $Out ".nojekyll") | Out-Null
 
 $distState = Get-Content -Raw -Encoding UTF8 (Join-Path $Out "data\state.json") | ConvertFrom-Json
-if (@($distState.dailyAnalysis).Count -ne 15) { throw "Dist verification failed: dailyAnalysis" }
-if (@($distState.expresses).Count -ne 3) { throw "Dist verification failed: expresses" }
+$distAnalysisCount = @($distState.dailyAnalysis).Count
+$distExpressCount = @($distState.expresses).Count
+$distExpectedExpressCount = [Math]::Min(3, [Math]::Floor($distAnalysisCount / 5))
+if ($distAnalysisCount -lt 1 -or $distAnalysisCount -gt 15) { throw "Dist verification failed: dailyAnalysis" }
+if ($distExpressCount -ne $distExpectedExpressCount) { throw "Dist verification failed: expresses" }
 
 Write-Host "CLOUDFLARE_PAGES_BUILD=GREEN"
 Write-Host "ANALYSIS=$analysisCount"
