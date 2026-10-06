@@ -1,18 +1,6 @@
 name: Deploy Cloudflare Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "index.html"
-      - "assets/**"
-      - "data/state.json"
-      - "data/live-state.json"
-      - "scripts/cloudflare_pages_build.sh"
-      - ".github/workflows/deploy-cloudflare-pages.yml"
-  workflow_run:
-    workflows: ["R15F R3 cognitive morning portfolio"]
-    types: [completed]
   workflow_dispatch:
 
 permissions:
