@@ -3256,8 +3256,16 @@ def settle_current() -> int:
         print("R15_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
         print("FINAL_STATUS=GREEN_R15_BOOTSTRAP_PREVIEW_SETTLEMENT_SKIPPED")
         return 0
+    odds_activation_threshold = safe_int(config.get("oddsBackupActivationThreshold"), 4)
+    if recovery_day and not current_records:
+        # Recovery/watchdog traffic is deliberately isolated on the reserve key
+        # when one is available. Normal morning production keeps using primary.
+        # This prevents a failed recovery attempt from exhausting the primary
+        # per-day ledger and then blocking its own retry while reserve quota is idle.
+        odds_activation_threshold = 1_000_000
+        print("R15_RECOVERY_BACKUP_PREFERRED=YES")
     odds_key, odds_key_selection = core.select_odds_api_key(
-        activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
+        activation_threshold=odds_activation_threshold,
     )
     print(f"R15_ODDS_KEY_SOURCE={odds_key_selection.get('selected')}")
     print(
