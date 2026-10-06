@@ -138,11 +138,15 @@ def operational_day(now: dt.datetime, config: dict[str, Any]) -> dict[str, Any]:
     end = start + dt.timedelta(hours=24)
     minimum_lead = dt.timedelta(minutes=safe_int(config.get("minimumLeadMinutes"), 45))
     query_start = max(now + minimum_lead, start.astimezone(UTC))
-    # R3R13: public selection is strictly limited to the active Moscow
-    # operational day. Future days may be pre-fetched elsewhere, but they must
-    # never be published as part of today's portfolio.
-    horizon_hours = 24
-    search_maximum_end = end.astimezone(UTC)
+    # R3R22: keep the Moscow day as the accounting/publication identity,
+    # but search a rolling prematch horizon so a sparse calendar cannot leave
+    # the public product empty. This changes discovery breadth, never quality.
+    search_days = max(1, min(3, safe_int(config.get("operationalWindowSearchDays"), 3)))
+    horizon_hours = max(24, min(search_days * 24, safe_int(config.get("portfolioSearchHorizonHours"), 72)))
+    search_maximum_end = max(
+        end.astimezone(UTC),
+        query_start + dt.timedelta(hours=horizon_hours),
+    )
     return {
         "operationalDayId": f"{start.date().isoformat()}-MSK-{hour:02d}00",
         "operationalDateLocal": start.date().isoformat(),
@@ -155,7 +159,7 @@ def operational_day(now: dt.datetime, config: dict[str, Any]) -> dict[str, Any]:
         "windowEndLocal": end.isoformat(),
         "durationHours": 24,
         "searchHorizonHours": horizon_hours,
-        "policy": "MOSCOW_PUBLICATION_DAY_WITH_PROGRESSIVE_FUTURE_EVENT_SEARCH",
+        "policy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     }
 # ---------------------------------------------------------------------------
 # Provider client with cooldowns and quota accounting
@@ -1165,7 +1169,7 @@ def discover_operational_events(
         "sportKeysWithEvents": len(by_sport),
         "eventsBySportKey": dict(by_sport),
         "errors": errors[-40:],
-        "policy": "STRICT_CURRENT_MOSCOW_OPERATIONAL_DAY_ONLY",
+        "policy": "ROLLING_PREMATCH_HORIZON_72H_BREADTH_FIRST",
     }
     return ordered, diagnostics
 def sport_history_coverage(events: list[dict[str, Any]], context: dict[str, Any]) -> float:
@@ -2292,8 +2296,12 @@ def complete_portfolio_acquisition(
         if safe_int(recovery_diag.get("returned"), 0) > 0:
             save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
 
-    # Reserved advanced recovery always runs before adding another competition.
-    run_recovery()
+    # R3R22: when the portfolio is sparse, breadth across competitions has
+    # priority over expensive advanced-market recovery. Advanced recovery still
+    # runs after featured-market coverage, preserving the same quality gates.
+    recovery_before_breadth = bool(config.get("oddsAdvancedRecoveryBeforeCompetitionBurst", False))
+    if recovery_before_breadth:
+        run_recovery()
 
     ranked = [str(value) for value in quota_plan.get("rankedCompetitionKeys") or []]
     maximum = max(len(selected), safe_int(config.get("oddsMaximumCompetitionsForPortfolio"), 8))
@@ -2328,11 +2336,15 @@ def complete_portfolio_acquisition(
             "qualifiedAfterFeatured": safe_int(diagnostics.get("eventsQualified"), 0),
             "quotaRemainingBeforeRecovery": client.odds_quota.get("requestsRemaining"),
         })
-        run_recovery()
+        if recovery_before_breadth:
+            run_recovery()
         completion_rounds[-1]["qualifiedAfterRecovery"] = safe_int(diagnostics.get("eventsQualified"), 0)
         completion_rounds[-1]["quotaRemainingAfterRecovery"] = client.odds_quota.get("requestsRemaining")
         if len(featured_events) == before_events and incoming_errors:
             break
+
+    if not recovery_before_breadth:
+        run_recovery()
 
     completion_keys = [key for key in selected if key not in initial_keys]
     quota_plan["competitionsSelected"] = len(selected)
@@ -3973,8 +3985,56 @@ def publish_generation() -> int:
         print(f"R15_NEXT_OPERATIONAL_DAY={rollover.get('nextOperationalDayId')}")
 
     if current_day == day["operationalDayId"] and current_records:
-        print("R15_CURRENT_OPERATIONAL_DAY_ALREADY_PUBLISHED=YES")
-        return 0
+        minimum_odds = safe_float(config.get("minimumBookmakerOdds"), 1.55)
+        future_records = []
+        invalid_future_records = []
+        started_or_unknown = []
+        for row in current_records:
+            if not isinstance(row, dict):
+                continue
+            commence = parse_time(row.get("commenceTime"))
+            if commence is None or commence <= now:
+                started_or_unknown.append(row)
+                continue
+            future_records.append(row)
+            qualification = row.get("qualification") if isinstance(row.get("qualification"), dict) else {}
+            core_rejected = bool(config.get("requireCoreQualification", True)) and qualification.get("qualified") is False
+            odds_below_floor = safe_float(row.get("bookmakerOdds"), safe_float(row.get("odds"))) < minimum_odds
+            if core_rejected or odds_below_floor:
+                invalid_future_records.append(row)
+        if invalid_future_records and future_records and not started_or_unknown:
+            withdrawn_daily = copy.deepcopy(current_records)
+            withdrawn_best = copy.deepcopy(state.get("bestBets") or [])
+            for collection in (withdrawn_daily, withdrawn_best):
+                for row in collection:
+                    if not isinstance(row, dict):
+                        continue
+                    row["status"] = "void"
+                    row["statusLabel"] = "Отозван до начала"
+                    row["settledAt"] = iso(now)
+                    row["settlementSource"] = "PREMATCH_POLICY_REVALIDATION"
+                    row["profit"] = 0.0
+                    row["withdrawalReason"] = "FAILED_CURRENT_HARD_GUARD_BEFORE_KICKOFF"
+            core.append_new_records_to_history(state, withdrawn_daily, withdrawn_best, config)
+            for express in state.get("expresses") or []:
+                if isinstance(express, dict) and str(express.get("status") or "pending") == "pending":
+                    express["status"] = "void"
+                    express["settledAt"] = iso(now)
+                    express["settlementSource"] = "PREMATCH_POLICY_REVALIDATION"
+                    express["profit"] = 0.0
+            archive_previous_expresses(state)
+            state["dailyAnalysis"] = []
+            state["bestBets"] = []
+            state["predictions"] = []
+            state["expresses"] = []
+            current_day = ""
+            current_records = []
+            update_express_bank_metrics(state, now)
+            print(f"R15_PREMATCH_POLICY_REVALIDATION_WITHDRAWN={len(invalid_future_records)}")
+            print("R15_PREMATCH_POLICY_REVALIDATION_RESELECT=YES")
+        else:
+            print("R15_CURRENT_OPERATIONAL_DAY_ALREADY_PUBLISHED=YES")
+            return 0
     if current_records and not all(str(row.get("status") or "pending") in TERMINAL for row in current_records if isinstance(row, dict)):
         print("R15_GENERATION_BLOCKED_ACTIVE_PREVIOUS_BATCH=YES")
         return 0
@@ -4499,8 +4559,12 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("R15 express nominal stake must be two percent")
     if safe_float(config.get("expressStartingBank")) != 10000.0:
         raise RuntimeError("R15 express starting bank must be 10000")
-    if safe_int(config.get("operationalWindowSearchDays"), 1) != 1:
-        raise RuntimeError("R15 may not search future operational days")
+    search_days = safe_int(config.get("operationalWindowSearchDays"), 3)
+    horizon_hours = safe_int(config.get("portfolioSearchHorizonHours"), 72)
+    if not 1 <= search_days <= 3:
+        raise RuntimeError("R15 rolling prematch search days must be within 1..3")
+    if not 24 <= horizon_hours <= search_days * 24:
+        raise RuntimeError("R15 rolling prematch horizon must fit configured search days")
 
 
 def validate_state() -> int:
@@ -4556,13 +4620,22 @@ def validate_state() -> int:
             raise RuntimeError("R15 express legs must come from daily analysis")
         public_start = parse_time(validation_meta.get("operationalWindowStart"))
         public_end = parse_time(validation_meta.get("operationalWindowEnd"))
+        selection_start = parse_time(validation_meta.get("selectionWindowStart")) or public_start
+        selection_end = parse_time(validation_meta.get("selectionWindowEnd")) or public_end
         if not public_start or not public_end or public_start >= public_end:
             raise RuntimeError("R15 public operational window missing or invalid")
+        if not selection_start or not selection_end or selection_start >= selection_end:
+            raise RuntimeError("R15 rolling selection window missing or invalid")
+        maximum_selection_end = selection_start + dt.timedelta(
+            hours=max(24, safe_int(config.get("portfolioSearchHorizonHours"), 72))
+        )
+        if selection_end > maximum_selection_end + dt.timedelta(minutes=5):
+            raise RuntimeError("R15 rolling selection horizon exceeds configured maximum")
         for row in daily:
             commence = parse_time(row.get("commenceTime"))
-            if commence is None or commence < public_start or commence >= public_end:
+            if commence is None or commence < selection_start or commence >= selection_end:
                 raise RuntimeError(
-                    "R15 event outside current Moscow operational day: "
+                    "R15 event outside rolling prematch selection horizon: "
                     f"{row.get('eventId')} {row.get('commenceTime')}"
                 )
             if str(row.get("sport") or "") != "soccer":
@@ -4790,7 +4863,7 @@ def self_test() -> int:
     print("R15_CORE_QUALIFICATION_GUARD=YES")
     print("R15_HARD_MIN_ODDS=1.55")
     print("R15_ADAPTIVE_FORM_DECAY=YES")
-    print("R15_STRICT_08_TO_08=YES")
+    print("R15_ROLLING_72H_PREMATCH_SEARCH=YES")
     return 0
 
 
