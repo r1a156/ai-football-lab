@@ -3878,14 +3878,18 @@ def publish_generation() -> int:
         else:
             analysis_diag["bootstrapPreviewAttempt"] = preview_diag
 
-    if recovery_day and len(records) != safe_int(config.get("dailyAnalysisTarget"), 15):
+    if recovery_day and not records:
         strict_analysis_diag = copy.deepcopy(analysis_diag)
         recovery_config = copy.deepcopy(config)
         recovery_config.update({
-            "bootstrapPreviewMinimumDataQuality": 40.0,
-            "bootstrapPreviewMinimumConservativeProbability": 0.48,
+            "bootstrapPreviewMinimumDataQuality": 58.0,
+            "bootstrapPreviewMinimumConservativeProbability": 0.56,
             "bootstrapPreviewMinimumBookmakers": 3,
-            "bootstrapPreviewMaximumSameLeague": 7,
+            "bootstrapPreviewMinimumAgreement": 54.0,
+            "bootstrapPreviewMinimumMarketStability": 48.0,
+            "bootstrapPreviewMaximumAnomaly": 58.0,
+            "bootstrapPreviewMaximumSameLeague": 5,
+            "bootstrapPreviewMaximumSameMarketFamily": 6,
             "bootstrapPreviewAllowPartial": True,
         })
         recovery_records, recovery_diag = build_bootstrap_preview_analysis(
@@ -3897,20 +3901,20 @@ def publish_generation() -> int:
                 row["financialMode"] = "EXPRESS_LEG"
                 row["strategyQualified"] = False
                 row["recoveryQualified"] = True
-                row["recoveryThresholdProfile"] = "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS"
+                row["recoveryThresholdProfile"] = "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS"
                 row.pop("previewQualified", None)
                 rationale = row.get("selectionRationale") if isinstance(row.get("selectionRationale"), dict) else {}
                 rationale.pop("previewNotice", None)
                 rationale["recoveryNotice"] = (
                     "Восстановительный суточный портфель: реальные HYBRID-данные, "
-                    "качество >=40, консервативная вероятность >=48%, минимум 3 букмекера."
+                    "качество >=58, консервативная вероятность >=56%, минимум 3 букмекера, без конфликтного направления тотала."
                 )
                 row["selectionRationale"] = rationale
             records = recovery_records
             analysis_diag = recovery_diag
             analysis_diag["mode"] = "RECOVERY_DAY"
             analysis_diag["strictProductionDiagnostics"] = strict_analysis_diag
-            analysis_diag["recoveryThresholdProfile"] = "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS"
+            analysis_diag["recoveryThresholdProfile"] = "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS"
             print("R15_RECOVERY_DAY_PROFILE=USED")
             print(f"R15_RECOVERY_DAY_ELIGIBLE={recovery_diag.get('eventsEligible', 0)}")
         else:
@@ -4199,7 +4203,7 @@ def publish_generation() -> int:
             "status": "RECOVERY_DAY",
             "recoveryDay": True,
             "recoveryDayPublishedAt": iso(now),
-            "recoveryThresholdProfile": "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS",
+            "recoveryThresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
             "recoveryStrictProductionThresholdsChanged": False,
             "bootstrapPreview": True,
             "bootstrapPreviewBankEngaged": True,
@@ -4208,7 +4212,7 @@ def publish_generation() -> int:
         report["diagnostics"]["recoveryDay"] = {
             "enabled": True,
             "bankEngaged": True,
-            "thresholdProfile": "HYBRID_Q40_P48_BOOKS3_STANDARD_MARKETS",
+            "thresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
             "strictProductionThresholdsChanged": False,
         }
         daily_auditor.mark_activated(day["operationalDayId"])
