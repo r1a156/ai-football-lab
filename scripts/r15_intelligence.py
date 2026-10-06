@@ -2543,25 +2543,29 @@ def build_strategy_analysis(
         reverse=True,
     )
     chosen: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]] = []
-    deferred = []
     league_counts: dict[str, int] = defaultdict(int)
+    family_counts: dict[str, int] = defaultdict(int)
+    max_family = max(1, safe_int(config.get("strategyMaximumSameMarketFamily"), 8))
     for row in evaluated_rows:
-        league = str(row[1].get("league") or "")
-        if league_counts[league] < max_league and len(chosen) < target:
-            chosen.append(row)
-            league_counts[league] += 1
-        else:
-            deferred.append(row)
-    for row in deferred:
         if len(chosen) >= target:
             break
+        league = str(row[1].get("league") or "")
+        family = str(row[1].get("marketFamily") or row[1].get("marketKey") or "OTHER").upper()
+        if league_counts[league] >= max_league:
+            continue
+        if family_counts[family] >= max_family:
+            continue
         chosen.append(row)
-    if len(chosen) < target:
+        league_counts[league] += 1
+        family_counts[family] += 1
+
+    if not chosen:
         diagnostics.update({
             "published": 0,
             "required": target,
-            "shortage": target - len(chosen),
-            "status": "INSUFFICIENT_QUALITY_EVENTS",
+            "shortage": target,
+            "status": "NO_QUALIFIED_EVENTS",
+            "partialPublication": False,
         })
         diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
         diagnostics["marketFamilies"] = dict(diagnostics["marketFamilies"])
@@ -2600,8 +2604,11 @@ def build_strategy_analysis(
     diagnostics.update({
         "published": len(records),
         "required": target,
-        "status": "GREEN",
-        "selectionObjective": "FULL_MATCH_UNDERSTANDING_THEN_MOST_OBVIOUS_QUALIFIED_MARKET_WITH_GOOD_PRICE",
+        "shortage": max(0, target - len(records)),
+        "partialPublication": len(records) < target,
+        "status": "GREEN_PARTIAL_PRODUCTION" if len(records) < target else "GREEN",
+        "marketFamilyCap": max_family,
+        "selectionObjective": "QUALITY_FIRST_PARTIAL_ALLOWED_WITH_MARKET_FAMILY_DIVERSIFICATION",
     })
     diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
     diagnostics["marketFamilies"] = dict(diagnostics["marketFamilies"])
@@ -2624,11 +2631,15 @@ def build_bootstrap_preview_analysis(
     probability values are preserved verbatim and every record is marked as a
     bootstrap preview.
     """
-    minimum_quality = safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
-    minimum_probability = safe_float(config.get("bootstrapPreviewMinimumConservativeProbability"), 0.42)
-    minimum_books = max(1, safe_int(config.get("bootstrapPreviewMinimumBookmakers"), 2))
+    minimum_quality = safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 58.0)
+    minimum_probability = safe_float(config.get("bootstrapPreviewMinimumConservativeProbability"), 0.56)
+    minimum_books = max(1, safe_int(config.get("bootstrapPreviewMinimumBookmakers"), 3))
+    minimum_agreement = safe_float(config.get("bootstrapPreviewMinimumAgreement"), 54.0)
+    minimum_stability = safe_float(config.get("bootstrapPreviewMinimumMarketStability"), 48.0)
+    maximum_anomaly = safe_float(config.get("bootstrapPreviewMaximumAnomaly"), 58.0)
     target = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
-    max_league = max(1, safe_int(config.get("bootstrapPreviewMaximumSameLeague"), 7))
+    max_league = max(1, safe_int(config.get("bootstrapPreviewMaximumSameLeague"), 5))
+    max_family = max(1, safe_int(config.get("bootstrapPreviewMaximumSameMarketFamily"), 6))
 
     evaluated: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]] = []
     diagnostics = {
@@ -2696,6 +2707,16 @@ def build_bootstrap_preview_analysis(
                 continue
             if books < minimum_books:
                 continue
+            if safe_float(item.get("agreement"), 0.0) < minimum_agreement:
+                continue
+            if safe_float(item.get("marketStability"), 0.0) < minimum_stability:
+                continue
+            if safe_float(item.get("anomaly"), 100.0) > maximum_anomaly:
+                continue
+            family = str(item.get("marketFamily") or item.get("marketKey") or "").lower()
+            is_total = "total" in family or str(item.get("marketKey") or "").lower() in {"totals", "team_totals"}
+            if is_total and bool(item.get("goalDirectionConflict")):
+                continue
             if safe_float(item.get("bookmakerOdds"), 0.0) < safe_float(config.get("minimumBookmakerOdds"), 1.35):
                 continue
             if not core.standard_market_allowed(
@@ -2706,7 +2727,7 @@ def build_bootstrap_preview_analysis(
                 continue
             item["strategyQualified"] = False
             item["previewQualified"] = True
-            item["previewThresholdProfile"] = "HISTORY_REQUIRED_Q40_P42_BOOKS2_STANDARD_MARKETS"
+            item["previewThresholdProfile"] = "HISTORY_REQUIRED_Q58_P56_BOOKS3_AGREEMENT_STABILITY_NO_TOTAL_CONFLICT"
             safe_candidates.append(item)
 
         if not safe_candidates:
@@ -2751,19 +2772,18 @@ def build_bootstrap_preview_analysis(
     )
 
     chosen: list[tuple[dict[str, Any], dict[str, Any], list[dict[str, Any]], dict[str, Any]]] = []
-    deferred = []
     league_counts: dict[str, int] = defaultdict(int)
+    family_counts: dict[str, int] = defaultdict(int)
     for row in evaluated:
-        league = str(row[1].get("league") or row[0].get("sport_title") or "")
-        if league_counts[league] < max_league and len(chosen) < target:
-            chosen.append(row)
-            league_counts[league] += 1
-        else:
-            deferred.append(row)
-    for row in deferred:
         if len(chosen) >= target:
             break
+        league = str(row[1].get("league") or row[0].get("sport_title") or "")
+        family = str(row[1].get("marketFamily") or row[1].get("marketKey") or "OTHER").upper()
+        if league_counts[league] >= max_league or family_counts[family] >= max_family:
+            continue
         chosen.append(row)
+        league_counts[league] += 1
+        family_counts[family] += 1
 
     allow_partial = bool(config.get("bootstrapPreviewAllowPartial", False))
     if len(chosen) < target and not allow_partial:
