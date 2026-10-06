@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=16.1.0">
   <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
   <title>Спортивный ИИ — портфель матчей</title>
-  <link rel="stylesheet" href="assets/styles.css?v=16.0.0-premium">
+  <link rel="stylesheet" href="assets/styles.css?v=16.2.0-grid-bank-fix">
 </head>
 <body>
   <!-- V16_PREMIUM_INTERFACE -->
@@ -24,7 +24,8 @@
       <a href="#matches">Матчи</a>
       <a href="#expresses">Экспрессы</a>
       <a href="#singles">Топ‑3</a>
-      <a href="#results">Результаты</a>
+      <a href="#model">Модель</a>
+      <a href="#results">Банк</a>
     </nav>
     <div class="connection" id="connectionState"><span></span><b>Загрузка</b></div>
   </header>
@@ -78,7 +79,7 @@
         <div class="spotlight-economics">
           <div><span>Коэффициент</span><strong id="spotlightOdds">—</strong></div>
           <div><span>Консервативный EV</span><strong id="spotlightEv">—</strong></div>
-          <div><span>Финансовый режим</span><strong id="spotlightBankroll">—</strong></div>
+          <div><span>Экспресс‑риск</span><strong id="spotlightBankroll">—</strong></div>
         </div>
         <div class="spotlight-reason"><span>Почему выбран</span><ul id="spotlightReasons"><li>Ожидаем проверенные данные</li></ul></div>
       </article>
@@ -148,7 +149,7 @@
           <div class="mini-card-head"><span>Calibration guard</span><b id="guardStatus">—</b></div>
           <div class="guard-row"><span>Доп. запас неопределённости</span><strong id="guardMargin">—</strong></div>
           <div class="guard-row"><span>Коррекция тоталов</span><strong id="totalHaircut">—</strong></div>
-          <div class="guard-row"><span>Ставки на банк</span><strong id="bankrollGuard">—</strong></div>
+          <div class="guard-row"><span>Новые экспрессы</span><strong id="bankrollGuard">—</strong></div>
           <p id="guardExplanation">Система может только ужесточать риск при плохой калибровке — не повышать вероятность искусственно.</p>
         </article>
       </div>
@@ -158,16 +159,31 @@
       <header class="section-head">
         <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
       </header>
-      <div class="results-layout">
-        <article class="bank-card">
-          <span>Экспресс‑банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
-          <div class="bank-grid">
-            <div><span>Старт</span><b id="bankStarting">—</b></div>
-            <div><span>В работе</span><b id="bankPlaced">—</b></div>
-            <div><span>Свободно</span><b id="bankAvailable">—</b></div>
-            <div><span>Результат</span><b id="bankProfit">—</b></div>
-          </div>
-        </article>
+      <div class="results-layout results-layout-v2">
+        <div class="bank-stack">
+          <article class="bank-card bank-card-model">
+            <span>Аналитический банк модели</span><strong id="modelBankCurrent">—</strong><small id="modelBankChange">—</small>
+            <div class="bank-grid">
+              <div><span>Старт</span><b id="modelBankStarting">10 000 ₽</b></div>
+              <div><span>Расчётов</span><b id="modelBankBets">—</b></div>
+              <div><span>ROI</span><b id="modelBankRoi">—</b></div>
+              <div><span>Max drawdown</span><b id="modelBankDrawdown">—</b></div>
+            </div>
+            <p class="bank-method">Симуляция одиночных прогнозов: фиксированная ставка 100 ₽ на каждый рассчитанный прогноз. Нужна для чистой оценки прибыльности модели без влияния экспрессов.</p>
+          </article>
+
+          <article class="bank-card bank-card-express">
+            <span>Экспресс‑банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
+            <div class="bank-grid">
+              <div><span>Старт</span><b id="bankStarting">—</b></div>
+              <div><span>В работе</span><b id="bankPlaced">—</b></div>
+              <div><span>Свободно</span><b id="bankAvailable">—</b></div>
+              <div><span>Результат</span><b id="bankProfit">—</b></div>
+            </div>
+            <p class="bank-method">Отдельный риск‑контур 5‑событийных экспрессов. Его просадка не смешивается с прибыльностью одиночных прогнозов.</p>
+          </article>
+        </div>
+
         <article class="history-card">
           <div class="history-head"><div><span>Последние расчёты</span><strong>История</strong></div><b id="historyCount">0</b></div>
           <div class="history-list" id="historyList"><div class="empty-mini">Завершённых событий пока нет</div></div>
@@ -191,6 +207,6 @@
   </dialog>
 
   <script src="assets/runtime-config.js?v=cf-final-utf8"></script>
-  <script src="assets/app.js?v=16.1.0-intelligence"></script>
+  <script src="assets/app.js?v=16.2.0-grid-bank-fix"></script>
 </body>
 </html>
