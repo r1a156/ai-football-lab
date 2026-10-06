@@ -276,7 +276,7 @@
   "expressStartingBank": 10000,
   "expressCount": 3,
   "expressLegsPerTicket": 5,
-  "expressStakePercent": 10,
+  "expressStakePercent": 2,
   "expressMaximumExposurePercent": 30,
   "expressHistoryLimit": 500,
   "bestFourFinancialMode": "INFORMATIONAL_ONLY",
@@ -289,8 +289,8 @@
   "lineMovementPolicy": "STORE_FIRST_CURRENT_AND_FINAL_AVAILABLE_QUOTES_WITHOUT_HIDDEN_PICK_REPLACEMENT",
   "footballDataOptionalEnrichmentEnabled": false,
   "oddsFreeMonthlyCredits": 500,
-  "oddsFreeDailyCreditBudget": 16,
-  "oddsDailyCarryAllowance": 2,
+  "oddsFreeDailyCreditBudget": 24,
+  "oddsDailyCarryAllowance": 12,
   "oddsTargetCandidateEvents": 84,
   "freeMeshMaximumMatches": 60000,
   "freeMeshSources": [
@@ -394,5 +394,6 @@
   "footballDataFixtureOddsCacheFile": "data/football-data-fixtures-odds.json",
   "cloudflareAiWorkerBoundModelOnly": true,
   "oddsBackupActivationThreshold": 4,
-  "livePaidScoreDailyCreditBudget": 2
+  "livePaidScoreDailyCreditBudget": 2,
+  "expressMinimumConservativeExpectedValue": 0.03
 }
