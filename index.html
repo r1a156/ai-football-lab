@@ -4,7 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#06080c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Спортивный ИИ">
   <meta name="description" content="Спортивный ИИ — премиальный интерфейс суточной футбольной аналитики, прогнозов и результатов.">
+  <link rel="manifest" href="manifest.webmanifest?v=16.1.0">
+  <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
   <title>Спортивный ИИ — портфель матчей</title>
   <link rel="stylesheet" href="assets/styles.css?v=16.0.0-premium">
 </head>
@@ -36,7 +41,8 @@
         </div>
         <div class="hero-actions">
           <a class="button button-primary" href="#matches">Открыть матчи</a>
-          <a class="button button-quiet" href="#results">Посмотреть результаты</a>
+          <a class="button button-quiet" href="#model">Состояние модели</a>
+          <button class="button button-quiet install-button" id="installApp" type="button" hidden>Установить приложение</button>
         </div>
       </div>
       <div class="summary-card" aria-label="Сводка">
@@ -54,6 +60,48 @@
     <section class="shell notice" id="staleNotice" hidden>
       <span class="notice-icon" aria-hidden="true">↻</span>
       <div><strong>Формируется новая подборка</strong><p id="staleMessage">Предыдущие матчи убраны из текущего экрана. Здесь появятся только свежие проверенные данные.</p></div>
+    </section>
+
+    <section class="intelligence shell" id="intelligence" aria-label="Интеллектуальная сводка">
+      <article class="spotlight-card">
+        <div class="spotlight-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="spotlight-head">
+          <div><span class="premium-kicker">ЛУЧШИЙ СИГНАЛ ДНЯ</span><h2 id="spotlightTeams">Подборка анализируется</h2></div>
+          <span class="mode-badge" id="spotlightMode">Проверка</span>
+        </div>
+        <div class="spotlight-pick"><span>Прогноз</span><strong id="spotlightPick">—</strong></div>
+        <div class="spotlight-metrics">
+          <div><span>Вероятность</span><strong id="spotlightProbability">—</strong><i><b id="spotlightProbabilityBar"></b></i></div>
+          <div><span>Качество</span><strong id="spotlightQuality">—</strong><i><b id="spotlightQualityBar"></b></i></div>
+          <div><span>Стабильность</span><strong id="spotlightStability">—</strong><i><b id="spotlightStabilityBar"></b></i></div>
+        </div>
+        <div class="spotlight-economics">
+          <div><span>Коэффициент</span><strong id="spotlightOdds">—</strong></div>
+          <div><span>Консервативный EV</span><strong id="spotlightEv">—</strong></div>
+          <div><span>Финансовый режим</span><strong id="spotlightBankroll">—</strong></div>
+        </div>
+        <div class="spotlight-reason"><span>Почему выбран</span><ul id="spotlightReasons"><li>Ожидаем проверенные данные</li></ul></div>
+      </article>
+
+      <div class="intelligence-side">
+        <article class="decision-card">
+          <div class="mini-card-head"><span>Решение системы</span><b>24H</b></div>
+          <div class="decision-flow">
+            <div><strong id="checkedCount">—</strong><span>проверено</span></div>
+            <i>→</i>
+            <div><strong id="qualifiedCount">—</strong><span>прошло фильтр</span></div>
+            <i>→</i>
+            <div><strong id="publishedCount">—</strong><span>опубликовано</span></div>
+          </div>
+          <div class="rejection-summary"><span>Главная причина отклонений</span><strong id="topRejectionReason">—</strong><small id="rejectedCount">—</small></div>
+        </article>
+
+        <article class="health-card">
+          <div class="mini-card-head"><span>Live intelligence</span><b id="healthOverall">—</b></div>
+          <div class="health-grid" id="healthGrid"><div class="health-line"><span>Источники</span><strong>Проверяем</strong></div></div>
+          <div class="health-footer"><span id="healthUpdated">—</span><strong id="quotaStatus">—</strong></div>
+        </article>
+      </div>
     </section>
 
     <section class="section shell" id="matches">
@@ -80,9 +128,35 @@
       <div class="single-grid" id="singleGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
 
+    <section class="section shell" id="model">
+      <header class="section-head">
+        <div><span class="section-kicker">04</span><h2>Калибровка модели</h2><p>Реальные результаты против заявленной вероятности. Без скрытия проигрышей и без подгонки под один день.</p></div>
+        <div class="section-stat"><span>Контроль</span><strong id="calibrationMode">AUTO GUARD</strong></div>
+      </header>
+      <div class="model-grid">
+        <article class="model-stat-card">
+          <div class="model-stat-head"><span>Последние 7 дней</span><b id="stat7Count">0 событий</b></div>
+          <div class="model-primary"><strong id="stat7Hit">—</strong><span>фактический hit rate</span></div>
+          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat7Predicted">—</strong></div><div><span>Brier</span><strong id="stat7Brier">—</strong></div></div>
+        </article>
+        <article class="model-stat-card">
+          <div class="model-stat-head"><span>Последние 30 дней</span><b id="stat30Count">0 событий</b></div>
+          <div class="model-primary"><strong id="stat30Hit">—</strong><span>фактический hit rate</span></div>
+          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat30Predicted">—</strong></div><div><span>Brier</span><strong id="stat30Brier">—</strong></div></div>
+        </article>
+        <article class="calibration-card">
+          <div class="mini-card-head"><span>Calibration guard</span><b id="guardStatus">—</b></div>
+          <div class="guard-row"><span>Доп. запас неопределённости</span><strong id="guardMargin">—</strong></div>
+          <div class="guard-row"><span>Коррекция тоталов</span><strong id="totalHaircut">—</strong></div>
+          <div class="guard-row"><span>Ставки на банк</span><strong id="bankrollGuard">—</strong></div>
+          <p id="guardExplanation">Система может только ужесточать риск при плохой калибровке — не повышать вероятность искусственно.</p>
+        </article>
+      </div>
+    </section>
+
     <section class="section shell" id="results">
       <header class="section-head">
-        <div><span class="section-kicker">04</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
+        <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
       </header>
       <div class="results-layout">
         <article class="bank-card">
@@ -108,7 +182,7 @@
   </footer>
 
   <nav class="mobile-nav" aria-label="Мобильная навигация">
-    <a href="#overview">Обзор</a><a href="#matches">Матчи</a><a href="#expresses">Экспрессы</a><a href="#results">Итоги</a>
+    <a href="#overview">Обзор</a><a href="#matches">Матчи</a><a href="#model">Модель</a><a href="#results">Итоги</a>
   </nav>
 
   <dialog class="detail-dialog" id="detailDialog">
@@ -117,6 +191,6 @@
   </dialog>
 
   <script src="assets/runtime-config.js?v=cf-final-utf8"></script>
-  <script src="assets/app.js?v=15.7.1-pages-local-first"></script>
+  <script src="assets/app.js?v=16.1.0-intelligence"></script>
 </body>
 </html>
