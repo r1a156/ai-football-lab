@@ -3634,6 +3634,134 @@ def release_expired_previous_day(
     }
 
 
+def derive_calibration_guard(state: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    """Conservative rolling guard for live HYBRID/FULL evidence.
+
+    The guard may only add uncertainty or disable bankroll exposure. It never
+    raises a probability and never loosens the configured production floors.
+    Small samples are shrunk toward no-change so one bad day cannot retune the
+    model aggressively.
+    """
+    rows = [
+        row for row in state.get("analysisHistory") or []
+        if isinstance(row, dict)
+        and str(row.get("status") or "") in {"won", "lost"}
+        and str(row.get("dataTier") or "").upper() in {"HYBRID", "FULL"}
+    ]
+    rows.sort(key=lambda row: str(
+        row.get("settledAt")
+        or row.get("resultUpdatedAt")
+        or row.get("commenceTime")
+        or ""
+    ))
+    window_size = max(20, safe_int(config.get("calibrationRollingWindow"), 60))
+    rows = rows[-window_size:]
+
+    def metrics(items: list[dict[str, Any]]) -> dict[str, Any]:
+        n = len(items)
+        if not n:
+            return {
+                "n": 0, "wins": 0, "hitRate": None, "avgPredicted": None,
+                "brier": None, "overconfidence": None, "shrunkOverconfidence": 0.0,
+            }
+        wins = sum(1 for row in items if str(row.get("status")) == "won")
+        probabilities = [
+            clamp(
+                safe_float(
+                    row.get("conservativeProbability"),
+                    safe_float(row.get("probability"), 0.5),
+                ),
+                0.01,
+                0.99,
+            )
+            for row in items
+        ]
+        hit_rate = wins / n
+        avg_predicted = sum(probabilities) / n
+        brier = sum(
+            (probability - (1.0 if str(row.get("status")) == "won" else 0.0)) ** 2
+            for probability, row in zip(probabilities, items)
+        ) / n
+        overconfidence = max(0.0, avg_predicted - hit_rate)
+        shrink = n / (n + max(1, safe_int(config.get("calibrationPriorStrength"), 20)))
+        shrunk = overconfidence * shrink
+        return {
+            "n": n,
+            "wins": wins,
+            "losses": n - wins,
+            "hitRate": round(hit_rate, 6),
+            "avgPredicted": round(avg_predicted, 6),
+            "brier": round(brier, 6),
+            "overconfidence": round(overconfidence, 6),
+            "shrunkOverconfidence": round(shrunk, 6),
+        }
+
+    overall = metrics(rows)
+    n = safe_int(overall.get("n"), 0)
+    if n < 10:
+        base_margin = 0.025
+    elif n < 20:
+        base_margin = 0.020
+    elif n < 40:
+        base_margin = 0.010
+    else:
+        base_margin = 0.0
+
+    shrunk_gap = safe_float(overall.get("shrunkOverconfidence"), 0.0)
+    brier = safe_float(overall.get("brier"), 0.0)
+    additional_margin = base_margin + max(0.0, shrunk_gap - 0.02) * 0.35
+    if n >= 8 and brier > 0.27:
+        additional_margin += 0.01
+    additional_margin = round(clamp(additional_margin, 0.0, 0.06), 6)
+
+    family_haircuts: dict[str, float] = {}
+    family_metrics: dict[str, Any] = {}
+    families = sorted({
+        str(row.get("marketFamily") or row.get("marketKey") or "OTHER").upper()
+        for row in rows
+    })
+    for family in families:
+        family_rows = [
+            row for row in rows
+            if str(row.get("marketFamily") or row.get("marketKey") or "OTHER").upper() == family
+        ]
+        fm = metrics(family_rows)
+        family_metrics[family] = fm
+        if safe_int(fm.get("n"), 0) >= 6:
+            family_gap = safe_float(fm.get("shrunkOverconfidence"), 0.0)
+            family_haircuts[family] = round(
+                clamp(max(0.0, family_gap - 0.02) * 0.30, 0.0, 0.04),
+                6,
+            )
+
+    bankroll_allowed = (
+        n >= max(30, safe_int(config.get("calibrationMinimumBankrollSample"), 30))
+        and brier <= safe_float(config.get("calibrationMaximumBankrollBrier"), 0.255)
+        and safe_float(overall.get("overconfidence"), 1.0)
+            <= safe_float(config.get("calibrationMaximumBankrollGap"), 0.05)
+    )
+
+    if n < 10:
+        mode = "LEARNING_GUARD"
+    elif additional_margin >= 0.03:
+        mode = "DEFENSIVE"
+    elif additional_margin > 0:
+        mode = "CAUTIOUS"
+    else:
+        mode = "CALIBRATED"
+
+    return {
+        "mode": mode,
+        "rollingWindow": window_size,
+        "overall": overall,
+        "marketFamilies": family_metrics,
+        "additionalUncertaintyMargin": additional_margin,
+        "marketFamilyHaircuts": family_haircuts,
+        "bankrollAllowed": bankroll_allowed,
+        "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS",
+    }
+
+
 def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> bool:
     meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
     if not bool(meta.get("bootstrapPreview")):
@@ -3695,6 +3823,16 @@ def publish_generation() -> int:
     validate_config(config)
     now = now_utc()
     state = ensure_r15_state(load_json(STATE_PATH, {}), config, now)
+    calibration_guard = derive_calibration_guard(state, config)
+    config = copy.deepcopy(config)
+    config["dynamicUncertaintyMargin"] = safe_float(calibration_guard.get("additionalUncertaintyMargin"), 0.0)
+    config["dynamicMarketFamilyHaircuts"] = copy.deepcopy(calibration_guard.get("marketFamilyHaircuts") or {})
+    config["expressBankrollAllowed"] = bool(calibration_guard.get("bankrollAllowed"))
+    state.setdefault("meta", {})["calibrationGuard"] = copy.deepcopy(calibration_guard)
+    print(f"R15_CALIBRATION_MODE={calibration_guard.get('mode')}")
+    print(f"R15_CALIBRATION_SAMPLE={safe_int((calibration_guard.get('overall') or {}).get('n'), 0)}")
+    print(f"R15_CALIBRATION_EXTRA_MARGIN={safe_float(calibration_guard.get('additionalUncertaintyMargin'), 0.0):.4f}")
+    print(f"R15_CALIBRATION_BANKROLL_ALLOWED={'YES' if calibration_guard.get('bankrollAllowed') else 'NO'}")
     activation = daily_auditor.activation_gate(now)
     bootstrap_preview = str(os.getenv("R15_BOOTSTRAP_PREVIEW", "")).strip().lower() in {"1", "true", "yes", "on"}
     recovery_day = str(os.getenv("R15_RECOVERY_DAY", "")).strip().lower() in {"1", "true", "yes", "on"}
@@ -4179,7 +4317,8 @@ def publish_generation() -> int:
         "russianNames": russian_names_result,
         "fonbetGate": fonbet_result,
         "dailyCloudflare Workers AIAudit": daily_audit,
-        "topSingles": 3,
+        "calibrationGuard": calibration_guard,
+        "topSingles": len(best),
     })
     state.pop("nextPortfolio", None)
     state.setdefault("meta", {})["nextPortfolioStatus"] = "PUBLISHED"
@@ -4206,12 +4345,12 @@ def publish_generation() -> int:
             "recoveryThresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
             "recoveryStrictProductionThresholdsChanged": False,
             "bootstrapPreview": True,
-            "bootstrapPreviewBankEngaged": True,
+            "bootstrapPreviewBankEngaged": False,
             "publicationPolicy": "STRICT_24H_CURRENT_DAY_RECOVERY_WITH_REAL_EVENTS_ONLY",
         })
         report["diagnostics"]["recoveryDay"] = {
             "enabled": True,
-            "bankEngaged": True,
+            "bankEngaged": False,
             "thresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
             "strictProductionThresholdsChanged": False,
         }
@@ -4235,7 +4374,7 @@ def publish_generation() -> int:
         print("FINAL_STATUS=GREEN_R15F_BOOTSTRAP_PREVIEW_PUBLISHED")
     elif recovery_day:
         print("R15F_RECOVERY_DAY=GREEN")
-        print("R15F_RECOVERY_DAY_BANK_ENGAGED=YES")
+        print("R15F_RECOVERY_DAY_BANK_ENGAGED=NO")
         print("FINAL_STATUS=GREEN_R15F_RECOVERY_DAY_PUBLISHED")
     else:
         print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_EXPRESS_PUBLISHED")
