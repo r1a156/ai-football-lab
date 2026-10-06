@@ -2958,8 +2958,8 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
     usable_records = list(records[: group_count * 5])
     bank = ensure_express_bank(state, config, now)
     current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
-    stake_percent = safe_float(config.get("expressStakePercent"), 10.0)
-    stake = round(current * stake_percent / 100.0, 2)
+    configured_stake_percent = safe_float(config.get("expressStakePercent"), 2.0)
+    recovery_mode = any(str(row.get("publicationMode") or "") == "RECOVERY_DAY" for row in usable_records)
     if group_count == 3 and len(usable_records) == 15:
         deterministic_groups = balanced_groups(usable_records)
     else:
@@ -3027,6 +3027,16 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
             row["expressLegNumber"] = leg_index
         combined_odds = round(combined_odds, 3)
         joint_probability = round(joint_probability, 6)
+        conservative_expected_value = round(joint_probability * combined_odds - 1.0, 6)
+        minimum_ev = safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03)
+        bankroll_enabled = (not recovery_mode) and conservative_expected_value >= minimum_ev
+        stake_percent = configured_stake_percent if bankroll_enabled else 0.0
+        stake = round(current * stake_percent / 100.0, 2)
+        financial_mode = (
+            "RECOVERY_INFORMATIONAL_NO_BANK"
+            if recovery_mode
+            else ("EXPRESS_POSITIVE_EV" if bankroll_enabled else "EXPRESS_INFORMATIONAL_NO_BANK")
+        )
         result.append({
             "id": express_id,
             "label": labels[group_index],
@@ -3041,12 +3051,16 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
             "settledCombinedOdds": None,
             "jointProbability": joint_probability,
             "jointProbabilityPercent": round(joint_probability * 100.0, 2),
+            "conservativeExpectedValue": conservative_expected_value,
+            "conservativeExpectedValuePercent": round(conservative_expected_value * 100.0, 2),
+            "breakEvenProbability": round(1.0 / combined_odds, 6) if combined_odds > 0 else None,
+            "bankrollEnabled": bankroll_enabled,
             "stakePercent": stake_percent,
             "stake": stake,
             "potentialPayout": round(stake * combined_odds, 2),
             "potentialProfit": round(stake * (combined_odds - 1.0), 2),
             "profit": 0.0,
-            "financialMode": "EXPRESS",
+            "financialMode": financial_mode,
             "bankPolicy": R15_EXPRESS_POLICY,
         })
     state["expresses"] = result
@@ -4216,8 +4230,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError(f"R15 config keys missing: {missing}")
     if safe_int(config.get("expressCount")) != 3 or safe_int(config.get("expressLegsPerTicket")) != 5:
         raise RuntimeError("R15 requires three expresses of five legs")
-    if safe_float(config.get("expressStakePercent")) != 10.0:
-        raise RuntimeError("R15 express stake must be ten percent")
+    if safe_float(config.get("expressStakePercent")) != 2.0:
+        raise RuntimeError("R15 express nominal stake must be two percent")
     if safe_float(config.get("expressStartingBank")) != 10000.0:
         raise RuntimeError("R15 express starting bank must be 10000")
     if safe_int(config.get("operationalWindowSearchDays"), 1) != 1:
@@ -4263,9 +4277,13 @@ def validate_state() -> int:
             if len(legs) != 5:
                 raise RuntimeError("Every R15 express must contain five legs")
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
-            expected_stake_percent = 0.0 if (bootstrap_preview and not recovery_day) else 10.0
+            expected_ev = safe_float(express.get("conservativeExpectedValue"), -1.0)
+            bankroll_enabled = bool(express.get("bankrollEnabled"))
+            expected_stake_percent = 0.0 if (recovery_day or (bootstrap_preview and not recovery_day) or not bankroll_enabled) else safe_float(config.get("expressStakePercent"), 2.0)
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
-                raise RuntimeError("R15 express stake percent changed")
+                raise RuntimeError("R15 express stake percent violates risk policy")
+            if bankroll_enabled and expected_ev < safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03):
+                raise RuntimeError("R15 express bank enabled without positive conservative EV")
         if len(leg_ids) != len(expresses) * 5 or len(set(leg_ids)) != len(leg_ids):
             raise RuntimeError("R15 express legs must be unique five-leg groups")
         daily_ids = {str(row.get("id") or "") for row in daily}
@@ -4416,8 +4434,8 @@ def self_test() -> int:
     state["expresses"] = build_expresses(records, state, config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
-    if abs(safe_float(state["expressBank"].get("placedAmount")) - 3000.0) > 0.01:
-        raise RuntimeError("SELF_TEST express exposure must be 3000")
+    if safe_float(state["expressBank"].get("placedAmount")) > 600.01:
+        raise RuntimeError("SELF_TEST express exposure exceeds 6 percent of bank")
     for row in state["dailyAnalysis"]:
         row["status"] = "won"
         row["score"] = "2:1"
@@ -4444,7 +4462,7 @@ def self_test() -> int:
     print("R15_SYNTHETIC_EXPRESSES=3")
     print("R15_SYNTHETIC_LEGS=15")
     print("R15_EXPRESS_STARTING_BANK=10000")
-    print("R15_EXPRESS_EXPOSURE=3000")
+    print("R15_EXPRESS_MAX_EXPOSURE=600")
     print("R15_ASIAN_MARKETS=REMOVED")
     print("R15_RUSSIAN_MATCHES=REMOVED")
     print("R15_MARKET_ONLY_STRATEGY=FORBIDDEN")
