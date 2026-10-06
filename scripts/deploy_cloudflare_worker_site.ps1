@@ -59,7 +59,7 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
 
         $publicAnalysis = @($publicState.dailyAnalysis).Count
         $publicExpresses = @($publicState.expresses).Count
-        $newLoader = $publicIndex -match "15\.6\.2-strict-day-rollover"
+        $newLoader = $publicIndex -match "15\.6\.3-autonomous-state"
 
         $expectedPublicExpresses = [Math]::Min(3, [Math]::Floor($publicAnalysis / 5))
         if ($publicAnalysis -ge 1 -and $publicAnalysis -le 15 -and $publicExpresses -eq $expectedPublicExpresses -and $newLoader) {
@@ -67,7 +67,7 @@ for ($attempt = 1; $attempt -le 5; $attempt++) {
             Write-Host "PUBLIC_VERIFY=GREEN"
             Write-Host "PUBLIC_ANALYSIS=$publicAnalysis"
             Write-Host "PUBLIC_EXPRESSES=$publicExpresses"
-            Write-Host "PUBLIC_LOADER=15.6.2-strict-day-rollover"
+            Write-Host "PUBLIC_LOADER=15.6.3-autonomous-state"
             Write-Host "PUBLIC_URL=$deploymentUrl"
             break
         }
