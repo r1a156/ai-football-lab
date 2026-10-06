@@ -1714,3 +1714,225 @@ h2{
   .smart-empty{padding:22px}
   .smart-empty strong{font-size:19px}
 }
+
+
+/* V16.2 grid + bank repair: final overrides */
+.results-layout-v2{
+  grid-template-columns:minmax(360px,.92fr) minmax(0,1.08fr);
+  align-items:start;
+}
+.bank-stack{
+  display:grid;
+  gap:14px;
+}
+.bank-stack .bank-card{
+  min-height:auto;
+}
+.bank-card-model{
+  border-color:rgba(126,240,197,.10);
+  background:
+    radial-gradient(300px 190px at 100% 0%,rgba(126,240,197,.075),transparent 72%),
+    linear-gradient(145deg,rgba(15,21,29,.96),rgba(8,11,16,.985));
+}
+.bank-card-express{
+  border-color:rgba(217,193,139,.10);
+}
+.bank-method{
+  position:relative;
+  z-index:1;
+  margin:16px 0 0;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.05);
+  color:#737e8c;
+  font-size:9px;
+  line-height:1.55;
+}
+.bank-card-model .bank-grid,
+.bank-card-express .bank-grid{
+  margin-top:26px;
+}
+.match-card{
+  grid-template-columns:48px minmax(0,1fr) minmax(390px,.95fr) 24px !important;
+  grid-auto-rows:auto;
+  gap:18px !important;
+  align-items:center;
+  min-height:118px;
+}
+.match-card>.rank{
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+.match-card>.match-main{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0;
+}
+.match-side{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(130px,.72fr) minmax(230px,1.28fr);
+  align-items:center;
+  gap:18px;
+}
+.match-card .pick{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  min-width:0;
+}
+.match-card .signal-cluster{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  min-width:0;
+}
+.match-card>.chevron{
+  grid-column:4 !important;
+  grid-row:1 !important;
+}
+.match-card .teams{
+  flex-wrap:wrap;
+}
+.match-card .teams span{
+  max-width:calc(50% - 14px);
+}
+.match-card .match-why{
+  max-width:760px;
+}
+.signal-cluster{
+  align-items:center;
+}
+.signal{
+  min-width:0;
+}
+.signal b{
+  white-space:nowrap;
+}
+.bank-strip{
+  border-color:rgba(126,240,197,.16);
+  background:linear-gradient(135deg,rgba(126,240,197,.09),rgba(126,240,197,.025));
+}
+.bank-strip span::after{
+  content:" модели";
+}
+@media(max-width:1180px){
+  .match-card{
+    grid-template-columns:46px minmax(0,1fr) 24px !important;
+    align-items:start;
+  }
+  .match-card>.rank{
+    grid-column:1 !important;
+    grid-row:1 / span 2 !important;
+  }
+  .match-card>.match-main{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+  .match-side{
+    grid-column:2 !important;
+    grid-row:2 !important;
+    margin-top:11px;
+    grid-template-columns:minmax(130px,.52fr) minmax(260px,1.48fr);
+  }
+  .match-card>.chevron{
+    grid-column:3 !important;
+    grid-row:1 / span 2 !important;
+    align-self:center;
+  }
+}
+@media(max-width:900px){
+  .results-layout-v2{
+    grid-template-columns:1fr;
+  }
+  .bank-stack{
+    grid-template-columns:1fr 1fr;
+  }
+  .history-card{
+    min-height:auto;
+  }
+  .match-side{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .signal-cluster{
+    max-width:520px;
+  }
+}
+@media(max-width:680px){
+  .bank-stack{
+    grid-template-columns:1fr;
+  }
+  .match-card{
+    grid-template-columns:38px minmax(0,1fr) 22px !important;
+    gap:10px !important;
+    min-height:unset;
+    padding:13px 11px;
+  }
+  .match-card>.rank{
+    grid-column:1 !important;
+    grid-row:1 / span 2 !important;
+    width:36px;
+    height:36px;
+  }
+  .match-card>.match-main{
+    grid-column:2 !important;
+    grid-row:1 !important;
+  }
+  .match-side{
+    grid-column:2 !important;
+    grid-row:2 !important;
+    margin-top:10px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .match-card>.chevron{
+    grid-column:3 !important;
+    grid-row:1 / span 2 !important;
+    align-self:center;
+  }
+  .signal-cluster{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px;
+  }
+  .signal{
+    padding:8px;
+    border:1px solid rgba(255,255,255,.045);
+    border-radius:10px;
+    background:rgba(255,255,255,.012);
+  }
+  .signal span{
+    font-size:7px;
+  }
+  .signal b{
+    font-size:10px;
+  }
+  .match-card .teams{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:2px;
+  }
+  .match-card .teams span{
+    max-width:100%;
+  }
+  .match-card .teams i{
+    display:none;
+  }
+  .match-card .match-why{
+    margin-top:5px;
+  }
+}
+@media(max-width:430px){
+  .signal-cluster{
+    grid-template-columns:1fr;
+  }
+  .signal{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:8px;
+  }
+  .signal i{
+    grid-column:1 / -1;
+  }
+}
