@@ -3251,7 +3251,12 @@ def settle_current() -> int:
     state = ensure_r15_state(raw_state, config, now)
     before = json_fingerprint(state)
     state_meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
-    if bool(state_meta.get("bootstrapPreview")) and not bool(state_meta.get("recoveryDay")):
+    current_records = [
+        row for row in state.get("dailyAnalysis") or []
+        if isinstance(row, dict)
+    ]
+    recovery_day = bool(state_meta.get("recoveryDay"))
+    if bool(state_meta.get("bootstrapPreview")) and not recovery_day:
         print("R15_BOOTSTRAP_PREVIEW_SETTLEMENT=SKIPPED")
         print("R15_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
         print("FINAL_STATUS=GREEN_R15_BOOTSTRAP_PREVIEW_SETTLEMENT_SKIPPED")
