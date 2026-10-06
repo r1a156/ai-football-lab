@@ -786,13 +786,40 @@ def form_summary(
             "opponentElo": 1500.0,
             "freshnessDays": 999.0,
             "restDays": None,
+            "recentMatches": 0,
+            "effectiveSample": 0.0,
+            "maximumWeightShare": 0.0,
+            "recencyHalfLifeDays": 0.0,
         }
-    weighted: list[tuple[dict[str, Any], float]] = []
+    age_rows: list[tuple[dict[str, Any], float, int]] = []
+    recent_window_days = max(30, safe_int(config.get("formSparseRecentWindowDays"), 90))
+    minimum_recent = max(2, safe_int(config.get("formSparseMinimumRecentMatches"), 3))
     for index, row in enumerate(selected):
         when = parse_time(row.get("utcDate")) or now - dt.timedelta(days=365)
         age_days = max(0.0, (now - when).total_seconds() / 86400.0)
-        weight = (0.5 ** (age_days / 70.0)) * (0.965 ** index)
+        age_rows.append((row, age_days, index))
+    recent_matches = sum(1 for _, age_days, _ in age_rows if age_days <= recent_window_days)
+    regular_half_life = max(30.0, safe_float(config.get("formRecencyHalfLifeDays"), 70.0))
+    sparse_half_life = max(regular_half_life, safe_float(config.get("formSparseHalfLifeDays"), 365.0))
+    half_life = regular_half_life if recent_matches >= minimum_recent else sparse_half_life
+    minimum_relative_weight = clamp(safe_float(config.get("formMinimumRelativeWeight"), 0.04), 0.0, 0.25)
+
+    weighted: list[tuple[dict[str, Any], float]] = []
+    for row, age_days, index in age_rows:
+        weight = max(
+            minimum_relative_weight,
+            (0.5 ** (age_days / half_life)) * (0.965 ** index),
+        )
         weighted.append((row, weight))
+
+    total_weight = sum(weight for _, weight in weighted)
+    normalized_weights = [weight / total_weight for _, weight in weighted] if total_weight > 0 else []
+    effective_sample = (
+        1.0 / sum(weight * weight for weight in normalized_weights)
+        if normalized_weights and sum(weight * weight for weight in normalized_weights) > 0
+        else 0.0
+    )
+    maximum_weight_share = max(normalized_weights, default=0.0)
 
     def wmetric(fn, default=0.0):
         return weighted_mean([(float(fn(row)), weight) for row, weight in weighted], default)
@@ -826,6 +853,10 @@ def form_summary(
         "opponentElo": round(wmetric(lambda row: safe_float(row.get("opponentElo"), 1500.0), 1500.0), 2),
         "freshnessDays": round(freshness, 2),
         "restDays": round(freshness, 2),
+        "recentMatches": recent_matches,
+        "effectiveSample": round(effective_sample, 3),
+        "maximumWeightShare": round(maximum_weight_share, 4),
+        "recencyHalfLifeDays": round(half_life, 1),
     }
 
 
@@ -936,24 +967,53 @@ def build_match_model(
 
         sample = min(home20["matches"], away20["matches"])
         venue_sample = min(home_venue["matches"], away_venue["matches"])
+        effective_sample = min(
+            safe_float(home20.get("effectiveSample"), 0.0),
+            safe_float(away20.get("effectiveSample"), 0.0),
+        )
+        effective_venue_sample = min(
+            safe_float(home_venue.get("effectiveSample"), 0.0),
+            safe_float(away_venue.get("effectiveSample"), 0.0),
+        )
+        sparse_recent = min(
+            safe_int(home10.get("recentMatches"), 0),
+            safe_int(away10.get("recentMatches"), 0),
+        )
         freshness = max(home10["freshnessDays"], away10["freshnessDays"])
         match_quality = min(home_match_score, away_match_score)
         quality = 40.0
-        quality += min(24.0, sample * 1.5)
-        quality += min(12.0, venue_sample * 1.8)
+        quality += min(22.0, effective_sample * 2.0)
+        quality += min(10.0, effective_venue_sample * 2.0)
         quality += match_quality * 12.0
         quality += 7.0 if context.get("cacheMeta", {}).get("complete") else 2.0
         quality -= max(0.0, freshness - 14.0) * 0.30
+        if sparse_recent < max(2, safe_int(config.get("formSparseMinimumRecentMatches"), 3)):
+            quality -= 6.0
         data_quality = clamp(quality, 40.0, 96.0)
-        if sample >= 12 and venue_sample >= 5 and match_quality >= 0.90 and freshness <= 35:
+        minimum_effective = max(2.0, safe_float(config.get("formMinimumEffectiveSample"), 3.0))
+        if (
+            sample >= 12
+            and venue_sample >= 5
+            and effective_sample >= max(8.0, minimum_effective)
+            and effective_venue_sample >= 4.0
+            and sparse_recent >= 3
+            and match_quality >= 0.90
+            and freshness <= 35
+        ):
             data_tier = "FULL"
-            stat_weight = 0.74
-        elif sample >= 8 and venue_sample >= 3 and match_quality >= 0.82:
+            stat_weight = 0.72
+        elif (
+            sample >= 8
+            and venue_sample >= 3
+            and effective_sample >= max(5.0, minimum_effective)
+            and sparse_recent >= 2
+            and match_quality >= 0.82
+        ):
             data_tier = "HYBRID"
-            stat_weight = 0.58
+            stat_weight = 0.54
         else:
             data_tier = "HYBRID"
-            stat_weight = 0.46
+            stat_weight = 0.38
         home_lambda = clamp(market_home * (1 - stat_weight) + stat_home * stat_weight, 0.20, 4.5)
         away_lambda = clamp(market_away * (1 - stat_weight) + stat_away * stat_weight, 0.20, 4.5)
 
@@ -964,7 +1024,7 @@ def build_match_model(
             f"Гости: {away10['gf']:.2f} забито и {away10['ga']:.2f} пропущено за 10 матчей",
             f"Дом/выезд: {home_venue['matches']} и {away_venue['matches']} релевантных матчей",
             f"Elo: {home_elo:.0f} против {away_elo:.0f}",
-            f"История: {sample} матчей на команду, свежесть {freshness:.0f} дней",
+            f"История: {sample} матчей, эффективная выборка {effective_sample:.1f}, свежих в окне {sparse_recent}",
         ]
         components.update({
             "historyAvailable": True,
@@ -992,6 +1052,10 @@ def build_match_model(
             "marketExpectedTotal": round(market_total, 4),
             "statExpectedTotal": round(stat_home + stat_away, 4),
             "teamNameMatch": round(match_quality, 3),
+            "effectiveHistorySample": round(effective_sample, 3),
+            "effectiveVenueSample": round(effective_venue_sample, 3),
+            "recentHistoryMatches": sparse_recent,
+            "historyRobustnessPolicy": "ADAPTIVE_RECENCY_DECAY_EFFECTIVE_SAMPLE",
         })
 
     matrix = core.score_matrix(home_lambda, away_lambda, 10)
@@ -4723,6 +4787,7 @@ def self_test() -> int:
     print("R15_MARKET_ONLY_STRATEGY=FORBIDDEN")
     print("R15_CORE_QUALIFICATION_GUARD=YES")
     print("R15_HARD_MIN_ODDS=1.55")
+    print("R15_ADAPTIVE_FORM_DECAY=YES")
     print("R15_STRICT_08_TO_08=YES")
     return 0
 

@@ -1,5 +1,5 @@
 {
-  "version": 34,
+  "version": 35,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -410,5 +410,11 @@
   "calibrationMinimumBankrollSample": 30,
   "calibrationMaximumBankrollBrier": 0.255,
   "calibrationMaximumBankrollGap": 0.05,
-  "requireCoreQualification": true
+  "requireCoreQualification": true,
+  "formRecencyHalfLifeDays": 70,
+  "formSparseHalfLifeDays": 365,
+  "formSparseRecentWindowDays": 90,
+  "formSparseMinimumRecentMatches": 3,
+  "formMinimumRelativeWeight": 0.04,
+  "formMinimumEffectiveSample": 3
 }
