@@ -3756,8 +3756,12 @@ def publish_generation() -> int:
         print("R15_GENERATION_BLOCKED_ACTIVE_PREVIOUS_BATCH=YES")
         return 0
 
+    odds_activation_threshold = safe_int(config.get("oddsBackupActivationThreshold"), 4)
+    if recovery_day and not current_records:
+        odds_activation_threshold = 1_000_000
+        print("R15_RECOVERY_GENERATION_BACKUP_PREFERRED=YES")
     odds_key, odds_key_selection = core.select_odds_api_key(
-        activation_threshold=safe_int(config.get("oddsBackupActivationThreshold"), 4),
+        activation_threshold=odds_activation_threshold,
     )
     football_key = os.getenv("FOOTBALL_DATA_API_KEY", "").strip() or None
     cloudflare_ai_key = os.getenv("CLOUDFLARE_AI_ACCESS_TOKEN", "").strip() or None
