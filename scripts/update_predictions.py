@@ -2661,8 +2661,8 @@ def evaluate_event_markets(
         if data_tier == "MARKET":
             model_probability = min(model_probability, market_probability + 0.03)
 
-        edge = model_probability - market_probability
-        expected_value = model_probability * odds - 1.0
+        raw_model_edge = model_probability - market_probability
+        raw_model_expected_value = model_probability * odds - 1.0
         dispersion = safe_float(quote.get("marketDispersion"))
         disagreement = abs(statistical_probability - market_probability)
         agreement = clamp(100 - disagreement * 190 - dispersion * 280, 0, 100)
@@ -2690,6 +2690,10 @@ def evaluate_event_markets(
         uncertainty_margin += max(0, 4 - quote_count) * 0.008
         uncertainty_margin = clamp(uncertainty_margin, 0.02, 0.16)
         conservative_probability = clamp(model_probability - uncertainty_margin, 0.02, 0.96)
+        # All selection/risk decisions use the same conservative probability
+        # that is shown publicly. Raw model edge remains diagnostic only.
+        edge = conservative_probability - market_probability
+        expected_value = conservative_probability * odds - 1.0
 
         preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
         preferred_max = safe_float(config.get("preferredMaximumOdds"), 2.40)
@@ -2770,8 +2774,12 @@ def evaluate_event_markets(
             "uncertaintyMargin": round(uncertainty_margin, 6),
             "statisticalProbability": round(statistical_probability, 6),
             "marketProbability": round(market_probability, 6),
+            "rawModelEdge": round(raw_model_edge, 6),
+            "rawModelExpectedValue": round(raw_model_expected_value, 6),
             "edge": round(edge, 6),
+            "conservativeEdge": round(edge, 6),
             "expectedValue": round(expected_value, 6),
+            "conservativeExpectedValue": round(expected_value, 6),
             "confidence": round(conservative_probability * 100, 1),
             "dataTier": data_tier,
             "dataQuality": round(data_quality, 1),
