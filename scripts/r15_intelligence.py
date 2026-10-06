@@ -4439,11 +4439,18 @@ def self_test() -> int:
     for row in state["dailyAnalysis"]:
         row["status"] = "won"
         row["score"] = "2:1"
+    bankroll_enabled_before = [
+        row for row in state.get("expresses") or []
+        if bool(row.get("bankrollEnabled")) and safe_float(row.get("stake")) > 0
+    ]
     counters = sync_and_settle_expresses(state, now + dt.timedelta(days=1))
     if counters["won"] != 3:
         raise RuntimeError("SELF_TEST express settlement failed")
-    if safe_float(state["expressBank"].get("current")) <= 10000.0:
-        raise RuntimeError("SELF_TEST express bank did not increase")
+    current_after_win = safe_float(state["expressBank"].get("current"))
+    if bankroll_enabled_before and current_after_win <= 10000.0:
+        raise RuntimeError("SELF_TEST positive-EV express bank did not increase")
+    if not bankroll_enabled_before and current_after_win != 10000.0:
+        raise RuntimeError("SELF_TEST informational expresses changed bank")
     # Verify a losing leg loses only its express and does not mutate the legacy bank.
     state2 = ensure_r15_state({}, config, now)
     records2 = copy.deepcopy(records)
