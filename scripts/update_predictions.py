@@ -2683,12 +2683,22 @@ def evaluate_event_markets(
             100,
         )
 
+        family_key = str(quote.get("marketFamily") or quote.get("marketKey") or "OTHER").upper()
+        dynamic_family_haircuts = (
+            config.get("dynamicMarketFamilyHaircuts")
+            if isinstance(config.get("dynamicMarketFamilyHaircuts"), dict)
+            else {}
+        )
+        calibration_haircut = safe_float(config.get("dynamicUncertaintyMargin"), 0.0)
+        calibration_haircut += safe_float(dynamic_family_haircuts.get(family_key), 0.0)
+
         uncertainty_margin = uncertainty_base
         uncertainty_margin += max(0.0, 60.0 - data_quality) / 1000.0
         uncertainty_margin += max(0.0, 65.0 - agreement) / 900.0
         uncertainty_margin += max(0.0, 65.0 - market_stability) / 1100.0
         uncertainty_margin += max(0, 4 - quote_count) * 0.008
-        uncertainty_margin = clamp(uncertainty_margin, 0.02, 0.16)
+        uncertainty_margin += max(0.0, calibration_haircut)
+        uncertainty_margin = clamp(uncertainty_margin, 0.02, 0.20)
         conservative_probability = clamp(model_probability - uncertainty_margin, 0.02, 0.96)
         # All selection/risk decisions use the same conservative probability
         # that is shown publicly. Raw model edge remains diagnostic only.
@@ -2772,6 +2782,8 @@ def evaluate_event_markets(
             "modelProbability": round(model_probability, 6),
             "conservativeProbability": round(conservative_probability, 6),
             "uncertaintyMargin": round(uncertainty_margin, 6),
+            "calibrationHaircut": round(max(0.0, calibration_haircut), 6),
+            "calibrationMarketFamily": family_key,
             "statisticalProbability": round(statistical_probability, 6),
             "marketProbability": round(market_probability, 6),
             "rawModelEdge": round(raw_model_edge, 6),
