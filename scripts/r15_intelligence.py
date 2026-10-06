@@ -124,6 +124,7 @@ def json_fingerprint(value: Any) -> str:
 
 
 # V10_R15F_R3R7_PROGRESSIVE_PORTFOLIO_ACQUISITION
+# V10_R15F_R3R13_STRICT_24H_ROLLOVER_AND_PARTIAL_AVAILABILITY
 # The Moscow operational day remains the publication/accounting identity. Match
 # discovery may progressively extend beyond that day only to assemble one full
 # quality portfolio; every event retains its real commence time.
@@ -137,8 +138,11 @@ def operational_day(now: dt.datetime, config: dict[str, Any]) -> dict[str, Any]:
     end = start + dt.timedelta(hours=24)
     minimum_lead = dt.timedelta(minutes=safe_int(config.get("minimumLeadMinutes"), 45))
     query_start = max(now + minimum_lead, start.astimezone(UTC))
-    horizon_hours = max(24, min(120, safe_int(config.get("portfolioSearchHorizonHours"), 72)))
-    search_maximum_end = query_start + dt.timedelta(hours=horizon_hours)
+    # R3R13: public selection is strictly limited to the active Moscow
+    # operational day. Future days may be pre-fetched elsewhere, but they must
+    # never be published as part of today's portfolio.
+    horizon_hours = 24
+    search_maximum_end = end.astimezone(UTC)
     return {
         "operationalDayId": f"{start.date().isoformat()}-MSK-{hour:02d}00",
         "operationalDateLocal": start.date().isoformat(),
@@ -1095,7 +1099,7 @@ def discover_operational_events(
         "sportKeysWithEvents": len(by_sport),
         "eventsBySportKey": dict(by_sport),
         "errors": errors[-40:],
-        "policy": "PROGRESSIVE_CURRENT_WINDOW_THEN_FUTURE_24H_STAGES_UNTIL_TARGET_OR_HORIZON",
+        "policy": "STRICT_CURRENT_MOSCOW_OPERATIONAL_DAY_ONLY",
     }
     return ordered, diagnostics
 def sport_history_coverage(events: list[dict[str, Any]], context: dict[str, Any]) -> float:
@@ -2934,16 +2938,25 @@ def update_express_bank_metrics(state: dict[str, Any], now: dt.datetime) -> None
 
 
 def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config: dict[str, Any], now: dt.datetime, preferred_groups: dict[str, list[str]] | None = None) -> list[dict[str, Any]]:
-    if len(records) != 15:
-        raise RuntimeError(f"R15_EXPRESS_REQUIRES_15_LEGS={len(records)}")
+    group_count = min(3, len(records) // 5)
+    if group_count <= 0:
+        state["expresses"] = []
+        update_express_bank_metrics(state, now)
+        return []
+    usable_records = list(records[: group_count * 5])
     bank = ensure_express_bank(state, config, now)
     current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
     stake_percent = safe_float(config.get("expressStakePercent"), 10.0)
     stake = round(current * stake_percent / 100.0, 2)
-    deterministic_groups = balanced_groups(records)
+    if group_count == 3 and len(usable_records) == 15:
+        deterministic_groups = balanced_groups(usable_records)
+    else:
+        deterministic_groups = [[] for _ in range(group_count)]
+        for index, row in enumerate(usable_records):
+            deterministic_groups[index % group_count].append(row)
     groups = deterministic_groups
-    if isinstance(preferred_groups, dict):
-        by_event = {str(row.get("eventId") or ""): row for row in records}
+    if group_count == 3 and isinstance(preferred_groups, dict):
+        by_event = {str(row.get("eventId") or ""): row for row in usable_records}
         candidate_groups = []
         candidate_ids = []
         valid = True
@@ -2960,13 +2973,13 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
             if candidate_score <= deterministic_score * safe_float(config.get("cloudflareAiExpressBalanceTolerance"), 1.25):
                 groups = candidate_groups
     result = []
-    labels = ["Экспресс A", "Экспресс B", "Экспресс C"]
+    labels = ["Экспресс A", "Экспресс B", "Экспресс C"][:group_count]
     for group_index, group in enumerate(groups):
         group.sort(key=lambda row: str(row.get("commenceTime") or ""))
         combined_odds = 1.0
         joint_probability = 1.0
         legs = []
-        express_id = "express-" + stable_id(labels[group_index], records[0].get("publishedAt"), group_index)
+        express_id = "express-" + stable_id(labels[group_index], usable_records[0].get("publishedAt"), group_index)
         for leg_index, row in enumerate(group, start=1):
             odds = safe_float(row.get("bookmakerOdds"), 1.0)
             probability = safe_float(row.get("conservativeProbability"), row.get("modelProbability"))
@@ -3467,6 +3480,101 @@ def archive_legacy_publication_bridge(
     })
     return result
 
+def release_expired_previous_day(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    next_day: dict[str, Any],
+) -> dict[str, Any]:
+    """Archive an expired public day so it can never block the next one.
+
+    Historical/settlement records are preserved before the public slot is
+    released. This specifically prevents a prior bad multi-day recovery batch
+    from keeping the next Moscow day empty.
+    """
+    meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
+    current_day = str(meta.get("operationalDayId") or "")
+    next_day_id = str(next_day.get("operationalDayId") or "")
+    daily = [row for row in state.get("dailyAnalysis") or [] if isinstance(row, dict)]
+    if not daily or not current_day or current_day == next_day_id:
+        return {"released": False, "reason": "SAME_OR_EMPTY_DAY"}
+
+    previous_end = parse_time(meta.get("operationalWindowEnd"))
+    if previous_end is None or now < previous_end:
+        return {"released": False, "reason": "PREVIOUS_DAY_NOT_EXPIRED"}
+
+    best = [row for row in state.get("bestBets") or [] if isinstance(row, dict)]
+    core.append_new_records_to_history(state, daily, best, config)
+    archive_previous_expresses(state)
+
+    old_batch = copy.deepcopy(state.get("batch") or {})
+    rollover_history = state.setdefault("operationalDayRolloverHistory", [])
+    rollover_history.append({
+        "releasedAt": iso(now),
+        "reason": "EXPIRED_PREVIOUS_OPERATIONAL_DAY_RELEASED",
+        "oldOperationalDayId": current_day,
+        "oldOperationalWindowEnd": meta.get("operationalWindowEnd"),
+        "nextOperationalDayId": next_day_id,
+        "analysisCount": len(daily),
+        "terminalAnalysisCount": sum(
+            1 for row in daily if str(row.get("status") or "pending") in TERMINAL
+        ),
+        "pendingAnalysisCount": sum(
+            1 for row in daily if str(row.get("status") or "pending") not in TERMINAL
+        ),
+        "oldBatch": old_batch,
+    })
+    state["operationalDayRolloverHistory"] = rollover_history[-30:]
+
+    state["dailyAnalysis"] = []
+    state["bestBets"] = []
+    state["predictions"] = []
+    state["expresses"] = []
+    state["batch"] = {
+        "version": 1,
+        "id": "",
+        "sequence": safe_int(old_batch.get("sequence"), safe_int(meta.get("batchSequence"), 0)),
+        "status": "WAITING_FOR_NEXT_SELECTION",
+        "statusLabel": "Формируется подборка текущих суток",
+        "createdAt": None,
+        "updatedAt": iso(now),
+        "analysisCount": 0,
+        "bestBetsCount": 0,
+        "terminalAnalysisCount": 0,
+        "terminalBestBetsCount": 0,
+        "pendingAnalysisCount": 0,
+        "pendingBestBetsCount": 0,
+        "completed": True,
+        "placedAmount": 0.0,
+        "availableAmount": safe_float(
+            (state.get("expressBank") or {}).get("current"),
+            safe_float(config.get("expressStartingBank"), 10000.0),
+        ),
+        "startingBank": safe_float(
+            (state.get("expressBank") or {}).get("starting"),
+            safe_float(config.get("expressStartingBank"), 10000.0),
+        ),
+        "transitionReason": "EXPIRED_PREVIOUS_OPERATIONAL_DAY_RELEASED",
+    }
+    meta.update({
+        "status": "GENERATING_R15_PORTFOLIO",
+        "dataFreshness": "PREVIOUS_DAY_RELEASED",
+        "batchStatus": "WAITING_FOR_NEXT_SELECTION",
+        "batchStatusLabel": "Формируется подборка текущих суток",
+        "previousOperationalDayReleasedAt": iso(now),
+        "previousOperationalDayReleased": current_day,
+        "updatedAt": iso(now),
+    })
+    state["meta"] = meta
+    update_express_bank_metrics(state, now)
+    return {
+        "released": True,
+        "oldOperationalDayId": current_day,
+        "nextOperationalDayId": next_day_id,
+        "analysisCount": len(daily),
+    }
+
+
 def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> bool:
     meta = state.get("meta") if isinstance(state.get("meta"), dict) else {}
     if not bool(meta.get("bootstrapPreview")):
@@ -3573,6 +3681,14 @@ def publish_generation() -> int:
         print(f"R15_R3R5R1_ARCHIVED_BEST_BETS={bridge.get('bestBets', 0)}")
         print("R15_R3R5R1_ARCHIVE_VERIFICATION=CANONICAL_SETTLEMENT_KEYS")
         print("R15_R3R5R1_BANK_MUTATION=NO")
+
+    rollover = release_expired_previous_day(state, config, now, day)
+    if rollover.get("released"):
+        current_day = ""
+        current_records = []
+        print("R15_EXPIRED_PREVIOUS_DAY_RELEASED=YES")
+        print(f"R15_EXPIRED_PREVIOUS_DAY={rollover.get('oldOperationalDayId')}")
+        print(f"R15_NEXT_OPERATIONAL_DAY={rollover.get('nextOperationalDayId')}")
 
     if current_day == day["operationalDayId"] and current_records:
         print("R15_CURRENT_OPERATIONAL_DAY_ALREADY_PUBLISHED=YES")
@@ -3711,7 +3827,7 @@ def publish_generation() -> int:
         recovery_records, recovery_diag = build_bootstrap_preview_analysis(
             odds_events, advanced, context, state, recovery_config, now
         )
-        if len(recovery_records) == safe_int(config.get("dailyAnalysisTarget"), 15):
+        if recovery_records:
             for row in recovery_records:
                 row["publicationMode"] = "RECOVERY_DAY"
                 row["financialMode"] = "EXPRESS_LEG"
@@ -3776,8 +3892,8 @@ def publish_generation() -> int:
         "errors": [],
     }
 
-    if len(records) != 15:
-        clear_completed_current_batch(state, now, "INSUFFICIENT_QUALITY_EVENTS_IN_PROGRESSIVE_SEARCH_HORIZON")
+    if not records:
+        clear_completed_current_batch(state, now, "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY")
         state.setdefault("meta", {}).update({
             "sourceMarker": R15_MARKER,
             "status": "WAITING_FOR_QUALITY_SELECTION",
@@ -3958,12 +4074,13 @@ def publish_generation() -> int:
         "selectionStagesUsed": discovery.get("stagesUsed"),
         "operationalWindowPolicy": day["policy"],
         "selectionPolicy": discovery.get("policy"),
-        "analysisTarget": 15,
-        "analysisPublished": 15,
-        "bestBetsPublished": 3,
-        "expressesPublished": 3,
-        "expressLegsPublished": 15,
-        "soccerAnalyses": 15,
+        "analysisTarget": safe_int(config.get("dailyAnalysisTarget"), 15),
+        "analysisPublished": len(records),
+        "bestBetsPublished": len(best),
+        "expressesPublished": len(expresses),
+        "expressLegsPublished": sum(len(item.get("legs") or []) for item in expresses),
+        "soccerAnalyses": len(records),
+        "partialDailyPortfolio": len(records) < safe_int(config.get("dailyAnalysisTarget"), 15),
         "hockeyAnalyses": 0,
         "candidateMatchesAnalyzed": analysis_diag.get("eventsWithMarkets"),
         "cloudflareAiAuditStatus": daily_audit.get("status"),
@@ -3971,7 +4088,7 @@ def publish_generation() -> int:
         "cloudflareAiSchemaValid": bool(daily_audit.get("schemaValid")),
         "cloudflareAiLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
-        "publicationPolicy": "DAILY_MOSCOW_PUBLICATION_WITH_PROGRESSIVE_EVENT_HORIZON_FIFTEEN_QUALITY_MATCHES",
+        "publicationPolicy": "STRICT_24H_MOSCOW_DAY_UP_TO_FIFTEEN_REAL_QUALIFIED_MATCHES",
         "virtualBankPolicy": R15_EXPRESS_POLICY,
         "updatedAt": iso(now),
         "lastSuccessfulRefreshAt": iso(now),
@@ -3987,8 +4104,8 @@ def publish_generation() -> int:
         "updatedAt": iso(now),
     }
     report["diagnostics"].update({
-        "dailyAnalysis": 15,
-        "informationalTopThree": 3,
+        "dailyAnalysis": len(records),
+        "informationalTopThree": len(best),
         "expresses": len(expresses),
         "expressBank": state.get("expressBank"),
         "russianNames": russian_names_result,
@@ -4116,12 +4233,14 @@ def validate_state() -> int:
     bootstrap_preview = bool(validation_meta.get("bootstrapPreview"))
     recovery_day = bool(validation_meta.get("recoveryDay"))
     if is_r15_publication:
-        if len(daily) != 15:
-            raise RuntimeError(f"R15 daily analysis must be 15, got {len(daily)}")
-        if len(best) != 3:
-            raise RuntimeError(f"R15 informational top three must be 3, got {len(best)}")
-        if len(expresses) != 3:
-            raise RuntimeError(f"R15 expresses must be 3, got {len(expresses)}")
+        if not (1 <= len(daily) <= safe_int(config.get("dailyAnalysisTarget"), 15)):
+            raise RuntimeError(f"R15 daily analysis must contain 1..15 current-day rows, got {len(daily)}")
+        expected_best = min(3, len(daily))
+        if len(best) != expected_best:
+            raise RuntimeError(f"R15 informational top rows must be {expected_best}, got {len(best)}")
+        expected_expresses = min(3, len(daily) // 5)
+        if len(expresses) != expected_expresses:
+            raise RuntimeError(f"R15 expresses must be {expected_expresses}, got {len(expresses)}")
         event_ids = [str(row.get("eventId") or "") for row in daily]
         if any(not value for value in event_ids) or len(event_ids) != len(set(event_ids)):
             raise RuntimeError("R15 duplicate or missing event IDs")
@@ -4134,11 +4253,11 @@ def validate_state() -> int:
             expected_stake_percent = 0.0 if (bootstrap_preview and not recovery_day) else 10.0
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
                 raise RuntimeError("R15 express stake percent changed")
-        if len(leg_ids) != 15 or len(set(leg_ids)) != 15:
-            raise RuntimeError("R15 express legs must use every analysis exactly once")
+        if len(leg_ids) != len(expresses) * 5 or len(set(leg_ids)) != len(leg_ids):
+            raise RuntimeError("R15 express legs must be unique five-leg groups")
         daily_ids = {str(row.get("id") or "") for row in daily}
-        if set(leg_ids) != daily_ids:
-            raise RuntimeError("R15 express legs differ from daily analysis")
+        if not set(leg_ids).issubset(daily_ids):
+            raise RuntimeError("R15 express legs must come from daily analysis")
         for row in daily:
             if str(row.get("sport") or "") != "soccer":
                 raise RuntimeError("R15 contains non-football event")
