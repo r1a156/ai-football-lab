@@ -134,8 +134,8 @@
     const quality = current ? average(state.dailyAnalysis.map(row => number(row.dataQuality))) : 0;
     const bank = state.expressBank;
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
-    setText("summaryMatches", current ? "15" : "—");
-    setText("summaryExpresses", current ? "3" : "—");
+    setText("summaryMatches", current ? String(state.dailyAnalysis.length) : "—");
+    setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryQuality", current ? `${formatNumber(quality, 0)}/100` : "—");
     setText("summaryBank", currency(bank.current ?? bank.starting ?? 10000));
