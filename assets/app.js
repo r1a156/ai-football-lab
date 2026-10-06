@@ -4,6 +4,8 @@
   const API_BASE = String(globalThis.FOOTBALL_API_BASE || "").replace(/\/+$/, "");
   const LOCAL_STATE_URL = "data/state.json";
   const LOCAL_LIVE_URL = "data/live-state.json";
+  const RAW_STATE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/state.json";
+  const RAW_LIVE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/live-state.json";
   const STATE_URL = API_BASE ? `${API_BASE}/data/state.json` : LOCAL_STATE_URL;
   const LIVE_URL = API_BASE ? `${API_BASE}/data/live-state.json` : LOCAL_LIVE_URL;
   const MIN_QUALITY = 58;
@@ -41,48 +43,39 @@
   }
 
   async function loadBestState(stamp) {
-    let primary = null;
-    let local = null;
-    let primaryError = null;
-    try {
-      primary = normalize(await fetchJson(STATE_URL, stamp));
-    } catch (error) {
-      primaryError = error;
+    const urls = API_BASE
+      ? [STATE_URL, RAW_STATE_URL, LOCAL_STATE_URL]
+      : [RAW_STATE_URL, LOCAL_STATE_URL];
+    const candidates = [];
+    let lastError = null;
+    for (const url of urls) {
+      try {
+        candidates.push(normalize(await fetchJson(url, stamp)));
+      } catch (error) {
+        lastError = error;
+      }
     }
-    if (!API_BASE) {
-      if (primary) return primary;
-      throw primaryError || new Error("state unavailable");
-    }
-    try {
-      local = normalize(await fetchJson(LOCAL_STATE_URL, stamp));
-    } catch (error) {
-      if (!primaryError) primaryError = error;
-    }
-    if (primary && local) {
-      const primaryCurrent = isCurrentPortfolio(primary);
-      const localCurrent = isCurrentPortfolio(local);
-      if (localCurrent && !primaryCurrent) return local;
-      if (primaryCurrent && !localCurrent) return primary;
-      const primaryUpdated = Date.parse(primary.meta.updatedAt || "") || 0;
-      const localUpdated = Date.parse(local.meta.updatedAt || "") || 0;
-      return localUpdated > primaryUpdated ? local : primary;
-    }
-    if (primary) return primary;
-    if (local) return local;
-    throw primaryError || new Error("state unavailable");
+    if (!candidates.length) throw lastError || new Error("state unavailable");
+    candidates.sort((a, b) => {
+      const currentDelta = Number(isCurrentPortfolio(b)) - Number(isCurrentPortfolio(a));
+      if (currentDelta) return currentDelta;
+      const bUpdated = Date.parse(b.meta.updatedAt || "") || 0;
+      const aUpdated = Date.parse(a.meta.updatedAt || "") || 0;
+      return bUpdated - aUpdated;
+    });
+    return candidates[0];
   }
 
   async function loadLiveState(stamp) {
-    try {
-      return await fetchJson(LIVE_URL, stamp);
-    } catch (error) {
-      if (!API_BASE) return {};
+    const urls = API_BASE
+      ? [LIVE_URL, RAW_LIVE_URL, LOCAL_LIVE_URL]
+      : [RAW_LIVE_URL, LOCAL_LIVE_URL];
+    for (const url of urls) {
       try {
-        return await fetchJson(LOCAL_LIVE_URL, stamp);
-      } catch {
-        return {};
-      }
+        return await fetchJson(url, stamp);
+      } catch {}
     }
+    return {};
   }
 
   function normalize(value) {
