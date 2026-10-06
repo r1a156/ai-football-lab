@@ -761,7 +761,9 @@ def form_summary(
     *,
     side: str | None = None,
     limit: int = 20,
+    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    config = config or {}
     selected = [row for row in games if side is None or row.get("side") == side][:limit]
     if not selected:
         return {
@@ -906,14 +908,14 @@ def build_match_model(
     if home_id and away_id:
         home_games = list(context.get("teamGames", {}).get(home_id) or [])
         away_games = list(context.get("teamGames", {}).get(away_id) or [])
-        home5 = form_summary(home_games, now, limit=5)
-        home10 = form_summary(home_games, now, limit=10)
-        home20 = form_summary(home_games, now, limit=20)
-        home_venue = form_summary(home_games, now, side="home", limit=10)
-        away5 = form_summary(away_games, now, limit=5)
-        away10 = form_summary(away_games, now, limit=10)
-        away20 = form_summary(away_games, now, limit=20)
-        away_venue = form_summary(away_games, now, side="away", limit=10)
+        home5 = form_summary(home_games, now, limit=5, config=config)
+        home10 = form_summary(home_games, now, limit=10, config=config)
+        home20 = form_summary(home_games, now, limit=20, config=config)
+        home_venue = form_summary(home_games, now, side="home", limit=10, config=config)
+        away5 = form_summary(away_games, now, limit=5, config=config)
+        away10 = form_summary(away_games, now, limit=10, config=config)
+        away20 = form_summary(away_games, now, limit=20, config=config)
+        away_venue = form_summary(away_games, now, side="away", limit=10, config=config)
         league = league_profile(str(event.get("sport_title") or ""), context)
         league_home = safe_float(league.get("homeGoals"), 1.45)
         league_away = safe_float(league.get("awayGoals"), 1.15)
