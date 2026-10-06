@@ -4,18 +4,22 @@
   const API_BASE = String(globalThis.FOOTBALL_API_BASE || "").replace(/\/+$/, "");
   const LOCAL_STATE_URL = "data/state.json";
   const LOCAL_LIVE_URL = "data/live-state.json";
+  const LOCAL_REPORT_URL = "data/last-update-report.json";
   const RAW_STATE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/state.json";
   const RAW_LIVE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/live-state.json";
+  const RAW_REPORT_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/last-update-report.json";
   const STATE_URL = API_BASE ? `${API_BASE}/data/state.json` : LOCAL_STATE_URL;
   const LIVE_URL = API_BASE ? `${API_BASE}/data/live-state.json` : LOCAL_LIVE_URL;
+  const REPORT_URL = API_BASE ? `${API_BASE}/data/last-update-report.json` : LOCAL_REPORT_URL;
   const MIN_QUALITY = 58;
   const MOSCOW = "Europe/Moscow";
-  const runtime = { state: null, live: null, records: new Map() };
+  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null };
 
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
     bindDialog();
+    setupPwa();
     await refresh();
     window.setInterval(refresh, 60_000);
   }
@@ -24,8 +28,14 @@
     setConnection("loading", "Обновление");
     try {
       const stamp = Date.now();
-      runtime.state = await loadBestState(stamp);
-      runtime.live = await loadLiveState(stamp);
+      const [state, live, report] = await Promise.all([
+        loadBestState(stamp),
+        loadLiveState(stamp),
+        loadReport(stamp),
+      ]);
+      runtime.state = state;
+      runtime.live = live;
+      runtime.report = report;
       render(runtime.state);
       setConnection("ready", "Актуально");
     } catch (error) {
@@ -78,6 +88,19 @@
     return {};
   }
 
+  async function loadReport(stamp) {
+    const urls = API_BASE
+      ? [LOCAL_REPORT_URL, RAW_REPORT_URL, REPORT_URL]
+      : [LOCAL_REPORT_URL, RAW_REPORT_URL];
+    for (const url of urls) {
+      try {
+        const value = await fetchJson(url, stamp);
+        return value && typeof value === "object" ? value : {};
+      } catch {}
+    }
+    return {};
+  }
+
   function normalize(value) {
     const state = value && typeof value === "object" ? value : {};
     state.meta = object(state.meta);
@@ -96,8 +119,12 @@
     runtime.records.clear();
     const current = isCurrentPortfolio(state);
     renderMeta(state, current);
+    renderSpotlight(state, runtime.report, current);
+    renderDecisionSummary(state, runtime.report, current);
+    renderHealth(state, runtime.report);
+    renderModelStats(state);
     renderMatches(current ? state.dailyAnalysis : []);
-    renderExpresses(current ? state.expresses : []);
+    renderExpresses(current ? state.expresses : [], state, current);
     renderSingles(current ? state.bestBets.slice(0, 3) : []);
     renderBank(state);
     renderHistory(state);
@@ -148,6 +175,146 @@
     document.getElementById("heroStatus")?.classList.toggle("is-ready", current);
   }
 
+  function renderSpotlight(state, report, current) {
+    const row = current ? state.dailyAnalysis[0] : null;
+    if (!row) {
+      setText("spotlightTeams", "Новая подборка формируется");
+      setText("spotlightPick", "—");
+      setText("spotlightProbability", "—");
+      setText("spotlightQuality", "—");
+      setText("spotlightStability", "—");
+      setText("spotlightOdds", "—");
+      setText("spotlightEv", "—");
+      setText("spotlightBankroll", "Отключён");
+      setText("spotlightMode", "Ожидание");
+      setHtml("spotlightReasons", "<li>Система не публикует слабые события ради заполнения списка.</li>");
+      setBar("spotlightProbabilityBar", 0);
+      setBar("spotlightQualityBar", 0);
+      setBar("spotlightStabilityBar", 0);
+      return;
+    }
+
+    const p = probability(row);
+    const q = number(row.dataQuality);
+    const stability = number(row.marketStability);
+    const ev = conservativeEv(row);
+    const guard = object(state.meta.calibrationGuard);
+    const bankrollAllowed = Boolean(guard.bankrollAllowed) && ev >= 0.03;
+    const informational = !bankrollAllowed;
+
+    setText("spotlightTeams", teamsText(row));
+    setText("spotlightPick", pick(row));
+    setText("spotlightProbability", `${formatNumber(p,1)}%`);
+    setText("spotlightQuality", `${formatNumber(q,0)}/100`);
+    setText("spotlightStability", stability ? `${formatNumber(stability,0)}/100` : "—");
+    setText("spotlightOdds", formatNumber(odds(row),2));
+    setText("spotlightEv", signedPercent(ev * 100));
+    setText("spotlightBankroll", informational ? "Отключён" : "Разрешён");
+    setText("spotlightMode", informational ? "Информационный" : "Допущен");
+    setBar("spotlightProbabilityBar", p);
+    setBar("spotlightQualityBar", q);
+    setBar("spotlightStabilityBar", stability);
+
+    const reasons = reasonItems(row).slice(0,3);
+    const economicReason = informational
+      ? (ev < 0 ? "Ставка на банк отключена: консервативное EV отрицательное." : "Ставка на банк отключена calibration guard.")
+      : "Положительное консервативное EV прошло финансовый фильтр.";
+    setHtml("spotlightReasons", [...reasons, economicReason].map(item => `<li>${escapeHtml(item)}</li>`).join(""));
+  }
+
+  function renderDecisionSummary(state, report, current) {
+    const diagnostics = object(report.diagnostics);
+    const analysis = object(diagnostics.analysis);
+    const discovery = object(diagnostics.discovery);
+    const rejectionReasons = object(analysis.rejectionReasons);
+    const checked = number(state.meta.candidateMatchesAnalyzed || discovery.events || analysis.oddsEvents);
+    const qualified = number(analysis.eventsQualified || (current ? state.dailyAnalysis.length : 0));
+    const published = current ? state.dailyAnalysis.length : 0;
+    const rejected = Math.max(0, checked - qualified);
+    const top = Object.entries(rejectionReasons).sort((a,b) => number(b[1]) - number(a[1]))[0];
+
+    setText("checkedCount", checked || "—");
+    setText("qualifiedCount", qualified || "0");
+    setText("publishedCount", published || "0");
+    setText("topRejectionReason", top ? top[0] : "Нет достаточных данных");
+    setText("rejectedCount", checked ? `${rejected} матчей не прошли основной фильтр` : "Ожидаем цикл анализа");
+  }
+
+  function renderHealth(state, report) {
+    const diagnostics = object(report.diagnostics);
+    const mesh = object(diagnostics.freeDataMesh);
+    const sources = object(mesh.sources);
+    const sportsDb = object(diagnostics.theSportsDbCurrentHistory);
+    const quota = object(diagnostics.quotaPlan);
+    const apiHealth = object(state.meta.apiHealth);
+    const items = Object.entries(sources).map(([name,status]) => [sourceLabel(name), String(status || "UNKNOWN")]);
+    if (sportsDb.status) items.push(["TheSportsDB", String(sportsDb.status)]);
+    items.push(["Odds/API", apiHealth.status || (quota.quotaExhaustedAfterAcquisition ? "LIMIT" : "GREEN")]);
+
+    const root = document.getElementById("healthGrid");
+    if (root) {
+      root.innerHTML = items.slice(0,6).map(([name,status]) =>
+        `<div class="health-line"><span>${escapeHtml(name)}</span><strong class="${healthClass(status)}">${escapeHtml(healthLabel(status))}</strong></div>`
+      ).join("");
+    }
+    const statuses = items.map(item => item[1].toUpperCase());
+    const overall = statuses.some(x => x === "RED" || x === "ERROR") ? "DEGRADED"
+      : statuses.some(x => x === "PARTIAL" || x === "LIMIT" || x === "DEGRADED") ? "PARTIAL" : "GREEN";
+    setText("healthOverall", healthLabel(overall));
+    setText("healthUpdated", state.meta.updatedAt ? `Обновлено ${formatShortDateTime(state.meta.updatedAt)}` : "—");
+    const remaining = number(quota.quotaRemainingBeforeOdds);
+    setText("quotaStatus", remaining ? `Квота: ${formatNumber(remaining,0)}` : "Квота контролируется");
+  }
+
+  function renderModelStats(state) {
+    const rows = array(state.analysisHistory).filter(row => ["won","lost"].includes(String(row.status || "").toLowerCase()));
+    const seven = statsForDays(rows, 7);
+    const thirty = statsForDays(rows, 30);
+    renderStatsWindow("7", seven);
+    renderStatsWindow("30", thirty);
+
+    const guard = object(state.meta.calibrationGuard);
+    const total = object(object(guard.marketFamilyHaircuts));
+    setText("calibrationMode", guard.mode || "AUTO GUARD");
+    setText("guardStatus", guard.mode || "LEARNING");
+    setText("guardMargin", guard.additionalUncertaintyMargin != null ? `+${formatNumber(number(guard.additionalUncertaintyMargin)*100,1)} п.п.` : "—");
+    setText("totalHaircut", total.TOTAL != null ? `−${formatNumber(number(total.TOTAL)*100,1)} п.п.` : "0 п.п.");
+    setText("bankrollGuard", guard.bankrollAllowed === false ? "Отключены" : "По EV-фильтру");
+    setText("guardExplanation", guard.policy
+      ? "Автоконтур может только ужесточать риск при плохой калибровке. Ослабление порогов и искусственное повышение вероятности запрещены."
+      : "Система сравнивает фактический результат с заявленной вероятностью и не подгоняет модель под один день.");
+  }
+
+  function renderStatsWindow(prefix, stats) {
+    setText(`stat${prefix}Count`, `${stats.n} событий`);
+    setText(`stat${prefix}Hit`, stats.n ? `${formatNumber(stats.hitRate*100,1)}%` : "—");
+    setText(`stat${prefix}Predicted`, stats.n ? `${formatNumber(stats.avgPredicted*100,1)}%` : "—");
+    setText(`stat${prefix}Brier`, stats.n ? formatNumber(stats.brier,3) : "—");
+  }
+
+  function statsForDays(rows, days) {
+    const cutoff = Date.now() - days * 86400_000;
+    const windowRows = rows.filter(row => {
+      const time = Date.parse(row.settledAt || row.commenceTime || "");
+      return Number.isFinite(time) && time >= cutoff;
+    });
+    if (!windowRows.length) return { n:0, hitRate:0, avgPredicted:0, brier:0 };
+    let wins = 0, pSum = 0, brier = 0;
+    for (const row of windowRows) {
+      const y = String(row.status).toLowerCase() === "won" ? 1 : 0;
+      const p = probabilityFraction(row);
+      wins += y;
+      pSum += p;
+      brier += (p-y)*(p-y);
+    }
+    return {
+      n: windowRows.length,
+      hitRate: wins/windowRows.length,
+      avgPredicted: pSum/windowRows.length,
+      brier: brier/windowRows.length,
+    };
+  }
+
   function renderMatches(rows) {
     const root = document.getElementById("matchList");
     if (!rows.length) {
@@ -156,12 +323,22 @@
     }
     root.innerHTML = rows.map((row, index) => {
       const key = remember(row, `match-${index}`);
+      const prob = probability(row);
+      const quality = number(row.dataQuality);
+      const stability = number(row.marketStability);
       return `<article class="match-card" data-record="${escapeHtml(key)}" tabindex="0" role="button" aria-label="Открыть прогноз ${escapeHtml(teamsText(row))}">
         <div class="rank ${index < 3 ? "top" : ""}">${index + 1}</div>
-        <div class="match-main"><div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div><div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div></div>
-        <div class="pick"><small>Прогноз</small><strong>${escapeHtml(pick(row))}</strong></div>
-        <div class="metric metric-probability"><small>Вероятность</small><strong>${percent(probability(row))}</strong></div>
-        <div class="metric metric-quality"><small>Качество</small><strong>${formatNumber(row.dataQuality, 0)}/100</strong></div>
+        <div class="match-main">
+          <div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div>
+          <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
+          <div class="match-why">${escapeHtml(reasonSummary(row))}</div>
+        </div>
+        <div class="pick"><small>Прогноз</small><strong>${escapeHtml(pick(row))}</strong><span class="pick-odds">× ${formatNumber(odds(row),2)}</span></div>
+        <div class="signal-cluster">
+          ${signalHtml("Вероятность", prob, prob)}
+          ${signalHtml("Качество", quality, quality)}
+          ${signalHtml("Стабильность", stability, stability)}
+        </div>
         <div class="chevron">›</div>
       </article>`;
     }).join("");
@@ -171,9 +348,16 @@
     });
   }
 
-  function renderExpresses(rows) {
+  function renderExpresses(rows, state, current) {
     const root = document.getElementById("expressGrid");
-    if (!rows.length) { root.innerHTML = empty("Экспрессы появятся вместе с новой подборкой"); return; }
+    if (!rows.length) {
+      const dailyCount = current ? array(state.dailyAnalysis).length : 0;
+      const message = dailyCount > 0
+        ? `Экспресс не сформирован: для безопасного купона нужно минимум 5 прошедших фильтр событий. Сегодня опубликовано ${dailyCount}.`
+        : "Экспрессы появятся только после публикации достаточного числа качественных событий.";
+      root.innerHTML = `<div class="smart-empty"><span>РИСК-КОНТРОЛЬ</span><strong>Экспресс пропущен системой</strong><p>${escapeHtml(message)}</p></div>`;
+      return;
+    }
     root.innerHTML = rows.map((ticket, index) => {
       const legs = array(ticket.legs);
       return `<article class="express-card">
@@ -225,7 +409,9 @@
       const status = String(row.status || "").toLowerCase();
       const label = status === "won" ? "Выигрыш" : status === "lost" ? "Проигрыш" : status === "push" ? "Возврат" : "Закрыто";
       const title = row.legs ? (row.title || row.name || "Экспресс") : teamsText(row);
-      const sub = row.legs ? `${array(row.legs).length} событий` : pick(row);
+      const sub = row.legs
+        ? `${array(row.legs).length} событий`
+        : `${pick(row)} · прогноз ${formatNumber(probability(row),1)}%`;
       const profit = number(row.profit ?? row.netProfit);
       return `<div class="history-row"><div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(sub)}</small></div><span class="result-badge ${escapeHtml(status)}">${label}</span><b class="history-profit">${signedCurrency(profit)}</b></div>`;
     }).join("");
@@ -239,7 +425,7 @@
       <h3>${escapeHtml(home(row))} — ${escapeHtml(away(row))}</h3>
       <p>${escapeHtml(formatDateTime(row.commenceTime || row.utcDate || row.kickoff))}</p>
       <div class="dialog-pick"><span>Прогноз системы</span><strong>${escapeHtml(pick(row))}</strong></div>
-      <div class="dialog-grid"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Качество данных</span><strong>${formatNumber(row.dataQuality,0)}/100</strong></div><div><span>Преимущество</span><strong>${signedPercent(row.edgePercent ?? number(row.edge)*100)}</strong></div></div>
+      <div class="dialog-grid"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Качество данных</span><strong>${formatNumber(row.dataQuality,0)}/100</strong></div><div><span>Стабильность линии</span><strong>${formatNumber(row.marketStability,0)}/100</strong></div><div><span>Согласованность</span><strong>${formatNumber(row.agreement,0)}/100</strong></div><div><span>Консервативный EV</span><strong>${signedPercent(conservativeEv(row)*100)}</strong></div></div>
       <div class="dialog-reason"><span>Почему выбран прогноз</span><p>${escapeHtml(row.reasonRu || row.reason || row.explanation || "Прогноз прошёл отбор по вероятности, качеству данных и рыночному сравнению.")}</p></div>
     </div>`;
     dialog.showModal();
@@ -255,6 +441,95 @@
     document.getElementById("matchList").innerHTML = empty("Не удалось загрузить данные. Страница повторит попытку автоматически.");
     document.getElementById("expressGrid").innerHTML = empty("Ожидаем соединение");
     document.getElementById("singleGrid").innerHTML = empty("Ожидаем соединение");
+  }
+
+  function setupPwa() {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+    const button = document.getElementById("installApp");
+    window.addEventListener("beforeinstallprompt", event => {
+      event.preventDefault();
+      runtime.installPrompt = event;
+      if (button) button.hidden = false;
+    });
+    button?.addEventListener("click", async () => {
+      if (!runtime.installPrompt) return;
+      runtime.installPrompt.prompt();
+      try { await runtime.installPrompt.userChoice; } catch {}
+      runtime.installPrompt = null;
+      button.hidden = true;
+    });
+    window.addEventListener("appinstalled", () => {
+      runtime.installPrompt = null;
+      if (button) button.hidden = true;
+    });
+  }
+
+  function reasonItems(row) {
+    const rationale = object(row.selectionRationale);
+    const explicit = array(rationale.reasons).filter(Boolean).map(String);
+    if (explicit.length) return explicit;
+    const notes = array(row.sourceNotes).filter(Boolean).map(String);
+    if (notes.length) return notes;
+    if (row.reasonRu || row.reason) return [String(row.reasonRu || row.reason)];
+    return [
+      `Консервативная вероятность ${formatNumber(probability(row),1)}%`,
+      `Качество данных ${formatNumber(row.dataQuality,0)}/100`,
+      `Подтверждение ${formatNumber(row.quoteCount,0)} букмекерами`,
+    ];
+  }
+
+  function reasonSummary(row) {
+    const items = reasonItems(row);
+    return items[0] || "Прогноз прошёл текущий фильтр качества.";
+  }
+
+  function conservativeEv(row) {
+    const p = probabilityFraction(row);
+    const price = odds(row);
+    return price > 0 ? p * price - 1 : 0;
+  }
+
+  function probabilityFraction(row) {
+    const raw = number(row.conservativeProbability ?? row.confidence ?? row.probabilityPercent ?? row.probability ?? row.modelProbability);
+    return raw > 1 ? raw / 100 : raw;
+  }
+
+  function signalHtml(label, value, width) {
+    const safeWidth = Math.max(0, Math.min(100, number(width)));
+    return `<div class="signal"><span>${escapeHtml(label)}</span><b>${formatNumber(value, value % 1 ? 1 : 0)}${label === "Вероятность" ? "%" : "/100"}</b><i><em style="width:${safeWidth}%"></em></i></div>`;
+  }
+
+  function setBar(id, value) {
+    const node = document.getElementById(id);
+    if (node) node.style.width = `${Math.max(0,Math.min(100,number(value)))}%`;
+  }
+
+  function setHtml(id, value) {
+    const node = document.getElementById(id);
+    if (node) node.innerHTML = String(value);
+  }
+
+  function sourceLabel(value) {
+    return String(value || "")
+      .replace("FOOTBALL_DATA_CO_UK","Football-data")
+      .replace("OPENFOOTBALL","OpenFootball")
+      .replace("OPENLIGADB","OpenLigaDB")
+      .replace("STATSBOMB_OPEN_DATA","StatsBomb")
+      .replace("CLUBELO","ClubElo");
+  }
+
+  function healthLabel(value) {
+    const text = String(value || "UNKNOWN").toUpperCase();
+    return ({GREEN:"OK",PARTIAL:"Частично",DEGRADED:"Ограничено",RED:"Ошибка",ERROR:"Ошибка",LIMIT:"Лимит",UNKNOWN:"Нет данных"})[text] || text;
+  }
+
+  function healthClass(value) {
+    const text = String(value || "").toUpperCase();
+    if (text === "GREEN") return "health-ok";
+    if (text === "RED" || text === "ERROR") return "health-bad";
+    return "health-warn";
   }
 
   function setConnection(mode, text) {
