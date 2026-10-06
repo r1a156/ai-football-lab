@@ -4139,7 +4139,7 @@ def publish_generation() -> int:
             "recoveryStrictProductionThresholdsChanged": False,
             "bootstrapPreview": True,
             "bootstrapPreviewBankEngaged": True,
-            "publicationPolicy": "ONE_DAY_RECOVERY_PORTFOLIO_STRICT_PRODUCTION_RETURNS_NEXT_OPERATIONAL_DAY",
+            "publicationPolicy": "STRICT_24H_CURRENT_DAY_RECOVERY_WITH_REAL_EVENTS_ONLY",
         })
         report["diagnostics"]["recoveryDay"] = {
             "enabled": True,
@@ -4156,10 +4156,10 @@ def publish_generation() -> int:
         daily_auditor.mark_activated(day["operationalDayId"])
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
-    print("R15F_ANALYSIS=15")
-    print("R15F_INFORMATIONAL_TOP_THREE=3")
-    print("R15F_EXPRESSES=3")
-    print("R15F_EXPRESS_LEGS=15")
+    print(f"R15F_ANALYSIS={len(records)}")
+    print(f"R15F_INFORMATIONAL_TOP_THREE={len(best)}")
+    print(f"R15F_EXPRESSES={len(expresses)}")
+    print(f"R15F_EXPRESS_LEGS={sum(len(item.get('legs') or []) for item in expresses)}")
     print(f"R15F_EXPRESS_BANK={state.get('expressBank', {}).get('current')}")
     if bootstrap_preview:
         print("R15F_BOOTSTRAP_PREVIEW=GREEN")
@@ -4258,7 +4258,17 @@ def validate_state() -> int:
         daily_ids = {str(row.get("id") or "") for row in daily}
         if not set(leg_ids).issubset(daily_ids):
             raise RuntimeError("R15 express legs must come from daily analysis")
+        public_start = parse_time(validation_meta.get("operationalWindowStart"))
+        public_end = parse_time(validation_meta.get("operationalWindowEnd"))
+        if not public_start or not public_end or public_start >= public_end:
+            raise RuntimeError("R15 public operational window missing or invalid")
         for row in daily:
+            commence = parse_time(row.get("commenceTime"))
+            if commence is None or commence < public_start or commence >= public_end:
+                raise RuntimeError(
+                    "R15 event outside current Moscow operational day: "
+                    f"{row.get('eventId')} {row.get('commenceTime')}"
+                )
             if str(row.get("sport") or "") != "soccer":
                 raise RuntimeError("R15 contains non-football event")
             if str(row.get("dataTier") or "MARKET") == "MARKET":
