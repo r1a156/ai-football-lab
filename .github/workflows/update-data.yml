@@ -1,3 +1,4 @@
+# R3R20_CORE_QUALIFICATION_AND_ODDS_FLOOR_2026_10_06
 # R3R19_FINAL_CALIBRATED_ACCEPTANCE_2026_10_06
 # R3R18_DIVERSIFICATION_SELFTEST_TRIGGER_2026_10_06
 # R3R17_CALIBRATION_GUARD_TRIGGER_2026_10_06
@@ -76,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           grep -Fq "V10_R15F_R3R13_STRICT_24H_ROLLOVER_AND_PARTIAL_AVAILABILITY" scripts/r15_intelligence.py
-          python -c "import json,pathlib; c=json.loads(pathlib.Path('config/analysis.json').read_text(encoding='utf-8')); assert int(c.get('portfolioSearchHorizonHours',0)) == 24; assert int(c.get('operationalWindowSearchDays',1)) == 1; assert bool(c.get('oddsAllowPortfolioCompletionBurst')); assert int(c.get('rejectionDiagnosticsLimit',0)) >= 120"
+          python -c "import json,pathlib; c=json.loads(pathlib.Path('config/analysis.json').read_text(encoding='utf-8')); assert int(c.get('portfolioSearchHorizonHours',0)) == 24; assert int(c.get('operationalWindowSearchDays',1)) == 1; assert float(c.get('minimumBookmakerOdds',0)) >= 1.55; assert bool(c.get('oddsAllowPortfolioCompletionBurst')); assert int(c.get('rejectionDiagnosticsLimit',0)) >= 120"
           python -m py_compile \
             scripts/update_predictions.py \
             scripts/r15_free_mesh.py \
@@ -122,7 +123,7 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           ODDS_API_KEY_BACKUP: ${{ secrets.ODDS_API_KEY_BACKUP }}
           R15_BOOTSTRAP_PREVIEW: ${{ inputs.bootstrap_preview }}
-          R15_RECOVERY_DAY: ${{ github.event_name == 'push' && 'true' || inputs.recovery_today }}
+          R15_RECOVERY_DAY: ${{ github.event_name == 'workflow_dispatch' && inputs.recovery_today || false }}
           CLOUDFLARE_AI_ACCESS_TOKEN: ${{ secrets.CLOUDFLARE_AI_ACCESS_TOKEN }}
           CLOUDFLARE_AI_MODEL: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
           CLOUDFLARE_AI_URL: https://ai-football-free.shevtsov001.workers.dev/internal/ai

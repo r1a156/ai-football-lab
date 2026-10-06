@@ -2333,6 +2333,17 @@ def merge_event(featured: dict[str, Any], advanced: dict[str, Any] | None) -> di
 
 def candidate_is_qualified(candidate: dict[str, Any], config: dict[str, Any]) -> tuple[bool, list[str]]:
     failures: list[str] = []
+    core_qualification = candidate.get("qualification") if isinstance(candidate.get("qualification"), dict) else {}
+    if core_qualification and core_qualification.get("qualified") is False:
+        core_failures = [
+            str(reason).strip()
+            for reason in (core_qualification.get("failures") or [])
+            if str(reason).strip()
+        ]
+        if core_failures:
+            failures.extend([f"Основной фильтр: {reason}" for reason in core_failures])
+        else:
+            failures.append("Кандидат отклонён основным фильтром")
     if str(candidate.get("dataTier") or "MARKET") == "MARKET":
         failures.append("Нет полноценной истории обеих команд")
     if safe_float(candidate.get("dataQuality")) < safe_float(config.get("strategyMinimumDataQuality"), 58):
@@ -2698,6 +2709,10 @@ def build_bootstrap_preview_analysis(
             item["dataTier"] = model.get("dataTier")
             item["dataQuality"] = data_quality
             item["obviousMarketScore"] = obvious_market_score(item, config)
+            core_qualification = item.get("qualification") if isinstance(item.get("qualification"), dict) else {}
+            if core_qualification and core_qualification.get("qualified") is False:
+                diagnostics["excludedCoreQualification"] = safe_int(diagnostics.get("excludedCoreQualification"), 0) + 1
+                continue
             probability = safe_float(
                 item.get("conservativeProbability"),
                 safe_float(item.get("modelProbability"), 0.0),
@@ -4604,6 +4619,33 @@ def self_test() -> int:
     state = ensure_r15_state({}, config, now)
     events = [synthetic_event(index, now) for index in range(15)]
 
+    guard_candidate = {
+        "dataTier": "HYBRID",
+        "dataQuality": 90,
+        "quoteCount": 5,
+        "conservativeProbability": 0.75,
+        "agreement": 90,
+        "marketStability": 90,
+        "anomaly": 0,
+        "marketFamily": "OUTCOME",
+        "marketKey": "h2h",
+        "bookmakerOdds": 1.80,
+        "qualification": {
+            "qualified": False,
+            "failures": ["Недостаточное математическое ожидание"],
+        },
+    }
+    guard_ok, guard_failures = candidate_is_qualified(guard_candidate, config)
+    if guard_ok or not any("Основной фильтр" in reason for reason in guard_failures):
+        raise RuntimeError("SELF_TEST core qualification guard failed")
+
+    low_odds_candidate = copy.deepcopy(guard_candidate)
+    low_odds_candidate["qualification"] = {"qualified": True, "failures": []}
+    low_odds_candidate["bookmakerOdds"] = 1.54
+    low_odds_ok, _ = candidate_is_qualified(low_odds_candidate, config)
+    if low_odds_ok:
+        raise RuntimeError("SELF_TEST hard minimum odds guard failed")
+
     # First prove the diversification guard: this synthetic fixture intentionally
     # makes every best market OUTCOME, so production must cap that family.
     guarded_records, guarded_diag = build_strategy_analysis(events, {}, context, state, config, now)
@@ -4672,6 +4714,8 @@ def self_test() -> int:
     print("R15_ASIAN_MARKETS=REMOVED")
     print("R15_RUSSIAN_MATCHES=REMOVED")
     print("R15_MARKET_ONLY_STRATEGY=FORBIDDEN")
+    print("R15_CORE_QUALIFICATION_GUARD=YES")
+    print("R15_HARD_MIN_ODDS=1.55")
     print("R15_STRICT_08_TO_08=YES")
     return 0
 
