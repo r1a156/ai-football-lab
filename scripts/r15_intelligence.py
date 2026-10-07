@@ -19,6 +19,7 @@ import json
 import math
 import os
 import pathlib
+import re
 import statistics
 import sys
 import time
@@ -27,6 +28,7 @@ import urllib.parse
 import urllib.request
 from collections import defaultdict
 from typing import Any, Iterable
+from zoneinfo import ZoneInfo
 
 import update_predictions as core
 import r15_free_mesh as free_mesh
@@ -1551,6 +1553,99 @@ def _r3r12_parse_http_time(value: Any) -> dt.datetime | None:
     return parsed.astimezone(UTC)
 
 
+def _r3r12_parse_upload_timestamp_html(payload: bytes) -> dt.datetime | None:
+    text = None
+    for encoding in ("utf-8-sig", "cp1252", "latin-1"):
+        try:
+            text = payload.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    if not text:
+        return None
+    match = re.search(
+        r"Latest\s+fixtures\s+uploaded:\s*(\d{1,2}/\d{1,2}/\d{2,4})\s+(\d{1,2}:\d{2})\s+UK\s+time",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    raw = f"{match.group(1)} {match.group(2)}"
+    parsed = None
+    for pattern in ("%d/%m/%y %H:%M", "%d/%m/%Y %H:%M"):
+        try:
+            parsed = dt.datetime.strptime(raw, pattern)
+            break
+        except ValueError:
+            continue
+    if parsed is None:
+        return None
+    return parsed.replace(tzinfo=ZoneInfo("Europe/London")).astimezone(UTC)
+
+
+def _r3r12_resolve_source_timestamp(
+    payload: bytes,
+    headers: dict[str, str],
+    cached: dict[str, Any],
+    now: dt.datetime,
+    metadata_updated: dt.datetime | None,
+) -> tuple[dt.datetime, dict[str, Any]]:
+    payload_hash = hashlib.sha256(payload).hexdigest()
+    http_updated = _r3r12_parse_http_time(headers.get("last-modified"))
+    cached_hash = str(cached.get("contentSha256") or "")
+    cached_changed = parse_time(cached.get("contentChangedAt") or cached.get("sourceUpdatedAt"))
+    content_changed = now if payload_hash != cached_hash else (cached_changed or now)
+
+    if http_updated is not None:
+        source_updated = http_updated
+        evidence = "HTTP_LAST_MODIFIED"
+        confidence = "HIGH"
+    elif metadata_updated is not None:
+        source_updated = metadata_updated
+        evidence = "FOOTBALL_DATA_UPLOAD_TIMESTAMP"
+        confidence = "HIGH"
+    elif cached_hash and cached_hash == payload_hash and cached_changed is not None:
+        source_updated = cached_changed
+        evidence = "CONTENT_HASH_UNCHANGED"
+        confidence = "MEDIUM"
+    else:
+        source_updated = now
+        evidence = "CONTENT_HASH_FIRST_OBSERVED" if not cached_hash else "CONTENT_HASH_CHANGED"
+        confidence = "MEDIUM"
+
+    return source_updated, {
+        "contentSha256": payload_hash,
+        "contentObservedAt": iso(now),
+        "contentChangedAt": iso(content_changed),
+        "freshnessEvidence": evidence,
+        "freshnessConfidence": confidence,
+    }
+
+
+def _r3r12_fetch_metadata_timestamp(
+    url: str,
+    timeout: int,
+) -> tuple[dt.datetime | None, str | None]:
+    try:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.2",
+                "Accept-Encoding": "identity",
+                "Cache-Control": "no-cache",
+                "User-Agent": "AI-Football-Lab-R15-Fixture-Metadata/1.0",
+            },
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = response.read()
+        parsed = _r3r12_parse_upload_timestamp_html(payload)
+        if parsed is None:
+            return None, "FIXTURE_METADATA_UPLOAD_TIMESTAMP_MISSING"
+        return parsed, None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}:{exc}"
+
+
 def _r3r12_source_fresh(source_updated: dt.datetime | None, config: dict[str, Any], now: dt.datetime) -> bool:
     if source_updated is None:
         return False
@@ -1747,18 +1842,28 @@ def load_football_data_fixture_odds(
         "enabled": bool(config.get("footballDataFixtureOddsEnabled", True)),
         "status": "DISABLED",
         "url": str(config.get("footballDataFixtureOddsUrl") or "https://www.football-data.co.uk/matches/resources/fixtures.csv"),
+        "metadataUrl": str(config.get("footballDataFixtureMetadataUrl") or "https://www.football-data.co.uk/matches.php"),
         "cachePath": str(FOOTBALL_DATA_FIXTURE_ODDS_PATH),
         "events": 0,
         "eventsWithThreeBookmakers": 0,
         "sourceUpdatedAt": None,
         "usedCache": False,
         "error": None,
+        "metadataError": None,
+        "freshnessEvidence": None,
+        "freshnessConfidence": None,
+        "contentSha256": None,
     }
     if not diagnostics["enabled"]:
         return [], diagnostics
 
     url = diagnostics["url"]
+    metadata_url = diagnostics["metadataUrl"]
     timeout = max(5, min(60, safe_int(config.get("footballDataFixtureOddsTimeoutSeconds"), 25)))
+    cached = load_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {})
+    if not isinstance(cached, dict):
+        cached = {}
+
     try:
         request = urllib.request.Request(
             url,
@@ -1766,15 +1871,24 @@ def load_football_data_fixture_odds(
                 "Accept": "text/csv,text/plain;q=0.9,*/*;q=0.3",
                 "Accept-Encoding": "identity",
                 "Cache-Control": "no-cache",
-                "User-Agent": "AI-Football-Lab-R15-R3R12/1.0",
+                "User-Agent": "AI-Football-Lab-R15-R3R24/1.0",
             },
         )
         with urllib.request.urlopen(request, timeout=timeout) as response:
             payload = response.read()
             headers = {str(key).lower(): str(value) for key, value in response.headers.items()}
-            source_updated = _r3r12_parse_http_time(headers.get("last-modified"))
-        if source_updated is None:
-            raise RuntimeError("FIXTURE_FEED_LAST_MODIFIED_MISSING")
+
+        metadata_updated = None
+        metadata_error = None
+        if _r3r12_parse_http_time(headers.get("last-modified")) is None:
+            metadata_updated, metadata_error = _r3r12_fetch_metadata_timestamp(metadata_url, timeout)
+        diagnostics["metadataError"] = metadata_error
+
+        source_updated, freshness = _r3r12_resolve_source_timestamp(
+            payload, headers, cached, now, metadata_updated
+        )
+        diagnostics.update(freshness)
+
         events, parsed = parse_football_data_fixture_csv(
             payload, source_updated, discovered_events, config, start, end, now
         )
@@ -1788,23 +1902,30 @@ def load_football_data_fixture_odds(
             else "INVALID_PAYLOAD" if parsed.get("invalidHeaders")
             else "NO_MATCHED_EVENTS"
         )
-        write_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {
-            "version": 1,
-            "sourceMarker": "V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK",
+
+        cache_payload = {
+            "version": 2,
+            "sourceMarker": "V10_R15F_R3R24_FIXTURE_FRESHNESS_CHAIN",
             "updatedAt": iso(now),
             "sourceUpdatedAt": iso(source_updated),
             "sourceUrl": url,
+            "metadataUrl": metadata_url,
             "status": diagnostics["status"],
+            "contentSha256": freshness.get("contentSha256"),
+            "contentObservedAt": freshness.get("contentObservedAt"),
+            "contentChangedAt": freshness.get("contentChangedAt"),
+            "freshnessEvidence": freshness.get("freshnessEvidence"),
+            "freshnessConfidence": freshness.get("freshnessConfidence"),
             "events": events,
             "diagnostics": diagnostics,
-        })
+        }
+        write_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, cache_payload)
         return events, diagnostics
     except Exception as exc:
         diagnostics["error"] = f"{type(exc).__name__}:{exc}"
 
-    cached = load_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {})
-    cached_updated = parse_time(cached.get("sourceUpdatedAt")) if isinstance(cached, dict) else None
-    if isinstance(cached, dict) and _r3r12_source_fresh(cached_updated, config, now):
+    cached_updated = parse_time(cached.get("sourceUpdatedAt"))
+    if _r3r12_source_fresh(cached_updated, config, now):
         usable: list[dict[str, Any]] = []
         discovered_ids = {str(event.get("id") or "") for event in discovered_events}
         minimum_lead = dt.timedelta(minutes=max(0, safe_int(config.get("minimumLeadMinutes"), 45)))
@@ -1827,20 +1948,24 @@ def load_football_data_fixture_odds(
         diagnostics["eventsWithThreeBookmakers"] = sum(
             1 for event in usable if len(event.get("bookmakers") or []) >= 3
         )
+        diagnostics["freshnessEvidence"] = cached.get("freshnessEvidence")
+        diagnostics["freshnessConfidence"] = cached.get("freshnessConfidence")
+        diagnostics["contentSha256"] = cached.get("contentSha256")
         return usable, diagnostics
 
+    diagnostics["status"] = "UNAVAILABLE"
     if not FOOTBALL_DATA_FIXTURE_ODDS_PATH.exists():
         write_json(FOOTBALL_DATA_FIXTURE_ODDS_PATH, {
-            "version": 1,
-            "sourceMarker": "V10_R15F_R3R12_NO_KEY_FIXTURE_ODDS_FALLBACK",
+            "version": 2,
+            "sourceMarker": "V10_R15F_R3R24_FIXTURE_FRESHNESS_CHAIN",
             "updatedAt": iso(now),
             "sourceUpdatedAt": None,
             "sourceUrl": url,
+            "metadataUrl": metadata_url,
             "status": "UNAVAILABLE",
             "events": [],
             "diagnostics": diagnostics,
         })
-    diagnostics["status"] = "UNAVAILABLE"
     return [], diagnostics
 
 def advanced_recovery_reserve_credits(
@@ -4907,6 +5032,28 @@ def self_test() -> int:
     sync_and_settle_expresses(state2, now + dt.timedelta(days=1))
     if safe_float(state2.get("bank", {}).get("current")) != legacy_before:
         raise RuntimeError("SELF_TEST legacy bank was changed")
+
+    fixture_html = b"<html>Latest fixtures uploaded: 02/10/26 09:57 UK time.</html>"
+    fixture_page_time = _r3r12_parse_upload_timestamp_html(fixture_html)
+    if fixture_page_time is None or fixture_page_time.date().isoformat() != "2026-10-02":
+        raise RuntimeError("SELF_TEST fixture metadata timestamp parser failed")
+    fixture_payload = b"Div,Date,HomeTeam,AwayTeam\\nE0,03/08/2026,Home Club 0,Away Club 0\\n"
+    hash_time_1, hash_meta_1 = _r3r12_resolve_source_timestamp(
+        fixture_payload, {}, {}, now, None
+    )
+    hash_time_2, hash_meta_2 = _r3r12_resolve_source_timestamp(
+        fixture_payload,
+        {},
+        {
+            "contentSha256": hash_meta_1.get("contentSha256"),
+            "contentChangedAt": iso(hash_time_1),
+        },
+        now + dt.timedelta(hours=4),
+        None,
+    )
+    if hash_time_2 != hash_time_1 or hash_meta_2.get("freshnessEvidence") != "CONTENT_HASH_UNCHANGED":
+        raise RuntimeError("SELF_TEST fixture content-hash freshness failed")
+
     print("R15_SELF_TEST=GREEN")
     print(f"R15_DIVERSIFICATION_GUARD_ANALYSIS={len(guarded_records)}")
     print("R15_SYNTHETIC_ANALYSIS=15")
@@ -4922,6 +5069,7 @@ def self_test() -> int:
     print("R15_ADAPTIVE_FORM_DECAY=YES")
     print("R15_ROLLING_72H_PREMATCH_SEARCH=YES")
     print("R15_PER_KEY_QUOTA_LEDGER=YES")
+    print("R15_FIXTURE_FRESHNESS_CHAIN=YES")
     return 0
 
 
