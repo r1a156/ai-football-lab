@@ -100,8 +100,8 @@
     "hockeyAnalyses": 0,
     "leaguesAnalyzed": 5,
     "countriesAnalyzed": 5,
-    "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
-    "publicationPolicy": "STRICT_24H_CURRENT_DAY_RECOVERY_WITH_REAL_EVENTS_ONLY",
+    "predictionObjective": "BEST_AVAILABLE_TOP_THREE_PLUS_SEPARATE_STRICT_PREMIUM",
+    "publicationPolicy": "DAILY_REAL_MATCHES_TOP_THREE_ALWAYS_PREMIUM_ONLY_WHEN_STRICT_FILTERS_PASS",
     "virtualBankPolicy": "ONE_ACTIVE_BANK_TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH_PROSPECTIVE_ONLY",
     "lastSuccessfulRefreshAt": "2026-10-06T09:30:11Z",
     "apiHealth": {
@@ -225,7 +225,12 @@
     },
     "partialDailyPortfolio": true,
     "bankPolicyEffectiveAt": "2026-10-07T07:44:56Z",
-    "legacyExpressBankPreservedForAudit": true
+    "legacyExpressBankPreservedForAudit": true,
+    "premiumBetsMaximum": 3,
+    "premiumBetsPolicy": "STRICT_FILTERS_ONLY_ZERO_OR_MORE_NO_ADDITIONAL_BANK_STAKE",
+    "topThreeSelectionPolicy": "ALWAYS_SELECT_THREE_BEST_AVAILABLE_REAL_PREMATCH_STANDARD_MARKET_EVENTS",
+    "visibleLanguage": "ru-RU",
+    "localizationPolicy": "ALL_VISIBLE_INTERFACE_TEXT_TEAM_NAMES_LEAGUES_MARKETS_STATUSES_AND_EXPLANATIONS_RUSSIAN"
   },
   "dailyAnalysis": [],
   "bestBets": [],
