@@ -4165,6 +4165,7 @@ def settle_current() -> int:
     express_counters = sync_and_settle_expresses(state, now)
     core.maintain_prediction_history(state, config, now)
     core.update_bank_metrics(state)
+    core.update_bank_metrics(state)
     core.update_statistics(state)
     update_express_statistics(state)
     update_express_bank_metrics(state, now)
@@ -5316,7 +5317,7 @@ def publish_generation() -> int:
         "cloudflareAiLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
         "publicationPolicy": "STRICT_24H_MOSCOW_DAY_UP_TO_FIFTEEN_REAL_QUALIFIED_MATCHES",
-        "virtualBankPolicy": R15_EXPRESS_POLICY,
+        "virtualBankPolicy": config.get("virtualBankPolicy"),
         "updatedAt": iso(now),
         "lastSuccessfulRefreshAt": iso(now),
         "apiHealth": {
@@ -5332,9 +5333,9 @@ def publish_generation() -> int:
     }
     report["diagnostics"].update({
         "dailyAnalysis": len(records),
-        "informationalTopThree": len(best),
+        "bankedTopThree": len([row for row in best if safe_float(row.get("stake")) > 0]),
         "expresses": len(expresses),
-        "expressBank": state.get("expressBank"),
+        "singleBank": state.get("bank"),
         "russianNames": russian_names_result,
         "fonbetGate": fonbet_result,
         "dailyCloudflare Workers AIAudit": daily_audit,
@@ -5385,10 +5386,10 @@ def publish_generation() -> int:
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
     print(f"R15F_ANALYSIS={len(records)}")
-    print(f"R15F_INFORMATIONAL_TOP_THREE={len(best)}")
+    print(f"R15F_TOP_THREE={len(best)}")
     print(f"R15F_EXPRESSES={len(expresses)}")
     print(f"R15F_EXPRESS_LEGS={sum(len(item.get('legs') or []) for item in expresses)}")
-    print(f"R15F_EXPRESS_BANK={state.get('expressBank', {}).get('current')}")
+    print(f"R15F_SINGLE_BANK={state.get('bank', {}).get('current')}")
     if bootstrap_preview:
         print("R15F_BOOTSTRAP_PREVIEW=GREEN")
         print("R15F_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
@@ -5398,7 +5399,7 @@ def publish_generation() -> int:
         print("R15F_RECOVERY_DAY_BANK_ENGAGED=NO")
         print("FINAL_STATUS=GREEN_R15F_RECOVERY_DAY_PUBLISHED")
     else:
-        print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_EXPRESS_PUBLISHED")
+        print("FINAL_STATUS=GREEN_R15F_FREE_DATA_MESH_TOP3_SINGLE_BANK_PUBLISHED")
     return 0
 
 
