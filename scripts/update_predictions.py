@@ -836,6 +836,11 @@ RUSSIAN_EXACT_NAMES = {
     "serie b": "Серия Б",
     "la liga": "Ла Лига",
     "bundesliga": "Бундеслига",
+    "bundesliga 2 germany": "2-я Бундеслига — Германия",
+    "3 liga germany": "3-я лига — Германия",
+    "ligue 2 france": "Лига 2 — Франция",
+    "turkey super league": "Суперлига Турции",
+    "veikkausliiga finland": "Вейккауслига — Финляндия",
     "ligue 1": "Лига 1",
     "ligue one": "Лига 1",
     "championship": "Чемпионшип",
@@ -877,6 +882,14 @@ RUSSIAN_EXACT_NAMES = {
     "atletico madrid": "Атлетико Мадрид",
     "bayern munich": "Бавария",
     "borussia dortmund": "Боруссия Дортмунд",
+    "1 fc heidenheim": "Хайденхайм",
+    "1 fc kaiserslautern": "Кайзерслаутерн",
+    "eintracht braunschweig": "Айнтрахт Брауншвейг",
+    "holstein kiel": "Хольштайн Киль",
+    "sochaux": "Сошо",
+    "boulogne": "Булонь",
+    "bragantino sp": "Брагантино",
+    "sarmiento de junin": "Сармьенто",
     "paris saint germain": "Пари Сен-Жермен",
     "inter milan": "Интер",
     "ac milan": "Милан",
@@ -951,6 +964,9 @@ RUSSIAN_WORDS = {
     "over": "Больше", "under": "Меньше", "draw": "Ничья",
     "home": "Хозяева", "away": "Гости", "total": "Тотал", "totals": "Тоталы",
     "cup": "Кубок", "league": "Лига", "premier": "Премьер",
+    "bundesliga": "Бундеслига", "ligue": "Лига", "serie": "Серия",
+    "germany": "Германия", "france": "Франция", "turkey": "Турция",
+    "brazil": "Бразилия", "argentina": "Аргентина", "finland": "Финляндия",
     "national": "Национальная", "conference": "Конференция", "division": "Дивизион",
     "north": "Север", "south": "Юг", "east": "Восток", "west": "Запад",
     "central": "Централь", "regional": "Региональная", "real": "Реал",
@@ -1042,12 +1058,15 @@ def russian_display_text(value: Any) -> str:
 
 
 def apply_russian_display_fields(record: dict[str, Any]) -> dict[str, Any]:
-    record["countryRu"] = russian_display_text(record.get("country") or record.get("countryRu"))
-    record["leagueRu"] = russian_display_text(record.get("league") or record.get("leagueRu"))
-    record["homeRu"] = russian_display_text(record.get("home") or record.get("homeRu"))
-    record["awayRu"] = russian_display_text(record.get("away") or record.get("awayRu"))
-    record["pickRu"] = russian_display_text(record.get("pick") or record.get("pickRu"))
-    record["bookmakerRu"] = russian_display_text(record.get("bookmaker") or record.get("bookmakerRu"))
+    # Preserve an already resolved Russian display value. Re-transliterating
+    # the original English field here used to overwrite better canonical names
+    # when records were copied into history.
+    record["countryRu"] = russian_display_text(record.get("countryRu") or record.get("country"))
+    record["leagueRu"] = russian_display_text(record.get("leagueRu") or record.get("league"))
+    record["homeRu"] = russian_display_text(record.get("homeRu") or record.get("home"))
+    record["awayRu"] = russian_display_text(record.get("awayRu") or record.get("away"))
+    record["pickRu"] = russian_display_text(record.get("pickRu") or record.get("pick"))
+    record["bookmakerRu"] = russian_display_text(record.get("bookmakerRu") or record.get("bookmaker"))
     if record.get("expectedResult"):
         record["expectedResultRu"] = russian_display_text(record.get("expectedResult"))
     if record.get("reason"):
