@@ -3289,6 +3289,8 @@ def build_strategy_analysis(
         "eventsWithHistory": 0,
         "eventsWithMarkets": 0,
         "eventsQualified": 0,
+        "eventsTopThreeEligible": 0,
+        "premiumQualifiedEvents": 0,
         "marketCandidates": 0,
         "rejectedByQuality": 0,
         "rejectedWithoutMarkets": 0,
@@ -3297,6 +3299,7 @@ def build_strategy_analysis(
         "dataTiers": defaultdict(int),
         "marketFamilies": defaultdict(int),
         "qualifiedEventIds": [],
+        "premiumEventIds": [],
     }
     for raw in odds_events:
         if core.infer_sport_from_key(raw.get("sport_key")) != "soccer" or not core.event_allowed(raw, config):
@@ -3313,8 +3316,11 @@ def build_strategy_analysis(
                     "eventId": event_id,
                     "sportKey": event.get("sport_key"),
                     "league": event.get("sport_title"),
+                    "leagueRu": core.russian_display_text(event.get("sport_title")),
                     "home": event.get("home_team"),
+                    "homeRu": core.russian_display_text(event.get("home_team")),
                     "away": event.get("away_team"),
+                    "awayRu": core.russian_display_text(event.get("away_team")),
                     "commenceTime": event.get("commence_time"),
                     "failures": ["Нет пригодных рынков или котировок"],
                 })
@@ -3336,20 +3342,23 @@ def build_strategy_analysis(
             best_rejected = alternatives[0] if alternatives else {}
             failures = []
             for candidate in alternatives:
-                for failure in candidate.get("strategyFailures") or []:
+                for failure in candidate.get("topThreeFailures") or []:
                     if failure not in failures:
                         failures.append(failure)
                     diagnostics["rejectionReasons"][failure] += 1
             if not failures:
-                failures = ["Ни один рынок не прошёл стратегические фильтры"]
+                failures = ["Нет рынка, пригодного даже для базового Топ‑3"]
                 diagnostics["rejectionReasons"][failures[0]] += 1
             if len(diagnostics["rejectedEvents"]) < max(10, safe_int(config.get("rejectionDiagnosticsLimit"), 120)):
                 diagnostics["rejectedEvents"].append({
                     "eventId": event_id,
                     "sportKey": event.get("sport_key"),
                     "league": event.get("sport_title"),
+                    "leagueRu": core.russian_display_text(event.get("sport_title")),
                     "home": event.get("home_team"),
+                    "homeRu": core.russian_display_text(event.get("home_team")),
                     "away": event.get("away_team"),
+                    "awayRu": core.russian_display_text(event.get("away_team")),
                     "commenceTime": event.get("commence_time"),
                     "dataTier": model.get("dataTier"),
                     "dataQuality": model.get("dataQuality"),
@@ -3375,8 +3384,15 @@ def build_strategy_analysis(
                     "failures": failures,
                 })
             continue
-        diagnostics["eventsQualified"] += 1
-        diagnostics["qualifiedEventIds"].append(event_id)
+        diagnostics["eventsTopThreeEligible"] += 1
+        if bool(selected.get("premiumQualified")):
+            diagnostics["eventsQualified"] += 1
+            diagnostics["premiumQualifiedEvents"] += 1
+            diagnostics["qualifiedEventIds"].append(event_id)
+            diagnostics["premiumEventIds"].append(event_id)
+        else:
+            for failure in selected.get("premiumFailures") or []:
+                diagnostics["rejectionReasons"][f"Премиум: {failure}"] += 1
         diagnostics["marketFamilies"][str(selected.get("marketFamily"))] += 1
         evaluated_rows.append((event, selected, alternatives, model))
 
@@ -3412,7 +3428,7 @@ def build_strategy_analysis(
             "published": 0,
             "required": target,
             "shortage": target,
-            "status": "NO_QUALIFIED_EVENTS",
+            "status": "NO_TOP_THREE_ELIGIBLE_EVENTS",
             "partialPublication": False,
         })
         diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
@@ -3431,7 +3447,11 @@ def build_strategy_analysis(
             "financialMode": "EXPRESS_LEG",
             "conservativeProbability": selected.get("conservativeProbability"),
             "obviousMarketScore": selected.get("obviousMarketScore"),
-            "strategyQualified": True,
+            "strategyQualified": bool(selected.get("premiumQualified")),
+            "topThreeEligible": True,
+            "premiumQualified": bool(selected.get("premiumQualified")),
+            "premiumFailures": list(selected.get("premiumFailures") or []),
+            "publicationTier": "ПРЕМИУМ" if bool(selected.get("premiumQualified")) else "ОСНОВНОЙ",
             "matchDossier": {
                 "dataTier": model.get("dataTier"),
                 "dataQuality": model.get("dataQuality"),
@@ -3456,7 +3476,8 @@ def build_strategy_analysis(
         "partialPublication": len(records) < target,
         "status": "GREEN_PARTIAL_PRODUCTION" if len(records) < target else "GREEN",
         "marketFamilyCap": max_family,
-        "selectionObjective": "QUALITY_FIRST_PARTIAL_ALLOWED_WITH_MARKET_FAMILY_DIVERSIFICATION",
+        "premiumPublished": sum(1 for row in records if bool(row.get("premiumQualified"))),
+        "selectionObjective": "BEST_AVAILABLE_TOP_THREE_ALWAYS_WITH_SEPARATE_STRICT_PREMIUM_LABEL",
     })
     diagnostics["dataTiers"] = dict(diagnostics["dataTiers"])
     diagnostics["marketFamilies"] = dict(diagnostics["marketFamilies"])
