@@ -5324,6 +5324,10 @@ def publish_generation() -> int:
     state["dailyAnalysis"] = records
     state["bestBets"] = best
     state["predictions"] = copy.deepcopy(best)
+    # Synchronize the canonical bank immediately after the Top-3 becomes
+    # current public state. This does not change bank.current; it only derives
+    # active exposure, available balance and active-bet count from frozen stakes.
+    core.update_bank_metrics(state)
     expresses = build_expresses(records, state, config, now, daily_audit.get("expresses") if isinstance(daily_audit, dict) else None)
     if bootstrap_preview:
         for row in records:
