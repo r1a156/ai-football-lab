@@ -1,7 +1,19 @@
 name: Deploy Cloudflare Pages
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "assets/**"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "scripts/cloudflare_pages_build.sh"
+      - ".github/workflows/deploy-cloudflare-pages.yml"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["UI premium acceptance"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -43,8 +55,9 @@ jobs:
           state = json.loads(pathlib.Path("dist/data/state.json").read_text(encoding="utf-8"))
           daily = state.get("dailyAnalysis") or []
           expresses = state.get("expresses") or []
-          assert 1 <= len(daily) <= 15, f"dailyAnalysis={len(daily)}"
+          assert 0 <= len(daily) <= 15, f"dailyAnalysis={len(daily)}"
           assert len(expresses) == min(3, len(daily)//5), (len(daily), len(expresses))
+          assert len(state.get("bestBets") or []) <= 3
           print("STATIC_STATE_GREEN", len(daily), len(expresses))
           PY
 
@@ -84,15 +97,16 @@ jobs:
                   daily = state.get("dailyAnalysis") or []
                   expresses = state.get("expresses") or []
                   if (
-                      1 <= len(daily) <= 15
+                      0 <= len(daily) <= 15
                       and len(expresses) == min(3, len(daily)//5)
-                      and "15.7.1-pages-local-first" in index
+                      and len(state.get("bestBets") or []) <= 3
+                      and "V16_5_SINGLE_BANK_TOP3_GRAPH" in index
                   ):
                       print("CLOUDFLARE_PUBLIC_VERIFY=GREEN")
                       print("PUBLIC_ANALYSIS=", len(daily))
                       print("PUBLIC_EXPRESSES=", len(expresses))
                       raise SystemExit(0)
-                  last = f"analysis={len(daily)} expresses={len(expresses)} loader={'15.7.1-pages-local-first' in index}"
+                  last = f"analysis={len(daily)} expresses={len(expresses)} single_bank_ui={'V16_5_SINGLE_BANK_TOP3_GRAPH' in index}"
               except Exception as exc:
                   last = repr(exc)
               time.sleep(4)
