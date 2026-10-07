@@ -127,6 +127,7 @@
     renderMatches(current ? state.dailyAnalysis : []);
     renderExpresses(current ? state.expresses : [], state, current);
     renderSingles(current ? state.bestBets.slice(0, 3) : []);
+    renderPremium(current ? state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).slice(0, 3) : [], state);
     renderBank(state);
     renderHistory(state);
     const notice = document.getElementById("staleNotice");
@@ -142,13 +143,15 @@
   function isCurrentPortfolio(state) {
     const daily = state.dailyAnalysis;
     const expresses = state.expresses;
-    if (daily.length < 1 || daily.length > 15) return false;
+    if (daily.length < 3 || daily.length > 15) return false;
+    if (state.bestBets.length !== 3) return false;
+    if (!state.bestBets.every(row => number(row.stakePercent) === 10 && number(row.stake) > 0)) return false;
     const expectedExpresses = Math.min(3, Math.floor(daily.length / 5));
     if (expresses.length !== expectedExpresses) return false;
     if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const marker = String(state.meta.sourceMarker || "");
     if (!marker.includes("R15")) return false;
-    if (!daily.every(row => String(row.dataTier || "").toUpperCase() !== "MARKET" && number(row.dataQuality) >= MIN_QUALITY)) return false;
+    if (!daily.every(row => odds(row) >= 1.55 && home(row) && away(row))) return false;
     const selectionEnd = Date.parse(state.meta.selectionWindowEnd || state.meta.operationalWindowEnd || "");
     const updated = Date.parse(state.meta.updatedAt || "");
     if (Number.isFinite(selectionEnd) && Number.isFinite(updated)) {
@@ -164,9 +167,9 @@
     setText("summaryMatches", current ? String(state.dailyAnalysis.length) : "—");
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
-    setText("summaryQuality", current ? `${formatNumber(quality, 0)}/100` : "—");
+    setText("summaryPremium", current ? String(state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).length) : "—");
     setText("summaryBank", currency(modelBank.current));
-    setText("summaryExposure", `ROI ${signedPercent(modelBank.roi)} · ${modelBank.count} закрытых ставок`);
+    setText("summaryExposure", `Доходность ${signedPercent(modelBank.roi)} · ${modelBank.count} закрытых ставок`);
     const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
@@ -341,8 +344,8 @@
           return `<article class="match-card">
             <div class="rank">${index + 1}</div>
             <div class="match-main">
-              <div class="match-meta"><span>${escapeHtml(row.league || "Футбол")}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
-              <div class="teams"><span>${escapeHtml(row.home || "—")}</span><i>—</i><span>${escapeHtml(row.away || "—")}</span></div>
+              <div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
+              <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
               <div class="match-why">${escapeHtml(failures.join("; ") || "Не прошёл полный контроль качества")}</div>
             </div>
             <div class="match-side">
@@ -393,8 +396,8 @@
           return `<article class="match-card">
             <div class="rank">${rows.length + index + 1}</div>
             <div class="match-main">
-              <div class="match-meta"><span>${escapeHtml(row.league || "Футбол")}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
-              <div class="teams"><span>${escapeHtml(row.home || "—")}</span><i>—</i><span>${escapeHtml(row.away || "—")}</span></div>
+              <div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
+              <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
               <div class="match-why">${escapeHtml(failures.join("; ") || "Близок к строгому допуску")}</div>
             </div>
             <div class="match-side">
@@ -441,9 +444,32 @@
       const key = remember(row, `single-${index}`);
       return `<article class="single-card" data-record="${escapeHtml(key)}" tabindex="0" role="button">
         <div class="single-rank">${index + 1}</div>
+        ${row.premiumQualified ? '<div class="premium-mark">Премиум</div>' : ''}
         <div class="single-teams"><small>${escapeHtml(league(row))} · ${escapeHtml(matchTime(row))}</small><span>${escapeHtml(home(row))}</span><span>${escapeHtml(away(row))}</span></div>
         <div class="single-pick"><span>Прогноз</span><strong>${escapeHtml(pick(row))}</strong></div>
         <div class="single-metrics"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Ставка</span><strong>${number(row.stake) > 0 ? currency(row.stake) : "без риска"}</strong></div></div>
+      </article>`;
+    }).join("");
+    root.querySelectorAll("[data-record]").forEach(node => node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record))));
+  }
+
+  function renderPremium(rows, state) {
+    const root = document.getElementById("premiumGrid");
+    if (!root) return;
+    if (!rows.length) {
+      root.innerHTML = '<div class="smart-empty"><span>ПРЕМИУМ</span><strong>Сегодня премиум‑ставок нет</strong><p>Это нормальный результат: премиум появляется только при одновременном прохождении всех строгих фильтров. Обычный Топ‑3 при этом публикуется каждый день независимо от премиум‑статуса.</p></div>';
+      return;
+    }
+    const topThreeIds = new Set(array(state.bestBets).map(row => String(row.eventId || "")));
+    root.innerHTML = rows.map((row, index) => {
+      const key = remember(row, `premium-${index}`);
+      const covered = topThreeIds.has(String(row.eventId || ""));
+      return `<article class="single-card premium-card" data-record="${escapeHtml(key)}" tabindex="0" role="button">
+        <div class="premium-mark">Премиум</div>
+        <div class="single-rank">${index + 1}</div>
+        <div class="single-teams"><small>${escapeHtml(league(row))} · ${escapeHtml(matchTime(row))}</small><span>${escapeHtml(home(row))}</span><span>${escapeHtml(away(row))}</span></div>
+        <div class="single-pick"><span>Прогноз</span><strong>${escapeHtml(pick(row))}</strong></div>
+        <div class="single-metrics"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Банк</span><strong>${covered ? "учтён в Топ‑3" : "без дополнительной ставки"}</strong></div></div>
       </article>`;
     }).join("");
     root.querySelectorAll("[data-record]").forEach(node => node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record))));
@@ -556,6 +582,7 @@
     document.getElementById("matchList").innerHTML = empty("Не удалось загрузить данные. Страница повторит попытку автоматически.");
     document.getElementById("expressGrid").innerHTML = empty("Ожидаем соединение");
     document.getElementById("singleGrid").innerHTML = empty("Ожидаем соединение");
+    if (document.getElementById("premiumGrid")) document.getElementById("premiumGrid").innerHTML = empty("Ожидаем соединение");
   }
 
   function setupPwa() {
@@ -628,16 +655,16 @@
 
   function sourceLabel(value) {
     return String(value || "")
-      .replace("FOOTBALL_DATA_CO_UK","Football-data")
-      .replace("OPENFOOTBALL","OpenFootball")
-      .replace("OPENLIGADB","OpenLigaDB")
-      .replace("STATSBOMB_OPEN_DATA","StatsBomb")
-      .replace("CLUBELO","ClubElo");
+      .replace("FOOTBALL_DATA_CO_UK","База футбольных результатов")
+      .replace("OPENFOOTBALL","Открытый архив матчей")
+      .replace("OPENLIGADB","Открытая база лиг")
+      .replace("STATSBOMB_OPEN_DATA","Открытая статистика матчей")
+      .replace("CLUBELO","Рейтинг силы клубов");
   }
 
   function healthLabel(value) {
     const text = String(value || "UNKNOWN").toUpperCase();
-    return ({GREEN:"OK",PARTIAL:"Частично",DEGRADED:"Ограничено",RED:"Ошибка",ERROR:"Ошибка",LIMIT:"Лимит",UNKNOWN:"Нет данных"})[text] || text;
+    return ({GREEN:"Норма",PARTIAL:"Частично",DEGRADED:"Ограничено",RED:"Ошибка",ERROR:"Ошибка",LIMIT:"Лимит",UNKNOWN:"Нет данных"})[text] || text;
   }
 
   function healthClass(value) {
