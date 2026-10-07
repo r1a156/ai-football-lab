@@ -3733,58 +3733,30 @@ def balanced_groups(records: list[dict[str, Any]]) -> list[list[dict[str, Any]]]
 
 
 def ensure_express_bank(state: dict[str, Any], config: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
-    starting = safe_float(config.get("expressStartingBank"), 10000.0)
+    """Return the historical express-bank archive without creating a second bank.
+
+    R16 has one active bank only: state["bank"]. Existing expressBank records
+    are retained verbatim for audit of old settled express activity.
+    """
     bank = state.get("expressBank") if isinstance(state.get("expressBank"), dict) else {}
-    if not bank:
-        bank = {
-            "starting": starting,
-            "current": starting,
-            "history": [{"timestamp": iso(now), "value": starting, "reason": "R15_EXPRESS_BANK_CREATED"}],
-            "createdAt": iso(now),
-        }
-    bank.setdefault("starting", starting)
-    bank.setdefault("current", bank.get("starting", starting))
-    bank.setdefault("history", [])
-    state["expressBank"] = bank
+    if bank:
+        bank.setdefault("mode", "LEGACY_ARCHIVE_ONLY")
+        bank.setdefault("active", False)
+        bank.setdefault("financialWritesDisabled", True)
     return bank
 
 
 def update_express_bank_metrics(state: dict[str, Any], now: dt.datetime) -> None:
-    bank = ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
-    current = safe_float(bank.get("current"), safe_float(bank.get("starting"), 10000.0))
-    active = [row for row in state.get("expresses") or [] if isinstance(row, dict) and str(row.get("status") or "pending") == "pending"]
-    placed = round(sum(safe_float(row.get("stake")) for row in active), 2)
-    starting = max(0.01, safe_float(bank.get("starting"), 10000.0))
-    values = [safe_float(row.get("value"), starting) for row in bank.get("history") or [] if isinstance(row, dict)] or [starting, current]
-    peak = values[0]
-    max_drawdown = 0.0
-    for value in values:
-        peak = max(peak, value)
-        if peak > 0:
-            max_drawdown = max(max_drawdown, (peak - value) / peak * 100.0)
-    calculated = {
-        "placedAmount": placed,
-        "activeExposure": placed,
-        "available": round(max(0.0, current - placed), 2),
-        "activeExpressCount": len(active),
-        "roi": round((current / starting - 1.0) * 100.0, 2),
-        "maxDrawdown": round(max_drawdown, 2),
-    }
-    changed = any(bank.get(key) != value for key, value in calculated.items())
-    bank.update(calculated)
-    if changed or not bank.get("updatedAt"):
-        bank["updatedAt"] = iso(now)
+    """Compatibility no-op for the frozen legacy express-bank archive."""
+    ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
 
 
 def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config: dict[str, Any], now: dt.datetime, preferred_groups: dict[str, list[str]] | None = None) -> list[dict[str, Any]]:
     group_count = min(3, len(records) // 5)
     if group_count <= 0:
         state["expresses"] = []
-        update_express_bank_metrics(state, now)
         return []
     usable_records = list(records[: group_count * 5])
-    bank = ensure_express_bank(state, config, now)
-    current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
     configured_stake_percent = safe_float(config.get("expressStakePercent"), 0.0)
     recovery_mode = any(str(row.get("publicationMode") or "") == "RECOVERY_DAY" for row in usable_records)
     if group_count == 3 and len(usable_records) == 15:
@@ -3887,7 +3859,6 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
             "bankPolicy": R15_EXPRESS_POLICY,
         })
     state["expresses"] = result
-    update_express_bank_metrics(state, now)
     return result
 
 
@@ -4043,7 +4014,7 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "analysisDateLocal": state.get("meta", {}).get("analysisDateLocal"),
         "batch": state.get("batch", {}),
         "dataCoverage": state.get("dataCoverage", {}),
-        "expressBank": state.get("expressBank", {}),
+        "bank": state.get("bank", {}),
         "expresses": state.get("expresses", []),
         "dailyAnalysis": state.get("dailyAnalysis", []),
         "bestBets": state.get("bestBets", []),
@@ -4156,7 +4127,6 @@ def settle_current() -> int:
     released = core.release_overdue_batch_records(state, config, now)
     express_counters = sync_and_settle_expresses(state, now)
     core.maintain_prediction_history(state, config, now)
-    core.update_bank_metrics(state)
     core.update_bank_metrics(state)
     core.update_statistics(state)
     update_express_statistics(state)
@@ -4337,10 +4307,13 @@ def archive_legacy_publication_bridge(
         "completed": True,
         "placedAmount": 0.0,
         "availableAmount": safe_float(
-            (state.get("expressBank") or {}).get("available"),
-            safe_float((state.get("expressBank") or {}).get("current"), 10000.0),
+            (state.get("bank") or {}).get("available"),
+            safe_float((state.get("bank") or {}).get("current"), config.get("startingVirtualBank", 10000.0)),
         ),
-        "startingBank": safe_float((state.get("expressBank") or {}).get("starting"), 10000.0),
+        "startingBank": safe_float(
+            (state.get("bank") or {}).get("starting"),
+            config.get("startingVirtualBank", 10000.0),
+        ),
         "transitionReason": "R3R5R1_LEGACY_BRIDGE_ARCHIVED",
     }
     state.setdefault("meta", {}).update({
@@ -4429,12 +4402,12 @@ def release_expired_previous_day(
         "completed": True,
         "placedAmount": 0.0,
         "availableAmount": safe_float(
-            (state.get("expressBank") or {}).get("current"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("current"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "startingBank": safe_float(
-            (state.get("expressBank") or {}).get("starting"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("starting"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "transitionReason": "EXPIRED_PREVIOUS_OPERATIONAL_DAY_RELEASED",
     }
@@ -4612,12 +4585,12 @@ def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now
         "completed": True,
         "placedAmount": 0.0,
         "availableAmount": safe_float(
-            (state.get("expressBank") or {}).get("current"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("current"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "startingBank": safe_float(
-            (state.get("expressBank") or {}).get("starting"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("starting"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "transitionReason": "BOOTSTRAP_PREVIEW_RETIRED_FOR_NORMAL_WINDOW",
     }
@@ -4650,7 +4623,7 @@ def publish_generation() -> int:
     config = copy.deepcopy(config)
     config["dynamicUncertaintyMargin"] = safe_float(calibration_guard.get("additionalUncertaintyMargin"), 0.0)
     config["dynamicMarketFamilyHaircuts"] = copy.deepcopy(calibration_guard.get("marketFamilyHaircuts") or {})
-    config["expressBankrollAllowed"] = bool(calibration_guard.get("bankrollAllowed"))
+    config["expressBankrollAllowed"] = False
     state.setdefault("meta", {})["calibrationGuard"] = copy.deepcopy(calibration_guard)
     print(f"R15_CALIBRATION_MODE={calibration_guard.get('mode')}")
     print(f"R15_CALIBRATION_SAMPLE={safe_int((calibration_guard.get('overall') or {}).get('n'), 0)}")
@@ -5247,8 +5220,8 @@ def publish_generation() -> int:
             "statusLabel": "Временный предпросмотр до штатного окна 08:00 МСК",
             "placedAmount": 0.0,
             "availableAmount": safe_float(
-                (state.get("expressBank") or {}).get("current"),
-                safe_float(config.get("expressStartingBank"), 10000.0),
+                (state.get("bank") or {}).get("current"),
+                safe_float(config.get("startingVirtualBank"), 10000.0),
             ),
             "rolloverExecutionPolicy": "AUTO_REPLACE_AT_FIRST_ACTIVE_08_MSK_WINDOW",
         })
