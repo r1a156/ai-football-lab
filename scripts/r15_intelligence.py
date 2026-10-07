@@ -5570,9 +5570,9 @@ def validate_state() -> int:
     bootstrap_preview = bool(validation_meta.get("bootstrapPreview"))
     recovery_day = bool(validation_meta.get("recoveryDay"))
     if is_r15_publication:
-        if not (1 <= len(daily) <= safe_int(config.get("dailyAnalysisTarget"), 15)):
-            raise RuntimeError(f"R15 daily analysis must contain 1..15 current-day rows, got {len(daily)}")
-        expected_best = min(3, len(daily))
+        if not (3 <= len(daily) <= safe_int(config.get("dailyAnalysisTarget"), 15)):
+            raise RuntimeError(f"R17 daily analysis must contain 3..15 current-day rows, got {len(daily)}")
+        expected_best = 3
         if len(best) != expected_best:
             raise RuntimeError(f"R15 informational top rows must be {expected_best}, got {len(best)}")
         expected_expresses = min(3, len(daily) // 5)
@@ -5621,23 +5621,22 @@ def validate_state() -> int:
                 )
             if str(row.get("sport") or "") != "soccer":
                 raise RuntimeError("R15 contains non-football event")
-            if str(row.get("dataTier") or "MARKET") == "MARKET":
-                raise RuntimeError("R15 strategy contains MARKET-only event")
-            minimum_quality = (
-                40.0
-                if recovery_day
-                else (
-                    safe_float(config.get("bootstrapPreviewMinimumDataQuality"), 40.0)
-                    if bootstrap_preview
-                    else safe_float(config.get("strategyMinimumDataQuality"), 58)
+            top_three_ok, top_three_failures = candidate_is_top_three_eligible(row, config)
+            if not top_three_ok:
+                raise RuntimeError(
+                    "R17 ordinary publication contains ineligible market: "
+                    + "; ".join(top_three_failures)
                 )
-            )
-            if safe_float(row.get("dataQuality")) < minimum_quality:
-                raise RuntimeError("R15 strategy contains weak data")
+            premium_ok, premium_failures = candidate_is_qualified(row, config)
+            if bool(row.get("premiumQualified")) and not premium_ok:
+                raise RuntimeError(
+                    "R17 premium label violates strict filters: "
+                    + "; ".join(premium_failures)
+                )
             if core.competition_is_excluded(row.get("sportKey"), row.get("league"), "", row.get("country"), config):
-                raise RuntimeError("R15 contains excluded competition")
+                raise RuntimeError("R17 contains excluded competition")
             if not core.record_uses_r14_standard_market(row):
-                raise RuntimeError("R15 contains Asian or unsupported market")
+                raise RuntimeError("R17 contains Asian or unsupported market")
         expected_best_percent = 0.0 if (bootstrap_preview or recovery_day) else safe_float(config.get("stakePerBestBetPercent"), 10.0)
         for row in best:
             if abs(safe_float(row.get("stakePercent")) - expected_best_percent) > 0.001:
@@ -5762,6 +5761,33 @@ def self_test() -> int:
     guard_ok, guard_failures = candidate_is_qualified(guard_candidate, config)
     if guard_ok or not any("Основной фильтр" in reason for reason in guard_failures):
         raise RuntimeError("SELF_TEST core qualification guard failed")
+
+    ordinary_candidate = copy.deepcopy(guard_candidate)
+    ordinary_candidate.update({
+        "market": "HOME_WIN",
+        "selectionCode": "HOME",
+        "modelProbability": 0.53,
+        "conservativeProbability": 0.50,
+        "expectedValue": -0.04,
+        "edge": -0.02,
+        "dataTier": "MARKET",
+        "dataQuality": 34,
+        "quoteCount": 2,
+        "agreement": 45,
+        "marketStability": 55,
+        "anomaly": 30,
+        "qualification": {
+            "qualified": False,
+            "failures": ["Недостаточная полнота данных"],
+        },
+    })
+    ordinary_ok, ordinary_failures = candidate_is_top_three_eligible(ordinary_candidate, config)
+    ordinary_premium, _ = candidate_is_qualified(ordinary_candidate, config)
+    selected_ordinary, _ = choose_obvious_candidate([ordinary_candidate], config)
+    if not ordinary_ok or ordinary_failures or ordinary_premium or not selected_ordinary:
+        raise RuntimeError("SELF_TEST R17 ordinary Top-3 was incorrectly blocked by premium filters")
+    if bool(selected_ordinary.get("premiumQualified")):
+        raise RuntimeError("SELF_TEST R17 ordinary Top-3 was incorrectly marked premium")
 
     low_odds_candidate = copy.deepcopy(guard_candidate)
     low_odds_candidate["qualification"] = {"qualified": True, "failures": []}
