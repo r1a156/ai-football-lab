@@ -44,6 +44,8 @@ jobs:
           print("APP_HAS_RAW_STATE_URL", "RAW_STATE_URL" in app)
           print("APP_HAS_LOAD_BEST_STATE", "loadBestState" in app)
           print("APP_HAS_CURRENT_PORTFOLIO", "isCurrentPortfolio" in app)
+          current_start=app.find("function isCurrentPortfolio")
+          print("IS_CURRENT_SNIPPET", app[current_start:current_start+1800].replace("\n","\\n") if current_start>=0 else "NOT_FOUND")
           print("RUNTIME_CONFIG", runtime.strip())
           start=app.find("async function loadBestState")
           print("LOAD_BEST_STATE_SNIPPET", app[start:start+2200].replace("\n","\\n") if start>=0 else "NOT_FOUND")
@@ -51,4 +53,21 @@ jobs:
           print("INDEX_HAS_SINGLE_GRID", "singleGrid" in index)
           for i,x in enumerate(best,1):
               print("PUBLIC_PICK",i,x.get("homeRu") or x.get("home"),"—",x.get("awayRu") or x.get("away"),x.get("pickRu") or x.get("pick"),x.get("bookmakerOdds") or x.get("odds"),x.get("commenceTime"),x.get("status"))
+
+          worker="https://ai-football-free.shevtsov001.workers.dev/data/state.json"
+          req=urllib.request.Request(
+              worker+"?v="+str(time.time_ns()),
+              headers={"Cache-Control":"no-cache","User-Agent":"AI-Football-Diagnostic/1.0","Origin":"https://ai-football-lab.pages.dev"},
+          )
+          with urllib.request.urlopen(req, timeout=20) as wr:
+              worker_headers=dict(wr.headers.items())
+              worker_state=json.load(wr)
+          print("WORKER_STATUS", "OK")
+          print("WORKER_ACAO", worker_headers.get("Access-Control-Allow-Origin") or worker_headers.get("access-control-allow-origin"))
+          print("WORKER_UPDATED_AT", (worker_state.get("meta") or {}).get("updatedAt"))
+          print("WORKER_DAILY", len(worker_state.get("dailyAnalysis") or []))
+          print("WORKER_BEST", len(worker_state.get("bestBets") or []))
+          print("WORKER_EXPRESSES", len(worker_state.get("expresses") or []))
+          for i,x in enumerate(worker_state.get("bestBets") or [],1):
+              print("WORKER_PICK",i,x.get("homeRu") or x.get("home"),"—",x.get("awayRu") or x.get("away"),x.get("pickRu") or x.get("pick"),x.get("bookmakerOdds") or x.get("odds"),x.get("commenceTime"),x.get("status"))
           PY
