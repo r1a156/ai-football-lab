@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=16.1.0">
   <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
   <title>Спортивный ИИ — портфель матчей</title>
-  <link rel="stylesheet" href="assets/styles.css?v=16.4.0-shadow-learning-best-matches">
+  <link rel="stylesheet" href="assets/styles.css?v=16.5.0-one-bank-top3">
 </head>
 <body>
   <!-- V16_PREMIUM_INTERFACE -->
@@ -35,7 +35,7 @@
       <div class="hero-copy">
         <span class="eyebrow">ПОРТФЕЛЬ НА СУТКИ</span>
         <h1>Главное по матчам.<br><em>Без лишнего шума.</em></h1>
-        <p>До пятнадцати отобранных событий из rolling prematch‑окна до 72 часов, до трёх экспрессов и три сильнейших одиночных прогноза. Сначала система ищет шире, но публикует только прошедшие полный контроль качества матчи.</p>
+        <p>До пятнадцати отобранных событий из rolling prematch‑окна до 72 часов, три сильнейших одиночных прогноза и аналитические экспрессы без отдельного банка. Сначала система ищет шире, но публикует только прошедшие полный контроль качества матчи.</p>
         <div class="hero-status" id="heroStatus">
           <span class="status-light"></span>
           <div><strong id="portfolioStatus">Проверяем данные</strong><small id="portfolioUpdated">—</small></div>
@@ -50,7 +50,7 @@
         <div class="summary-head"><span>Сегодня</span><time id="summaryDate">—</time></div>
         <div class="summary-grid">
           <article><small>Матчи</small><strong id="summaryMatches">—</strong><span>в рейтинге</span></article>
-          <article><small>Экспрессы</small><strong id="summaryExpresses">—</strong><span>по 5 событий</span></article>
+          <article><small>Экспрессы</small><strong id="summaryExpresses">—</strong><span>аналитика без ставки</span></article>
           <article><small>Топ‑3</small><strong id="summarySingles">—</strong><span>лучшие позиции</span></article>
           <article><small>Качество</small><strong id="summaryQuality">—</strong><span>среднее значение</span></article>
         </div>
@@ -79,7 +79,7 @@
         <div class="spotlight-economics">
           <div><span>Коэффициент</span><strong id="spotlightOdds">—</strong></div>
           <div><span>Консервативный EV</span><strong id="spotlightEv">—</strong></div>
-          <div><span>Экспресс‑риск</span><strong id="spotlightBankroll">—</strong></div>
+          <div><span>Ставка банка</span><strong id="spotlightBankroll">—</strong></div>
         </div>
         <div class="spotlight-reason"><span>Почему выбран</span><ul id="spotlightReasons"><li>Ожидаем проверенные данные</li></ul></div>
       </article>
@@ -115,7 +115,7 @@
 
     <section class="section shell" id="expresses">
       <header class="section-head">
-        <div><span class="section-kicker">02</span><h2>Три экспресса</h2><p>Каждый матч используется один раз, без повторов между купонами.</p></div>
+        <div><span class="section-kicker">02</span><h2>Три аналитических экспресса</h2><p>Информационные комбинации без отдельного банка и без списания средств. Каждый матч используется один раз.</p></div>
         <div class="section-stat"><span>Формат</span><strong>3 × 5</strong></div>
       </header>
       <div class="express-grid" id="expressGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
@@ -123,8 +123,8 @@
 
     <section class="section shell" id="singles">
       <header class="section-head">
-        <div><span class="section-kicker">03</span><h2>Топ‑3</h2><p>Три первые позиции общего рейтинга, без отдельного списания банка.</p></div>
-        <div class="section-stat"><span>Режим</span><strong>Контроль</strong></div>
+        <div><span class="section-kicker">03</span><h2>Топ‑3</h2><p>Три сильнейших опубликованных прогноза. На каждый фиксируется 10% текущего банка в момент публикации.</p></div>
+        <div class="section-stat"><span>Банк</span><strong>3 × 10%</strong></div>
       </header>
       <div class="single-grid" id="singleGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
@@ -149,7 +149,7 @@
           <div class="mini-card-head"><span>Calibration guard</span><b id="guardStatus">—</b></div>
           <div class="guard-row"><span>Доп. запас неопределённости</span><strong id="guardMargin">—</strong></div>
           <div class="guard-row"><span>Коррекция тоталов</span><strong id="totalHaircut">—</strong></div>
-          <div class="guard-row"><span>Новые экспрессы</span><strong id="bankrollGuard">—</strong></div>
+          <div class="guard-row"><span>Правило банка</span><strong id="bankrollGuard">—</strong></div>
           <p id="guardExplanation">Система может только ужесточать риск при плохой калибровке — не повышать вероятность искусственно.</p>
         </article>
       </div>
@@ -157,30 +157,25 @@
 
     <section class="section shell" id="results">
       <header class="section-head">
-        <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
+        <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Один виртуальный банк. История не пересчитывается задним числом; новые ставки — только Топ‑3 по 10% каждая.</p></div>
       </header>
       <div class="results-layout results-layout-v2">
         <div class="bank-stack">
-          <article class="bank-card bank-card-model">
-            <span>Аналитический банк модели</span><strong id="modelBankCurrent">—</strong><small id="modelBankChange">—</small>
-            <div class="bank-grid">
-              <div><span>Старт</span><b id="modelBankStarting">10 000 ₽</b></div>
-              <div><span>Расчётов</span><b id="modelBankBets">—</b></div>
-              <div><span>ROI</span><b id="modelBankRoi">—</b></div>
-              <div><span>Max drawdown</span><b id="modelBankDrawdown">—</b></div>
-            </div>
-            <p class="bank-method">Симуляция одиночных прогнозов: фиксированная ставка 100 ₽ на каждый рассчитанный прогноз. Нужна для чистой оценки прибыльности модели без влияния экспрессов.</p>
-          </article>
-
-          <article class="bank-card bank-card-express">
-            <span>Экспресс‑банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
+          <article class="bank-card bank-card-primary">
+            <span>Единый виртуальный банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
             <div class="bank-grid">
               <div><span>Старт</span><b id="bankStarting">—</b></div>
               <div><span>В работе</span><b id="bankPlaced">—</b></div>
               <div><span>Свободно</span><b id="bankAvailable">—</b></div>
               <div><span>Результат</span><b id="bankProfit">—</b></div>
+              <div><span>ROI</span><b id="bankRoi">—</b></div>
+              <div><span>Max drawdown</span><b id="bankDrawdown">—</b></div>
+              <div><span>Активных ставок</span><b id="bankActiveBets">0</b></div>
+              <div><span>Новая экспозиция</span><b>до 30%</b></div>
             </div>
-            <p class="bank-method">Отдельный риск‑контур 5‑событийных экспрессов. Его просадка не смешивается с прибыльностью одиночных прогнозов.</p>
+            <div class="bank-chart-head"><span>Динамика банка</span><small id="bankChartRange">—</small></div>
+            <div class="bank-chart" id="bankChart" aria-live="polite"></div>
+            <p class="bank-method">Новая политика: три одиночные ставки по 10% текущего банка. Размер каждой ставки фиксируется до начала матча. Старые закрытые результаты и баланс сохранены без ретроактивного пересчёта.</p>
           </article>
         </div>
 
@@ -207,6 +202,6 @@
   </dialog>
 
   <script src="assets/runtime-config.js?v=cf-final-utf8"></script>
-  <script src="assets/app.js?v=16.4.0-shadow-learning-best-matches"></script>
+  <script src="assets/app.js?v=16.5.0-one-bank-top3"></script>
 </body>
 </html>
