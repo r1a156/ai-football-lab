@@ -3128,6 +3128,41 @@ def candidate_is_qualified(candidate: dict[str, Any], config: dict[str, Any]) ->
     return not failures, failures
 
 
+def candidate_is_top_three_eligible(candidate: dict[str, Any], config: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Basic eligibility for the mandatory Top-3.
+
+    These floors protect against invalid/stale/contradictory markets, but they
+    are intentionally weaker than the premium qualification. Premium filters
+    must never be able to make the ordinary Top-3 disappear.
+    """
+    failures: list[str] = []
+    odds = safe_float(candidate.get("bookmakerOdds"))
+    conservative = safe_float(candidate.get("conservativeProbability"), candidate.get("modelProbability"))
+    stability = safe_float(candidate.get("marketStability"))
+    anomaly = safe_float(candidate.get("anomaly"))
+    quote_count = safe_int(candidate.get("quoteCount"))
+    family = str(candidate.get("marketFamily") or candidate.get("marketKey") or "").lower()
+    is_total_market = "total" in family or str(candidate.get("marketKey") or "").lower() in {"totals", "team_totals"}
+
+    if not core.record_uses_r14_standard_market(candidate):
+        failures.append("Рынок не входит в разрешённый список")
+    if odds < safe_float(config.get("minimumBookmakerOdds"), 1.55):
+        failures.append("Коэффициент ниже минимального")
+    if odds > safe_float(config.get("maximumBookmakerOdds"), 3.2):
+        failures.append("Коэффициент выше допустимого")
+    if quote_count < safe_int(config.get("minimumBookmakers"), 2):
+        failures.append("Недостаточно независимых котировок")
+    if conservative <= 0:
+        failures.append("Нет расчётной вероятности")
+    if bool(candidate.get("goalDirectionConflict")) and is_total_market:
+        failures.append("Направление тотала противоречит модели матча")
+    if stability and stability < 25:
+        failures.append("Критически нестабильная линия")
+    if anomaly > 80:
+        failures.append("Критическая рыночная аномальность")
+    return not failures, failures
+
+
 def obvious_market_score(candidate: dict[str, Any], config: dict[str, Any]) -> float:
     probability = safe_float(candidate.get("conservativeProbability"), candidate.get("modelProbability"))
     odds = safe_float(candidate.get("bookmakerOdds"), 1.0)
@@ -3147,25 +3182,54 @@ def obvious_market_score(candidate: dict[str, Any], config: dict[str, Any]) -> f
 
 
 def choose_obvious_candidate(candidates: list[dict[str, Any]], config: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
-    qualified: list[dict[str, Any]] = []
+    """Choose the best available real market; premium is a separate label."""
+    eligible: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     for source in candidates:
         item = copy.deepcopy(source)
-        okay, failures = candidate_is_qualified(item, config)
-        item["strategyQualified"] = okay
-        item["strategyFailures"] = failures
+        top_three_ok, top_three_failures = candidate_is_top_three_eligible(item, config)
+        premium_ok, premium_failures = candidate_is_qualified(item, config)
+        item["topThreeEligible"] = top_three_ok
+        item["topThreeFailures"] = top_three_failures
+        item["premiumQualified"] = premium_ok
+        item["premiumFailures"] = premium_failures
+        # Keep the legacy field for diagnostics, but it now means premium-only.
+        item["strategyQualified"] = premium_ok
+        item["strategyFailures"] = premium_failures
         item["obviousMarketScore"] = obvious_market_score(item, config)
-        (qualified if okay else rejected).append(item)
-    if not qualified:
-        return None, sorted(rejected, key=lambda row: safe_float(row.get("conservativeProbability")), reverse=True)
+        (eligible if top_three_ok else rejected).append(item)
+    if not eligible:
+        return None, sorted(
+            rejected,
+            key=lambda row: (
+                safe_float(row.get("conservativeProbability")),
+                safe_float(row.get("dataQuality")),
+                safe_float(row.get("obviousMarketScore")),
+            ),
+            reverse=True,
+        )
 
-    qualified.sort(key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("dataQuality")), safe_float(row.get("obviousMarketScore"))), reverse=True)
-    highest_probability = qualified[0]
+    eligible.sort(
+        key=lambda row: (
+            safe_float(row.get("obviousMarketScore")),
+            safe_float(row.get("conservativeProbability")),
+            safe_float(row.get("reliabilityScore")),
+            safe_float(row.get("dataQuality")),
+            safe_float(row.get("marketStability")),
+            -safe_float(row.get("anomaly")),
+        ),
+        reverse=True,
+    )
+    highest_probability = max(
+        eligible,
+        key=lambda row: safe_float(row.get("conservativeProbability")),
+    )
     gap = safe_float(config.get("marketDominanceProbabilityGap"), 0.02)
     preferred_min = safe_float(config.get("preferredMinimumOdds"), 1.55)
     close = [
-        row for row in qualified
-        if safe_float(highest_probability.get("conservativeProbability")) - safe_float(row.get("conservativeProbability")) <= gap
+        row for row in eligible
+        if safe_float(highest_probability.get("conservativeProbability"))
+        - safe_float(row.get("conservativeProbability")) <= gap
     ]
     close.sort(
         key=lambda row: (
@@ -3175,8 +3239,8 @@ def choose_obvious_candidate(candidates: list[dict[str, Any]], config: dict[str,
         ),
         reverse=True,
     )
-    selected = close[0]
-    alternatives = [row for row in qualified if row is not selected] + rejected
+    selected = close[0] if close else eligible[0]
+    alternatives = [row for row in eligible if row is not selected] + rejected
     selected["marketDominanceRule"] = {
         "highestProbability": safe_float(highest_probability.get("conservativeProbability")),
         "selectedProbability": safe_float(selected.get("conservativeProbability")),
@@ -3184,7 +3248,6 @@ def choose_obvious_candidate(candidates: list[dict[str, Any]], config: dict[str,
         "priceUsedOnlyInsideGap": True,
     }
     return selected, alternatives
-
 
 def selection_explanation(selected: dict[str, Any], alternatives: list[dict[str, Any]]) -> dict[str, Any]:
     components = selected.get("modelComponents") if isinstance(selected.get("modelComponents"), dict) else {}
