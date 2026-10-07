@@ -1,0 +1,201 @@
+name: Recover active Top-3 publication
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r18-recover-active-top3.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: r18-recover-active-top3
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout current main with history
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate retention code
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/r15_intelligence.py
+          python scripts/r15_intelligence.py --self-test
+
+      - name: Restore exact immutable active publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import copy
+          import datetime as dt
+          import json
+          import subprocess
+          import sys
+
+          SOURCE_COMMIT = "19365e0e9638596c3356e4251cb8a24dce149679"
+          sys.path.insert(0, "scripts")
+          import r15_intelligence as r15
+
+          def load(path):
+              with open(path, "r", encoding="utf-8") as fh:
+                  return json.load(fh)
+
+          current = load("data/state.json")
+          current_best = [x for x in current.get("bestBets") or [] if isinstance(x, dict)]
+          if len(current_best) == 3 and not bool((current.get("batch") or {}).get("completed")):
+              print("R18_RECOVERY=SKIP_CURRENT_ACTIVE_PUBLICATION_ALREADY_PRESENT")
+              raise SystemExit(0)
+          if current_best:
+              raise RuntimeError(f"Refusing recovery over non-empty unexpected publication: {len(current_best)}")
+
+          raw = subprocess.check_output(
+              ["git", "show", f"{SOURCE_COMMIT}:data/state.json"],
+              text=True,
+              encoding="utf-8",
+          )
+          source = json.loads(raw)
+          source_best = [x for x in source.get("bestBets") or [] if isinstance(x, dict)]
+          source_daily = [x for x in source.get("dailyAnalysis") or [] if isinstance(x, dict)]
+          source_expresses = [x for x in source.get("expresses") or [] if isinstance(x, dict)]
+          source_batch = source.get("batch") if isinstance(source.get("batch"), dict) else {}
+
+          if len(source_best) != 3:
+              raise RuntimeError(f"Historical source is not Top-3: {len(source_best)}")
+          if len(source_daily) < 3:
+              raise RuntimeError("Historical source has insufficient daily analysis")
+          if bool(source_batch.get("completed")):
+              raise RuntimeError("Historical source batch is already completed")
+
+          now = dt.datetime.now(dt.timezone.utc)
+          daily_ids = {str(x.get("eventId") or "") for x in source_daily}
+          for row in source_best:
+              event_id = str(row.get("eventId") or "")
+              if not event_id or event_id not in daily_ids:
+                  raise RuntimeError(f"Top-3 event missing from analysis: {event_id}")
+              odds = r15.safe_float(row.get("bookmakerOdds"), r15.safe_float(row.get("odds")))
+              if odds < 1.55:
+                  raise RuntimeError(f"Historical Top-3 has odds below 1.55: {event_id} {odds}")
+              if str(row.get("status") or "pending").lower() in r15.TERMINAL:
+                  raise RuntimeError(f"Historical Top-3 already terminal: {event_id}")
+              commence = r15.parse_time(row.get("commenceTime"))
+              if commence is None or commence <= now:
+                  raise RuntimeError(f"Refusing to recover after kickoff: {event_id} {row.get('commenceTime')}")
+
+          # Restore the exact already-published records. No pick, odds, stake,
+          # qualification, result, or publication timestamp is recomputed.
+          for key in ("dailyAnalysis", "bestBets", "predictions", "expresses", "batch"):
+              current[key] = copy.deepcopy(source.get(key) or ([] if key != "batch" else {}))
+
+          current_meta = current.setdefault("meta", {})
+          source_meta = source.get("meta") if isinstance(source.get("meta"), dict) else {}
+          for key in (
+              "analysisDateLocal",
+              "operationalDayId",
+              "operationalWindowStart",
+              "operationalWindowEnd",
+              "selectionWindowStart",
+              "selectionWindowEnd",
+              "selectionStagesUsed",
+              "selectionPolicy",
+          ):
+              if key in source_meta:
+                  current_meta[key] = copy.deepcopy(source_meta[key])
+          current_meta.update({
+              "sourceMarker": r15.R15_MARKER,
+              "status": "ACTIVE_PUBLICATION_RECOVERED",
+              "dataFreshness": "ACTIVE_PUBLICATION_RETAINED_FROM_IMMUTABLE_GIT_HISTORY",
+              "publicationRecoveryAt": r15.iso(now),
+              "publicationRecoverySourceCommit": SOURCE_COMMIT,
+              "publicationRecoveryPolicy": "EXACT_RECORD_REPLAY_BEFORE_KICKOFF_NO_RECOMPUTE",
+              "updatedAt": r15.iso(now),
+          })
+          current["dailyAudit"] = {
+              "status": "CURRENT_PUBLICATION_RECOVERED",
+              "schemaValid": True,
+              "publishedCount": len(source_daily),
+              "bestBetsCount": len(source_best),
+              "updatedAt": r15.iso(now),
+              "reason": "EMPTY_ACQUISITION_ERASED_ACTIVE_PUBLICATION",
+              "sourceCommit": SOURCE_COMMIT,
+              "auditIntegrity": "EXACT_PRE_KICKOFF_REPLAY",
+          }
+          current["systemNarrative"] = {
+              "status": "CURRENT_PUBLICATION_RECOVERED",
+              "title": "Текущая подборка восстановлена",
+              "lead": "Активный Топ-3 сохранён без изменения прогнозов.",
+              "body": "Технический пустой цикл больше не может стирать уже опубликованную подборку.",
+              "generatedBy": "DETERMINISTIC_SYSTEM",
+              "updatedAt": r15.iso(now),
+          }
+
+          r15.core.update_bank_metrics(current)
+          r15.core.update_statistics(current)
+          r15.update_express_statistics(current)
+          r15.update_express_bank_metrics(current, now)
+
+          report = load("data/last-update-report.json")
+          report.setdefault("diagnostics", {})["publicationRecovery"] = {
+              "status": "GREEN",
+              "recoveredAt": r15.iso(now),
+              "sourceCommit": SOURCE_COMMIT,
+              "bestBetsCount": 3,
+              "policy": "EXACT_PRE_KICKOFF_REPLAY_NO_RECOMPUTE",
+          }
+          r15.write_public_files(current, report)
+
+          restored = load("data/state.json")
+          restored_best = restored.get("bestBets") or []
+          if len(restored_best) != 3:
+              raise RuntimeError("Restored state does not contain exactly three best bets")
+          immutable_fields = (
+              "id", "eventId", "home", "away", "homeRu", "awayRu", "commenceTime",
+              "pick", "pickRu", "bookmakerOdds", "odds", "stake", "stakePercent",
+              "publishedAt", "qualification", "premiumQualified", "topThreeEligible",
+          )
+          for old, new in zip(source_best, restored_best):
+              for field in immutable_fields:
+                  if old.get(field) != new.get(field):
+                      raise RuntimeError(f"Audit-integrity mismatch: {field} {old.get('eventId')}")
+          print("R18_RECOVERY=GREEN")
+          for index, row in enumerate(restored_best, 1):
+              print(
+                  "R18_PICK",
+                  index,
+                  row.get("homeRu") or row.get("home"),
+                  "—",
+                  row.get("awayRu") or row.get("away"),
+                  row.get("pickRu") or row.get("pick"),
+                  row.get("bookmakerOdds") or row.get("odds"),
+                  row.get("commenceTime"),
+              )
+          PY
+
+      - name: Commit recovery and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/state.json data/ai_daily_analysis.json data/last-update-report.json
+          git rm -f .github/workflows/r18-recover-active-top3.yml
+          if git diff --cached --quiet; then
+            echo "R18_COMMIT=NO_CHANGES"
+            exit 0
+          fi
+          git commit -m "Restore immutable active Top-3 after empty acquisition"
+          git push origin HEAD:main
