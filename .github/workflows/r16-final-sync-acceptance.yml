@@ -1,0 +1,66 @@
+name: R16 final sync acceptance
+
+on:
+  push:
+    branches: [r16-final-sync-one-bank-20261007]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify runtime and audit invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/update_predictions.py scripts/r15_intelligence.py scripts/r15_daily_auditor.py scripts/r15_free_mesh.py scripts/update_live.py
+          node --check assets/app.js
+          node --check sw.js
+          python - <<'PY'
+          import json, pathlib
+          c=json.load(open("config/analysis.json",encoding="utf-8"))
+          s=json.load(open("data/state.json",encoding="utf-8"))
+          snap=json.load(open("data/ai_daily_analysis.json",encoding="utf-8"))
+          assert (c["bestBetsTarget"],c["stakePerBestBetPercent"],c["maximumDailyExposurePercent"]) == (3,10,30)
+          assert c["minimumBookmakerOdds"] >= 1.55
+          assert c["expressStakePercent"] == 0
+          assert (s["meta"]["bestBetsTarget"],s["meta"]["stakePerPredictionPercent"],s["meta"]["maximumDailyExposurePercent"]) == (3,10,30)
+          assert s["bank"]["current"] == 6971.08
+          assert len(s["bank"]["history"]) == 26
+          assert s["bank"]["stakePercent"] == 10
+          assert s["expressBank"]["current"] == 7000
+          assert s["expressBank"]["mode"] == "LEGACY_ARCHIVE_ONLY"
+          assert "bank" in snap and "expressBank" not in snap
+          assert snap["bank"]["current"] == s["bank"]["current"]
+          code=pathlib.Path("scripts/r15_intelligence.py").read_text(encoding="utf-8")
+          assert code.count("core.update_bank_metrics(state)\n    core.update_bank_metrics(state)") == 0
+          assert '"bank": state.get("bank", {})' in code
+          print("R16_AUDIT_INVARIANTS=GREEN")
+          PY
+      - name: Full self tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/update_predictions.py --self-test
+          python scripts/r15_free_mesh.py --self-test
+          python scripts/r15_daily_auditor.py --self-test
+          python scripts/r15_intelligence.py --self-test
+          python scripts/update_live.py --self-test
+          python scripts/update_predictions.py --validate
+          python scripts/r15_intelligence.py --validate
+      - name: Public build
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/cloudflare_pages_build.sh
+          test -f dist/index.html
+          test -f dist/assets/app.js
+          grep -q 'Единый виртуальный банк' dist/index.html
+          grep -q '3 × 10%' dist/index.html
