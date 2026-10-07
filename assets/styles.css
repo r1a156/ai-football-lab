@@ -1936,3 +1936,70 @@ h2{
     grid-column:1 / -1;
   }
 }
+
+
+/* V16.5 one canonical bank + immutable top-three staking */
+.bank-card-primary{
+  border-color:rgba(126,240,197,.12);
+  background:
+    radial-gradient(420px 230px at 100% 0%,rgba(126,240,197,.08),transparent 72%),
+    linear-gradient(145deg,rgba(15,21,29,.97),rgba(8,11,16,.99));
+}
+.bank-card-primary .bank-grid{
+  margin-top:26px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+.bank-chart-head{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.bank-chart-head span{
+  color:#aab4c0;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.bank-chart-head small{
+  color:#778391;
+  font-size:9px;
+}
+.bank-chart{
+  position:relative;
+  z-index:1;
+  width:100%;
+  min-height:170px;
+  margin-top:10px;
+  overflow:hidden;
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(255,255,255,.004));
+}
+.bank-chart svg{
+  display:block;
+  width:100%;
+  height:auto;
+  min-height:170px;
+}
+.bank-chart-line{
+  fill:none;
+  stroke:var(--accent);
+  stroke-width:2.2;
+  vector-effect:non-scaling-stroke;
+}
+.bank-chart-area{
+  fill:url(#bankAreaGradient);
+  stroke:none;
+}
+.bank-chart-dot{
+  fill:var(--accent);
+}
+@media(max-width:760px){
+  .bank-card-primary .bank-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bank-chart-head{align-items:flex-start;flex-direction:column;gap:5px}
+}
