@@ -5484,7 +5484,7 @@ def validate_state() -> int:
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
             expected_ev = safe_float(express.get("conservativeExpectedValue"), -1.0)
             bankroll_enabled = bool(express.get("bankrollEnabled"))
-            expected_stake_percent = 0.0 if (recovery_day or (bootstrap_preview and not recovery_day) or not bankroll_enabled) else safe_float(config.get("expressStakePercent"), 2.0)
+            expected_stake_percent = 0.0
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
                 raise RuntimeError("R15 express stake percent violates risk policy")
             if bankroll_enabled and expected_ev < safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03):
@@ -5533,23 +5533,27 @@ def validate_state() -> int:
                 raise RuntimeError("R15 contains excluded competition")
             if not core.record_uses_r14_standard_market(row):
                 raise RuntimeError("R15 contains Asian or unsupported market")
-        if any(safe_float(row.get("stake")) != 0.0 for row in best):
-            raise RuntimeError("R15 informational top three carries a separate stake")
+        expected_best_percent = 0.0 if (bootstrap_preview or recovery_day) else safe_float(config.get("stakePerBestBetPercent"), 10.0)
+        for row in best:
+            if abs(safe_float(row.get("stakePercent")) - expected_best_percent) > 0.001:
+                raise RuntimeError("R15 top-three single-bank stake percent mismatch")
+            if expected_best_percent > 0.0 and safe_float(row.get("stake")) <= 0.0:
+                raise RuntimeError("R15 top-three single-bank stake must be positive")
         audit = state.get("dailyAudit") if isinstance(state.get("dailyAudit"), dict) else {}
         if audit.get("schemaValid") and safe_int(audit.get("logicalRuns"), 0) > 1:
             raise RuntimeError("R15 Cloudflare Workers AI logical audit ran more than once")
         if any(safe_float(row.get("auditRiskPenalty"), 0.0) < 0 for row in daily):
             raise RuntimeError("R15 audit increased confidence")
-    update_express_bank_metrics(state, now)
-    bank = state.get("expressBank") or {}
-    active = [row for row in expresses if str(row.get("status") or "pending") == "pending"]
+    core.update_bank_metrics(state)
+    bank = state.get("bank") or {}
+    active = [row for row in best if str(row.get("status") or "pending") == "pending"]
     expected = round(sum(safe_float(row.get("stake")) for row in active), 2)
     if abs(safe_float(bank.get("placedAmount")) - expected) > 0.02:
-        raise RuntimeError("R15 express bank exposure mismatch")
+        raise RuntimeError("R15 single bank exposure mismatch")
     print("R15_VALIDATION=GREEN")
     print(f"R15_ANALYSIS={len(daily)}")
     print(f"R15_EXPRESSES={len(expresses)}")
-    print(f"R15F_EXPRESS_BANK={bank.get('current')}")
+    print(f"R15F_SINGLE_BANK={bank.get('current')}")
     return 0
 
 
@@ -5806,13 +5810,8 @@ def repair_state() -> int:
     before_fingerprint = json_fingerprint(before)
     state = ensure_r15_state(copy.deepcopy(before), config, now)
     changed = json_fingerprint(state) != before_fingerprint
-    for row in state.get("bestBets") or []:
-        if isinstance(row, dict) and str(row.get("sourceMarker") or "") == R15_MARKER:
-            if safe_float(row.get("stake")) != 0.0 or safe_float(row.get("stakePercent")) != 0.0:
-                row["stake"] = 0.0
-                row["stakePercent"] = 0.0
-                row["financialMode"] = "INFORMATIONAL_ONLY"
-                changed = True
+    # Frozen published stakes are audit records. Never rewrite them during repair.
+    # The 10% top-three policy applies only to newly published future picks.
     previous_bank = json_fingerprint(state.get("expressBank") or {})
     update_express_bank_metrics(state, now)
     if json_fingerprint(state.get("expressBank") or {}) != previous_bank:
