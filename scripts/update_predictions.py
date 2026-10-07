@@ -6444,7 +6444,7 @@ def run_self_test() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     # Synthetic tests are intentionally less strict on edge/data thresholds so
-    # the test exercises the complete 15 -> 4 structure, not live-market luck.
+    # the test exercises the complete 15 -> 3 structure, not live-market luck.
     test_config = copy.deepcopy(config)
     test_config.update(
         {
@@ -6515,9 +6515,9 @@ def run_self_test() -> int:
         test_config,
         now,
     )
-    if len(best) != 4 or len(new_best) != 4:
+    if len(best) != 3 or len(new_best) != 3:
         raise RuntimeError(
-            f"SELF_TEST expected 4 best bets, got {len(best)}"
+            f"SELF_TEST expected 3 best bets, got {len(best)}"
         )
     daily_by_event = {str(item.get("eventId") or ""): item for item in daily}
     for item in best:
@@ -6529,7 +6529,7 @@ def run_self_test() -> int:
             or str(item.get("selectionCode") or "") != str(source.get("selectionCode") or "")
             or str(item.get("point") or "") != str(source.get("point") or "")
         ):
-            raise RuntimeError("SELF_TEST best four changed the published fifteen market")
+            raise RuntimeError("SELF_TEST top three changed the published fifteen market")
 
     strict_failure_daily = copy.deepcopy(daily)
     for analysis in strict_failure_daily:
@@ -6555,9 +6555,9 @@ def run_self_test() -> int:
         test_config,
         now,
     )
-    if len(fallback_best) != 4 or len(fallback_new) != 4:
+    if len(fallback_best) != 3 or len(fallback_new) != 3:
         raise RuntimeError(
-            "SELF_TEST exact-four regression failed: "
+            "SELF_TEST top-three regression failed: "
             f"best={len(fallback_best)}"
         )
     if any(
@@ -6565,7 +6565,7 @@ def run_self_test() -> int:
         for item in fallback_best
     ):
         raise RuntimeError(
-            "SELF_TEST exact-four tier is missing"
+            "SELF_TEST top-three tier is missing"
         )
 
     # R12 regression: published financial picks are immutable. A later
@@ -6575,7 +6575,7 @@ def run_self_test() -> int:
     stale_state["dailyAnalysis"] = copy.deepcopy(daily)
     stale_history = []
     stale_visible = []
-    for index in range(4):
+    for index in range(3):
         stale = copy.deepcopy(best[index])
         stale["id"] = f"frozen-best-{index}"
         stale["eventId"] = f"frozen-event-{index}"
@@ -6607,7 +6607,7 @@ def run_self_test() -> int:
     )
     if sync_probe.get("changed"):
         raise RuntimeError(
-            "SELF_TEST frozen best four were reselected"
+            "SELF_TEST frozen top three were reselected"
         )
     if sync_probe.get("reason") != (
         "CURRENT_BATCH_FROZEN_AT_PUBLICATION"
