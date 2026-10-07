@@ -31,6 +31,7 @@ jobs:
           state=json.loads(get("/data/state.json"))
           snap=json.loads(get("/data/ai_daily_analysis.json"))
           app=get("/assets/app.js").decode("utf-8","replace")
+          runtime=get("/assets/runtime-config.js").decode("utf-8","replace")
           index=get("/").decode("utf-8","replace")
           best=state.get("bestBets") or []
           print("PUBLIC_UPDATED_AT", (state.get("meta") or {}).get("updatedAt"))
@@ -43,6 +44,9 @@ jobs:
           print("APP_HAS_RAW_STATE_URL", "RAW_STATE_URL" in app)
           print("APP_HAS_LOAD_BEST_STATE", "loadBestState" in app)
           print("APP_HAS_CURRENT_PORTFOLIO", "isCurrentPortfolio" in app)
+          print("RUNTIME_CONFIG", runtime.strip())
+          start=app.find("async function loadBestState")
+          print("LOAD_BEST_STATE_SNIPPET", app[start:start+2200].replace("\n","\\n") if start>=0 else "NOT_FOUND")
           print("INDEX_HAS_V16_5", "V16_5_SINGLE_BANK_TOP3_GRAPH" in index)
           print("INDEX_HAS_SINGLE_GRID", "singleGrid" in index)
           for i,x in enumerate(best,1):
