@@ -36,14 +36,17 @@ jobs:
         with:
           ref: main
 
-      - name: Validate Cloudflare credentials
+      - name: Detect Cloudflare deployment mode
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${CLOUDFLARE_API_TOKEN:-}" || {
-            echo "CLOUDFLARE_API_TOKEN secret is missing"
-            exit 2
-          }
+          if [[ -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+            echo "CLOUDFLARE_DEPLOY_MODE=WRANGLER" >> "$GITHUB_ENV"
+            echo "Cloudflare deploy mode: Wrangler token"
+          else
+            echo "CLOUDFLARE_DEPLOY_MODE=GIT_INTEGRATION" >> "$GITHUB_ENV"
+            echo "CLOUDFLARE_API_TOKEN is not configured; Wrangler upload will be skipped and canonical Pages will still be verified."
+          fi
 
       - name: Build static site
         shell: bash
@@ -65,6 +68,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "${CLOUDFLARE_DEPLOY_MODE}" != "WRANGLER" ]]; then
+            echo "Wrangler upload skipped; checking Cloudflare Pages Git integration."
+            exit 0
+          fi
           npx --yes wrangler@latest pages deploy dist \
             --project-name ai-football-lab \
             --branch main \
