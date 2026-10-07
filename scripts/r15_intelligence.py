@@ -3785,7 +3785,7 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
     usable_records = list(records[: group_count * 5])
     bank = ensure_express_bank(state, config, now)
     current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
-    configured_stake_percent = safe_float(config.get("expressStakePercent"), 2.0)
+    configured_stake_percent = safe_float(config.get("expressStakePercent"), 0.0)
     recovery_mode = any(str(row.get("publicationMode") or "") == "RECOVERY_DAY" for row in usable_records)
     if group_count == 3 and len(usable_records) == 15:
         deterministic_groups = balanced_groups(usable_records)
@@ -3939,15 +3939,6 @@ def sync_and_settle_expresses(state: dict[str, Any], now: dt.datetime) -> dict[s
         })
         express_id = str(express.get("id") or "")
         if express_id not in history_ids:
-            bank = ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
-            bank["current"] = round(safe_float(bank.get("current"), 10000.0) + profit, 2)
-            bank.setdefault("history", []).append({
-                "timestamp": iso(now),
-                "value": bank["current"],
-                "change": round(profit, 2),
-                "expressId": express_id,
-                "reason": f"EXPRESS_{final_status.upper()}",
-            })
             state.setdefault("expressHistory", []).append(copy.deepcopy(express))
             history_ids.add(express_id)
         counters["settled"] += 1
@@ -5211,7 +5202,14 @@ def publish_generation() -> int:
     records = audited_records
     audit_system_message = daily_audit.get("systemMessage") if isinstance(daily_audit.get("systemMessage"), dict) else {}
     state["dailyAudit"] = copy.deepcopy(daily_audit)
-    best = informational_best_three(\n        records, state, config, now, list(daily_audit.get("topSingles") or []),\n        bank_enabled=not (bootstrap_preview or recovery_day),\n    )
+    best = informational_best_three(
+        records,
+        state,
+        config,
+        now,
+        list(daily_audit.get("topSingles") or []),
+        bank_enabled=not (bootstrap_preview or recovery_day),
+    )
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -5488,8 +5486,8 @@ def validate_state() -> int:
             expected_stake_percent = 0.0
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
                 raise RuntimeError("R15 express stake percent violates risk policy")
-            if bankroll_enabled and expected_ev < safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03):
-                raise RuntimeError("R15 express bank enabled without positive conservative EV")
+            if bankroll_enabled or safe_float(express.get("stake")) != 0.0:
+                raise RuntimeError("R15 express coupons must be informational only")
         if len(leg_ids) != len(expresses) * 5 or len(set(leg_ids)) != len(leg_ids):
             raise RuntimeError("R15 express legs must be unique five-leg groups")
         daily_ids = {str(row.get("id") or "") for row in daily}
@@ -5813,9 +5811,9 @@ def repair_state() -> int:
     changed = json_fingerprint(state) != before_fingerprint
     # Frozen published stakes are audit records. Never rewrite them during repair.
     # The 10% top-three policy applies only to newly published future picks.
-    previous_bank = json_fingerprint(state.get("expressBank") or {})
-    update_express_bank_metrics(state, now)
-    if json_fingerprint(state.get("expressBank") or {}) != previous_bank:
+    previous_bank = json_fingerprint(state.get("bank") or {})
+    core.update_bank_metrics(state)
+    if json_fingerprint(state.get("bank") or {}) != previous_bank:
         changed = True
     if changed:
         state.setdefault("meta", {})["updatedAt"] = iso(now)
