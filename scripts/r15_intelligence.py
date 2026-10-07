@@ -5430,8 +5430,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError(f"R15 config keys missing: {missing}")
     if safe_int(config.get("expressCount")) != 3 or safe_int(config.get("expressLegsPerTicket")) != 5:
         raise RuntimeError("R15 requires three expresses of five legs")
-    if safe_float(config.get("expressStakePercent")) != 2.0:
-        raise RuntimeError("R15 express nominal stake must be two percent")
+    if safe_float(config.get("expressStakePercent")) != 0.0:
+        raise RuntimeError("R15 express coupons must have zero financial stake")
     if safe_float(config.get("expressStartingBank")) != 10000.0:
         raise RuntimeError("R15 express starting bank must be 10000")
     search_days = safe_int(config.get("operationalWindowSearchDays"), 3)
