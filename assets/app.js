@@ -219,7 +219,7 @@
     setText("spotlightOdds", formatNumber(odds(row),2));
     setText("spotlightEv", signedPercent(ev * 100));
     setText("spotlightBankroll", banked ? `10% · ${currency(rankedStake)}` : (inTopThree ? "Без ставки" : "Не в Топ‑3"));
-    setText("spotlightMode", banked ? "Топ‑3 · банк" : (inTopThree ? "Топ‑3 · контроль" : "Анализ"));
+    setText("spotlightMode", row.premiumQualified ? "Премиум · Топ‑3" : (banked ? "Топ‑3 · банк" : (inTopThree ? "Топ‑3 · контроль" : "Анализ")));
     setBar("spotlightProbabilityBar", p);
     setBar("spotlightQualityBar", q);
     setBar("spotlightStabilityBar", stability);
@@ -239,7 +239,7 @@
     const discovery = object(diagnostics.discovery);
     const rejectionReasons = object(analysis.rejectionReasons);
     const checked = number(state.meta.candidateMatchesAnalyzed || discovery.events || analysis.oddsEvents);
-    const qualified = number(analysis.eventsQualified || (current ? state.dailyAnalysis.length : 0));
+    const qualified = number(analysis.premiumQualifiedEvents ?? analysis.eventsQualified ?? 0);
     const published = current ? state.dailyAnalysis.length : 0;
     const rejected = Math.max(0, checked - qualified);
     const top = Object.entries(rejectionReasons).sort((a,b) => number(b[1]) - number(a[1]))[0];
@@ -248,7 +248,7 @@
     setText("qualifiedCount", qualified || "0");
     setText("publishedCount", published || "0");
     setText("topRejectionReason", top ? top[0] : "Нет достаточных данных");
-    setText("rejectedCount", checked ? `${rejected} матчей не прошли основной фильтр` : "Ожидаем цикл анализа");
+    setText("rejectedCount", checked ? `${qualified} премиум из ${checked} проверенных матчей` : "Ожидаем цикл анализа");
   }
 
   function renderHealth(state, report) {
@@ -259,8 +259,8 @@
     const quota = object(diagnostics.quotaPlan);
     const apiHealth = object(state.meta.apiHealth);
     const items = Object.entries(sources).map(([name,status]) => [sourceLabel(name), String(status || "UNKNOWN")]);
-    if (sportsDb.status) items.push(["TheSportsDB", String(sportsDb.status)]);
-    items.push(["Odds/API", apiHealth.status || (quota.quotaExhaustedAfterAcquisition ? "LIMIT" : "GREEN")]);
+    if (sportsDb.status) items.push(["Дополнительная база результатов", String(sportsDb.status)]);
+    items.push(["Котировки букмекеров", apiHealth.status || (quota.quotaExhaustedAfterAcquisition ? "LIMIT" : "GREEN")]);
 
     const root = document.getElementById("healthGrid");
     if (root) {
@@ -286,8 +286,8 @@
 
     const guard = object(state.meta.calibrationGuard);
     const total = object(object(guard.marketFamilyHaircuts));
-    setText("calibrationMode", guard.mode || "AUTO GUARD");
-    setText("guardStatus", guard.mode || "LEARNING");
+    setText("calibrationMode", calibrationLabel(guard.mode));
+    setText("guardStatus", calibrationLabel(guard.mode));
     setText("guardMargin", guard.additionalUncertaintyMargin != null ? `+${formatNumber(number(guard.additionalUncertaintyMargin)*100,1)} п.п.` : "—");
     setText("totalHaircut", total.TOTAL != null ? `−${formatNumber(number(total.TOTAL)*100,1)} п.п.` : "0 п.п.");
     setText("bankrollGuard", "Топ‑3 · 10% × 3");
@@ -660,6 +660,18 @@
       .replace("OPENLIGADB","Открытая база лиг")
       .replace("STATSBOMB_OPEN_DATA","Открытая статистика матчей")
       .replace("CLUBELO","Рейтинг силы клубов");
+  }
+
+  function calibrationLabel(value) {
+    const text = String(value || "").toUpperCase();
+    return ({
+      "AUTO GUARD":"АВТОКОНТРОЛЬ",
+      "LEARNING":"ОБУЧЕНИЕ",
+      "NORMAL":"НОРМАЛЬНЫЙ",
+      "STRICT":"СТРОГИЙ",
+      "CAUTION":"ОСТОРОЖНЫЙ",
+      "BANKROLL_PAUSED":"БАНК ПРИОСТАНОВЛЕН"
+    })[text] || (text ? "АВТОКОНТРОЛЬ" : "АВТОКОНТРОЛЬ");
   }
 
   function healthLabel(value) {
