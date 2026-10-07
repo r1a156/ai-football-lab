@@ -1,4 +1,4 @@
-const CACHE = "ai-football-shell-v16-1";
+const CACHE = "ai-football-shell-v16-4";
 const CORE = [
   "./",
   "./index.html",
