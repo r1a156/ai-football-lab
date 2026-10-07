@@ -5696,26 +5696,30 @@ def self_test() -> int:
         row["stakePercent"] = 0.0
     state["dailyAnalysis"] = records
     state["bestBets"] = best
+    core.update_bank_metrics(state)
+    if len(best) != 3:
+        raise RuntimeError("SELF_TEST top-three size mismatch")
+    if any(abs(safe_float(row.get("stakePercent")) - 10.0) > 0.001 for row in best):
+        raise RuntimeError("SELF_TEST top-three stake percent is not 10")
+    expected_single_stake = round(safe_float(state.get("bank", {}).get("current"), 10000.0) * 0.10, 2)
+    if any(abs(safe_float(row.get("stake")) - expected_single_stake) > 0.01 for row in best):
+        raise RuntimeError("SELF_TEST top-three stake amount mismatch")
+    if abs(safe_float(state.get("bank", {}).get("placedAmount")) - expected_single_stake * 3) > 0.02:
+        raise RuntimeError("SELF_TEST single-bank exposure is not 30 percent")
     state["expresses"] = build_expresses(records, state, full_test_config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
-    if safe_float(state["expressBank"].get("placedAmount")) > 600.01:
-        raise RuntimeError("SELF_TEST express exposure exceeds 6 percent of bank")
+    if any(safe_float(row.get("stake")) != 0.0 or bool(row.get("bankrollEnabled")) for row in state["expresses"]):
+        raise RuntimeError("SELF_TEST informational express changed financial exposure")
     for row in state["dailyAnalysis"]:
         row["status"] = "won"
         row["score"] = "2:1"
-    bankroll_enabled_before = [
-        row for row in state.get("expresses") or []
-        if bool(row.get("bankrollEnabled")) and safe_float(row.get("stake")) > 0
-    ]
+    legacy_express_bank_before = json_fingerprint(state.get("expressBank") or {})
     counters = sync_and_settle_expresses(state, now + dt.timedelta(days=1))
     if counters["won"] != 3:
         raise RuntimeError("SELF_TEST express settlement failed")
-    current_after_win = safe_float(state["expressBank"].get("current"))
-    if bankroll_enabled_before and current_after_win <= 10000.0:
-        raise RuntimeError("SELF_TEST positive-EV express bank did not increase")
-    if not bankroll_enabled_before and current_after_win != 10000.0:
-        raise RuntimeError("SELF_TEST informational expresses changed bank")
+    if json_fingerprint(state.get("expressBank") or {}) != legacy_express_bank_before:
+        raise RuntimeError("SELF_TEST informational expresses mutated legacy express bank")
     # Verify a losing leg loses only its express and does not mutate the legacy bank.
     state2 = ensure_r15_state({}, config, now)
     records2 = copy.deepcopy(records)
@@ -5783,7 +5787,9 @@ def self_test() -> int:
     print("R15_SYNTHETIC_EXPRESSES=3")
     print("R15_SYNTHETIC_LEGS=15")
     print("R15_EXPRESS_STARTING_BANK=10000")
-    print("R15_EXPRESS_MAX_EXPOSURE=600")
+    print("R15_SINGLE_BANK_TOP3_STAKE_PERCENT=10")
+    print("R15_SINGLE_BANK_MAX_EXPOSURE_PERCENT=30")
+    print("R15_EXPRESS_FINANCIAL_EXPOSURE=0")
     print("R15_ASIAN_MARKETS=REMOVED")
     print("R15_RUSSIAN_MATCHES=REMOVED")
     print("R15_MARKET_ONLY_STRATEGY=FORBIDDEN")
