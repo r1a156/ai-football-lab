@@ -1,5 +1,5 @@
 {
-  "version": 36,
+  "version": 37,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -418,5 +418,7 @@
   "formMinimumRelativeWeight": 0.04,
   "formMinimumEffectiveSample": 3,
   "footballDataFixtureMetadataUrl": "https://www.football-data.co.uk/matches.php",
-  "footballDataFixtureFreshnessPolicy": "HTTP_LAST_MODIFIED_THEN_PUBLISHED_UPLOAD_TIMESTAMP_THEN_CONTENT_HASH"
+  "footballDataFixtureFreshnessPolicy": "HTTP_LAST_MODIFIED_THEN_PUBLISHED_UPLOAD_TIMESTAMP_THEN_CONTENT_HASH",
+  "oddsUseSecondaryKeyFallback": true,
+  "oddsSecondaryKeyFallbackPolicy": "ONLY_WHEN_PRIMARY_PORTFOLIO_INCOMPLETE_USE_UNSEEN_COMPETITIONS_WITH_SEPARATE_DAILY_LEDGER"
 }

@@ -4299,6 +4299,140 @@ def publish_generation() -> int:
     )
     featured_errors = list(acquisition_errors)
     keys = list(quota_plan.get("competitionKeysSelected") or keys)
+
+    # R3R25: if the primary credential cannot build a quality portfolio, use
+    # the already-configured reserve credential for additional competitions.
+    # Each credential keeps its own persistent daily ledger; thresholds are
+    # unchanged and cached primary quotes are merged with reserve-key results.
+    quota_by_key: dict[str, Any] = {
+        str(getattr(client, "quota_identity", "PRIMARY")): copy.deepcopy(client.odds_quota)
+    }
+    primary_plan_snapshot = copy.deepcopy(quota_plan)
+    secondary_fallback = {
+        "enabled": bool(config.get("oddsUseSecondaryKeyFallback", True)),
+        "activated": False,
+        "reason": None,
+        "competitionKeysSelected": [],
+        "featuredEventsCollected": 0,
+        "quota": None,
+    }
+    target_records = max(1, safe_int(config.get("dailyAnalysisTarget"), 15))
+    selected_identity = str(getattr(client, "quota_identity", "PRIMARY") or "PRIMARY").upper()
+    backup_key = os.getenv("ODDS_API_KEY_BACKUP", "").strip()
+    backup_probe = odds_key_selection.get("backup") if isinstance(odds_key_selection.get("backup"), dict) else {}
+    backup_remaining = safe_int(backup_probe.get("remaining"), -1)
+    if (
+        bool(config.get("oddsUseSecondaryKeyFallback", True))
+        and selected_identity == "PRIMARY"
+        and safe_int(preliminary_diag.get("eventsQualified"), 0) < target_records
+        and backup_key
+        and bool(backup_probe.get("valid"))
+        and (backup_remaining < 0 or backup_remaining > 0)
+    ):
+        already_selected = set(str(value) for value in keys if value)
+        remaining_discovered = [
+            event for event in discovered
+            if str(event.get("sport_key") or "") not in already_selected
+        ]
+        if remaining_discovered:
+            backup_client = ProviderClient(client.health)
+            seed_client_quota_identity(
+                backup_client,
+                {
+                    "selected": "BACKUP",
+                    "primary": odds_key_selection.get("primary") or {},
+                    "backup": backup_probe,
+                },
+            )
+            backup_keys, backup_plan = select_sport_keys_by_quota(
+                remaining_discovered, context, backup_client, config
+            )
+            if backup_keys:
+                (
+                    secondary_odds_events,
+                    secondary_advanced,
+                    secondary_errors,
+                    backup_plan,
+                    secondary_preliminary_diag,
+                    secondary_recovery_diag,
+                ) = complete_portfolio_acquisition(
+                    backup_client,
+                    backup_key,
+                    backup_keys,
+                    backup_plan,
+                    remaining_discovered,
+                    config,
+                    start,
+                    end,
+                    context,
+                    state,
+                    now,
+                )
+                odds_events = secondary_odds_events
+                advanced = secondary_advanced
+                featured_errors.extend(secondary_errors)
+                preliminary_diag = secondary_preliminary_diag
+                advanced_recovery_diag = {
+                    "requested": safe_int(advanced_recovery_diag.get("requested"), 0)
+                        + safe_int(secondary_recovery_diag.get("requested"), 0),
+                    "returned": safe_int(advanced_recovery_diag.get("returned"), 0)
+                        + safe_int(secondary_recovery_diag.get("returned"), 0),
+                    "usefulResponses": safe_int(advanced_recovery_diag.get("usefulResponses"), 0)
+                        + safe_int(secondary_recovery_diag.get("usefulResponses"), 0),
+                    "recoveredEvents": safe_int(advanced_recovery_diag.get("recoveredEvents"), 0)
+                        + safe_int(secondary_recovery_diag.get("recoveredEvents"), 0),
+                    "attemptedPairs": safe_int(advanced_recovery_diag.get("attemptedPairs"), 0)
+                        + safe_int(secondary_recovery_diag.get("attemptedPairs"), 0),
+                    "unsupportedMarkets": {
+                        **(advanced_recovery_diag.get("unsupportedMarkets") or {}),
+                        **(secondary_recovery_diag.get("unsupportedMarkets") or {}),
+                    },
+                    "errors": (
+                        list(advanced_recovery_diag.get("errors") or [])
+                        + list(secondary_recovery_diag.get("errors") or [])
+                    )[-40:],
+                }
+                secondary_keys = list(backup_plan.get("competitionKeysSelected") or backup_keys)
+                keys = list(dict.fromkeys(keys + secondary_keys))
+                quota_by_key["BACKUP"] = copy.deepcopy(backup_client.odds_quota)
+                secondary_fallback.update({
+                    "activated": True,
+                    "reason": "PRIMARY_PORTFOLIO_INCOMPLETE",
+                    "competitionKeysSelected": secondary_keys,
+                    "featuredEventsCollected": safe_int(backup_plan.get("featuredEventsCollected"), 0),
+                    "quota": copy.deepcopy(backup_client.odds_quota),
+                    "quotaPlan": backup_plan,
+                })
+                quota_plan["secondaryKeyFallback"] = secondary_fallback
+                quota_plan["primaryKeyPlan"] = primary_plan_snapshot
+                quota_plan["competitionKeysSelected"] = keys
+                quota_plan["competitionsSelected"] = len(keys)
+                quota_plan["featuredEventsCollected"] = len(odds_events)
+                quota_plan["qualifiedAfterAdvanced"] = safe_int(preliminary_diag.get("eventsQualified"), 0)
+                client.calls.extend([
+                    dict(call, quotaIdentity="BACKUP")
+                    for call in backup_client.calls
+                ])
+                client.health = backup_client.health
+                print(f"R15_SECONDARY_KEY_COMPETITIONS={len(secondary_keys)}")
+                print(f"R15_SECONDARY_KEY_ODDS_EVENTS={len(odds_events)}")
+            else:
+                secondary_fallback["reason"] = "BACKUP_DAILY_BUDGET_OR_SELECTION_EMPTY"
+                quota_plan["secondaryKeyFallback"] = secondary_fallback
+        else:
+            secondary_fallback["reason"] = "NO_UNSEEN_COMPETITIONS"
+            quota_plan["secondaryKeyFallback"] = secondary_fallback
+    else:
+        if selected_identity != "PRIMARY":
+            secondary_fallback["reason"] = "CURRENT_CREDENTIAL_ALREADY_BACKUP"
+        elif safe_int(preliminary_diag.get("eventsQualified"), 0) >= target_records:
+            secondary_fallback["reason"] = "PRIMARY_PORTFOLIO_READY"
+        elif not backup_key or not bool(backup_probe.get("valid")):
+            secondary_fallback["reason"] = "BACKUP_UNAVAILABLE"
+        else:
+            secondary_fallback["reason"] = "BACKUP_QUOTA_EMPTY"
+        quota_plan["secondaryKeyFallback"] = secondary_fallback
+
     for event in odds_events:
         event["sport_type"] = "soccer"
         event["country"] = core.infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
@@ -4414,6 +4548,7 @@ def publish_generation() -> int:
             "analysis": analysis_diag,
             "apiCalls": client.calls,
             "quota": client.odds_quota,
+            "quotaByKey": quota_by_key,
             "fonbet": {
                 "status": fonbet_snapshot.get("status"),
                 "mode": fonbet_mode,
@@ -4451,6 +4586,7 @@ def publish_generation() -> int:
             "publishedEvents": 0,
             "providerHealth": copy.deepcopy(client.health),
             "quota": copy.deepcopy(client.odds_quota),
+            "quotaByKey": copy.deepcopy(quota_by_key),
             "historyMatches": context.get("cacheMeta", {}).get("matches"),
             "historyCoverageStart": context.get("cacheMeta", {}).get("coverageStart"),
             "historyCoverageEnd": context.get("cacheMeta", {}).get("coverageEnd"),
@@ -5070,6 +5206,7 @@ def self_test() -> int:
     print("R15_ROLLING_72H_PREMATCH_SEARCH=YES")
     print("R15_PER_KEY_QUOTA_LEDGER=YES")
     print("R15_FIXTURE_FRESHNESS_CHAIN=YES")
+    print("R15_SECONDARY_KEY_FALLBACK=YES")
     return 0
 
 
