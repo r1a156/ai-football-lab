@@ -9,6 +9,11 @@ on:
       - "manifest.webmanifest"
       - "sw.js"
       - "scripts/cloudflare_pages_build.sh"
+      - "data/state.json"
+      - "data/live-state.json"
+      - "data/last-update-report.json"
+      - "data/ai_daily_analysis.json"
+      - "data/provider-health.json"
       - ".github/workflows/deploy-cloudflare-pages.yml"
   workflow_dispatch:
   workflow_run:
@@ -86,7 +91,7 @@ jobs:
           import json, time, urllib.request
           base = "https://ai-football-lab.pages.dev"
           last = None
-          for attempt in range(8):
+          for attempt in range(90):
               try:
                   stamp = str(time.time_ns())
                   req = urllib.request.Request(
@@ -101,21 +106,51 @@ jobs:
                   )
                   with urllib.request.urlopen(req, timeout=15) as r:
                       index = r.read().decode("utf-8", "replace")
+                  req = urllib.request.Request(
+                      f"{base}/data/ai_daily_analysis.json?v={stamp}",
+                      headers={"Cache-Control":"no-cache","User-Agent":"AI-Football-Deploy-Guard/1.0"},
+                  )
+                  with urllib.request.urlopen(req, timeout=15) as r:
+                      snapshot = json.load(r)
                   daily = state.get("dailyAnalysis") or []
                   expresses = state.get("expresses") or []
+                  best = state.get("bestBets") or []
+                  bank = state.get("bank") or {}
+                  meta = state.get("meta") or {}
+                  policy_ok = (
+                      meta.get("bestBetsTarget") == 3
+                      and meta.get("stakePerPredictionPercent") == 10
+                      and meta.get("maximumDailyExposurePercent") == 30
+                      and bank.get("stakePercent") == 10
+                      and str(meta.get("virtualBankPolicy") or "").startswith("ONE_ACTIVE_BANK_TOP_THREE")
+                  )
+                  snapshot_ok = (
+                      isinstance(snapshot.get("bank"), dict)
+                      and "expressBank" not in snapshot
+                      and snapshot.get("bank", {}).get("current") == bank.get("current")
+                  )
                   if (
                       0 <= len(daily) <= 15
                       and len(expresses) == min(3, len(daily)//5)
-                      and len(state.get("bestBets") or []) <= 3
+                      and len(best) <= 3
                       and "V16_5_SINGLE_BANK_TOP3_GRAPH" in index
+                      and policy_ok
+                      and snapshot_ok
                   ):
                       print("CLOUDFLARE_PUBLIC_VERIFY=GREEN")
                       print("PUBLIC_ANALYSIS=", len(daily))
                       print("PUBLIC_EXPRESSES=", len(expresses))
+                      print("PUBLIC_BEST_BETS=", len(best))
+                      print("PUBLIC_BANK=", bank.get("current"))
+                      print("PUBLIC_POLICY=TOP3_10_PERCENT_ONE_BANK")
                       raise SystemExit(0)
-                  last = f"analysis={len(daily)} expresses={len(expresses)} single_bank_ui={'V16_5_SINGLE_BANK_TOP3_GRAPH' in index}"
+                  last = (
+                      f"analysis={len(daily)} expresses={len(expresses)} best={len(best)} "
+                      f"single_bank_ui={'V16_5_SINGLE_BANK_TOP3_GRAPH' in index} "
+                      f"policy_ok={policy_ok} snapshot_ok={snapshot_ok} bank={bank.get('current')}"
+                  )
               except Exception as exc:
                   last = repr(exc)
-              time.sleep(4)
+              time.sleep(5)
           raise SystemExit("Cloudflare canonical verification failed: " + str(last))
           PY
