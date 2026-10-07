@@ -697,7 +697,7 @@ def migrate_state(
     state["bank"]["current"] = round(
         safe_float(state["bank"].get("current"), state["bank"]["starting"]), 2
     )
-    state["bank"]["stakePercent"] = 20
+    state["bank"]["stakePercent"] = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     if not isinstance(state["bank"].get("history"), list):
         state["bank"]["history"] = []
 
@@ -3924,7 +3924,7 @@ def apply_best_bets_to_daily_analysis(
     daily_analysis: list[dict[str, Any]],
     best_bets: list[dict[str, Any]],
 ) -> None:
-    """Make the fifteen-analysis view and current four an atomic projection."""
+    """Make the fifteen-analysis view and current top-three an atomic projection."""
     best_by_event = {
         str(item.get("eventId") or ""): item
         for item in best_bets
@@ -7092,6 +7092,21 @@ def repair_prediction_integrity() -> int:
     target = safe_int(config.get("bestBetsTarget"), 3)
     expected_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     current = [item for item in state.get("bestBets") or [] if isinstance(item, dict)]
+    if current:
+        financial_policy_matches = (
+            len(current) == target
+            and all(
+                abs(safe_float(item.get("stakePercent")) - expected_percent) <= 0.001
+                and safe_float(item.get("stake")) > 0
+                for item in current
+            )
+        )
+        if not financial_policy_matches:
+            print("AUDIT_GUARD_FROZEN_PUBLICATION=TRUE")
+            print("STATE_REPAIR_CHANGED=FALSE")
+            print("BANK_PRESERVED=TRUE")
+            print(f"BANK_CURRENT={bank_snapshot.get('current')}")
+            return 0
     history = [item for item in state.get("history") or [] if isinstance(item, dict)]
     batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
     batch_id = str(batch.get("id") or "")
@@ -7116,10 +7131,6 @@ def repair_prediction_integrity() -> int:
         record["isBestBet"] = True
         record["rank"] = rank
         record["rankLabel"] = "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}"
-        if abs(safe_float(record.get("stakePercent")) - expected_percent) > 0.001:
-            record["stakePercent"] = expected_percent
-        if safe_float(record.get("stake")) <= 0:
-            record["stake"] = round(safe_float(bank_snapshot.get("current"), config.get("startingVirtualBank", 10000)) * expected_percent / 100.0, 2)
         record["statusLabel"] = result_status_label(normalize_history_status(record.get("status")))
         apply_russian_display_fields(record)
         repaired_best.append(record)
