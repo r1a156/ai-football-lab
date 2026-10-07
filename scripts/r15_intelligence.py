@@ -1027,7 +1027,57 @@ def build_match_model(
         away_lambda = clamp(market_away * (1 - stat_weight) + stat_away * stat_weight, 0.20, 4.5)
 
         pair_key = tuple(sorted((home_id, away_id)))
-        h2h = list(context.get("pairGames", {}).get(pair_key) or [])[:5]
+        h2h = list(context.get("pairGames", {}).get(pair_key) or [])[:8]
+        h2h_home_goals: list[float] = []
+        h2h_away_goals: list[float] = []
+        h2h_weights: list[float] = []
+        for index, row in enumerate(h2h):
+            row_home_id = str(row.get("homeId") or "")
+            row_away_id = str(row.get("awayId") or "")
+            if home_id not in {row_home_id, row_away_id} or away_id not in {row_home_id, row_away_id}:
+                continue
+            current_home_goals = (
+                safe_float(row.get("homeScore"))
+                if row_home_id == home_id
+                else safe_float(row.get("awayScore"))
+            )
+            current_away_goals = (
+                safe_float(row.get("homeScore"))
+                if row_home_id == away_id
+                else safe_float(row.get("awayScore"))
+            )
+            when = parse_time(row.get("utcDate")) or now - dt.timedelta(days=730)
+            age_days = max(0.0, (now - when).total_seconds() / 86400.0)
+            weight = (0.5 ** (age_days / 540.0)) * (0.90 ** index)
+            h2h_home_goals.append(current_home_goals)
+            h2h_away_goals.append(current_away_goals)
+            h2h_weights.append(weight)
+
+        h2h_matches = len(h2h_weights)
+        h2h_weight = 0.0
+        h2h_home_avg = 0.0
+        h2h_away_avg = 0.0
+        h2h_over25 = 0.0
+        h2h_btts = 0.0
+        if h2h_matches >= 2 and sum(h2h_weights) > 0:
+            h2h_home_avg = weighted_mean(list(zip(h2h_home_goals, h2h_weights)), home_lambda)
+            h2h_away_avg = weighted_mean(list(zip(h2h_away_goals, h2h_weights)), away_lambda)
+            h2h_over25 = weighted_mean([
+                (1.0 if h + a > 2.5 else 0.0, w)
+                for h, a, w in zip(h2h_home_goals, h2h_away_goals, h2h_weights)
+            ], 0.5)
+            h2h_btts = weighted_mean([
+                (1.0 if h > 0 and a > 0 else 0.0, w)
+                for h, a, w in zip(h2h_home_goals, h2h_away_goals, h2h_weights)
+            ], 0.5)
+            # H2H is a weak prior, never a dominant signal.
+            h2h_weight = min(
+                safe_float(config.get("h2hMaximumModelWeight"), 0.10),
+                safe_float(config.get("h2hPerMatchModelWeight"), 0.018) * h2h_matches,
+            )
+            home_lambda = clamp(home_lambda * (1.0 - h2h_weight) + h2h_home_avg * h2h_weight, 0.20, 4.5)
+            away_lambda = clamp(away_lambda * (1.0 - h2h_weight) + h2h_away_avg * h2h_weight, 0.20, 4.5)
+
         source_notes = [
             f"Хозяева: {home10['gf']:.2f} забито и {home10['ga']:.2f} пропущено за 10 матчей",
             f"Гости: {away10['gf']:.2f} забито и {away10['ga']:.2f} пропущено за 10 матчей",
@@ -1049,7 +1099,13 @@ def build_match_model(
             "awayElo": round(away_elo, 2),
             "eloHomeProbability": round(elo_home_probability, 6),
             "leagueProfile": league,
-            "h2hMatches": len(h2h),
+            "h2hMatches": h2h_matches,
+            "h2hModelWeight": round(h2h_weight, 4),
+            "h2hExpectedHome": round(h2h_home_avg, 4) if h2h_matches else None,
+            "h2hExpectedAway": round(h2h_away_avg, 4) if h2h_matches else None,
+            "h2hExpectedTotal": round(h2h_home_avg + h2h_away_avg, 4) if h2h_matches else None,
+            "h2hOver25Rate": round(h2h_over25, 4) if h2h_matches else None,
+            "h2hBttsRate": round(h2h_btts, 4) if h2h_matches else None,
             "combinedRecentTotalGoals": round(mean([home10["totalGoals"], away10["totalGoals"]]), 4),
             "combinedRecentOver15": round(mean([home10["over15"], away10["over15"], home_venue["over15"], away_venue["over15"]]), 4),
             "combinedRecentOver25": round(mean([home10["over25"], away10["over25"], home_venue["over25"], away_venue["over25"]]), 4),
@@ -2140,6 +2196,191 @@ def merge_unique_odds_events(existing: list[dict[str, Any]], incoming: list[dict
     return sorted(by_id.values(), key=lambda item: str(item.get("commence_time") or ""))
 
 
+def refresh_shadow_watchlist(
+    state: dict[str, Any],
+    diagnostics: dict[str, Any],
+    now: dt.datetime,
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    shadow = state.setdefault("shadowLearning", {})
+    pending = [
+        copy.deepcopy(row)
+        for row in shadow.get("pending") or []
+        if isinstance(row, dict) and str(row.get("status") or "pending") == "pending"
+    ]
+    settled = [
+        copy.deepcopy(row)
+        for row in shadow.get("settled") or []
+        if isinstance(row, dict)
+    ]
+    official_event_ids = {
+        str(row.get("eventId") or "")
+        for collection in ("dailyAnalysis", "analysisHistory")
+        for row in state.get(collection) or []
+        if isinstance(row, dict)
+    }
+    by_event = {str(row.get("eventId") or ""): row for row in pending if str(row.get("eventId") or "")}
+    candidates: list[dict[str, Any]] = []
+    minimum_odds = safe_float(config.get("minimumBookmakerOdds"), 1.55)
+    for row in diagnostics.get("rejectedEvents") or []:
+        if not isinstance(row, dict):
+            continue
+        event_id = str(row.get("eventId") or "")
+        candidate = row.get("shadowCandidate") if isinstance(row.get("shadowCandidate"), dict) else {}
+        commence = parse_time(row.get("commenceTime"))
+        if (
+            not event_id
+            or event_id in official_event_ids
+            or not candidate
+            or commence is None
+            or commence <= now + dt.timedelta(minutes=max(1, safe_int(config.get("minimumLeadMinutes"), 45)))
+            or safe_float(candidate.get("bookmakerOdds"), 0.0) < minimum_odds
+        ):
+            continue
+        record = {
+            "id": stable_id("shadow", event_id, candidate.get("market"), candidate.get("selectionCode"), candidate.get("point")),
+            "recordType": "SHADOW_CANDIDATE",
+            "learningSampleSource": "SHADOW_REJECTED",
+            "eventId": event_id,
+            "sport": "soccer",
+            "sportKey": row.get("sportKey"),
+            "league": row.get("league"),
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "commenceTime": row.get("commenceTime"),
+            "status": "pending",
+            "trackedAt": iso(now),
+            "failures": list(row.get("failures") or []),
+            **copy.deepcopy(candidate),
+        }
+        record["probability"] = safe_float(record.get("modelProbability"), safe_float(record.get("conservativeProbability"), 0.0))
+        record["odds"] = safe_float(record.get("bookmakerOdds"), 0.0)
+        record["shadowRankScore"] = round(
+            safe_float(record.get("conservativeProbability")) * 100
+            + safe_float(record.get("dataQuality")) * 0.18
+            + safe_float(record.get("agreement")) * 0.08
+            + safe_float(record.get("marketStability")) * 0.08
+            - safe_float(record.get("anomaly")) * 0.06
+            + clamp(safe_float(record.get("expectedValue")) * 100, -10, 15) * 0.05,
+            4,
+        )
+        candidates.append(record)
+
+    candidates.sort(
+        key=lambda row: (
+            safe_float(row.get("shadowRankScore")),
+            safe_float(row.get("conservativeProbability")),
+            safe_float(row.get("dataQuality")),
+        ),
+        reverse=True,
+    )
+    target = max(4, safe_int(config.get("shadowLearningDailyTarget"), 12))
+    for record in candidates[:target]:
+        event_id = str(record.get("eventId") or "")
+        if event_id and event_id not in by_event:
+            by_event[event_id] = record
+
+    # Keep only future/pending shadow candidates; settled archive is separate.
+    pending = sorted(
+        by_event.values(),
+        key=lambda row: str(row.get("commenceTime") or ""),
+    )[-max(100, safe_int(config.get("shadowLearningPendingLimit"), 300)):]
+    shadow.update({
+        "version": 1,
+        "updatedAt": iso(now),
+        "pending": pending,
+        "settled": settled[-max(500, safe_int(config.get("shadowLearningSettledLimit"), 3000)):],
+    })
+    stats = shadow.setdefault("statistics", {})
+    stats["tracked"] = len(pending) + len(settled)
+    stats["pending"] = len(pending)
+    stats["settled"] = len(settled)
+    return {"pending": len(pending), "settled": len(settled), "addedPool": len(candidates)}
+
+
+def settle_shadow_watchlist(
+    state: dict[str, Any],
+    results: dict[str, dict[str, Any]],
+    football_context: dict[str, Any],
+    now: dt.datetime,
+    config: dict[str, Any],
+) -> dict[str, int]:
+    shadow = state.setdefault("shadowLearning", {})
+    pending = [row for row in shadow.get("pending") or [] if isinstance(row, dict)]
+    settled = [copy.deepcopy(row) for row in shadow.get("settled") or [] if isinstance(row, dict)]
+    official_event_ids = {
+        str(row.get("eventId") or "")
+        for row in state.get("analysisHistory") or []
+        if isinstance(row, dict)
+    }
+    remaining: list[dict[str, Any]] = []
+    counters = {"settled": 0, "won": 0, "lost": 0, "push": 0, "superseded": 0, "unresolved": 0}
+    settled_ids = {str(row.get("id") or "") for row in settled}
+
+    for source in pending:
+        record = copy.deepcopy(source)
+        event_id = str(record.get("eventId") or "")
+        commence = parse_time(record.get("commenceTime"))
+        if event_id in official_event_ids:
+            record["status"] = "superseded"
+            record["settledAt"] = iso(now)
+            record["settlementSource"] = "OFFICIAL_PUBLICATION_SUPERSEDED_SHADOW"
+            if str(record.get("id") or "") not in settled_ids:
+                settled.append(record)
+                settled_ids.add(str(record.get("id") or ""))
+            counters["superseded"] += 1
+            continue
+        if commence is None or commence > now:
+            remaining.append(record)
+            continue
+
+        result = core.match_provider_score_result(record, results, config)
+        if result is None:
+            result = core.match_football_result(record, football_context)
+        if result is None:
+            # Keep it retryable for 72 hours after kickoff.
+            if commence and now - commence <= dt.timedelta(hours=72):
+                remaining.append(record)
+                counters["unresolved"] += 1
+            continue
+
+        home_score = safe_int(result.get("homeScore"))
+        away_score = safe_int(result.get("awayScore"))
+        status = core.settle_market(record, home_score, away_score)
+        record.update({
+            "status": status,
+            "statusLabel": core.result_status_label(status),
+            "score": f"{home_score}:{away_score}",
+            "homeScore": home_score,
+            "awayScore": away_score,
+            "settledAt": iso(now),
+            "settlementSource": result.get("source"),
+            "profit": 0.0,
+            "financialMode": "SHADOW_LEARNING_ONLY",
+        })
+        if status in {"won", "lost", "push"}:
+            core.update_learning_from_record(state, record)
+            counters["settled"] += 1
+            counters[status] += 1
+        if str(record.get("id") or "") not in settled_ids:
+            settled.append(record)
+            settled_ids.add(str(record.get("id") or ""))
+
+    shadow["pending"] = remaining[-max(100, safe_int(config.get("shadowLearningPendingLimit"), 300)):]
+    shadow["settled"] = settled[-max(500, safe_int(config.get("shadowLearningSettledLimit"), 3000)):]
+    shadow["updatedAt"] = iso(now)
+    stats = shadow.setdefault("statistics", {})
+    stats.update({
+        "tracked": len(shadow["pending"]) + len(shadow["settled"]),
+        "pending": len(shadow["pending"]),
+        "settled": sum(1 for row in shadow["settled"] if str(row.get("status")) in {"won", "lost", "push"}),
+        "won": sum(1 for row in shadow["settled"] if str(row.get("status")) == "won"),
+        "lost": sum(1 for row in shadow["settled"] if str(row.get("status")) == "lost"),
+        "push": sum(1 for row in shadow["settled"] if str(row.get("status")) == "push"),
+    })
+    return counters
+
+
 def enrich_rejection_diagnostics(diagnostics: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     hard_names = {
         "Нет полноценной истории обеих команд",
@@ -2778,6 +3019,20 @@ def build_strategy_analysis(
                     "bestCandidate": best_rejected.get("pickRu") or best_rejected.get("pick"),
                     "bestProbability": best_rejected.get("conservativeProbability"),
                     "bestOdds": best_rejected.get("bookmakerOdds"),
+                    "bestScore": best_rejected.get("obviousMarketScore"),
+                    "shadowCandidate": {
+                        key: copy.deepcopy(best_rejected.get(key))
+                        for key in (
+                            "market", "marketKey", "marketFamily", "selectionCode", "point",
+                            "pick", "pickRu", "bookmakerOdds", "modelProbability",
+                            "conservativeProbability", "marketProbability", "expectedValue",
+                            "edge", "dataTier", "dataQuality", "quoteCount", "agreement",
+                            "marketStability", "anomaly", "obviousMarketScore",
+                            "qualification", "strategyFailures", "goalDirectionConflict",
+                            "learningAdjustment", "learningEvidence",
+                        )
+                        if best_rejected.get(key) is not None
+                    },
                     "failures": failures,
                 })
             continue
@@ -3516,6 +3771,10 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "bestBets": state.get("bestBets", []),
         "dailyAudit": state.get("dailyAudit", {}),
         "systemNarrative": state.get("systemNarrative", {}),
+        "shadowLearning": {
+            "statistics": copy.deepcopy((state.get("shadowLearning") or {}).get("statistics") or {}),
+            "pending": copy.deepcopy((state.get("shadowLearning") or {}).get("pending") or [])[:20],
+        },
         "nextPortfolio": state.get("nextPortfolio", {}),
     })
 
@@ -3593,10 +3852,15 @@ def settle_current() -> int:
     score_errors: list[str] = []
     client = ProviderClient(load_json(PROVIDER_HEALTH_PATH, {}))
     seed_client_quota_identity(client, odds_key_selection)
-    if due:
+    shadow_pending_due = [
+        row for row in (state.get("shadowLearning") or {}).get("pending") or []
+        if isinstance(row, dict)
+        and (parse_time(row.get("commenceTime")) or now + dt.timedelta(days=1)) <= now
+    ]
+    if due or shadow_pending_due:
         sport_keys = [
             str(row.get("sportKey") or row.get("oddsSportKey") or "")
-            for row in due
+            for row in list(due) + shadow_pending_due
             if isinstance(row, dict)
         ]
         provider_scores, score_errors = core.fetch_scores_for_sport_keys(client, odds_key, sport_keys)
@@ -3606,6 +3870,7 @@ def settle_current() -> int:
     counters = core.settle_pending_records(state, score_results, football_context, now, config) if due else {
         "analysisSettled": 0, "bestBetsSettled": 0, "unresolved": 0
     }
+    shadow_counters = settle_shadow_watchlist(state, score_results, football_context, now, config)
     tracked_history = ingest_settled_state_history(cache, state, now)
     if tracked_history.get("added"):
         write_json(HISTORY_CACHE_PATH, cache)
@@ -3635,6 +3900,7 @@ def settle_current() -> int:
         "dueRecords": len(due),
         "providerFinalResults": len(score_results),
         "settlement": counters,
+        "shadowSettlement": shadow_counters,
         "trackedHistory": tracked_history,
         "overdueRelease": released,
         "expressSettlement": express_counters,
@@ -4529,6 +4795,8 @@ def publish_generation() -> int:
         safe_int(analysis_diag.get("eventsEligible"), 0),
     )
 
+    shadow_watchlist = refresh_shadow_watchlist(state, analysis_diag, now, config)
+
     report = {
         "status": "GREEN" if len(records) == 15 else "DEGRADED",
         "version": core.STATE_VERSION,
@@ -4546,6 +4814,10 @@ def publish_generation() -> int:
             "featuredOddsEvents": len(odds_events),
             "advancedOddsEvents": len(advanced),
             "analysis": analysis_diag,
+            "shadowLearning": {
+                **shadow_watchlist,
+                "statistics": copy.deepcopy((state.get("shadowLearning") or {}).get("statistics") or {}),
+            },
             "apiCalls": client.calls,
             "quota": client.odds_quota,
             "quotaByKey": quota_by_key,
@@ -5207,6 +5479,8 @@ def self_test() -> int:
     print("R15_PER_KEY_QUOTA_LEDGER=YES")
     print("R15_FIXTURE_FRESHNESS_CHAIN=YES")
     print("R15_SECONDARY_KEY_FALLBACK=YES")
+    print("R15_H2H_WEAK_PRIOR=YES")
+    print("R15_SHADOW_REJECTED_LEARNING=YES")
     return 0
 
 

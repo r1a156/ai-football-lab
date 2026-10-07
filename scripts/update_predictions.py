@@ -617,8 +617,21 @@ def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dic
             "byLeague": [],
             "byOddsBand": [],
         },
+        "shadowLearning": {
+            "version": 1,
+            "updatedAt": iso_z(now),
+            "pending": [],
+            "settled": [],
+            "statistics": {
+                "tracked": 0,
+                "settled": 0,
+                "won": 0,
+                "lost": 0,
+                "push": 0,
+            },
+        },
         "learning": {
-            "version": 2,
+            "version": 3,
             "updatedAt": iso_z(now),
             "segments": {},
             "calibrationBins": {},
@@ -706,13 +719,23 @@ def migrate_state(
         dict(item) for item in old_analysis_history if isinstance(item, dict)
     ]
 
+    old_shadow = source.get("shadowLearning") if isinstance(source.get("shadowLearning"), dict) else {}
+    state["shadowLearning"].update(old_shadow)
+    if not isinstance(state["shadowLearning"].get("pending"), list):
+        state["shadowLearning"]["pending"] = []
+    if not isinstance(state["shadowLearning"].get("settled"), list):
+        state["shadowLearning"]["settled"] = []
+    if not isinstance(state["shadowLearning"].get("statistics"), dict):
+        state["shadowLearning"]["statistics"] = {}
+    state["shadowLearning"]["version"] = 1
+
     old_learning = source.get("learning") if isinstance(source.get("learning"), dict) else {}
     state["learning"].update(old_learning)
     state["learning"].setdefault("segments", {})
     state["learning"].setdefault("calibrationBins", {})
     state["learning"].setdefault("modelNotes", [])
     state["learning"].setdefault("modelReadiness", {})
-    state["learning"]["version"] = 2
+    state["learning"]["version"] = 3
 
     old_stats = source.get("statistics") if isinstance(source.get("statistics"), dict) else {}
     state["statistics"].update(old_stats)
@@ -2462,13 +2485,20 @@ def learning_segment_keys(
     data_tier: str = "",
     probability: float = 0.0,
     market_detail: str = "",
+    home: str = "",
+    away: str = "",
+    sample_source: str = "PUBLISHED",
 ) -> list[str]:
     odds_band = "LOW" if odds < 1.55 else "MID" if odds < 1.80 else "UPPER_MID" if odds < 2.20 else "HIGH"
     probability_band = f"P{int(clamp(probability, 0.0, 0.999) * 10) * 10:02d}"
     league_key = normalize_text(league)[:80] or "unknown"
     tier = str(data_tier or "UNKNOWN").upper()
     detail = str(market_detail or family or "OTHER").upper()
-    return [
+    home_key = normalize_text(home)[:80] or "unknown"
+    away_key = normalize_text(away)[:80] or "unknown"
+    pair_key = "~".join(sorted((home_key, away_key)))
+    source = str(sample_source or "PUBLISHED").upper()
+    keys = [
         f"SPORT|{sport}",
         f"MARKET|{sport}|{family}",
         f"MARKET_DETAIL|{sport}|{detail}",
@@ -2480,7 +2510,26 @@ def learning_segment_keys(
         f"LEAGUE_MARKET_DETAIL|{sport}|{league_key}|{detail}",
         f"MARKET_TIER|{sport}|{family}|{tier}",
         f"MARKET_DETAIL_TIER|{sport}|{detail}|{tier}",
+        f"SAMPLE_SOURCE|{sport}|{source}",
     ]
+    if home_key != "unknown":
+        keys.extend([
+            f"TEAM|{sport}|{home_key}",
+            f"TEAM_HOME|{sport}|{home_key}",
+            f"TEAM_MARKET|{sport}|{home_key}|{detail}",
+        ])
+    if away_key != "unknown":
+        keys.extend([
+            f"TEAM|{sport}|{away_key}",
+            f"TEAM_AWAY|{sport}|{away_key}",
+            f"TEAM_MARKET|{sport}|{away_key}|{detail}",
+        ])
+    if home_key != "unknown" and away_key != "unknown":
+        keys.extend([
+            f"MATCHUP|{sport}|{pair_key}",
+            f"MATCHUP_MARKET|{sport}|{pair_key}|{detail}",
+        ])
+    return keys
 
 def probability_adjustment(
     learning: dict[str, Any],
@@ -2492,6 +2541,8 @@ def probability_adjustment(
     probability: float,
     config: dict[str, Any],
     market_detail: str = "",
+    home: str = "",
+    away: str = "",
 ) -> tuple[float, list[dict[str, Any]]]:
     minimum = safe_int(config.get("learningMinimumSegmentSamples"), 40)
     full = safe_int(config.get("learningFullWeightSamples"), 160)
@@ -2500,16 +2551,35 @@ def probability_adjustment(
     total_weight = 0.0
     weighted_adjustment = 0.0
     segments = learning.get("segments") if isinstance(learning.get("segments"), dict) else {}
-    for key in learning_segment_keys(sport, league, family, odds, data_tier, probability, market_detail):
+    for key in learning_segment_keys(
+        sport, league, family, odds, data_tier, probability, market_detail,
+        home, away, "ALL_PREMATCH"
+    ):
+        # SAMPLE_SOURCE is diagnostic only; use all other settled prematch
+        # segments for calibration. Team/matchup effects require their own
+        # minimum sample sizes and have tighter caps to prevent overfitting.
+        if key.startswith("SAMPLE_SOURCE|"):
+            continue
         segment = segments.get(key)
         if not isinstance(segment, dict):
             continue
         count = safe_int(segment.get("settled"))
-        if count < minimum:
+        local_minimum = minimum
+        local_full = full
+        local_maximum = maximum
+        if key.startswith(("TEAM|", "TEAM_HOME|", "TEAM_AWAY|", "TEAM_MARKET|")):
+            local_minimum = max(4, safe_int(config.get("learningTeamMinimumSamples"), 8))
+            local_full = max(local_minimum, safe_int(config.get("learningTeamFullWeightSamples"), 40))
+            local_maximum = min(maximum, safe_float(config.get("learningTeamMaximumProbabilityAdjustment"), 0.025))
+        elif key.startswith(("MATCHUP|", "MATCHUP_MARKET|")):
+            local_minimum = max(2, safe_int(config.get("learningMatchupMinimumSamples"), 3))
+            local_full = max(local_minimum, safe_int(config.get("learningMatchupFullWeightSamples"), 10))
+            local_maximum = min(maximum, safe_float(config.get("learningMatchupMaximumProbabilityAdjustment"), 0.018))
+        if count < local_minimum:
             continue
         bias = safe_float(segment.get("probabilityBias"), 0.0)
-        weight = clamp((count - minimum + 1) / max(1, full - minimum + 1), 0.05, 1.0)
-        weighted_adjustment += clamp(bias, -maximum, maximum) * weight
+        weight = clamp((count - local_minimum + 1) / max(1, local_full - local_minimum + 1), 0.05, 1.0)
+        weighted_adjustment += clamp(bias, -local_maximum, local_maximum) * weight
         total_weight += weight
         contributions.append(
             {
@@ -2654,6 +2724,8 @@ def evaluate_event_markets(
             preliminary_probability,
             config,
             learning_market_detail(quote),
+            str(event.get("home_team") or ""),
+            str(event.get("away_team") or ""),
         )
         model_probability = clamp(preliminary_probability + adjustment, 0.03, 0.97)
         # Market-only rows must not invent a large edge from a model that has no
@@ -4852,9 +4924,13 @@ def update_learning_from_record(state: dict[str, Any], record: dict[str, Any]) -
     brier = (probability - actual) ** 2
     log_loss = -(actual * math.log(probability) + (1 - actual) * math.log(1 - probability))
 
+    sample_source = str(record.get("learningSampleSource") or "PUBLISHED").upper()
     for key in learning_segment_keys(
         sport, league, family, odds, str(record.get("dataTier") or ""),
-        probability, learning_market_detail(record)
+        probability, learning_market_detail(record),
+        str(record.get("home") or ""),
+        str(record.get("away") or ""),
+        sample_source,
     ):
         segment = segments.setdefault(
             key,

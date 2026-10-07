@@ -329,19 +329,19 @@
         root.innerHTML = empty("Свежие матчи ещё не опубликованы");
         return;
       }
-      root.innerHTML = `<div class="smart-empty"><span>КАНДИДАТЫ НА ПРОВЕРКЕ</span><strong>Официальных прогнозов пока нет</strong><p>Ниже — ближайшие к допуску матчи. Они не являются ставками и показаны только для прозрачности отбора.</p></div>` +
+      root.innerHTML = `<div class="smart-empty"><span>ЛУЧШИЕ МАТЧИ ПО МОДЕЛИ</span><strong>Строгих прогнозов пока нет — показываем лучшие аналитические матчи</strong><p>Эти матчи зафиксированы до начала и участвуют в shadow-learning. Они не считаются официальными ставками, пока не пройдут строгий фильтр.</p></div>` +
         nearMisses.map((row, index) => {
           const failures = [...array(row.hardFailures), ...array(row.marketFailures)].filter(Boolean).slice(0, 2);
           const probabilityValue = number(row.bestProbability) <= 1 ? number(row.bestProbability) * 100 : number(row.bestProbability);
           return `<article class="match-card">
             <div class="rank">${index + 1}</div>
             <div class="match-main">
-              <div class="match-meta"><span>${escapeHtml(row.league || "Футбол")}</span><span>•</span><span>не допущен</span></div>
+              <div class="match-meta"><span>${escapeHtml(row.league || "Футбол")}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
               <div class="teams"><span>${escapeHtml(row.home || "—")}</span><i>—</i><span>${escapeHtml(row.away || "—")}</span></div>
               <div class="match-why">${escapeHtml(failures.join("; ") || "Не прошёл полный контроль качества")}</div>
             </div>
             <div class="match-side">
-              <div class="pick"><small>Кандидат</small><strong>${escapeHtml(row.bestCandidate || "—")}</strong><span class="pick-odds">× ${formatNumber(row.bestOdds,2)}</span></div>
+              <div class="pick"><small>Лучший рынок модели</small><strong>${escapeHtml(row.bestCandidate || "—")}</strong><span class="pick-odds">× ${formatNumber(row.bestOdds,2)}</span></div>
               <div class="signal-cluster">
                 ${signalHtml("Вероятность", probabilityValue, probabilityValue)}
                 ${signalHtml("Качество", number(row.dataQuality), number(row.dataQuality))}
@@ -375,6 +375,34 @@
         <div class="chevron">›</div>
       </article>`;
     }).join("");
+    const analysis = object(object(runtime.report.diagnostics).analysis);
+    const officialIds = new Set(rows.map(row => String(row.eventId || "")));
+    const learningCandidates = array(analysis.nearMissCandidates)
+      .filter(row => number(row.bestOdds) >= 1.55 && !officialIds.has(String(row.eventId || "")))
+      .slice(0, Math.max(0, 8 - rows.length));
+    if (learningCandidates.length) {
+      root.innerHTML += `<div class="smart-empty"><span>ЛУЧШИЕ МАТЧИ ПО МОДЕЛИ</span><strong>Дополнительные аналитические кандидаты</strong><p>Зафиксированы до начала матча и участвуют в обучении, но не входят в официальный портфель.</p></div>` +
+        learningCandidates.map((row, index) => {
+          const failures = [...array(row.hardFailures), ...array(row.marketFailures)].filter(Boolean).slice(0, 2);
+          const probabilityValue = number(row.bestProbability) <= 1 ? number(row.bestProbability) * 100 : number(row.bestProbability);
+          return `<article class="match-card">
+            <div class="rank">${rows.length + index + 1}</div>
+            <div class="match-main">
+              <div class="match-meta"><span>${escapeHtml(row.league || "Футбол")}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
+              <div class="teams"><span>${escapeHtml(row.home || "—")}</span><i>—</i><span>${escapeHtml(row.away || "—")}</span></div>
+              <div class="match-why">${escapeHtml(failures.join("; ") || "Близок к строгому допуску")}</div>
+            </div>
+            <div class="match-side">
+              <div class="pick"><small>Лучший рынок модели</small><strong>${escapeHtml(row.bestCandidate || "—")}</strong><span class="pick-odds">× ${formatNumber(row.bestOdds,2)}</span></div>
+              <div class="signal-cluster">
+                ${signalHtml("Вероятность", probabilityValue, probabilityValue)}
+                ${signalHtml("Качество", number(row.dataQuality), number(row.dataQuality))}
+              </div>
+            </div>
+            <div class="chevron">○</div>
+          </article>`;
+        }).join("");
+    }
     root.querySelectorAll("[data-record]").forEach(node => {
       node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record)));
       node.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") openDetails(runtime.records.get(node.dataset.record)); });

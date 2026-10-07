@@ -1,5 +1,5 @@
 {
-  "version": 37,
+  "version": 38,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -178,7 +178,7 @@
   "fallbackMaximumAnomaly": 65,
   "fallbackMinimumExpectedValue": -0.05,
   "bestBetsFreezePolicy": "IMMUTABLE_AFTER_PUBLICATION_UNTIL_SETTLEMENT",
-  "learningSamplePolicy": "ONE_SETTLED_ANALYSIS_PER_EVENT_NO_FINANCIAL_DUPLICATES",
+  "learningSamplePolicy": "ONE_PREMATCH_LABEL_PER_EVENT_OFFICIAL_PREFERRED_SHADOW_ONLY_IF_NEVER_PUBLISHED",
   "allFifteenSettlementPolicy": "UPDATE_SCORE_STATUS_WIN_LOSS_PUSH_FOR_EVERY_PUBLISHED_ANALYSIS",
   "bankIntegrityPolicy": "PRESERVE_LEGACY_BANK_AND_HISTORY_NEW_FINANCIAL_ACTIVITY_ONLY_IN_EXPRESS_BANK",
   "dailySelectionObjective": "MAXIMUM_CONSERVATIVE_CALIBRATED_HIT_RATE_WITH_DIRECTIONAL_GOAL_GUARDS",
@@ -420,5 +420,21 @@
   "footballDataFixtureMetadataUrl": "https://www.football-data.co.uk/matches.php",
   "footballDataFixtureFreshnessPolicy": "HTTP_LAST_MODIFIED_THEN_PUBLISHED_UPLOAD_TIMESTAMP_THEN_CONTENT_HASH",
   "oddsUseSecondaryKeyFallback": true,
-  "oddsSecondaryKeyFallbackPolicy": "ONLY_WHEN_PRIMARY_PORTFOLIO_INCOMPLETE_USE_UNSEEN_COMPETITIONS_WITH_SEPARATE_DAILY_LEDGER"
+  "oddsSecondaryKeyFallbackPolicy": "ONLY_WHEN_PRIMARY_PORTFOLIO_INCOMPLETE_USE_UNSEEN_COMPETITIONS_WITH_SEPARATE_DAILY_LEDGER",
+  "shadowLearningEnabled": true,
+  "shadowLearningDailyTarget": 12,
+  "shadowLearningPendingLimit": 300,
+  "shadowLearningSettledLimit": 3000,
+  "shadowLearningPolicy": "PREMATCH_FIXED_BEST_REJECTED_CANDIDATES_SETTLE_SEPARATELY_NO_BANK_NO_PUBLIC_STAT_REWRITE",
+  "learningTeamMinimumSamples": 8,
+  "learningTeamFullWeightSamples": 40,
+  "learningTeamMaximumProbabilityAdjustment": 0.025,
+  "learningMatchupMinimumSamples": 3,
+  "learningMatchupFullWeightSamples": 10,
+  "learningMatchupMaximumProbabilityAdjustment": 0.018,
+  "h2hPerMatchModelWeight": 0.018,
+  "h2hMaximumModelWeight": 0.1,
+  "h2hPolicy": "RECENCY_WEIGHTED_WEAK_PRIOR_MAX_10_PERCENT_NEVER_OVERRIDE_FORM_ELO_MARKET",
+  "bestMatchesDisplayTarget": 8,
+  "bestMatchesDisplayPolicy": "OFFICIAL_FIRST_THEN_SHADOW_LEARNING_CANDIDATES_CLEARLY_LABELLED"
 }
