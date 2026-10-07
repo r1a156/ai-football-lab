@@ -215,7 +215,7 @@ def fetch_odds_scores(
         if any(bool(item.get("isBestBet")) for item in row[1])
     ]
     other_groups = [row for row in ranked_groups if row not in best_groups]
-    # All distinct sport keys used by the current four best bets receive live
+    # All distinct sport keys used by the current three best bets receive live
     # coverage first. Remaining analysis groups rotate by five-minute slot so
     # the same first groups cannot starve the rest of the 15-match batch.
     maximum_calls = max(configured_calls, len(best_groups))
