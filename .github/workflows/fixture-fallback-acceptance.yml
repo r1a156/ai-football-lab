@@ -1,0 +1,69 @@
+name: Fixture fallback acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/r15_intelligence.py"
+      - "config/analysis.json"
+      - ".github/workflows/fixture-fallback-acceptance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-fixture-fallback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile and self-test
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/r15_intelligence.py
+          python scripts/r15_intelligence.py --self-test
+      - name: Probe Football-Data freshness chain
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import pathlib
+          import sys
+          sys.path.insert(0, str(pathlib.Path("scripts").resolve()))
+          import r15_intelligence as r15
+
+          config = json.loads(pathlib.Path("config/analysis.json").read_text(encoding="utf-8"))
+          now = dt.datetime.now(dt.timezone.utc)
+          _, diag = r15.load_football_data_fixture_odds(
+              [],
+              config,
+              now,
+              now + dt.timedelta(hours=72),
+              now,
+          )
+          print(json.dumps(diag, ensure_ascii=False, indent=2))
+          error = str(diag.get("error") or "")
+          assert "FIXTURE_FEED_LAST_MODIFIED_MISSING" not in error, error
+          assert diag.get("sourceUpdatedAt"), diag
+          assert diag.get("freshnessEvidence") in {
+              "HTTP_LAST_MODIFIED",
+              "FOOTBALL_DATA_UPLOAD_TIMESTAMP",
+              "CONTENT_HASH_FIRST_OBSERVED",
+              "CONTENT_HASH_CHANGED",
+              "CONTENT_HASH_UNCHANGED",
+          }, diag
+          assert diag.get("status") in {
+              "GREEN",
+              "STALE",
+              "INVALID_PAYLOAD",
+              "NO_MATCHED_EVENTS",
+              "CACHE_GREEN",
+              "CACHE_EMPTY",
+          }, diag
+          print("FIXTURE_FRESHNESS_ACCEPTANCE=GREEN")
+          PY
