@@ -3856,18 +3856,10 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
         joint_probability = round(joint_probability, 6)
         conservative_expected_value = round(joint_probability * combined_odds - 1.0, 6)
         minimum_ev = safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03)
-        bankroll_enabled = (
-            bool(config.get("expressBankrollAllowed", False))
-            and (not recovery_mode)
-            and conservative_expected_value >= minimum_ev
-        )
-        stake_percent = configured_stake_percent if bankroll_enabled else 0.0
-        stake = round(current * stake_percent / 100.0, 2)
-        financial_mode = (
-            "RECOVERY_INFORMATIONAL_NO_BANK"
-            if recovery_mode
-            else ("EXPRESS_POSITIVE_EV" if bankroll_enabled else "EXPRESS_INFORMATIONAL_NO_BANK")
-        )
+        bankroll_enabled = False
+        stake_percent = 0.0
+        stake = 0.0
+        financial_mode = "EXPRESS_INFORMATIONAL_NO_BANK"
         result.append({
             "id": express_id,
             "label": labels[group_index],
