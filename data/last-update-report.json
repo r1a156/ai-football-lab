@@ -3,8 +3,8 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "generate",
-  "startedAt": "2026-10-07T12:01:13Z",
-  "finishedAt": "2026-10-07T12:06:57Z",
+  "startedAt": "2026-10-07T13:12:11Z",
+  "finishedAt": "2026-10-07T13:18:35Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -42,23 +42,30 @@
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 67,
-      "matchesAdded": 66,
+      "requests": 60,
+      "matchesAdded": 59,
       "historyMatches": 17496,
       "errors": [
-        "136517:HTTPError",
-        "136462:HTTPError",
-        "136469:HTTPError",
-        "133901:HTTPError",
-        "134294:HTTPError",
-        "134291:HTTPError",
-        "145212:HTTPError",
-        "137932:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError"
+        "133913:HTTPError",
+        "134515:HTTPError",
+        "135179:HTTPError",
+        "137775:HTTPError",
+        "135151:HTTPError",
+        "137773:HTTPError",
+        "135170:HTTPError",
+        "133912:HTTPError",
+        "133909:HTTPError",
+        "136452:HTTPError",
+        "136454:HTTPError",
+        "136468:HTTPError",
+        "136458:HTTPError",
+        "136461:HTTPError",
+        "136453:HTTPError",
+        "135988:HTTPError",
+        "136460:HTTPError",
+        "135983:HTTPError",
+        "134506:HTTPError",
+        "133978:HTTPError"
       ]
     },
     "trackedHistory": {
@@ -72,18 +79,18 @@
       "operationalDateLocal": "2026-10-07",
       "operationalWindowStart": "2026-10-07T05:00:00Z",
       "operationalWindowEnd": "2026-10-08T05:00:00Z",
-      "queryWindowStart": "2026-10-07T12:46:13Z",
-      "queryWindowEnd": "2026-10-10T12:46:13Z",
-      "searchWindowMaximumEnd": "2026-10-10T12:46:13Z",
+      "queryWindowStart": "2026-10-07T13:57:11Z",
+      "queryWindowEnd": "2026-10-10T13:57:11Z",
+      "searchWindowMaximumEnd": "2026-10-10T13:57:11Z",
       "windowStartLocal": "2026-10-07T08:00:00+03:00",
       "windowEndLocal": "2026-10-08T08:00:00+03:00",
       "durationHours": 24,
       "searchHorizonHours": 72,
       "policy": "ROLLING_PREMATCH_HORIZON_72H_BREADTH_FIRST",
-      "selectionWindowStart": "2026-10-07T12:46:13Z",
-      "selectionWindowEnd": "2026-10-10T12:46:13Z",
+      "selectionWindowStart": "2026-10-07T13:57:11Z",
+      "selectionWindowEnd": "2026-10-10T13:57:11Z",
       "activeFootballCompetitions": 47,
-      "events": 95,
+      "events": 111,
       "targetEvents": 120,
       "targetReached": false,
       "stagesUsed": 4,
@@ -91,7 +98,7 @@
         {
           "stage": 0,
           "name": "CURRENT_OPERATIONAL_REMAINDER",
-          "start": "2026-10-07T12:46:13Z",
+          "start": "2026-10-07T13:57:11Z",
           "end": "2026-10-08T05:00:00Z",
           "newEvents": 12,
           "cumulativeEvents": 12,
@@ -119,13 +126,13 @@
           "stage": 3,
           "name": "FUTURE_STAGE_3",
           "start": "2026-10-10T05:00:00Z",
-          "end": "2026-10-10T12:46:13Z",
-          "newEvents": 29,
-          "cumulativeEvents": 95,
+          "end": "2026-10-10T13:57:11Z",
+          "newEvents": 45,
+          "cumulativeEvents": 111,
           "providerErrors": 0
         }
       ],
-      "sportKeysWithEvents": 30,
+      "sportKeysWithEvents": 31,
       "eventsBySportKey": {
         "soccer_finland_veikkausliiga": 4,
         "soccer_brazil_campeonato": 10,
@@ -134,35 +141,36 @@
         "soccer_korea_kleague1": 5,
         "soccer_japan_j_league": 6,
         "soccer_china_superleague": 6,
-        "soccer_saudi_arabia_pro_league": 3,
+        "soccer_saudi_arabia_pro_league": 4,
         "soccer_poland_ekstraklasa": 3,
         "soccer_germany_bundesliga2": 5,
         "soccer_denmark_superliga": 1,
         "soccer_germany_liga3": 6,
         "soccer_norway_eliteserien": 1,
-        "soccer_sweden_allsvenskan": 1,
-        "soccer_turkey_super_league": 2,
+        "soccer_sweden_allsvenskan": 3,
+        "soccer_turkey_super_league": 4,
         "soccer_argentina_primera_division": 4,
         "soccer_portugal_primeira_liga": 2,
         "soccer_france_ligue_two": 7,
         "soccer_netherlands_eredivisie": 1,
-        "soccer_germany_bundesliga": 1,
-        "soccer_italy_serie_b": 1,
+        "soccer_germany_bundesliga": 6,
+        "soccer_italy_serie_b": 5,
         "soccer_belgium_first_div": 1,
         "soccer_france_ligue_one": 1,
         "soccer_efl_champ": 4,
         "soccer_spain_la_liga": 2,
         "soccer_mexico_ligamx": 2,
-        "soccer_sweden_superettan": 1,
+        "soccer_sweden_superettan": 2,
         "soccer_england_league1": 2,
         "soccer_england_league2": 2,
-        "soccer_epl": 1
+        "soccer_epl": 1,
+        "soccer_italy_serie_a": 1
       },
       "errors": []
     },
     "quotaPlan": {
       "freeMonthlyMode": true,
-      "quotaRemainingBeforeOdds": 296,
+      "quotaRemainingBeforeOdds": 294,
       "quotaHardReserve": 0,
       "daysLeftInQuotaPeriod": 25,
       "dailyFairShare": 11,
@@ -180,9 +188,9 @@
       "minimumCompetitionsForPortfolio": 3,
       "maximumCompetitionsForPortfolio": 8,
       "featuredCostPerCompetition": 2,
-      "competitionsWithEvents": 30,
+      "competitionsWithEvents": 31,
       "competitionsSelected": 0,
-      "competitionsDeferredByQuota": 30,
+      "competitionsDeferredByQuota": 31,
       "estimatedFeaturedCost": 0,
       "projectedEventsWithOdds": 0,
       "projectedHistoryCoveredEvents": 0,
@@ -193,7 +201,9 @@
       "rankedCompetitionKeys": [
         "soccer_france_ligue_two",
         "soccer_germany_liga3",
+        "soccer_germany_bundesliga",
         "soccer_germany_bundesliga2",
+        "soccer_italy_serie_b",
         "soccer_efl_champ",
         "soccer_brazil_serie_b",
         "soccer_brazil_campeonato",
@@ -202,13 +212,12 @@
         "soccer_england_league1",
         "soccer_england_league2",
         "soccer_finland_veikkausliiga",
+        "soccer_turkey_super_league",
         "soccer_netherlands_eredivisie",
-        "soccer_germany_bundesliga",
-        "soccer_italy_serie_b",
         "soccer_belgium_first_div",
         "soccer_france_ligue_one",
         "soccer_epl",
-        "soccer_turkey_super_league",
+        "soccer_italy_serie_a",
         "soccer_portugal_primeira_liga",
         "soccer_league_of_ireland",
         "soccer_korea_kleague1",
@@ -216,27 +225,27 @@
         "soccer_china_superleague",
         "soccer_saudi_arabia_pro_league",
         "soccer_poland_ekstraklasa",
-        "soccer_mexico_ligamx",
-        "soccer_denmark_superliga",
-        "soccer_norway_eliteserien",
         "soccer_sweden_allsvenskan",
-        "soccer_sweden_superettan"
+        "soccer_mexico_ligamx",
+        "soccer_sweden_superettan",
+        "soccer_denmark_superliga",
+        "soccer_norway_eliteserien"
       ],
       "initialCompetitionKeys": [],
       "completionCompetitionKeys": [],
       "completionRounds": [],
-      "allEventsHistoricallyInspected": 95,
+      "allEventsHistoricallyInspected": 111,
       "competitionKeysSelected": [],
       "portfolioCompletionBurstActual": false,
-      "featuredEventsCollected": 23,
+      "featuredEventsCollected": 0,
       "advancedRecoveryReservedBeforeFeatured": 0,
       "advancedRecoveryRequested": 0,
       "advancedRecoveryReturned": 0,
       "advancedRecoveryUsefulResponses": 0,
       "advancedRecoveryRecoveredEvents": 0,
-      "topThreeEligibleAfterAdvanced": 22,
+      "topThreeEligibleAfterAdvanced": 0,
       "premiumQualifiedAfterAdvanced": 0,
-      "qualifiedAfterAdvanced": 22,
+      "qualifiedAfterAdvanced": 0,
       "noKeyFixtureOddsEnabled": true,
       "noKeyFixtureOddsStatus": "STALE",
       "noKeyFixtureOddsEvents": 0,
@@ -245,204 +254,62 @@
       "noKeyFixtureOddsUsedCache": false,
       "noKeyFixtureOddsError": null,
       "oddsCacheEnabled": true,
-      "oddsCacheLoadedFeatured": 23,
+      "oddsCacheLoadedFeatured": 0,
       "oddsCacheLoadedAdvanced": 0,
-      "oddsCacheExpired": 0,
-      "oddsCacheSavedFeatured": 23,
+      "oddsCacheExpired": 23,
+      "oddsCacheSavedFeatured": 0,
       "oddsCacheSavedAdvanced": 0,
       "oddsCacheMaximumAgeMinutes": 180,
       "quotaExhaustedAtStart": false,
       "quotaExhaustedAfterAcquisition": false,
       "automaticResumeOnQuotaRecovery": true,
-      "quotaLifecycleStatus": "PORTFOLIO_READY",
+      "quotaLifecycleStatus": "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE",
       "secondaryKeyFallback": {
         "enabled": true,
         "activated": false,
-        "reason": "PRIMARY_PORTFOLIO_READY",
+        "reason": "BACKUP_DAILY_BUDGET_OR_SELECTION_EMPTY",
         "competitionKeysSelected": [],
         "featuredEventsCollected": 0,
         "quota": null
       },
-      "advancedCompletionMode": false,
+      "advancedCompletionMode": true,
       "advancedRecoveryRequestedEvents": 0,
       "advancedRecoveryReceivedEvents": 0,
       "advancedRecoveryAttemptedPairs": 0,
       "advancedRecoveryUnsupportedMarkets": {}
     },
-    "featuredOddsEvents": 23,
+    "featuredOddsEvents": 0,
     "advancedOddsEvents": 0,
     "analysis": {
-      "oddsEvents": 23,
-      "eventsWithHistory": 13,
-      "eventsWithMarkets": 23,
+      "oddsEvents": 0,
+      "eventsWithHistory": 0,
+      "eventsWithMarkets": 0,
       "eventsQualified": 0,
-      "eventsTopThreeEligible": 22,
+      "eventsTopThreeEligible": 0,
       "premiumQualifiedEvents": 0,
-      "marketCandidates": 77,
-      "rejectedByQuality": 1,
+      "marketCandidates": 0,
+      "rejectedByQuality": 0,
       "rejectedWithoutMarkets": 0,
-      "rejectionReasons": {
-        "Премиум: Недостаточная консервативная вероятность": 22,
-        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 22,
-        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 22,
-        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 22,
-        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 22,
-        "Премиум: Недостаточное качество данных": 20,
-        "Премиум: Основной фильтр: Недостаточная полнота данных": 20,
-        "Премиум: Нет полноценной истории обеих команд": 9,
-        "Премиум: Основной фильтр: Нет независимой статистической модели команд": 9,
-        "Направление тотала противоречит модели матча": 2,
-        "Премиум: Основной фильтр: Линия недостаточно стабильна": 2
-      },
-      "rejectedEvents": [
-        {
-          "eventId": "38a335b265e15cadc748cd78a866bcaf",
-          "sportKey": "soccer_brazil_campeonato",
-          "league": "Brazil Série A",
-          "leagueRu": "Серия A Бразилии",
-          "home": "Fluminense",
-          "homeRu": "Флуминенсе",
-          "away": "Coritiba",
-          "awayRu": "Коритиба",
-          "commenceTime": "2026-10-09T00:30:00Z",
-          "dataTier": "MARKET",
-          "dataQuality": 34.0,
-          "quoteCount": 17,
-          "candidateCount": 2,
-          "bestCandidate": "Тотал меньше 2.5",
-          "bestProbability": 0.302591,
-          "bestOdds": 2.0,
-          "bestScore": 48.4101,
-          "shadowCandidate": {
-            "market": "TOTAL_UNDER",
-            "marketKey": "totals",
-            "marketFamily": "TOTAL",
-            "selectionCode": "UNDER",
-            "point": 2.5,
-            "pick": "Тотал меньше 2.5",
-            "pickRu": "Тотал меньше 2.5",
-            "bookmakerOdds": 2.0,
-            "modelProbability": 0.469251,
-            "conservativeProbability": 0.302591,
-            "marketProbability": 0.498355,
-            "expectedValue": -0.394817,
-            "edge": -0.195764,
-            "dataTier": "MARKET",
-            "dataQuality": 34.0,
-            "quoteCount": 17,
-            "agreement": 88.7,
-            "marketStability": 62.4,
-            "anomaly": 30.3,
-            "obviousMarketScore": 48.4101,
-            "qualification": {
-              "qualified": false,
-              "failures": [
-                "Консенсус букмекеров не подтверждает выбранное направление тотала",
-                "Ожидаемая сумма голов слишком высока для ставки на меньше",
-                "Недостаточная консервативная вероятность",
-                "Недостаточная расчётная вероятность",
-                "Недостаточное преимущество над рынком",
-                "Недостаточное математическое ожидание",
-                "Недостаточная полнота данных",
-                "Нет независимой статистической модели команд"
-              ]
-            },
-            "strategyFailures": [
-              "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-              "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-              "Основной фильтр: Недостаточная консервативная вероятность",
-              "Основной фильтр: Недостаточная расчётная вероятность",
-              "Основной фильтр: Недостаточное преимущество над рынком",
-              "Основной фильтр: Недостаточное математическое ожидание",
-              "Основной фильтр: Недостаточная полнота данных",
-              "Основной фильтр: Нет независимой статистической модели команд",
-              "Нет полноценной истории обеих команд",
-              "Недостаточное качество данных",
-              "Недостаточная консервативная вероятность",
-              "История и модель голов противоречат направлению тотала"
-            ],
-            "goalDirectionConflict": true,
-            "learningAdjustment": -0.034447,
-            "learningEvidence": [
-              {
-                "segment": "SPORT|soccer",
-                "samples": 80,
-                "bias": -0.0324,
-                "weight": 0.339,
-                "hitRate": 0.575,
-                "averagePredicted": 0.6074,
-                "brierScore": 0.245914
-              },
-              {
-                "segment": "MARKET|soccer|TOTAL",
-                "samples": 54,
-                "bias": -0.0725,
-                "weight": 0.124,
-                "hitRate": 0.537,
-                "averagePredicted": 0.6095,
-                "brierScore": 0.251634
-              }
-            ]
-          },
-          "failures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        }
-      ],
-      "dataTiers": {
-        "HYBRID": 11,
-        "MARKET": 10,
-        "FULL": 2
-      },
-      "marketFamilies": {
-        "TOTAL": 13,
-        "OUTCOME": 9
-      },
+      "rejectionReasons": {},
+      "rejectedEvents": [],
+      "dataTiers": {},
+      "marketFamilies": {},
       "qualifiedEventIds": [],
       "premiumEventIds": [],
-      "published": 11,
+      "published": 0,
       "required": 15,
-      "shortage": 4,
-      "partialPublication": true,
-      "status": "GREEN_PARTIAL_PRODUCTION",
-      "marketFamilyCap": 8,
-      "premiumPublished": 0,
-      "selectionObjective": "BEST_AVAILABLE_TOP_THREE_ALWAYS_WITH_SEPARATE_STRICT_PREMIUM_LABEL",
+      "shortage": 15,
+      "status": "NO_TOP_THREE_ELIGIBLE_EVENTS",
+      "partialPublication": false,
       "hardRejectionReasons": {},
-      "marketRejectionReasons": {
-        "Направление тотала противоречит модели матча": 1
-      },
-      "nearMissCandidates": [
-        {
-          "eventId": "38a335b265e15cadc748cd78a866bcaf",
-          "league": "Brazil Série A",
-          "leagueRu": "Серия A Бразилии",
-          "home": "Fluminense",
-          "homeRu": "Флуминенсе",
-          "away": "Coritiba",
-          "awayRu": "Коритиба",
-          "bestCandidate": "Тотал меньше 2.5",
-          "bestProbability": 0.302591,
-          "bestOdds": 2.0,
-          "dataQuality": 34.0,
-          "quoteCount": 17,
-          "probabilityGap": 0.2574,
-          "qualityGap": 24.0,
-          "bookmakerGap": 0,
-          "hardFailures": [],
-          "marketFailures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        }
-      ],
-      "advancedRecoveryEventIds": [
-        "38a335b265e15cadc748cd78a866bcaf"
-      ]
+      "marketRejectionReasons": {},
+      "nearMissCandidates": [],
+      "advancedRecoveryEventIds": []
     },
     "shadowLearning": {
       "pending": 6,
       "settled": 8,
-      "addedPool": 1,
+      "addedPool": 0,
       "statistics": {
         "tracked": 14,
         "pending": 6,
@@ -457,61 +324,61 @@
         "provider": "THE_ODDS_API",
         "label": "ODDS_SPORTS",
         "status": 200,
-        "elapsedSeconds": 0.124
+        "elapsedSeconds": 0.302
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.144
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_australia_aleague",
         "status": 200,
-        "elapsedSeconds": 0.092
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_austria_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.21
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_belgium_first_div",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.238
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.094
+        "elapsedSeconds": 0.134
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.251
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_chile_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.04
+        "elapsedSeconds": 0.087
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_china_superleague",
         "status": 200,
-        "elapsedSeconds": 0.194
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_libertadores",
         "status": 200,
-        "elapsedSeconds": 0.092
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
@@ -523,97 +390,97 @@
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.105
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.098
+        "elapsedSeconds": 0.201
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_efl_cup",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.197
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.106
+        "elapsedSeconds": 0.1
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.116
+        "elapsedSeconds": 0.104
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.137
+        "elapsedSeconds": 0.148
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_finland_veikkausliiga",
         "status": 200,
-        "elapsedSeconds": 0.069
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_one",
         "status": 200,
-        "elapsedSeconds": 0.065
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.161
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga2",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.096
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_dfb_pokal",
         "status": 200,
-        "elapsedSeconds": 0.072
+        "elapsedSeconds": 0.105
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_liga3",
         "status": 200,
-        "elapsedSeconds": 0.039
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_greece_super_league",
         "status": 200,
-        "elapsedSeconds": 0.112
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.182
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.077
+        "elapsedSeconds": 0.108
       },
       {
         "provider": "THE_ODDS_API",
@@ -625,979 +492,979 @@
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_korea_kleague1",
         "status": 200,
-        "elapsedSeconds": 0.094
+        "elapsedSeconds": 0.11
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_league_of_ireland",
-        "status": 200,
-        "elapsedSeconds": 0.046
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_mexico_ligamx",
-        "status": 200,
-        "elapsedSeconds": 0.059
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_netherlands_eredivisie",
-        "status": 200,
-        "elapsedSeconds": 0.039
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_norway_eliteserien",
-        "status": 200,
-        "elapsedSeconds": 0.042
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_poland_ekstraklasa",
-        "status": 200,
-        "elapsedSeconds": 0.049
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_portugal_primeira_liga",
-        "status": 200,
-        "elapsedSeconds": 0.041
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_saudi_arabia_pro_league",
-        "status": 200,
-        "elapsedSeconds": 0.045
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_spain_la_liga",
-        "status": 200,
-        "elapsedSeconds": 0.058
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_spain_segunda_division",
-        "status": 200,
-        "elapsedSeconds": 0.048
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_spl",
-        "status": 200,
-        "elapsedSeconds": 0.056
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_sweden_allsvenskan",
-        "status": 200,
-        "elapsedSeconds": 0.037
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_sweden_superettan",
-        "status": 200,
-        "elapsedSeconds": 0.046
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_switzerland_superleague",
-        "status": 200,
-        "elapsedSeconds": 0.045
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_turkey_super_league",
-        "status": 200,
-        "elapsedSeconds": 0.052
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_uefa_champs_league",
-        "status": 200,
-        "elapsedSeconds": 0.131
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_uefa_europa_conference_league",
-        "status": 200,
-        "elapsedSeconds": 0.041
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_uefa_europa_league",
-        "status": 200,
-        "elapsedSeconds": 0.068
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_uefa_nations_league",
-        "status": 200,
-        "elapsedSeconds": 0.165
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_usa_mls",
-        "status": 200,
-        "elapsedSeconds": 0.051
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_argentina_primera_division",
-        "status": 200,
-        "elapsedSeconds": 0.044
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_australia_aleague",
-        "status": 200,
-        "elapsedSeconds": 0.04
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_austria_bundesliga",
-        "status": 200,
-        "elapsedSeconds": 0.038
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_belgium_first_div",
-        "status": 200,
-        "elapsedSeconds": 0.046
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_brazil_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.066
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_brazil_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.064
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_chile_campeonato",
-        "status": 200,
-        "elapsedSeconds": 0.038
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_china_superleague",
         "status": 200,
         "elapsedSeconds": 0.092
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_conmebol_copa_libertadores",
-        "status": 200,
-        "elapsedSeconds": 0.045
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
-        "status": 200,
-        "elapsedSeconds": 0.065
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_denmark_superliga",
-        "status": 200,
-        "elapsedSeconds": 0.059
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_efl_champ",
-        "status": 200,
-        "elapsedSeconds": 0.047
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_england_efl_cup",
-        "status": 200,
-        "elapsedSeconds": 0.064
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_england_league1",
-        "status": 200,
-        "elapsedSeconds": 0.054
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_england_league2",
-        "status": 200,
-        "elapsedSeconds": 0.047
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_epl",
-        "status": 200,
-        "elapsedSeconds": 0.045
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_finland_veikkausliiga",
-        "status": 200,
-        "elapsedSeconds": 0.056
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_france_ligue_one",
-        "status": 200,
-        "elapsedSeconds": 0.058
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_france_ligue_two",
-        "status": 200,
-        "elapsedSeconds": 0.043
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_germany_bundesliga",
-        "status": 200,
-        "elapsedSeconds": 0.168
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_germany_bundesliga2",
-        "status": 200,
-        "elapsedSeconds": 0.048
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_germany_dfb_pokal",
-        "status": 200,
-        "elapsedSeconds": 0.041
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_germany_liga3",
-        "status": 200,
-        "elapsedSeconds": 0.055
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_greece_super_league",
-        "status": 200,
-        "elapsedSeconds": 0.04
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_italy_serie_a",
-        "status": 200,
-        "elapsedSeconds": 0.049
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_italy_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.047
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_japan_j_league",
-        "status": 200,
-        "elapsedSeconds": 0.046
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_korea_kleague1",
-        "status": 200,
-        "elapsedSeconds": 0.051
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "EVENTS:soccer_league_of_ireland",
-        "status": 200,
-        "elapsedSeconds": 0.046
-      },
-      {
-        "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_mexico_ligamx",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.093
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.087
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_norway_eliteserien",
         "status": 200,
-        "elapsedSeconds": 0.036
+        "elapsedSeconds": 0.207
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.084
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_portugal_primeira_liga",
         "status": 200,
-        "elapsedSeconds": 0.063
+        "elapsedSeconds": 0.108
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.091
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_la_liga",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.215
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.104
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spl",
         "status": 200,
-        "elapsedSeconds": 0.068
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_allsvenskan",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_superettan",
         "status": 200,
-        "elapsedSeconds": 0.035
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_switzerland_superleague",
         "status": 200,
-        "elapsedSeconds": 0.043
+        "elapsedSeconds": 0.112
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_turkey_super_league",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.107
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league",
         "status": 200,
-        "elapsedSeconds": 0.043
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.087
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_league",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.209
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_nations_league",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.107
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_usa_mls",
         "status": 200,
-        "elapsedSeconds": 0.054
+        "elapsedSeconds": 0.106
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.047
+        "elapsedSeconds": 0.118
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_australia_aleague",
         "status": 200,
-        "elapsedSeconds": 0.064
+        "elapsedSeconds": 0.091
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_austria_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.05
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_belgium_first_div",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.091
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.05
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.1
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_chile_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.107
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_china_superleague",
         "status": 200,
-        "elapsedSeconds": 0.064
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_libertadores",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.108
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_sudamericana",
         "status": 200,
-        "elapsedSeconds": 0.051
+        "elapsedSeconds": 0.096
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.092
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.039
+        "elapsedSeconds": 0.203
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_efl_cup",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.102
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.042
+        "elapsedSeconds": 0.206
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.056
+        "elapsedSeconds": 0.108
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_finland_veikkausliiga",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.087
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_one",
         "status": 200,
-        "elapsedSeconds": 0.062
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.059
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga2",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_dfb_pokal",
         "status": 200,
-        "elapsedSeconds": 0.039
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_liga3",
         "status": 200,
-        "elapsedSeconds": 0.057
+        "elapsedSeconds": 0.102
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_greece_super_league",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.203
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_japan_j_league",
         "status": 200,
-        "elapsedSeconds": 0.036
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_korea_kleague1",
         "status": 200,
-        "elapsedSeconds": 0.047
+        "elapsedSeconds": 0.202
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_league_of_ireland",
         "status": 200,
-        "elapsedSeconds": 0.038
+        "elapsedSeconds": 0.211
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_mexico_ligamx",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.202
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.043
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_norway_eliteserien",
         "status": 200,
-        "elapsedSeconds": 0.058
+        "elapsedSeconds": 0.091
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.042
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_portugal_primeira_liga",
         "status": 200,
-        "elapsedSeconds": 0.063
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.053
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_la_liga",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.112
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.056
+        "elapsedSeconds": 0.098
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spl",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.203
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_allsvenskan",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.22
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_superettan",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.12
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_switzerland_superleague",
         "status": 200,
-        "elapsedSeconds": 0.065
+        "elapsedSeconds": 0.216
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_turkey_super_league",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.196
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league",
         "status": 200,
-        "elapsedSeconds": 0.047
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.072
+        "elapsedSeconds": 0.096
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_league",
         "status": 200,
-        "elapsedSeconds": 0.057
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_nations_league",
         "status": 200,
-        "elapsedSeconds": 0.038
+        "elapsedSeconds": 0.194
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_usa_mls",
         "status": 200,
-        "elapsedSeconds": 0.06
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.09
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_australia_aleague",
         "status": 200,
-        "elapsedSeconds": 0.05
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_austria_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.041
+        "elapsedSeconds": 0.113
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_belgium_first_div",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.089
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.042
+        "elapsedSeconds": 0.116
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.047
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_chile_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.064
+        "elapsedSeconds": 0.104
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_china_superleague",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.116
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_libertadores",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.197
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_sudamericana",
         "status": 200,
-        "elapsedSeconds": 0.053
+        "elapsedSeconds": 0.088
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.05
+        "elapsedSeconds": 0.091
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.066
+        "elapsedSeconds": 0.105
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_efl_cup",
         "status": 200,
-        "elapsedSeconds": 0.047
+        "elapsedSeconds": 0.107
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.1
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.066
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.105
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_finland_veikkausliiga",
         "status": 200,
-        "elapsedSeconds": 0.053
+        "elapsedSeconds": 0.086
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_one",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.041
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.089
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga2",
         "status": 200,
-        "elapsedSeconds": 0.06
+        "elapsedSeconds": 0.205
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_dfb_pokal",
         "status": 200,
-        "elapsedSeconds": 0.042
+        "elapsedSeconds": 0.245
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_liga3",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.102
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_greece_super_league",
         "status": 200,
-        "elapsedSeconds": 0.051
+        "elapsedSeconds": 0.089
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.056
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.046
+        "elapsedSeconds": 0.105
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_japan_j_league",
         "status": 200,
-        "elapsedSeconds": 0.045
+        "elapsedSeconds": 0.093
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_korea_kleague1",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_league_of_ireland",
         "status": 200,
-        "elapsedSeconds": 0.052
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_mexico_ligamx",
         "status": 200,
-        "elapsedSeconds": 0.043
+        "elapsedSeconds": 0.099
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.069
+        "elapsedSeconds": 0.1
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_norway_eliteserien",
         "status": 200,
-        "elapsedSeconds": 0.074
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_portugal_primeira_liga",
         "status": 200,
-        "elapsedSeconds": 0.064
+        "elapsedSeconds": 0.102
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.041
+        "elapsedSeconds": 0.097
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_la_liga",
         "status": 200,
-        "elapsedSeconds": 0.049
+        "elapsedSeconds": 0.093
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.042
+        "elapsedSeconds": 0.093
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spl",
         "status": 200,
-        "elapsedSeconds": 0.052
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_allsvenskan",
         "status": 200,
-        "elapsedSeconds": 0.055
+        "elapsedSeconds": 0.104
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_superettan",
         "status": 200,
-        "elapsedSeconds": 0.043
+        "elapsedSeconds": 0.104
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_switzerland_superleague",
         "status": 200,
-        "elapsedSeconds": 0.041
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_turkey_super_league",
         "status": 200,
-        "elapsedSeconds": 0.062
+        "elapsedSeconds": 0.095
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league",
         "status": 200,
-        "elapsedSeconds": 0.048
+        "elapsedSeconds": 0.094
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.057
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_league",
         "status": 200,
-        "elapsedSeconds": 0.044
+        "elapsedSeconds": 0.113
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_nations_league",
         "status": 200,
-        "elapsedSeconds": 0.061
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_usa_mls",
         "status": 200,
-        "elapsedSeconds": 0.064
+        "elapsedSeconds": 0.116
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_argentina_primera_division",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_australia_aleague",
+        "status": 200,
+        "elapsedSeconds": 0.089
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.088
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.121
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_chile_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_china_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.203
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.086
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_denmark_superliga",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.104
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_finland_veikkausliiga",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.21
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga2",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.109
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_japan_j_league",
+        "status": 200,
+        "elapsedSeconds": 0.111
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_korea_kleague1",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_league_of_ireland",
+        "status": 200,
+        "elapsedSeconds": 0.114
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_poland_ekstraklasa",
+        "status": 200,
+        "elapsedSeconds": 0.091
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.205
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_saudi_arabia_pro_league",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.115
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.211
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.097
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_superettan",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_switzerland_superleague",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_turkey_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.098
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league",
+        "status": 200,
+        "elapsedSeconds": 0.092
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_europa_conference_league",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_europa_league",
+        "status": 200,
+        "elapsedSeconds": 0.098
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.118
       }
     ],
     "quota": {
-      "requestsRemaining": "296",
-      "requestsUsed": "204",
+      "requestsRemaining": "294",
+      "requestsUsed": "206",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "PRIMARY": {
-        "requestsRemaining": "296",
-        "requestsUsed": "204",
+        "requestsRemaining": "294",
+        "requestsUsed": "206",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
@@ -1606,338 +1473,8 @@
       "status": "GREEN",
       "mode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
       "confirmedEvents": 0,
-      "sourceUpdatedAt": "2026-10-07T12:06:57Z"
-    },
-    "dailyAnalysis": 11,
-    "bankedTopThree": 3,
-    "premiumBets": 0,
-    "premiumEventIds": [],
-    "expresses": 2,
-    "singleBank": {
-      "starting": 10000,
-      "current": 6971.08,
-      "stakePercent": 10,
-      "roi": -30.29,
-      "maxDrawdown": 66.54,
-      "activeExposure": 2091.33,
-      "history": [
-        {
-          "date": "2026-07-17",
-          "value": 10000,
-          "event": "REAL_MODE_START"
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9333.33,
-          "event": "PREDICTION_LOST",
-          "matchId": 554925
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9646.66,
-          "event": "PREDICTION_WON",
-          "matchId": 554928
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9973.33,
-          "event": "PREDICTION_WON",
-          "matchId": 554923
-        },
-        {
-          "date": "2026-07-25",
-          "value": 10713.33,
-          "event": "PREDICTION_WON",
-          "matchId": 554926
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554935-over_2_5",
-          "eventId": "b2ae0c5388431d8a811f3ead9312fed1",
-          "match": "Grêmio — Fluminense",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554932-over_2_5",
-          "eventId": "d9d1726d183975de80ce176cd8e4a6ab",
-          "match": "Bragantino — Coritiba",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554934-under_2_5",
-          "eventId": "19fc51f8fad955615b5d08db4ec89e1f",
-          "match": "Flamengo — São Paulo",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554936-over_2_5",
-          "eventId": "51474caaaca9d0664acc4c445caf0c64",
-          "match": "Palmeiras — Mineiro",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T19:55:36Z",
-          "value": 12598.88,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-083420965b660d3abf43",
-          "eventId": "16da0ac17df035ef762b98ba1a3b3bf9",
-          "match": "Helsingborgs IF — Nordic United FC",
-          "profit": 1885.55
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T22:18:45Z",
-          "value": 13948.76,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-4f65e7b27ccb4106f4ef",
-          "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
-          "match": "Hearts — SK Sturm Graz",
-          "profit": 1349.88
-        },
-        {
-          "date": "2026-07-29",
-          "timestamp": "2026-07-29T03:44:43Z",
-          "value": 15127.23,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-b4c6761c07a745d1183a",
-          "eventId": "5746af78ef429ff259802e90e744590b",
-          "match": "Banfield — Sarmiento de Junin",
-          "profit": 1178.47
-        },
-        {
-          "date": "2026-07-29",
-          "timestamp": "2026-07-29T03:44:43Z",
-          "value": 17291.33,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-634d1548e80a0d8cbef0",
-          "eventId": "7f97e1ad452a6c39dab72ee7a0c99130",
-          "match": "Ponte Preta — Athletic Club (MG)",
-          "profit": 2164.1
-        },
-        {
-          "date": "2026-07-30",
-          "timestamp": "2026-07-30T18:13:30Z",
-          "value": 13833.06,
-          "event": "PREDICTION_LOST",
-          "recordId": "analysis-06396867c56d708cdac2",
-          "eventId": "f858d26e25a166ffd0ea372e3efa3520",
-          "match": "Red Star Belgrade — Larne FC",
-          "profit": -3458.27
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T01:54:59Z",
-          "value": 11066.45,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-30764579a953f3980f93",
-          "eventId": "4f68110ae33722f386ddcd2aa17cc01c",
-          "match": "Corinthians — Atletico Paranaense",
-          "profit": -2766.61
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T01:54:59Z",
-          "value": 13639.4,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-f34fa34b4ea7a79c192d",
-          "eventId": "c56c0611b78cf2c9b19aaf7403def23b",
-          "match": "Grêmio — Club Bolívar",
-          "profit": 2572.95
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T14:39:44Z",
-          "value": 15299.37,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-2d1c8a1a3b43fcdebd0a",
-          "eventId": "b2dafd55f589fced90359c3f3bfe6f09",
-          "match": "Henan FC — Dalian Yingbo",
-          "profit": 1659.97
-        },
-        {
-          "date": "2026-08-01",
-          "timestamp": "2026-08-01T14:47:48Z",
-          "value": 12532.76,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-39081d38d4f03d85d557",
-          "eventId": "2f75420bd3bb24996d73b1e23cecd77b",
-          "match": "TPS Turku — IFK Mariehamn",
-          "profit": -2766.61
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T13:56:05Z",
-          "value": 13911.36,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-6ea5004ac829d8e22db3",
-          "eventId": "7ebdca8fb4ef84a455589ea024dda075",
-          "match": "Daejeon Citizen — Gwangju FC",
-          "profit": 1378.6
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T17:11:59Z",
-          "value": 11404.81,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-57fec456f1627bf39201",
-          "eventId": "71c389f15d960e817660cd85c03c0001",
-          "match": "FC Sion — FC Luzern",
-          "profit": -2506.55
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T17:11:59Z",
-          "value": 12933.81,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-9b33d072340741c258ef",
-          "eventId": "9d49893900d172d53f16771f82984160",
-          "match": "AIK — Örgryte IS",
-          "profit": 1529
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T19:33:36Z",
-          "value": 14462.81,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-5c5c8e9940dd8ea0f6a7",
-          "eventId": "4f9650822cbd8cff1a72231bd04a1f1c",
-          "match": "Silkeborg IF — FC Copenhagen",
-          "profit": 1529
-        },
-        {
-          "date": "2026-08-04",
-          "timestamp": "2026-08-04T03:44:10Z",
-          "value": 11570.25,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-7f18e124f93ebef000af",
-          "eventId": "004b0d634351d34f62dc5ebb339f8f50",
-          "match": "Atlético Huracán — Atlético Tucuman",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-04",
-          "timestamp": "2026-08-04T03:44:10Z",
-          "value": 8677.69,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-4c209c3fed9d9dffbdd3",
-          "eventId": "fadd514709eaad344a2d7f3bdc1b20b5",
-          "match": "Central Córdoba — San Lorenzo",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-05",
-          "timestamp": "2026-08-05T03:40:27Z",
-          "value": 5785.13,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-87af9ab11c8e5d2fe916",
-          "eventId": "da7597293509b90e5b048ed138133638",
-          "match": "Columbus Crew SC — Atlas",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-05",
-          "timestamp": "2026-08-05T21:37:31Z",
-          "value": 6971.08,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-95b7c092f58d0a80ffa1",
-          "eventId": "713ff08f1bd3e066b0f281e2788c3554",
-          "match": "Fenerbahce — SK Sturm Graz",
-          "profit": 1185.95
-        }
-      ],
-      "placedAmount": 2091.33,
-      "activeBetsCount": 3,
-      "available": 4879.75,
-      "closedBalance": 6971.08,
-      "mode": "ACTIVE_SINGLE_BANK",
-      "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
-      "policyEffectiveAt": "2026-10-07T07:44:56Z",
-      "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
-    },
-    "russianNames": {
-      "resolved": 22,
-      "teams": 22,
-      "theSportsDbResolved": 193
-    },
-    "fonbetGate": {
-      "status": "GREEN",
-      "confirmed": 0,
-      "unknown": 0,
-      "total": 11
-    },
-    "dailyCloudflare Workers AIAudit": {
-      "status": "SKIPPED",
-      "reason": "REQUIRES_15_RECORDS_GOT_11"
-    },
-    "calibrationGuard": {
-      "mode": "DEFENSIVE",
-      "rollingWindow": 60,
-      "overall": {
-        "n": 14,
-        "wins": 6,
-        "losses": 8,
-        "hitRate": 0.428571,
-        "avgPredicted": 0.583358,
-        "brier": 0.263211,
-        "overconfidence": 0.154786,
-        "shrunkOverconfidence": 0.063735
-      },
-      "marketFamilies": {
-        "HANDICAP": {
-          "n": 2,
-          "wins": 1,
-          "losses": 1,
-          "hitRate": 0.5,
-          "avgPredicted": 0.60634,
-          "brier": 0.243623,
-          "overconfidence": 0.10634,
-          "shrunkOverconfidence": 0.009667
-        },
-        "OUTCOME": {
-          "n": 1,
-          "wins": 0,
-          "losses": 1,
-          "hitRate": 0.0,
-          "avgPredicted": 0.508915,
-          "brier": 0.258994,
-          "overconfidence": 0.508915,
-          "shrunkOverconfidence": 0.024234
-        },
-        "TOTAL": {
-          "n": 11,
-          "wins": 5,
-          "losses": 6,
-          "hitRate": 0.454545,
-          "avgPredicted": 0.585946,
-          "brier": 0.267155,
-          "overconfidence": 0.131401,
-          "shrunkOverconfidence": 0.046626
-        }
-      },
-      "additionalUncertaintyMargin": 0.035307,
-      "marketFamilyHaircuts": {
-        "TOTAL": 0.007988
-      },
-      "bankrollAllowed": false,
-      "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
-    },
-    "topSingles": 3
+      "sourceUpdatedAt": "2026-10-07T13:18:35Z"
+    }
   },
   "warnings": [],
   "errors": []
