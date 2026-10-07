@@ -50,7 +50,7 @@ FOOTBALL_DATA_FIXTURE_ODDS_PATH = ROOT / "data" / "football-data-fixtures-odds.j
 UTC = dt.timezone.utc
 R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
 R15_HISTORY_MARKER = "V10_R15_PERSISTENT_FOOTBALL_HISTORY"
-R15_EXPRESS_POLICY = "THREE_BALANCED_EXPRESSES_FIVE_LEGS_TEN_PERCENT_EACH"
+R15_EXPRESS_POLICY = "THREE_BALANCED_EXPRESSES_FIVE_LEGS_INFORMATIONAL_ONLY"
 R15_MARKET_POLICY = "FOOTBALL_STANDARD_MARKETS_ONLY_NO_ASIAN_LINES"
 TERMINAL = {"won", "lost", "push", "void", "cancelled", "unresolved"}
 
@@ -3646,11 +3646,29 @@ def build_bootstrap_preview_analysis(
     return records, diagnostics
 
 
-def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, preferred_event_ids: list[str] | None = None) -> list[dict[str, Any]]:
+def informational_best_three(
+    records: list[dict[str, Any]],
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    preferred_event_ids: list[str] | None = None,
+    *,
+    bank_enabled: bool = True,
+) -> list[dict[str, Any]]:
+    """Freeze the visible top three and prospectively stake one bank at 10% each.
+
+    Historical records are never recalculated. Preview/recovery publications may
+    call this with bank_enabled=False, keeping their stake at zero.
+    """
     by_event = {str(row.get("eventId") or ""): row for row in records}
     preferred = [by_event[value] for value in (preferred_event_ids or []) if value in by_event]
     remaining = [row for row in sorted(records, key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("obviousMarketScore"))), reverse=True) if row not in preferred]
     ranked = (preferred + remaining)[:3]
+    bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
+    bank_value = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000.0))
+    configured_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
+    stake_percent = configured_percent if bank_enabled else 0.0
+    stake = round(bank_value * stake_percent / 100.0, 2) if bank_enabled else 0.0
     result = []
     for rank, source in enumerate(ranked, start=1):
         item = copy.deepcopy(source)
@@ -3658,20 +3676,20 @@ def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, pr
             "id": "ranked-" + stable_id(source.get("id"), rank, source.get("publishedAt")),
             "sourceAnalysisId": source.get("id"),
             "recordType": "BEST_BET",
-            "financialMode": "INFORMATIONAL_ONLY",
+            "financialMode": "SINGLE_BANK_TOP_THREE" if bank_enabled else "INFORMATIONAL_ONLY",
             "isBestBet": True,
             "rank": rank,
             "rankLabel": "Самый надёжный прогноз" if rank == 1 else f"Надёжность №{rank}",
-            "stake": 0.0,
-            "stakePercent": 0.0,
-            "bankPolicy": "INFORMATIONAL_RANKING_NO_SEPARATE_STAKE",
+            "stake": stake,
+            "stakePercent": stake_percent,
+            "stakeAssignedAt": iso(now) if bank_enabled else None,
+            "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH" if bank_enabled else "NO_BANK_PREVIEW_OR_RECOVERY",
             "publishedAt": iso(now),
             "status": "pending",
             "statusLabel": core.result_status_label("pending"),
         })
         result.append(item)
     return result
-
 
 def express_balance_score(groups: list[list[dict[str, Any]]]) -> float:
     log_probs = [sum(math.log(max(0.01, safe_float(row.get("conservativeProbability"), 0.5))) for row in group) for group in groups]
@@ -5200,7 +5218,7 @@ def publish_generation() -> int:
     records = audited_records
     audit_system_message = daily_audit.get("systemMessage") if isinstance(daily_audit.get("systemMessage"), dict) else {}
     state["dailyAudit"] = copy.deepcopy(daily_audit)
-    best = informational_best_three(records, now, list(daily_audit.get("topSingles") or []))
+    best = informational_best_three(\n        records, state, config, now, list(daily_audit.get("topSingles") or []),\n        bank_enabled=not (bootstrap_preview or recovery_day),\n    )
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -5676,7 +5694,7 @@ def self_test() -> int:
         raise RuntimeError(f"SELF_TEST full synthetic strategy produced {len(records)}: {diag}")
     day = operational_day(now, full_test_config)
     core.apply_operational_window_metadata(records, day, now)
-    best = informational_best_three(records, now)
+    best = informational_best_three(records, state, full_test_config, now)
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -5710,7 +5728,7 @@ def self_test() -> int:
         row["status"] = "won"
     records2[0]["status"] = "lost"
     state2["dailyAnalysis"] = records2
-    state2["bestBets"] = informational_best_three(records2, now)
+    state2["bestBets"] = informational_best_three(records2, state2, full_test_config, now)
     state2["expresses"] = build_expresses(records2, state2, full_test_config, now)
     legacy_before = safe_float(state2.get("bank", {}).get("current"))
     sync_and_settle_expresses(state2, now + dt.timedelta(days=1))
