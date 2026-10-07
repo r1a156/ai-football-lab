@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" data-version="V16_PREMIUM_INTERFACE V16_5_SINGLE_BANK_TOP3_GRAPH">
+<html lang="ru" data-version="V17_TOP3_ALWAYS_PREMIUM_SEPARATE_RUSSIAN V16_5_SINGLE_BANK_TOP3_GRAPH">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=16.1.0">
   <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
   <title>Спортивный ИИ — портфель матчей</title>
-  <link rel="stylesheet" href="assets/styles.css?v=16.4.0-shadow-learning-best-matches">
+  <link rel="stylesheet" href="assets/styles.css?v=17.0.0-top3-premium-ru">
 </head>
 <body>
   <!-- V16_PREMIUM_INTERFACE -->
@@ -22,8 +22,9 @@
     </a>
     <nav class="desktop-nav" aria-label="Разделы">
       <a href="#matches">Матчи</a>
-      <a href="#expresses">Экспрессы</a>
       <a href="#singles">Топ‑3</a>
+      <a href="#premium">Премиум</a>
+      <a href="#expresses">Экспрессы</a>
       <a href="#model">Модель</a>
       <a href="#results">Банк</a>
     </nav>
@@ -35,7 +36,7 @@
       <div class="hero-copy">
         <span class="eyebrow">ПОРТФЕЛЬ НА СУТКИ</span>
         <h1>Главное по матчам.<br><em>Без лишнего шума.</em></h1>
-        <p>До пятнадцати отобранных событий из rolling prematch‑окна до 72 часов, до трёх экспрессов и три сильнейших одиночных прогноза. Сначала система ищет шире, но публикует только прошедшие полный контроль качества матчи.</p>
+        <p>Система анализирует реальные предматчевые события, обязательно выбирает три лучших доступных прогноза и фиксирует на каждый 10% текущего банка. Премиум‑ставки показываются отдельно и только тогда, когда прогноз прошёл все строгие фильтры.</p>
         <div class="hero-status" id="heroStatus">
           <span class="status-light"></span>
           <div><strong id="portfolioStatus">Проверяем данные</strong><small id="portfolioUpdated">—</small></div>
@@ -52,7 +53,7 @@
           <article><small>Матчи</small><strong id="summaryMatches">—</strong><span>в рейтинге</span></article>
           <article><small>Экспрессы</small><strong id="summaryExpresses">—</strong><span>по 5 событий</span></article>
           <article><small>Топ‑3</small><strong id="summarySingles">—</strong><span>лучшие позиции</span></article>
-          <article><small>Качество</small><strong id="summaryQuality">—</strong><span>среднее значение</span></article>
+          <article><small>Премиум</small><strong id="summaryPremium">—</strong><span>строгий допуск</span></article>
         </div>
         <div class="bank-strip"><span>Текущий банк</span><strong id="summaryBank">—</strong><small id="summaryExposure">—</small></div>
       </div>
@@ -67,7 +68,7 @@
       <article class="spotlight-card">
         <div class="spotlight-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="spotlight-head">
-          <div><span class="premium-kicker">ЛУЧШИЙ СИГНАЛ ДНЯ</span><h2 id="spotlightTeams">Подборка анализируется</h2></div>
+          <div><span class="premium-kicker">ЛУЧШИЙ ПРОГНОЗ ДНЯ</span><h2 id="spotlightTeams">Подборка анализируется</h2></div>
           <span class="mode-badge" id="spotlightMode">Проверка</span>
         </div>
         <div class="spotlight-pick"><span>Прогноз</span><strong id="spotlightPick">—</strong></div>
@@ -78,7 +79,7 @@
         </div>
         <div class="spotlight-economics">
           <div><span>Коэффициент</span><strong id="spotlightOdds">—</strong></div>
-          <div><span>Консервативный EV</span><strong id="spotlightEv">—</strong></div>
+          <div><span>Ожидаемая доходность</span><strong id="spotlightEv">—</strong></div>
           <div><span>Ставка банка</span><strong id="spotlightBankroll">—</strong></div>
         </div>
         <div class="spotlight-reason"><span>Почему выбран</span><ul id="spotlightReasons"><li>Ожидаем проверенные данные</li></ul></div>
@@ -86,7 +87,7 @@
 
       <div class="intelligence-side">
         <article class="decision-card">
-          <div class="mini-card-head"><span>Решение системы</span><b>24H</b></div>
+          <div class="mini-card-head"><span>Решение системы</span><b>24 Ч</b></div>
           <div class="decision-flow">
             <div><strong id="checkedCount">—</strong><span>проверено</span></div>
             <i>→</i>
@@ -98,7 +99,7 @@
         </article>
 
         <article class="health-card">
-          <div class="mini-card-head"><span>Live intelligence</span><b id="healthOverall">—</b></div>
+          <div class="mini-card-head"><span>Состояние источников</span><b id="healthOverall">—</b></div>
           <div class="health-grid" id="healthGrid"><div class="health-line"><span>Источники</span><strong>Проверяем</strong></div></div>
           <div class="health-footer"><span id="healthUpdated">—</span><strong id="quotaStatus">—</strong></div>
         </article>
@@ -129,24 +130,32 @@
       <div class="single-grid" id="singleGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
 
+    <section class="section shell" id="premium">
+      <header class="section-head">
+        <div><span class="section-kicker">04</span><h2>Премиум‑ставки</h2><p>Редкий отдельный статус. Здесь только прогнозы, которые одновременно прошли все строгие фильтры системы. Отдельной дополнительной ставки из банка не создаётся.</p></div>
+        <div class="section-stat"><span>Допуск</span><strong>Только строгий</strong></div>
+      </header>
+      <div class="single-grid premium-grid" id="premiumGrid"><div class="loading-card"></div></div>
+    </section>
+
     <section class="section shell" id="model">
       <header class="section-head">
-        <div><span class="section-kicker">04</span><h2>Калибровка модели</h2><p>Реальные результаты против заявленной вероятности. Без скрытия проигрышей и без подгонки под один день.</p></div>
-        <div class="section-stat"><span>Контроль</span><strong id="calibrationMode">AUTO GUARD</strong></div>
+        <div><span class="section-kicker">05</span><h2>Калибровка модели</h2><p>Реальные результаты против заявленной вероятности. Без скрытия проигрышей и без подгонки под один день.</p></div>
+        <div class="section-stat"><span>Контроль</span><strong id="calibrationMode">АВТОКОНТРОЛЬ</strong></div>
       </header>
       <div class="model-grid">
         <article class="model-stat-card">
           <div class="model-stat-head"><span>Последние 7 дней</span><b id="stat7Count">0 событий</b></div>
-          <div class="model-primary"><strong id="stat7Hit">—</strong><span>фактический hit rate</span></div>
-          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat7Predicted">—</strong></div><div><span>Brier</span><strong id="stat7Brier">—</strong></div></div>
+          <div class="model-primary"><strong id="stat7Hit">—</strong><span>фактическая точность</span></div>
+          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat7Predicted">—</strong></div><div><span>Оценка Брайера</span><strong id="stat7Brier">—</strong></div></div>
         </article>
         <article class="model-stat-card">
           <div class="model-stat-head"><span>Последние 30 дней</span><b id="stat30Count">0 событий</b></div>
-          <div class="model-primary"><strong id="stat30Hit">—</strong><span>фактический hit rate</span></div>
-          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat30Predicted">—</strong></div><div><span>Brier</span><strong id="stat30Brier">—</strong></div></div>
+          <div class="model-primary"><strong id="stat30Hit">—</strong><span>фактическая точность</span></div>
+          <div class="model-secondary"><div><span>Средний прогноз</span><strong id="stat30Predicted">—</strong></div><div><span>Оценка Брайера</span><strong id="stat30Brier">—</strong></div></div>
         </article>
         <article class="calibration-card">
-          <div class="mini-card-head"><span>Calibration guard</span><b id="guardStatus">—</b></div>
+          <div class="mini-card-head"><span>Контроль калибровки</span><b id="guardStatus">—</b></div>
           <div class="guard-row"><span>Доп. запас неопределённости</span><strong id="guardMargin">—</strong></div>
           <div class="guard-row"><span>Коррекция тоталов</span><strong id="totalHaircut">—</strong></div>
           <div class="guard-row"><span>Финансовый контур</span><strong id="bankrollGuard">—</strong></div>
@@ -157,7 +166,7 @@
 
     <section class="section shell" id="results">
       <header class="section-head">
-        <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
+        <div><span class="section-kicker">06</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
       </header>
       <div class="results-layout results-layout-v2">
         <article class="bank-card bank-card-single">
@@ -167,8 +176,8 @@
             <div><span>В работе</span><b id="bankPlaced">—</b></div>
             <div><span>Свободно</span><b id="bankAvailable">—</b></div>
             <div><span>Результат</span><b id="bankProfit">—</b></div>
-            <div><span>ROI</span><b id="bankRoi">—</b></div>
-            <div><span>Max drawdown</span><b id="bankDrawdown">—</b></div>
+            <div><span>Доходность</span><b id="bankRoi">—</b></div>
+            <div><span>Макс. просадка</span><b id="bankDrawdown">—</b></div>
           </div>
           <div class="bank-chart-wrap">
             <div class="bank-chart-head"><span>Динамика банка</span><b id="bankHistoryCount">0 точек</b></div>
@@ -201,6 +210,6 @@
   </dialog>
 
   <script src="assets/runtime-config.js?v=cf-final-utf8"></script>
-  <script src="assets/app.js?v=16.5.0-single-bank-top3"></script>
+  <script src="assets/app.js?v=17.0.0-top3-premium-ru"></script>
 </body>
 </html>
