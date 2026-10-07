@@ -115,7 +115,7 @@
 
     <section class="section shell" id="expresses">
       <header class="section-head">
-        <div><span class="section-kicker">02</span><h2>Три экспресса</h2><p>Каждый матч используется один раз, без повторов между купонами.</p></div>
+        <div><span class="section-kicker">02</span><h2>Три экспресса</h2><p>Аналитические купоны без списания банка. Каждый матч используется один раз, без повторов между купонами.</p></div>
         <div class="section-stat"><span>Формат</span><strong>3 × 5</strong></div>
       </header>
       <div class="express-grid" id="expressGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
@@ -123,8 +123,8 @@
 
     <section class="section shell" id="singles">
       <header class="section-head">
-        <div><span class="section-kicker">03</span><h2>Топ‑3</h2><p>Три первые позиции общего рейтинга, без отдельного списания банка.</p></div>
-        <div class="section-stat"><span>Режим</span><strong>Контроль</strong></div>
+        <div><span class="section-kicker">03</span><h2>Топ‑3</h2><p>Три лучшие одиночные ставки. На каждую при публикации фиксируется 10% текущего банка.</p></div>
+        <div class="section-stat"><span>Банк</span><strong>3 × 10%</strong></div>
       </header>
       <div class="single-grid" id="singleGrid"><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div></div>
     </section>
@@ -149,7 +149,7 @@
           <div class="mini-card-head"><span>Calibration guard</span><b id="guardStatus">—</b></div>
           <div class="guard-row"><span>Доп. запас неопределённости</span><strong id="guardMargin">—</strong></div>
           <div class="guard-row"><span>Коррекция тоталов</span><strong id="totalHaircut">—</strong></div>
-          <div class="guard-row"><span>Новые экспрессы</span><strong id="bankrollGuard">—</strong></div>
+          <div class="guard-row"><span>Финансовый контур</span><strong id="bankrollGuard">—</strong></div>
           <p id="guardExplanation">Система может только ужесточать риск при плохой калибровке — не повышать вероятность искусственно.</p>
         </article>
       </div>
@@ -160,33 +160,27 @@
         <div><span class="section-kicker">05</span><h2>Банк и результаты</h2><p>Короткая сводка без смешивания текущих прогнозов и истории.</p></div>
       </header>
       <div class="results-layout results-layout-v2">
-        <div class="bank-stack">
-          <article class="bank-card bank-card-model">
-            <span>Аналитический банк модели</span><strong id="modelBankCurrent">—</strong><small id="modelBankChange">—</small>
-            <div class="bank-grid">
-              <div><span>Старт</span><b id="modelBankStarting">10 000 ₽</b></div>
-              <div><span>Расчётов</span><b id="modelBankBets">—</b></div>
-              <div><span>ROI</span><b id="modelBankRoi">—</b></div>
-              <div><span>Max drawdown</span><b id="modelBankDrawdown">—</b></div>
-            </div>
-            <p class="bank-method">Симуляция одиночных прогнозов: фиксированная ставка 100 ₽ на каждый рассчитанный прогноз. Нужна для чистой оценки прибыльности модели без влияния экспрессов.</p>
-          </article>
-
-          <article class="bank-card bank-card-express">
-            <span>Экспресс‑банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
-            <div class="bank-grid">
-              <div><span>Старт</span><b id="bankStarting">—</b></div>
-              <div><span>В работе</span><b id="bankPlaced">—</b></div>
-              <div><span>Свободно</span><b id="bankAvailable">—</b></div>
-              <div><span>Результат</span><b id="bankProfit">—</b></div>
-            </div>
-            <p class="bank-method">Отдельный риск‑контур 5‑событийных экспрессов. Его просадка не смешивается с прибыльностью одиночных прогнозов.</p>
-          </article>
-        </div>
+        <article class="bank-card bank-card-single">
+          <span>Единый виртуальный банк</span><strong id="bankCurrent">—</strong><small id="bankChange">—</small>
+          <div class="bank-grid bank-grid-six">
+            <div><span>Старт</span><b id="bankStarting">—</b></div>
+            <div><span>В работе</span><b id="bankPlaced">—</b></div>
+            <div><span>Свободно</span><b id="bankAvailable">—</b></div>
+            <div><span>Результат</span><b id="bankProfit">—</b></div>
+            <div><span>ROI</span><b id="bankRoi">—</b></div>
+            <div><span>Max drawdown</span><b id="bankDrawdown">—</b></div>
+          </div>
+          <div class="bank-chart-wrap">
+            <div class="bank-chart-head"><span>Динамика банка</span><b id="bankHistoryCount">0 точек</b></div>
+            <svg id="bankChart" class="bank-chart" viewBox="0 0 640 180" preserveAspectRatio="none" role="img" aria-label="График изменения виртуального банка"></svg>
+            <div class="bank-chart-axis"><span id="bankChartStart">—</span><span id="bankChartEnd">—</span></div>
+          </div>
+          <p class="bank-method">Один банк для Топ‑3: каждая новая ставка получает 10% баланса, зафиксированного в момент публикации. Экспрессы банк не используют. Исторические ставки и рассчитанные результаты не пересчитываются задним числом.</p>
+        </article>
 
         <article class="history-card">
-          <div class="history-head"><div><span>Последние расчёты</span><strong>История</strong></div><b id="historyCount">0</b></div>
-          <div class="history-list" id="historyList"><div class="empty-mini">Завершённых событий пока нет</div></div>
+          <div class="history-head"><div><span>Банковские расчёты</span><strong>История ставок</strong></div><b id="historyCount">0</b></div>
+          <div class="history-list" id="historyList"><div class="empty-mini">Завершённых ставок пока нет</div></div>
         </article>
       </div>
     </section>
