@@ -1,4 +1,4 @@
-const CACHE = "ai-football-shell-v16-5-single-bank";
+const CACHE = "ai-football-shell-v17-top3-premium-ru";
 const CORE = [
   "./",
   "./index.html",
