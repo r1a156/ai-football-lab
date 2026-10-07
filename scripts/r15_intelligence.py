@@ -4076,6 +4076,49 @@ def archive_previous_expresses(state: dict[str, Any]) -> None:
 
 
 def clear_completed_current_batch(state: dict[str, Any], now: dt.datetime, reason: str) -> None:
+    # An empty acquisition/generation pass is not authority to erase an already
+    # published portfolio. Keep the exact immutable publication until its batch
+    # is terminal; a later pass may replace it only through the normal rollover.
+    current_daily = [row for row in state.get("dailyAnalysis") or [] if isinstance(row, dict)]
+    current_best = [row for row in state.get("bestBets") or [] if isinstance(row, dict)]
+    current_batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
+    active_best = [
+        row for row in current_best
+        if str(row.get("status") or "pending").lower() not in TERMINAL
+    ]
+    retain_publication = (
+        len(current_daily) >= 3
+        and len(current_best) == 3
+        and bool(active_best)
+        and not bool(current_batch.get("completed"))
+        and all(safe_float(row.get("bookmakerOdds"), safe_float(row.get("odds"))) >= 1.55 for row in current_best)
+    )
+    if retain_publication:
+        state["dailyAudit"] = {
+            "status": "CURRENT_PUBLICATION_RETAINED",
+            "schemaValid": True,
+            "publishedCount": len(current_daily),
+            "bestBetsCount": len(current_best),
+            "updatedAt": iso(now),
+            "reason": reason,
+            "retentionPolicy": "DO_NOT_ERASE_ACTIVE_PUBLICATION_ON_EMPTY_ACQUISITION",
+        }
+        state["systemNarrative"] = {
+            "status": "CURRENT_PUBLICATION_RETAINED",
+            "title": "Текущая подборка сохранена",
+            "lead": "Новый проход не заменил уже опубликованные матчи.",
+            "body": "Пустой или неполный цикл получения данных не имеет права переписывать активный Топ-3. Опубликованные прогнозы остаются неизменными до штатного завершения партии.",
+            "generatedBy": "DETERMINISTIC_SYSTEM",
+            "updatedAt": iso(now),
+        }
+        state.setdefault("meta", {}).update({
+            "publicationRetentionAt": iso(now),
+            "publicationRetentionReason": reason,
+            "publicationRetentionPolicy": "IMMUTABLE_ACTIVE_BATCH_FAIL_CLOSED",
+        })
+        update_express_bank_metrics(state, now)
+        return
+
     archive_previous_expresses(state)
     state["dailyAnalysis"] = []
     state["bestBets"] = []
@@ -5795,6 +5838,26 @@ def self_test() -> int:
     low_odds_ok, _ = candidate_is_qualified(low_odds_candidate, config)
     if low_odds_ok:
         raise RuntimeError("SELF_TEST hard minimum odds guard failed")
+
+    retention_state = ensure_r15_state({}, config, now)
+    retention_rows = [
+        {
+            "id": f"retention-{index}",
+            "eventId": f"retention-event-{index}",
+            "status": "pending",
+            "bookmakerOdds": 1.55 + index * 0.01,
+        }
+        for index in range(3)
+    ]
+    retention_state["dailyAnalysis"] = copy.deepcopy(retention_rows)
+    retention_state["bestBets"] = copy.deepcopy(retention_rows)
+    retention_state["predictions"] = copy.deepcopy(retention_rows)
+    retention_state["batch"] = {"id": "retention-batch", "completed": False}
+    clear_completed_current_batch(retention_state, now, "SELF_TEST_EMPTY_ACQUISITION")
+    if len(retention_state.get("bestBets") or []) != 3 or len(retention_state.get("dailyAnalysis") or []) != 3:
+        raise RuntimeError("SELF_TEST empty acquisition erased active publication")
+    if str((retention_state.get("dailyAudit") or {}).get("status")) != "CURRENT_PUBLICATION_RETAINED":
+        raise RuntimeError("SELF_TEST active publication retention marker missing")
 
     # Structural synthetic fixtures predate the core qualification layer and are
     # intentionally unrealistic. The explicit guard checks above exercise the
