@@ -1,0 +1,50 @@
+name: R18 public site diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/r18-public-diagnostic.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect canonical public site
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, time, urllib.request
+          base="https://ai-football-lab.pages.dev"
+          def get(path):
+              req=urllib.request.Request(
+                  f"{base}{path}?v={time.time_ns()}",
+                  headers={"Cache-Control":"no-cache","User-Agent":"AI-Football-Diagnostic/1.0"},
+              )
+              with urllib.request.urlopen(req, timeout=20) as r:
+                  return r.read()
+          state=json.loads(get("/data/state.json"))
+          snap=json.loads(get("/data/ai_daily_analysis.json"))
+          app=get("/assets/app.js").decode("utf-8","replace")
+          index=get("/").decode("utf-8","replace")
+          best=state.get("bestBets") or []
+          print("PUBLIC_UPDATED_AT", (state.get("meta") or {}).get("updatedAt"))
+          print("PUBLIC_SOURCE_MARKER", (state.get("meta") or {}).get("sourceMarker"))
+          print("PUBLIC_DAILY", len(state.get("dailyAnalysis") or []))
+          print("PUBLIC_BEST", len(best))
+          print("PUBLIC_EXPRESSES", len(state.get("expresses") or []))
+          print("PUBLIC_SNAPSHOT_UPDATED", snap.get("updatedAt"))
+          print("APP_FIRST_LINE", app.splitlines()[0] if app.splitlines() else "")
+          print("APP_HAS_RAW_STATE_URL", "RAW_STATE_URL" in app)
+          print("APP_HAS_LOAD_BEST_STATE", "loadBestState" in app)
+          print("APP_HAS_CURRENT_PORTFOLIO", "isCurrentPortfolio" in app)
+          print("INDEX_HAS_V16_5", "V16_5_SINGLE_BANK_TOP3_GRAPH" in index)
+          print("INDEX_HAS_SINGLE_GRID", "singleGrid" in index)
+          for i,x in enumerate(best,1):
+              print("PUBLIC_PICK",i,x.get("homeRu") or x.get("home"),"—",x.get("awayRu") or x.get("away"),x.get("pickRu") or x.get("pick"),x.get("bookmakerOdds") or x.get("odds"),x.get("commenceTime"),x.get("status"))
+          PY
