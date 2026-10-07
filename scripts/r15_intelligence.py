@@ -176,6 +176,7 @@ class ProviderError(RuntimeError):
 class ProviderClient:
     def __init__(self, prior_health: dict[str, Any] | None = None) -> None:
         self.calls: list[dict[str, Any]] = []
+        self.quota_identity = "PRIMARY"
         self.odds_quota = {
             "requestsRemaining": None,
             "requestsUsed": None,
@@ -1181,17 +1182,37 @@ def sport_history_coverage(events: list[dict[str, Any]], context: dict[str, Any]
     return matched / len(events) if events else 0.0
 
 
+def quota_identity_from_selection(selection: dict[str, Any]) -> str:
+    selected = str(selection.get("selected") or "PRIMARY").upper()
+    return "BACKUP" if selected.startswith("BACKUP") else "PRIMARY"
+
+
+def seed_client_quota_identity(client: ProviderClient, selection: dict[str, Any]) -> None:
+    identity = quota_identity_from_selection(selection)
+    probe = selection.get("backup") if identity == "BACKUP" else selection.get("primary")
+    probe = probe if isinstance(probe, dict) else {}
+    client.quota_identity = identity
+    mapping = {
+        "remaining": "requestsRemaining",
+        "used": "requestsUsed",
+        "last": "requestsLast",
+    }
+    for source, target in mapping.items():
+        value = probe.get(source)
+        if value is not None and safe_int(value, -1) >= 0:
+            client.odds_quota[target] = str(safe_int(value, 0))
+
+
 def _persistent_odds_daily_spend(
     client: ProviderClient,
     config: dict[str, Any],
     now: dt.datetime,
 ) -> int:
-    """Track The Odds API credits across repeated workflow runs in one Moscow day.
+    """Track Odds API credits per credential for one Moscow operational day.
 
-    The provider's x-requests-used header is monthly and monotonic until the
-    subscription resets. We persist the monthly baseline for the active
-    operational day in r15-runtime-control.json. This makes the configured
-    daily budget a real cross-run ceiling instead of a per-process ceiling.
+    PRIMARY and BACKUP are independent subscriptions/quotas. Mixing their
+    monthly counters in one baseline can falsely exhaust the active key, so
+    every identity has an isolated persistent ledger.
     """
     current_raw = client.odds_quota.get("requestsUsed")
     estimated_this_run = max(
@@ -1203,43 +1224,62 @@ def _persistent_odds_daily_spend(
 
     current_used = max(0, safe_int(current_raw, 0))
     day_id = str(operational_day(now, config).get("operationalDayId") or "")
+    identity = str(getattr(client, "quota_identity", "PRIMARY") or "PRIMARY").upper()
+    if identity not in {"PRIMARY", "BACKUP"}:
+        identity = "PRIMARY"
+
     control = load_json(daily_auditor.CONTROL_PATH, {})
-    ledger = control.get("oddsQuotaLedger")
+    ledgers = control.get("oddsQuotaLedgers")
+    if not isinstance(ledgers, dict):
+        ledgers = {}
+    ledger = ledgers.get(identity)
     if not isinstance(ledger, dict):
-        ledger = {}
+        legacy = control.get("oddsQuotaLedger")
+        if isinstance(legacy, dict) and str(legacy.get("quotaIdentity") or "").upper() == identity:
+            ledger = copy.deepcopy(legacy)
+        else:
+            ledger = {
+                "operationalDayId": day_id,
+                "quotaIdentity": identity,
+                "baselineMonthlyUsed": current_used,
+                "lastMonthlyUsed": current_used,
+                "creditsUsed": 0,
+                "updatedAt": iso(now),
+                "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
+                "migration": "FIRST_KEY_SCOPED_OBSERVATION",
+            }
 
     ledger_day = str(ledger.get("operationalDayId") or "")
     baseline = safe_int(ledger.get("baselineMonthlyUsed"), current_used)
 
-    # A new operational day or a provider monthly reset starts a new baseline.
     if ledger_day != day_id or current_used < baseline:
         baseline = current_used
         ledger = {
             "operationalDayId": day_id,
+            "quotaIdentity": identity,
             "baselineMonthlyUsed": current_used,
             "lastMonthlyUsed": current_used,
             "creditsUsed": 0,
             "updatedAt": iso(now),
-            "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING",
+            "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
         }
-        control["oddsQuotaLedger"] = ledger
-        write_json(daily_auditor.CONTROL_PATH, control)
-        return 0
+    else:
+        spent = max(0, current_used - baseline)
+        ledger.update({
+            "operationalDayId": day_id,
+            "quotaIdentity": identity,
+            "lastMonthlyUsed": current_used,
+            "creditsUsed": spent,
+            "updatedAt": iso(now),
+            "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
+        })
 
-    spent = max(0, current_used - baseline)
-    if (
-        safe_int(ledger.get("lastMonthlyUsed"), -1) != current_used
-        or safe_int(ledger.get("creditsUsed"), -1) != spent
-    ):
-        ledger["lastMonthlyUsed"] = current_used
-        ledger["creditsUsed"] = spent
-        ledger["updatedAt"] = iso(now)
-        ledger["policy"] = "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING"
-        control["oddsQuotaLedger"] = ledger
-        write_json(daily_auditor.CONTROL_PATH, control)
-
-    return spent
-
+    ledgers[identity] = ledger
+    control["oddsQuotaLedgers"] = ledgers
+    # Compatibility alias: always mirror the currently selected credential.
+    control["oddsQuotaLedger"] = copy.deepcopy(ledger)
+    write_json(daily_auditor.CONTROL_PATH, control)
+    return max(0, safe_int(ledger.get("creditsUsed"), 0))
 
 def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: dt.datetime | None = None) -> dict[str, int]:
     now = now or now_utc()
@@ -3305,6 +3345,21 @@ def clear_completed_current_batch(state: dict[str, Any], now: dt.datetime, reaso
     state["bestBets"] = []
     state["predictions"] = []
     state["expresses"] = []
+    state["dailyAudit"] = {
+        "status": "NO_CURRENT_PUBLICATION",
+        "schemaValid": True,
+        "publishedCount": 0,
+        "updatedAt": iso(now),
+        "reason": reason,
+    }
+    state["systemNarrative"] = {
+        "status": "WAITING_FOR_NEXT_SELECTION",
+        "title": "Формируется новая подборка",
+        "lead": "Официальных прогнозов сейчас нет.",
+        "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
+        "generatedBy": "DETERMINISTIC_SYSTEM",
+        "updatedAt": iso(now),
+    }
     state["batch"] = {
         "id": "",
         "status": "WAITING_FOR_NEXT_SELECTION",
@@ -3412,6 +3467,7 @@ def settle_current() -> int:
     score_results = dict(live_results)
     score_errors: list[str] = []
     client = ProviderClient(load_json(PROVIDER_HEALTH_PATH, {}))
+    seed_client_quota_identity(client, odds_key_selection)
     if due:
         sport_keys = [
             str(row.get("sportKey") or row.get("oddsSportKey") or "")
@@ -4060,6 +4116,7 @@ def publish_generation() -> int:
 
     prior_health = load_json(PROVIDER_HEALTH_PATH, {})
     client = ProviderClient(prior_health)
+    seed_client_quota_identity(client, odds_key_selection)
 
     # R15F: the historical/team-strength layer is refreshed from no-key public
     # sources before any bookmaker event is ranked. This is the primary source
@@ -4864,6 +4921,7 @@ def self_test() -> int:
     print("R15_HARD_MIN_ODDS=1.55")
     print("R15_ADAPTIVE_FORM_DECAY=YES")
     print("R15_ROLLING_72H_PREMATCH_SEARCH=YES")
+    print("R15_PER_KEY_QUOTA_LEDGER=YES")
     return 0
 
 

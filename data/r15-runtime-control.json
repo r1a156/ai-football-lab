@@ -15,10 +15,34 @@
   "lastAuditFingerprint": null,
   "oddsQuotaLedger": {
     "operationalDayId": "2026-10-06-MSK-0800",
-    "baselineMonthlyUsed": 22,
+    "quotaIdentity": "BACKUP",
+    "baselineMonthlyUsed": 38,
     "lastMonthlyUsed": 44,
-    "creditsUsed": 22,
+    "creditsUsed": 6,
     "updatedAt": "2026-10-07T00:17:49Z",
-    "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING"
+    "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
+    "migrationEvidence": "BACKUP observed used=38 at 2026-10-06T17:02Z and used=44 at 2026-10-07T00:17Z"
+  },
+  "oddsQuotaLedgers": {
+    "PRIMARY": {
+      "operationalDayId": "2026-10-06-MSK-0800",
+      "quotaIdentity": "PRIMARY",
+      "baselineMonthlyUsed": 22,
+      "lastMonthlyUsed": 186,
+      "creditsUsed": 164,
+      "updatedAt": "2026-10-06T17:02:07Z",
+      "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
+      "migrationEvidence": "PRIMARY observed used=186 (remaining=314) at 2026-10-06T17:02Z"
+    },
+    "BACKUP": {
+      "operationalDayId": "2026-10-06-MSK-0800",
+      "quotaIdentity": "BACKUP",
+      "baselineMonthlyUsed": 38,
+      "lastMonthlyUsed": 44,
+      "creditsUsed": 6,
+      "updatedAt": "2026-10-07T00:17:49Z",
+      "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY",
+      "migrationEvidence": "BACKUP observed used=38 at 2026-10-06T17:02Z and used=44 at 2026-10-07T00:17Z"
+    }
   }
 }

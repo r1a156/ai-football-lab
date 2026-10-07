@@ -1,3 +1,4 @@
+# R3R23_PER_KEY_QUOTA_LEDGER_2026_10_07
 # R3R22_ROLLING_72H_BREADTH_FIRST_2026_10_06
 # R3R21B_FORM_CONFIG_WIRING_2026_10_06
 # R3R21_ADAPTIVE_FORM_DECAY_2026_10_06
@@ -35,10 +36,6 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/update-data.yml'
   schedule:
     # Moscow is UTC+03 year-round: these are 08:07, 08:22, 08:37 and 09:02 MSK.
     - cron: '7 5 * * *'
