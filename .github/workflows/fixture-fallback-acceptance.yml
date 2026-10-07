@@ -24,7 +24,8 @@ jobs:
       - name: Compile and self-test
         run: |
           set -euo pipefail
-          python -m py_compile scripts/r15_intelligence.py
+          python -m py_compile scripts/update_predictions.py scripts/r15_intelligence.py
+          python scripts/update_predictions.py --self-test
           python scripts/r15_intelligence.py --self-test
       - name: Probe Football-Data freshness chain
         run: |
