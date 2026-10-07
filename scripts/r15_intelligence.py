@@ -5262,6 +5262,12 @@ def publish_generation() -> int:
         now,
     )
     records = audited_records
+    for row in records:
+        premium_ok, premium_failures = candidate_is_qualified(row, config)
+        row["premiumQualified"] = premium_ok
+        row["premiumFailures"] = premium_failures
+        row["strategyQualified"] = premium_ok
+        row["publicationTier"] = "ПРЕМИУМ" if premium_ok else "ОСНОВНОЙ"
     audit_system_message = daily_audit.get("systemMessage") if isinstance(daily_audit.get("systemMessage"), dict) else {}
     state["dailyAudit"] = copy.deepcopy(daily_audit)
     best = informational_best_three(
@@ -5272,6 +5278,23 @@ def publish_generation() -> int:
         list(daily_audit.get("topSingles") or []),
         bank_enabled=not (bootstrap_preview or recovery_day),
     )
+    if len(best) != min(3, len(records)):
+        raise RuntimeError(f"R17_TOP_THREE_INCOMPLETE={len(best)};RECORDS={len(records)}")
+    premium_records = [
+        row for row in records if bool(row.get("premiumQualified"))
+    ][:max(0, safe_int(config.get("premiumBetsMaximum"), 3))]
+    premium_event_ids = {str(row.get("eventId") or "") for row in premium_records}
+    best_by_event = {str(row.get("eventId") or ""): row for row in best}
+    for row in records:
+        event_id = str(row.get("eventId") or "")
+        row["premiumVisible"] = event_id in premium_event_ids
+        row["premiumBankCoveredByTopThree"] = (
+            event_id in premium_event_ids and event_id in best_by_event
+        )
+    for row in best:
+        event_id = str(row.get("eventId") or "")
+        row["premiumQualified"] = event_id in premium_event_ids
+        row["premiumLabel"] = "Премиум" if row["premiumQualified"] else None
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -5324,6 +5347,8 @@ def publish_generation() -> int:
         "oddsEvents": len(odds_events),
         "historyMatchedEvents": analysis_diag.get("eventsWithHistory"),
         "qualifiedEvents": analysis_diag.get("eventsQualified"),
+        "topThreeEligibleEvents": analysis_diag.get("eventsTopThreeEligible"),
+        "premiumQualifiedEvents": len(premium_records),
         "marketCandidates": analysis_diag.get("marketCandidates"),
         "publishedEvents": len(records),
         "historyMatches": context.get("cacheMeta", {}).get("matches"),
@@ -5365,6 +5390,7 @@ def publish_generation() -> int:
         "analysisTarget": safe_int(config.get("dailyAnalysisTarget"), 15),
         "analysisPublished": len(records),
         "bestBetsPublished": len(best),
+        "premiumBetsPublished": len(premium_records),
         "expressesPublished": len(expresses),
         "expressLegsPublished": sum(len(item.get("legs") or []) for item in expresses),
         "soccerAnalyses": len(records),
@@ -5375,8 +5401,8 @@ def publish_generation() -> int:
         "cloudflareAiModelUsed": daily_audit.get("modelUsed"),
         "cloudflareAiSchemaValid": bool(daily_audit.get("schemaValid")),
         "cloudflareAiLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
-        "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
-        "publicationPolicy": "STRICT_24H_MOSCOW_DAY_UP_TO_FIFTEEN_REAL_QUALIFIED_MATCHES",
+        "predictionObjective": "BEST_AVAILABLE_TOP_THREE_PLUS_SEPARATE_STRICT_PREMIUM",
+        "publicationPolicy": "DAILY_REAL_MATCHES_TOP_THREE_ALWAYS_PREMIUM_ONLY_WHEN_STRICT_FILTERS_PASS",
         "virtualBankPolicy": config.get("virtualBankPolicy"),
         "updatedAt": iso(now),
         "lastSuccessfulRefreshAt": iso(now),
@@ -5394,6 +5420,8 @@ def publish_generation() -> int:
     report["diagnostics"].update({
         "dailyAnalysis": len(records),
         "bankedTopThree": len([row for row in best if safe_float(row.get("stake")) > 0]),
+        "premiumBets": len(premium_records),
+        "premiumEventIds": sorted(premium_event_ids),
         "expresses": len(expresses),
         "singleBank": state.get("bank"),
         "russianNames": russian_names_result,
