@@ -53,20 +53,20 @@ jobs:
               "topRejectionReason","healthOverall","healthGrid","stat7Hit","stat7Brier",
               "stat30Hit","stat30Brier","guardStatus","bankrollGuard","installApp",
               "matchList","expressGrid","singleGrid","historyList",
-              "modelBankCurrent","modelBankRoi","modelBankDrawdown","bankCurrent","bankProfit"
+              "bankCurrent","bankProfit","bankRoi","bankDrawdown","bankActiveBets","bankChart"
           }
           present = set(re.findall(r'id="([^"]+)"', html))
           missing = sorted(required_ids - present)
           assert not missing, f"Missing premium DOM ids: {missing}"
 
           assert "V16_PREMIUM_INTERFACE" in html
-          assert "16.4.0-shadow-learning-best-matches" in html
+          assert "16.5.0-one-bank-top3" in html
           assert "renderSpotlight" in app
           assert "renderModelStats" in app
           assert "setupPwa" in app
           assert "intelligence" in css and "model-grid" in css and "signal-cluster" in css
           assert "V16.2 grid + bank repair" in css
-          assert "match-side" in app and "modelBankSnapshot" in app
+          assert "match-side" in app and "bankSnapshot" in app and "renderBankChart" in app
           assert manifest["display"] == "standalone"
           assert manifest["start_url"] == "./"
           assert (root/"assets/app-icon.svg").is_file()
@@ -120,9 +120,10 @@ jobs:
 
           grep -q 'ЛУЧШИЕ МАТЧИ ПО МОДЕЛИ' /tmp/desktop-dom.html
           grep -q 'Строгих прогнозов пока нет — показываем лучшие аналитические матчи' /tmp/desktop-dom.html
-          grep -q 'Аналитический банк модели' /tmp/desktop-dom.html
-          grep -q 'Экспресс' /tmp/desktop-dom.html
-          grep -q 'modelBankCurrent' /tmp/desktop-dom.html
+          grep -q 'Единый виртуальный банк' /tmp/desktop-dom.html
+          grep -q 'Три аналитических экспресса' /tmp/desktop-dom.html
+          grep -q 'bankChart' /tmp/desktop-dom.html
+          grep -q '3 × 10%' /tmp/desktop-dom.html
           grep -q 'signal-cluster' /tmp/desktop-dom.html
           grep -q 'mobile-nav' /tmp/mobile-dom.html
           ! grep -q 'Загружаем подборку' /tmp/desktop-dom.html
