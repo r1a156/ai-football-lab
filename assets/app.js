@@ -110,7 +110,8 @@
     state.expressHistory = array(state.expressHistory);
     state.analysisHistory = array(state.analysisHistory);
     state.history = array(state.history);
-    state.expressBank = Object.keys(object(state.expressBank)).length ? object(state.expressBank) : object(state.bank);
+    state.bank = object(state.bank);
+    state.expressBank = object(state.expressBank); // legacy audit archive only
     state.statistics = object(state.statistics);
     return state;
   }
@@ -158,14 +159,14 @@
 
   function renderMeta(state, current) {
     const quality = current ? average(state.dailyAnalysis.map(row => number(row.dataQuality))) : 0;
-    const modelBank = modelBankSnapshot(state);
+    const bank = bankSnapshot(state);
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
     setText("summaryMatches", current ? String(state.dailyAnalysis.length) : "—");
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryQuality", current ? `${formatNumber(quality, 0)}/100` : "—");
-    setText("summaryBank", currency(modelBank.current));
-    setText("summaryExposure", `ROI ${signedPercent(modelBank.roi * 100)} · ${modelBank.count} расчётов`);
+    setText("summaryBank", currency(bank.current));
+    setText("summaryExposure", `ROI ${signedPercent(bank.roi)} · в работе ${currency(bank.placed)} · 3 × 10%`);
     const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
@@ -199,9 +200,9 @@
     const q = number(row.dataQuality);
     const stability = number(row.marketStability);
     const ev = conservativeEv(row);
-    const guard = object(state.meta.calibrationGuard);
-    const bankrollAllowed = Boolean(guard.bankrollAllowed) && ev >= 0.03;
-    const informational = !bankrollAllowed;
+    const topThree = array(state.bestBets);
+    const banked = topThree.some(item => String(item.eventId || "") === String(row.eventId || "") && number(item.stake) > 0);
+    const informational = !banked;
 
     setText("spotlightTeams", teamsText(row));
     setText("spotlightPick", pick(row));
@@ -210,18 +211,16 @@
     setText("spotlightStability", stability ? `${formatNumber(stability,0)}/100` : "—");
     setText("spotlightOdds", formatNumber(odds(row),2));
     setText("spotlightEv", signedPercent(ev * 100));
-    setText("spotlightBankroll", informational ? "Пауза" : "Разрешён");
-    setText("spotlightMode", informational ? "Информационный" : "Допущен");
+    setText("spotlightBankroll", informational ? "Без ставки" : "10% банка");
+    setText("spotlightMode", informational ? "Аналитика" : "Топ‑3");
     setBar("spotlightProbabilityBar", p);
     setBar("spotlightQualityBar", q);
     setBar("spotlightStabilityBar", stability);
 
     const reasons = reasonItems(row).slice(0,3);
     const economicReason = informational
-      ? (ev < 0
-          ? "Экспресс‑риск поставлен на паузу: консервативное EV отрицательное. Аналитический банк продолжает считать результат одиночных прогнозов."
-          : "Экспресс‑риск поставлен на паузу calibration guard. Аналитический банк продолжает считать прибыльность модели.")
-      : "Экспресс‑риск разрешён: положительное консервативное EV прошло финансовый фильтр.";
+      ? "Матч остаётся аналитическим: банк используется только для трёх сильнейших опубликованных одиночных прогнозов."
+      : "Ставка зафиксирована при публикации: 10% текущего банка. После начала матча размер ставки не меняется.";
     setHtml("spotlightReasons", [...reasons, economicReason].map(item => `<li>${escapeHtml(item)}</li>`).join(""));
   }
 
@@ -282,9 +281,9 @@
     setText("guardStatus", guard.mode || "LEARNING");
     setText("guardMargin", guard.additionalUncertaintyMargin != null ? `+${formatNumber(number(guard.additionalUncertaintyMargin)*100,1)} п.п.` : "—");
     setText("totalHaircut", total.TOTAL != null ? `−${formatNumber(number(total.TOTAL)*100,1)} п.п.` : "0 п.п.");
-    setText("bankrollGuard", guard.bankrollAllowed === false ? "Пауза risk‑guard" : "По EV‑фильтру");
+    setText("bankrollGuard", "Топ‑3 · по 10%");
     setText("guardExplanation", guard.policy
-      ? "Автоконтур ограничивает только новые рискованные экспрессы. Аналитический банк одиночных прогнозов продолжает считать ROI, прибыль и просадку ежедневно."
+      ? "Автоконтур может только ужесточать отбор прогнозов. Размер уже опубликованной ставки и закрытые результаты не пересчитываются задним числом."
       : "Система сравнивает фактический результат с заявленной вероятностью и не подгоняет модель под один день.");
   }
 
@@ -424,7 +423,7 @@
       return `<article class="express-card">
         <div class="card-top"><div><span>КУПОН ${index + 1}</span><strong>${escapeHtml(ticket.title || ticket.name || `Экспресс ${index + 1}`)}</strong></div><b class="odds-badge">${formatNumber(ticket.combinedOdds ?? ticket.totalOdds ?? ticket.odds, 2)}</b></div>
         <ol class="leg-list">${legs.map((leg, legIndex) => `<li><b>${legIndex + 1}</b><div><strong>${escapeHtml(teamsText(leg))}</strong><small>${escapeHtml(pick(leg))}</small></div><em>${formatNumber(leg.odds ?? leg.bookmakerOdds, 2)}</em></li>`).join("")}</ol>
-        <div class="express-footer"><span>Ставка <strong>${currency(ticket.stake)}</strong></span><span>Вероятность <strong>${percent(probability(ticket))}</strong></span></div>
+        <div class="express-footer"><span>Режим <strong>без ставки</strong></span><span>Вероятность <strong>${percent(probability(ticket))}</strong></span></div>
       </article>`;
     }).join("");
   }
@@ -438,75 +437,80 @@
         <div class="single-rank">${index + 1}</div>
         <div class="single-teams"><small>${escapeHtml(league(row))} · ${escapeHtml(matchTime(row))}</small><span>${escapeHtml(home(row))}</span><span>${escapeHtml(away(row))}</span></div>
         <div class="single-pick"><span>Прогноз</span><strong>${escapeHtml(pick(row))}</strong></div>
-        <div class="single-metrics"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Качество</span><strong>${formatNumber(row.dataQuality,0)}</strong></div></div>
+        <div class="single-metrics"><div><span>Вероятность</span><strong>${percent(probability(row))}</strong></div><div><span>Коэффициент</span><strong>${formatNumber(odds(row),2)}</strong></div><div><span>Ставка</span><strong>${number(row.stake) > 0 ? currency(row.stake) : "—"}</strong></div></div>
       </article>`;
     }).join("");
     root.querySelectorAll("[data-record]").forEach(node => node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record))));
   }
 
-  function modelBankSnapshot(state) {
-    const starting = 10000;
-    const stake = 100;
-    const rows = array(state.analysisHistory)
-      .filter(row => ["won","lost","push"].includes(String(row.status || "").toLowerCase()))
-      .filter(row => odds(row) > 1)
-      .sort((a,b) => Date.parse(a.settledAt || a.commenceTime || 0) - Date.parse(b.settledAt || b.commenceTime || 0));
-
-    let current = starting;
-    let totalStaked = 0;
-    let peak = starting;
-    let maxDrawdown = 0;
-
-    for (const row of rows) {
-      const status = String(row.status || "").toLowerCase();
-      const price = odds(row);
-      totalStaked += stake;
-      if (status === "won") current += stake * (price - 1);
-      else if (status === "lost") current -= stake;
-      peak = Math.max(peak, current);
-      if (peak > 0) maxDrawdown = Math.max(maxDrawdown, (peak - current) / peak);
-    }
-
+  function bankSnapshot(state) {
+    const bank = object(state.bank);
+    const starting = number(bank.starting || 10000);
+    const current = number(bank.current ?? starting);
+    const placed = number(bank.placedAmount ?? bank.activeExposure);
+    const available = number(bank.available ?? current - placed);
     const profit = current - starting;
-    return {
-      starting,
-      current,
-      profit,
-      totalStaked,
-      roi: totalStaked > 0 ? profit / totalStaked : 0,
-      maxDrawdown,
-      count: rows.length,
-    };
-  }
-
-  function renderModelBank(state) {
-    const model = modelBankSnapshot(state);
-    setText("modelBankCurrent", currency(model.current));
-    setText("modelBankStarting", currency(model.starting));
-    setText("modelBankBets", String(model.count));
-    setText("modelBankRoi", signedPercent(model.roi * 100));
-    setText("modelBankDrawdown", `${formatNumber(model.maxDrawdown * 100,1)}%`);
-    setText("modelBankChange", `${signedCurrency(model.profit)} · ${model.count} рассчитанных прогнозов`);
+    const roi = bank.roi != null ? number(bank.roi) : (starting ? profit / starting * 100 : 0);
+    const maxDrawdown = number(bank.maxDrawdown);
+    const activeBets = number(bank.activeBetsCount);
+    return { bank, starting, current, placed, available, profit, roi, maxDrawdown, activeBets };
   }
 
   function renderBank(state) {
-    renderModelBank(state);
-    const bank = state.expressBank;
-    const current = number(bank.current ?? bank.starting ?? 10000);
-    const starting = number(bank.starting ?? 10000);
-    const placed = number(bank.placedAmount ?? bank.activeExposure);
-    const available = number(bank.available ?? current - placed);
-    const profit = number(bank.profit ?? current - starting);
-    setText("bankCurrent", currency(current));
-    setText("bankStarting", currency(starting));
-    setText("bankPlaced", currency(placed));
-    setText("bankAvailable", currency(available));
-    setText("bankProfit", signedCurrency(profit));
-    setText("bankChange", profit === 0 ? "без изменений" : `${profit > 0 ? "+" : ""}${formatNumber(starting ? profit / starting * 100 : 0, 1)}% от старта`);
+    const model = bankSnapshot(state);
+    setText("bankCurrent", currency(model.current));
+    setText("bankStarting", currency(model.starting));
+    setText("bankPlaced", currency(model.placed));
+    setText("bankAvailable", currency(model.available));
+    setText("bankProfit", signedCurrency(model.profit));
+    setText("bankRoi", signedPercent(model.roi));
+    setText("bankDrawdown", `${formatNumber(model.maxDrawdown,1)}%`);
+    setText("bankActiveBets", String(model.activeBets));
+    setText("bankChange", model.profit === 0
+      ? "без изменений"
+      : `${model.profit > 0 ? "+" : ""}${formatNumber(model.roi,1)}% от старта`);
+    renderBankChart(model.bank, model.starting, model.current);
+  }
+
+  function renderBankChart(bank, starting, current) {
+    const root = document.getElementById("bankChart");
+    if (!root) return;
+    const history = array(bank.history)
+      .map((row, index) => ({ value: number(row.value), stamp: row.timestamp || row.date || "", index }))
+      .filter(row => Number.isFinite(row.value) && row.value > 0);
+    if (!history.length) history.push({ value: starting, stamp: "", index: 0 });
+    if (Math.abs(history[history.length - 1].value - current) > 0.005) {
+      history.push({ value: current, stamp: "", index: history.length });
+    }
+    const values = history.map(row => row.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = Math.max(1, max - min);
+    const width = 640;
+    const height = 170;
+    const padX = 10;
+    const padY = 14;
+    const points = history.map((row, index) => {
+      const x = history.length === 1 ? width / 2 : padX + index * (width - padX * 2) / (history.length - 1);
+      const y = height - padY - (row.value - min) * (height - padY * 2) / range;
+      return [x, y];
+    });
+    const polyline = points.map(([x,y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+    const area = points.length
+      ? `M ${points[0][0].toFixed(1)} ${(height-padY).toFixed(1)} L ${points.map(([x,y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(" L ")} L ${points[points.length-1][0].toFixed(1)} ${(height-padY).toFixed(1)} Z`
+      : "";
+    root.innerHTML = `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="График изменения банка">
+      <defs><linearGradient id="bankAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-opacity=".22"/><stop offset="100%" stop-opacity="0"/></linearGradient></defs>
+      <path class="bank-chart-area" d="${area}"></path>
+      <polyline class="bank-chart-line" points="${polyline}"></polyline>
+      ${points.map(([x,y]) => `<circle class="bank-chart-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4"></circle>`).join("")}
+    </svg>`;
+    setText("bankChartRange", `История: ${currency(values[0])} → ${currency(values[values.length-1])}`);
   }
 
   function renderHistory(state) {
-    const rows = [...state.expressHistory, ...state.history, ...state.analysisHistory]
+    const rows = array(state.history)
+      .filter(row => String(row.recordType || "") === "BEST_BET")
       .filter(row => ["won","lost","push","void","cancelled"].includes(String(row.status || "").toLowerCase()))
       .sort((a,b) => Date.parse(b.settledAt || b.commenceTime || b.utcDate || 0) - Date.parse(a.settledAt || a.commenceTime || a.utcDate || 0));
     setText("historyCount", String(rows.length));
