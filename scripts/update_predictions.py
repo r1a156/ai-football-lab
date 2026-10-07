@@ -501,12 +501,12 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError("Config source marker mismatch")
     if safe_int(config.get("dailyAnalysisTarget")) != 15:
         raise RuntimeError("dailyAnalysisTarget must be 15")
-    if safe_int(config.get("bestBetsTarget")) != 4:
-        raise RuntimeError("bestBetsTarget must be 4")
-    if safe_float(config.get("stakePerBestBetPercent")) != 20.0:
-        raise RuntimeError("stakePerBestBetPercent must be 20")
-    if safe_float(config.get("maximumDailyExposurePercent")) != 80.0:
-        raise RuntimeError("maximumDailyExposurePercent must be 80")
+    if safe_int(config.get("bestBetsTarget")) != 3:
+        raise RuntimeError("bestBetsTarget must be 3")
+    if safe_float(config.get("stakePerBestBetPercent")) != 10.0:
+        raise RuntimeError("stakePerBestBetPercent must be 10")
+    if safe_float(config.get("maximumDailyExposurePercent")) != 30.0:
+        raise RuntimeError("maximumDailyExposurePercent must be 30")
     if not bool(config.get("footballOnly")):
         raise RuntimeError("R14 footballOnly must be true")
     if safe_int(config.get("maximumHockeySportRequests"), 0) != 0:
@@ -589,7 +589,7 @@ def default_state(config: dict[str, Any], now: dt.datetime | None = None) -> dic
         "bank": {
             "starting": round(starting, 2),
             "current": round(starting, 2),
-            "stakePercent": 20,
+            "stakePercent": 10,
             "roi": 0.0,
             "maxDrawdown": 0.0,
             "activeExposure": 0.0,
@@ -3468,7 +3468,7 @@ def build_daily_analysis(
         event_analyses.append((event, candidates))
 
     target = safe_int(config.get("dailyAnalysisTarget"), 15)
-    best_target = safe_int(config.get("bestBetsTarget"), 4)
+    best_target = safe_int(config.get("bestBetsTarget"), 3)
     if len(event_analyses) < target:
         raise RuntimeError(
             "EXACT_DAILY_FIFTEEN_NOT_MET: "
@@ -3831,7 +3831,7 @@ def select_best_bets(
     config: dict[str, Any],
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    target = safe_int(config.get("bestBetsTarget"), 4)
+    target = safe_int(config.get("bestBetsTarget"), 3)
     daily_target = safe_int(config.get("dailyAnalysisTarget"), 15)
     if len(daily_analysis) != daily_target:
         raise RuntimeError(
@@ -3895,7 +3895,7 @@ def select_best_bets(
     bank_value = safe_float(
         bank.get("current"), config.get("startingVirtualBank", 10000)
     )
-    stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
+    stake_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     stake = round(bank_value * stake_percent / 100.0, 2)
     published_at = iso_z(now)
     for rank, item in enumerate(selected, start=1):
@@ -3912,7 +3912,7 @@ def select_best_bets(
         item["stake"] = stake
         item["stakeAssignedAt"] = published_at
         item["settlementOddsType"] = "BOOKMAKER_FIXED_AT_PUBLICATION"
-        item["bankPolicy"] = "TWENTY_PERCENT_PER_EXACT_TOP_FOUR_BET"
+        item["bankPolicy"] = "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH"
         item["selectionObjective"] = (
             "MAXIMUM_CALIBRATED_HIT_RATE_WITH_EXACT_SAFE_PORTFOLIO"
         )
@@ -3975,7 +3975,7 @@ def current_best_bets_are_synchronized(
         item for item in state.get("bestBets") or []
         if isinstance(item, dict)
     ]
-    target = safe_int(config.get("bestBetsTarget"), 4)
+    target = safe_int(config.get("bestBetsTarget"), 3)
     if len(daily) < target or len(best) != target:
         return False
 
@@ -6060,7 +6060,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
             daily_analysis, cloudflare_ai_key, config, client
         )
         best_bets, new_best = select_best_bets(daily_analysis, state, config, now)
-        if len(best_bets) != safe_int(config.get("bestBetsTarget"), 4):
+        if len(best_bets) != safe_int(config.get("bestBetsTarget"), 3):
             raise RuntimeError(f"EXACT_BEST_FOUR_REQUIRED={len(best_bets)}")
 
         # V10 R10: the visible four and the fifteen are published as one
@@ -6131,7 +6131,7 @@ def run_pipeline(mode: str, force_generation: bool = False) -> int:
                 ),
                 "analysisTarget": safe_int(config.get("dailyAnalysisTarget"), 15),
                 "analysisPublished": len(daily_analysis),
-                "bestBetsTarget": safe_int(config.get("bestBetsTarget"), 4),
+                "bestBetsTarget": safe_int(config.get("bestBetsTarget"), 3),
                 "bestBetsPublished": len(best_bets),
                 "newBestBets": len(new_best),
                 "sportsAnalyzed": sorted({str(item.get("sport")) for item in daily_analysis}),
@@ -6276,7 +6276,7 @@ def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: 
     if not isinstance(daily, list) or not isinstance(best, list):
         raise RuntimeError("V10 state requires dailyAnalysis and bestBets arrays")
     daily_target = safe_int(config.get("dailyAnalysisTarget"), 15)
-    best_target = safe_int(config.get("bestBetsTarget"), 4)
+    best_target = safe_int(config.get("bestBetsTarget"), 3)
     if daily and len(daily) != daily_target:
         raise RuntimeError(f"Published dailyAnalysis must contain exactly {daily_target}, got {len(daily)}")
     if daily and len(best) != best_target:
@@ -6290,7 +6290,7 @@ def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: 
     if len([value for value in best_event_ids if value]) != len(set(value for value in best_event_ids if value)):
         raise RuntimeError("bestBets contains duplicate events")
     minimum_odds = safe_float(config.get("minimumBookmakerOdds"), 1.35)
-    expected_stake_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
+    expected_stake_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     for item in daily + best:
         if str(item.get("marketPolicy") or "") == R14_MARKET_POLICY:
             if not record_uses_r14_standard_market(item):
@@ -6299,7 +6299,7 @@ def validate_state(state: dict[str, Any], config: dict[str, Any], allow_legacy: 
                 raise RuntimeError("R14 publication contains a non-football event")
     for item in best:
         if abs(safe_float(item.get("stakePercent")) - expected_stake_percent) > 0.001:
-            raise RuntimeError("Every best bet must preserve the configured 20 percent stake policy")
+            raise RuntimeError("Every best bet must preserve the configured 10 percent stake policy")
         if safe_float(item.get("stake")) <= 0:
             raise RuntimeError("Best bet stake must be positive")
         if safe_float(item.get("bookmakerOdds") or item.get("odds")) < minimum_odds:
@@ -6515,9 +6515,9 @@ def run_self_test() -> int:
         test_config,
         now,
     )
-    if len(best) != 4 or len(new_best) != 4:
+    if len(best) != 3 or len(new_best) != 3:
         raise RuntimeError(
-            f"SELF_TEST expected 4 best bets, got {len(best)}"
+            f"SELF_TEST expected 3 best bets, got {len(best)}"
         )
     daily_by_event = {str(item.get("eventId") or ""): item for item in daily}
     for item in best:
@@ -6555,9 +6555,9 @@ def run_self_test() -> int:
         test_config,
         now,
     )
-    if len(fallback_best) != 4 or len(fallback_new) != 4:
+    if len(fallback_best) != 3 or len(fallback_new) != 3:
         raise RuntimeError(
-            "SELF_TEST exact-four regression failed: "
+            "SELF_TEST exact-three regression failed: "
             f"best={len(fallback_best)}"
         )
     if any(
@@ -6565,7 +6565,7 @@ def run_self_test() -> int:
         for item in fallback_best
     ):
         raise RuntimeError(
-            "SELF_TEST exact-four tier is missing"
+            "SELF_TEST exact-three tier is missing"
         )
 
     # R12 regression: published financial picks are immutable. A later
@@ -6575,7 +6575,7 @@ def run_self_test() -> int:
     stale_state["dailyAnalysis"] = copy.deepcopy(daily)
     stale_history = []
     stale_visible = []
-    for index in range(4):
+    for index in range(3):
         stale = copy.deepcopy(best[index])
         stale["id"] = f"frozen-best-{index}"
         stale["eventId"] = f"frozen-event-{index}"
@@ -6607,7 +6607,7 @@ def run_self_test() -> int:
     )
     if sync_probe.get("changed"):
         raise RuntimeError(
-            "SELF_TEST frozen best four were reselected"
+            "SELF_TEST frozen best three were reselected"
         )
     if sync_probe.get("reason") != (
         "CURRENT_BATCH_FROZEN_AT_PUBLICATION"
@@ -6650,7 +6650,7 @@ def run_self_test() -> int:
     active_batch = ensure_current_batch(state, test_config, now)
     if active_batch.get("status") != "ACTIVE":
         raise RuntimeError("SELF_TEST active batch status missing")
-    if safe_int(state.get("bank", {}).get("activeBetsCount")) != 4:
+    if safe_int(state.get("bank", {}).get("activeBetsCount")) != 3:
         raise RuntimeError("SELF_TEST active bank count mismatch")
     expected_available = round(
         safe_float(state.get("bank", {}).get("current"))
@@ -6668,14 +6668,13 @@ def run_self_test() -> int:
         str(best[0]["eventId"]): {"homeScore": 2, "awayScore": 1, "source": "SELF_TEST"},
         str(best[1]["eventId"]): {"homeScore": 0, "awayScore": 2, "source": "SELF_TEST"},
         str(best[2]["eventId"]): {"homeScore": 1, "awayScore": 1, "source": "SELF_TEST"},
-        str(best[3]["eventId"]): {"homeScore": 3, "awayScore": 2, "source": "SELF_TEST"},
     }
     settle_pending_records(state, results, football_context, now + dt.timedelta(days=1))
     settled_visible = [
         item for item in state.get("dailyAnalysis") or []
         if str(item.get("eventId") or "") in results
     ]
-    if len(settled_visible) != 4:
+    if len(settled_visible) != 3:
         raise RuntimeError("SELF_TEST did not mirror settlements into the fifteen")
     if any(
         str(item.get("status") or "pending") not in {"won", "lost", "push"}
@@ -6864,16 +6863,16 @@ def run_self_test() -> int:
         probe["qualification"] = {"qualified": True, "failures": []}
         under_pool.append(probe)
     under_selected, under_diag = choose_exact_portfolio_candidates(
-        under_pool, 4, test_config
+        under_pool, 3, test_config
     )
-    if len(under_selected) != 4:
+    if len(under_selected) != 3:
         raise RuntimeError(
-            f"SELF_TEST R14R3 exact-four under portfolio failed: {len(under_selected)}"
+            f"SELF_TEST top-three under portfolio failed: {len(under_selected)}"
         )
     if not under_diag.get("underPreferenceRelaxed"):
         raise RuntimeError("SELF_TEST R14R3 under preference relaxation was not reported")
-    print("R14R3_EXACT_FOUR_PORTFOLIO=GREEN")
-    print("R14R3_SAFE_UNDER_POOL_SELECTED=4")
+    print("TOP_THREE_PORTFOLIO=GREEN")
+    print("SAFE_UNDER_POOL_SELECTED=3")
 
     # R11 operational-day tests: rollover executes immediately, while the
     # selected fixtures remain inside one Moscow 08:00-08:00 day.
@@ -7090,8 +7089,8 @@ def repair_prediction_integrity() -> int:
     bank_snapshot = copy.deepcopy(state.get("bank") if isinstance(state.get("bank"), dict) else {})
     bank_fingerprint = json.dumps(bank_snapshot, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     changed = False
-    target = safe_int(config.get("bestBetsTarget"), 4)
-    expected_percent = safe_float(config.get("stakePerBestBetPercent"), 20.0)
+    target = safe_int(config.get("bestBetsTarget"), 3)
+    expected_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     current = [item for item in state.get("bestBets") or [] if isinstance(item, dict)]
     history = [item for item in state.get("history") or [] if isinstance(item, dict)]
     batch = state.get("batch") if isinstance(state.get("batch"), dict) else {}
@@ -7188,7 +7187,7 @@ def cli_main(argv: list[str] | None = None) -> int:
     group.add_argument("--update", action="store_true", help="Force daily generation")
     group.add_argument("--settle", action="store_true", help="Settle due events without forced generation")
     group.add_argument("--settle-live", action="store_true", help="Settle confirmed live finals and clean prediction history")
-    group.add_argument("--live-cycle", action="store_true", help="Settle the current batch and immediately publish the next 15 plus 4 when complete")
+    group.add_argument("--live-cycle", action="store_true", help="Settle the current batch and immediately publish the next 15 plus 3 when complete")
     group.add_argument("--validate", action="store_true", help="Validate repository and state")
     group.add_argument("--self-test", action="store_true", help="Run offline synthetic end-to-end test")
     group.add_argument("--migrate-state", action="store_true", help="Migrate legacy state to V10")
