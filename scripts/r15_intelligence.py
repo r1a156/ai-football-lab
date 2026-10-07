@@ -3944,7 +3944,8 @@ def sync_and_settle_expresses(state: dict[str, Any], now: dt.datetime) -> dict[s
         counters["settled"] += 1
         counters[final_status] += 1
     state["expressHistory"] = (state.get("expressHistory") or [])[-safe_int(load_json(CONFIG_PATH, {}).get("expressHistoryLimit"), 500):]
-    update_express_bank_metrics(state, now)
+    # expressBank is legacy audit state only. Informational coupons must not
+    # mutate it, even through derived counters or timestamps.
     return counters
 
 
