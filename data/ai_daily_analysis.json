@@ -91,45 +91,262 @@
     "status": "INSUFFICIENT_QUALITY_EVENTS",
     "updatedAt": "2026-10-07T06:13:54Z"
   },
-  "expressBank": {
+  "bank": {
     "starting": 10000,
-    "current": 7000.0,
+    "current": 6971.08,
+    "stakePercent": 10,
+    "roi": -30.29,
+    "maxDrawdown": 66.54,
+    "activeExposure": 0,
     "history": [
       {
-        "timestamp": "2026-08-03T19:35:53Z",
+        "date": "2026-07-17",
         "value": 10000,
-        "reason": "R15_EXPRESS_BANK_CREATED"
+        "event": "REAL_MODE_START"
       },
       {
-        "timestamp": "2026-10-05T22:01:04Z",
-        "value": 9000.0,
-        "change": -1000.0,
-        "expressId": "express-7b7a9029957eb685fe62",
-        "reason": "EXPRESS_LOST"
+        "date": "2026-07-25",
+        "value": 9333.33,
+        "event": "PREDICTION_LOST",
+        "matchId": 554925
       },
       {
-        "timestamp": "2026-10-05T22:01:04Z",
-        "value": 8000.0,
-        "change": -1000.0,
-        "expressId": "express-c0eb7c586bc1007b946e",
-        "reason": "EXPRESS_LOST"
+        "date": "2026-07-25",
+        "value": 9646.66,
+        "event": "PREDICTION_WON",
+        "matchId": 554928
       },
       {
-        "timestamp": "2026-10-06T02:13:15Z",
-        "value": 7000.0,
-        "change": -1000.0,
-        "expressId": "express-244095d1c1292d2519ba",
-        "reason": "EXPRESS_LOST"
+        "date": "2026-07-25",
+        "value": 9973.33,
+        "event": "PREDICTION_WON",
+        "matchId": 554923
+      },
+      {
+        "date": "2026-07-25",
+        "value": 10713.33,
+        "event": "PREDICTION_WON",
+        "matchId": 554926
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T06:48:07Z",
+        "value": 10713.33,
+        "event": "PREDICTION_PUSH",
+        "recordId": "real-554935-over_2_5",
+        "eventId": "b2ae0c5388431d8a811f3ead9312fed1",
+        "match": "Grêmio — Fluminense",
+        "profit": 0
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T06:48:07Z",
+        "value": 10713.33,
+        "event": "PREDICTION_PUSH",
+        "recordId": "real-554932-over_2_5",
+        "eventId": "d9d1726d183975de80ce176cd8e4a6ab",
+        "match": "Bragantino — Coritiba",
+        "profit": 0
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T06:48:07Z",
+        "value": 10713.33,
+        "event": "PREDICTION_PUSH",
+        "recordId": "real-554934-under_2_5",
+        "eventId": "19fc51f8fad955615b5d08db4ec89e1f",
+        "match": "Flamengo — São Paulo",
+        "profit": 0
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T06:48:07Z",
+        "value": 10713.33,
+        "event": "PREDICTION_PUSH",
+        "recordId": "real-554936-over_2_5",
+        "eventId": "51474caaaca9d0664acc4c445caf0c64",
+        "match": "Palmeiras — Mineiro",
+        "profit": 0
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T19:55:36Z",
+        "value": 12598.88,
+        "event": "PREDICTION_WON",
+        "recordId": "analysis-083420965b660d3abf43",
+        "eventId": "16da0ac17df035ef762b98ba1a3b3bf9",
+        "match": "Helsingborgs IF — Nordic United FC",
+        "profit": 1885.55
+      },
+      {
+        "date": "2026-07-28",
+        "timestamp": "2026-07-28T22:18:45Z",
+        "value": 13948.76,
+        "event": "PREDICTION_WON",
+        "recordId": "analysis-4f65e7b27ccb4106f4ef",
+        "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
+        "match": "Hearts — SK Sturm Graz",
+        "profit": 1349.88
+      },
+      {
+        "date": "2026-07-29",
+        "timestamp": "2026-07-29T03:44:43Z",
+        "value": 15127.23,
+        "event": "PREDICTION_WON",
+        "recordId": "analysis-b4c6761c07a745d1183a",
+        "eventId": "5746af78ef429ff259802e90e744590b",
+        "match": "Banfield — Sarmiento de Junin",
+        "profit": 1178.47
+      },
+      {
+        "date": "2026-07-29",
+        "timestamp": "2026-07-29T03:44:43Z",
+        "value": 17291.33,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-634d1548e80a0d8cbef0",
+        "eventId": "7f97e1ad452a6c39dab72ee7a0c99130",
+        "match": "Ponte Preta — Athletic Club (MG)",
+        "profit": 2164.1
+      },
+      {
+        "date": "2026-07-30",
+        "timestamp": "2026-07-30T18:13:30Z",
+        "value": 13833.06,
+        "event": "PREDICTION_LOST",
+        "recordId": "analysis-06396867c56d708cdac2",
+        "eventId": "f858d26e25a166ffd0ea372e3efa3520",
+        "match": "Red Star Belgrade — Larne FC",
+        "profit": -3458.27
+      },
+      {
+        "date": "2026-07-31",
+        "timestamp": "2026-07-31T01:54:59Z",
+        "value": 11066.45,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-30764579a953f3980f93",
+        "eventId": "4f68110ae33722f386ddcd2aa17cc01c",
+        "match": "Corinthians — Atletico Paranaense",
+        "profit": -2766.61
+      },
+      {
+        "date": "2026-07-31",
+        "timestamp": "2026-07-31T01:54:59Z",
+        "value": 13639.4,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-f34fa34b4ea7a79c192d",
+        "eventId": "c56c0611b78cf2c9b19aaf7403def23b",
+        "match": "Grêmio — Club Bolívar",
+        "profit": 2572.95
+      },
+      {
+        "date": "2026-07-31",
+        "timestamp": "2026-07-31T14:39:44Z",
+        "value": 15299.37,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-2d1c8a1a3b43fcdebd0a",
+        "eventId": "b2dafd55f589fced90359c3f3bfe6f09",
+        "match": "Henan FC — Dalian Yingbo",
+        "profit": 1659.97
+      },
+      {
+        "date": "2026-08-01",
+        "timestamp": "2026-08-01T14:47:48Z",
+        "value": 12532.76,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-39081d38d4f03d85d557",
+        "eventId": "2f75420bd3bb24996d73b1e23cecd77b",
+        "match": "TPS Turku — IFK Mariehamn",
+        "profit": -2766.61
+      },
+      {
+        "date": "2026-08-02",
+        "timestamp": "2026-08-02T13:56:05Z",
+        "value": 13911.36,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-6ea5004ac829d8e22db3",
+        "eventId": "7ebdca8fb4ef84a455589ea024dda075",
+        "match": "Daejeon Citizen — Gwangju FC",
+        "profit": 1378.6
+      },
+      {
+        "date": "2026-08-02",
+        "timestamp": "2026-08-02T17:11:59Z",
+        "value": 11404.81,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-57fec456f1627bf39201",
+        "eventId": "71c389f15d960e817660cd85c03c0001",
+        "match": "FC Sion — FC Luzern",
+        "profit": -2506.55
+      },
+      {
+        "date": "2026-08-02",
+        "timestamp": "2026-08-02T17:11:59Z",
+        "value": 12933.81,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-9b33d072340741c258ef",
+        "eventId": "9d49893900d172d53f16771f82984160",
+        "match": "AIK — Örgryte IS",
+        "profit": 1529
+      },
+      {
+        "date": "2026-08-02",
+        "timestamp": "2026-08-02T19:33:36Z",
+        "value": 14462.81,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-5c5c8e9940dd8ea0f6a7",
+        "eventId": "4f9650822cbd8cff1a72231bd04a1f1c",
+        "match": "Silkeborg IF — FC Copenhagen",
+        "profit": 1529
+      },
+      {
+        "date": "2026-08-04",
+        "timestamp": "2026-08-04T03:44:10Z",
+        "value": 11570.25,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-7f18e124f93ebef000af",
+        "eventId": "004b0d634351d34f62dc5ebb339f8f50",
+        "match": "Atlético Huracán — Atlético Tucuman",
+        "profit": -2892.56
+      },
+      {
+        "date": "2026-08-04",
+        "timestamp": "2026-08-04T03:44:10Z",
+        "value": 8677.69,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-4c209c3fed9d9dffbdd3",
+        "eventId": "fadd514709eaad344a2d7f3bdc1b20b5",
+        "match": "Central Córdoba — San Lorenzo",
+        "profit": -2892.56
+      },
+      {
+        "date": "2026-08-05",
+        "timestamp": "2026-08-05T03:40:27Z",
+        "value": 5785.13,
+        "event": "PREDICTION_LOST",
+        "recordId": "bet-87af9ab11c8e5d2fe916",
+        "eventId": "da7597293509b90e5b048ed138133638",
+        "match": "Columbus Crew SC — Atlas",
+        "profit": -2892.56
+      },
+      {
+        "date": "2026-08-05",
+        "timestamp": "2026-08-05T21:37:31Z",
+        "value": 6971.08,
+        "event": "PREDICTION_WON",
+        "recordId": "bet-95b7c092f58d0a80ffa1",
+        "eventId": "713ff08f1bd3e066b0f281e2788c3554",
+        "match": "Fenerbahce — SK Sturm Graz",
+        "profit": 1185.95
       }
     ],
-    "createdAt": "2026-08-03T19:35:53Z",
     "placedAmount": 0,
-    "activeExposure": 0,
-    "available": 7000.0,
-    "activeExpressCount": 0,
-    "roi": -30.0,
-    "maxDrawdown": 30.0,
-    "updatedAt": "2026-10-06T02:13:15Z"
+    "activeBetsCount": 0,
+    "available": 6971.08,
+    "closedBalance": 6971.08,
+    "mode": "ACTIVE_SINGLE_BANK",
+    "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
+    "policyEffectiveAt": "2026-10-07T07:44:56Z",
+    "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
   },
   "expresses": [],
   "dailyAnalysis": [],
@@ -204,7 +421,7 @@
         "quoteCount": 22,
         "agreement": 83.7,
         "marketStability": 72.8,
-        "anomaly": 17.0,
+        "anomaly": 17,
         "obviousMarketScore": 62.1788,
         "qualification": {
           "qualified": false,
@@ -287,7 +504,7 @@
         "dataQuality": 47.1,
         "quoteCount": 15,
         "agreement": 95.9,
-        "marketStability": 69.0,
+        "marketStability": 69,
         "anomaly": 19.9,
         "obviousMarketScore": 66.0393,
         "qualification": {
@@ -775,7 +992,7 @@
         "quoteCount": 11,
         "agreement": 77.2,
         "marketStability": 85.7,
-        "anomaly": 9.0,
+        "anomaly": 9,
         "obviousMarketScore": 76.4658,
         "qualification": {
           "qualified": false,
@@ -866,7 +1083,7 @@
         "expectedValue": -0.065849,
         "edge": -0.022838,
         "dataTier": "FULL",
-        "dataQuality": 84.0,
+        "dataQuality": 84,
         "quoteCount": 14,
         "agreement": 77.1,
         "marketStability": 69.7,
@@ -1044,7 +1261,7 @@
         "expectedValue": -0.199844,
         "edge": -0.089125,
         "dataTier": "HYBRID",
-        "dataQuality": 40.0,
+        "dataQuality": 40,
         "quoteCount": 13,
         "agreement": 80.1,
         "marketStability": 74.3,
@@ -1137,7 +1354,7 @@
         "expectedValue": -0.2468,
         "edge": -0.12873,
         "dataTier": "HYBRID",
-        "dataQuality": 40.0,
+        "dataQuality": 40,
         "quoteCount": 6,
         "agreement": 89.9,
         "marketStability": 82.6,
@@ -1243,7 +1460,7 @@
         "expectedValue": -0.270182,
         "edge": -0.139935,
         "dataTier": "HYBRID",
-        "dataQuality": 40.0,
+        "dataQuality": 40,
         "quoteCount": 4,
         "agreement": 94.8,
         "marketStability": 91.6,
