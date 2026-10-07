@@ -1,14 +1,9 @@
-# R3R23_ONE_SHOT_QUOTA_RECOVERY_TRIGGER_2026_10_07
 # V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO
 # V10_R6_LIVE_AUTO_REFRESH — compatibility marker for existing live validator
 name: R15F live scores and express settlement
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/live-update.yml'
   schedule:
     # Keep 05:00-06:59 UTC clear for the dedicated morning writer.
     # Outside that window this also acts as a missing-portfolio watchdog.
