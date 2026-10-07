@@ -60,7 +60,7 @@ jobs:
           assert not missing, f"Missing premium DOM ids: {missing}"
 
           assert "V16_PREMIUM_INTERFACE" in html
-          assert "16.2.0-grid-bank-fix" in html
+          assert "16.3.0-near-miss-quota-fix" in html
           assert "renderSpotlight" in app
           assert "renderModelStats" in app
           assert "setupPwa" in app
@@ -118,12 +118,14 @@ jobs:
           "$BROWSER" --headless=new --no-sandbox --disable-gpu             --virtual-time-budget=8000             --window-size=1440,1800             --dump-dom http://127.0.0.1:4173/ > /tmp/desktop-dom.html
           "$BROWSER" --headless=new --no-sandbox --disable-gpu             --virtual-time-budget=8000             --window-size=390,1600             --dump-dom http://127.0.0.1:4173/ > /tmp/mobile-dom.html
 
-          grep -q 'Хорватия' /tmp/desktop-dom.html
+          grep -q 'КАНДИДАТЫ НА ПРОВЕРКЕ' /tmp/desktop-dom.html
+          grep -q 'Официальных прогнозов пока нет' /tmp/desktop-dom.html
           grep -q 'Аналитический банк модели' /tmp/desktop-dom.html
           grep -q 'Экспресс' /tmp/desktop-dom.html
           grep -q 'modelBankCurrent' /tmp/desktop-dom.html
           grep -q 'signal-cluster' /tmp/desktop-dom.html
           grep -q 'mobile-nav' /tmp/mobile-dom.html
           ! grep -q 'Загружаем подборку' /tmp/desktop-dom.html
+          ! grep -q 'Хорватия' /tmp/desktop-dom.html
           echo "BROWSER_RENDER_DESKTOP=GREEN"
           echo "BROWSER_RENDER_MOBILE=GREEN"
