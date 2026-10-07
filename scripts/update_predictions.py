@@ -6837,7 +6837,7 @@ def run_self_test() -> int:
         raise RuntimeError("SELF_TEST net-profit formula regression")
 
     # R14R3 regression: a safe pool dominated by TOTAL_UNDER must still
-    # produce exactly four. The one-under limit is a preference and cannot
+    # produce exactly three. The one-under limit is a preference and cannot
     # abort publication after a completed batch.
     under_pool = []
     for index in range(7):
@@ -6863,16 +6863,16 @@ def run_self_test() -> int:
         probe["qualification"] = {"qualified": True, "failures": []}
         under_pool.append(probe)
     under_selected, under_diag = choose_exact_portfolio_candidates(
-        under_pool, 4, test_config
+        under_pool, 3, test_config
     )
-    if len(under_selected) != 4:
+    if len(under_selected) != 3:
         raise RuntimeError(
-            f"SELF_TEST R14R3 exact-four under portfolio failed: {len(under_selected)}"
+            f"SELF_TEST R16 top-three under portfolio failed: {len(under_selected)}"
         )
     if not under_diag.get("underPreferenceRelaxed"):
         raise RuntimeError("SELF_TEST R14R3 under preference relaxation was not reported")
-    print("R14R3_EXACT_FOUR_PORTFOLIO=GREEN")
-    print("R14R3_SAFE_UNDER_POOL_SELECTED=4")
+    print("R16_TOP_THREE_PORTFOLIO=GREEN")
+    print("R16_SAFE_UNDER_POOL_SELECTED=3")
 
     # R11 operational-day tests: rollover executes immediately, while the
     # selected fixtures remain inside one Moscow 08:00-08:00 day.
