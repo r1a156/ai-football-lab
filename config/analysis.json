@@ -1,5 +1,5 @@
 {
-  "version": 38,
+  "version": 39,
   "timezone": "Europe/Moscow",
   "dailyAnalysisTarget": 15,
   "bestBetsTarget": 4,
@@ -436,5 +436,16 @@
   "h2hMaximumModelWeight": 0.1,
   "h2hPolicy": "RECENCY_WEIGHTED_WEAK_PRIOR_MAX_10_PERCENT_NEVER_OVERRIDE_FORM_ELO_MARKET",
   "bestMatchesDisplayTarget": 8,
-  "bestMatchesDisplayPolicy": "OFFICIAL_FIRST_THEN_SHADOW_LEARNING_CANDIDATES_CLEARLY_LABELLED"
+  "bestMatchesDisplayPolicy": "OFFICIAL_FIRST_THEN_SHADOW_LEARNING_CANDIDATES_CLEARLY_LABELLED",
+  "h2hSequenceMinimumSamples": 4,
+  "h2hSequenceMinimumConfidence": 0.58,
+  "h2hSequenceMaximumProbabilityAdjustment": 0.012,
+  "h2hSequencePolicy": "DETECT_ALTERNATING_OR_PERSISTENT_BINARY_PATTERN_WEAK_CONTEXT_ONLY_NEVER_STANDALONE",
+  "tableSeasonResetGapDays": 55,
+  "tableMaximumLatestMatchAgeDays": 45,
+  "tableLowImportanceMinimumProgress": 0.55,
+  "tournamentContextMaximumProbabilityAdjustment": 0.012,
+  "matchContextMaximumProbabilityAdjustment": 0.02,
+  "tournamentImportancePolicy": "DERIVED_FINISHED_MATCH_TABLE_REGULAR_COMPETITIONS_ONLY_TITLE_TOP_ZONE_RELEGATION_AND_LOW_STAKES_CONTEXT",
+  "matchContextPolicy": "FORM_ELO_MARKET_PRIMARY_H2H_SEQUENCE_AND_TABLE_IMPORTANCE_BOUNDED_CONFIRMING_SIGNALS"
 }

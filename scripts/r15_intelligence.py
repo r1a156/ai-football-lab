@@ -687,6 +687,9 @@ def build_history_context(cache: dict[str, Any], registry: dict[str, Any], now: 
             "awayId": away_id,
             "homeScore": home_score,
             "awayScore": away_score,
+            "matchday": match.get("matchday"),
+            "stage": str(match.get("stage") or ""),
+            "group": str(match.get("group") or ""),
         }
         team_games[home_id].append({
             **base,
@@ -723,6 +726,92 @@ def build_history_context(cache: dict[str, Any], registry: dict[str, Any], now: 
             "awayGoals": mean([row[1] for row in rows], 1.15),
             "totalGoals": mean([row[0] + row[1] for row in rows], 2.60),
         }
+    # Derived current competition tables from completed matches only.
+    # This is deliberately conservative: do not combine multi-group or
+    # knockout competitions into one fake table.
+    league_completed: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for match in chronological:
+        league_name = str(match.get("competition") or match.get("competitionCode") or "")
+        if league_name:
+            league_completed[normalize(league_name)].append(match)
+
+    competition_tables: dict[str, dict[str, Any]] = {}
+    for league_key, matches in league_completed.items():
+        rows = sorted(matches, key=lambda item: item["when"])
+        if not rows:
+            continue
+        latest = rows[-1]["when"]
+        max_age_days = max(20, safe_int(load_json(CONFIG_PATH, {}).get("tableMaximumLatestMatchAgeDays"), 45))
+        if (now - latest).total_seconds() / 86400.0 > max_age_days:
+            continue
+
+        # Detect current season/cycle from the most recent dense block. A long
+        # off-season gap resets the table; ordinary international breaks do not.
+        gap_days = max(45, safe_int(load_json(CONFIG_PATH, {}).get("tableSeasonResetGapDays"), 55))
+        season_rows: list[dict[str, Any]] = [rows[-1]]
+        for previous, current in zip(reversed(rows[:-1]), reversed(rows[1:])):
+            gap = (current["when"] - previous["when"]).total_seconds() / 86400.0
+            if gap > gap_days:
+                break
+            season_rows.append(previous)
+        season_rows.sort(key=lambda item: item["when"])
+
+        groups = {str(row.get("group") or "").strip() for row in season_rows if str(row.get("group") or "").strip()}
+        stages = {str(row.get("stage") or "").upper().strip() for row in season_rows if str(row.get("stage") or "").strip()}
+        knockout_tokens = ("LAST_", "QUARTER", "SEMI", "FINAL", "ROUND_", "PLAYOFF", "KNOCKOUT")
+        knockout = any(any(token in stage for token in knockout_tokens) for stage in stages)
+        if len(groups) > 1 or knockout:
+            continue
+
+        table: dict[str, dict[str, Any]] = {}
+        for row in season_rows:
+            home = str(row.get("homeId") or "")
+            away = str(row.get("awayId") or "")
+            if not home or not away:
+                continue
+            hs = safe_int(row.get("homeScore"))
+            aw = safe_int(row.get("awayScore"))
+            home_row = table.setdefault(home, {"teamId": home, "played": 0, "points": 0, "gf": 0, "ga": 0, "wins": 0, "draws": 0, "losses": 0})
+            away_row = table.setdefault(away, {"teamId": away, "played": 0, "points": 0, "gf": 0, "ga": 0, "wins": 0, "draws": 0, "losses": 0})
+            home_row["played"] += 1; away_row["played"] += 1
+            home_row["gf"] += hs; home_row["ga"] += aw
+            away_row["gf"] += aw; away_row["ga"] += hs
+            if hs > aw:
+                home_row["points"] += 3; home_row["wins"] += 1; away_row["losses"] += 1
+            elif aw > hs:
+                away_row["points"] += 3; away_row["wins"] += 1; home_row["losses"] += 1
+            else:
+                home_row["points"] += 1; away_row["points"] += 1
+                home_row["draws"] += 1; away_row["draws"] += 1
+
+        teams = list(table.values())
+        if len(teams) < 6:
+            continue
+        average_played = mean([safe_int(row.get("played")) for row in teams], 0.0)
+        if average_played < 3.0:
+            continue
+        teams.sort(key=lambda row: (
+            safe_int(row.get("points")),
+            safe_int(row.get("gf")) - safe_int(row.get("ga")),
+            safe_int(row.get("gf")),
+        ), reverse=True)
+        for rank, row in enumerate(teams, start=1):
+            row["rank"] = rank
+            row["goalDifference"] = safe_int(row.get("gf")) - safe_int(row.get("ga"))
+
+        competition_tables[league_key] = {
+            "leagueKey": league_key,
+            "teams": {str(row["teamId"]): row for row in teams},
+            "teamCount": len(teams),
+            "averagePlayed": round(average_played, 2),
+            "latestMatchAt": iso(latest),
+            "seasonStartAt": iso(season_rows[0]["when"]),
+            "matches": len(season_rows),
+            "stages": sorted(stages),
+            "groupCount": len(groups),
+            "source": "DERIVED_FROM_FINISHED_MATCHES",
+        }
+
     global_profile = {
         "matches": len(all_rows),
         "homeGoals": mean([row[0] for row in all_rows], 1.45),
@@ -736,6 +825,7 @@ def build_history_context(cache: dict[str, Any], registry: dict[str, Any], now: 
         "pairGames": dict(pair_games),
         "elo": dict(elo),
         "leagueProfiles": league_profiles,
+        "competitionTables": competition_tables,
         "globalLeagueProfile": global_profile,
         "cacheMeta": {
             "matches": len(chronological),
@@ -869,6 +959,172 @@ def form_summary(
     }
 
 
+def competition_table_profile(league: str, context: dict[str, Any]) -> dict[str, Any] | None:
+    normalized = normalize(league)
+    tables = context.get("competitionTables", {}) if isinstance(context.get("competitionTables"), dict) else {}
+    direct = tables.get(normalized)
+    if isinstance(direct, dict):
+        return direct
+    best = None
+    best_score = 0.0
+    for key, value in tables.items():
+        score = core.token_similarity(normalized, key)
+        if score > best_score:
+            best_score = score
+            best = value
+    return best if isinstance(best, dict) and best_score >= 0.78 else None
+
+
+def tournament_importance(
+    league: str,
+    home_id: str | None,
+    away_id: str | None,
+    context: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    profile = competition_table_profile(league, context)
+    if not profile or not home_id or not away_id:
+        return {
+            "available": False,
+            "score": 50.0,
+            "confidence": 0.0,
+            "classification": "UNKNOWN",
+            "reasons": [],
+        }
+    teams = profile.get("teams") if isinstance(profile.get("teams"), dict) else {}
+    home = teams.get(str(home_id))
+    away = teams.get(str(away_id))
+    if not isinstance(home, dict) or not isinstance(away, dict):
+        return {
+            "available": False,
+            "score": 50.0,
+            "confidence": 0.0,
+            "classification": "TEAM_NOT_IN_DERIVED_TABLE",
+            "reasons": [],
+        }
+
+    team_count = max(2, safe_int(profile.get("teamCount"), len(teams)))
+    expected_games = max(1, (team_count - 1) * 2)
+    average_played = safe_float(profile.get("averagePlayed"), 0.0)
+    progress = clamp(average_played / expected_games, 0.0, 1.0)
+    top_zone = max(3, min(6, math.ceil(team_count * 0.25)))
+    relegation_count = max(2, min(4, math.ceil(team_count * 0.15)))
+    relegation_start = team_count - relegation_count + 1
+
+    ordered = sorted(
+        [row for row in teams.values() if isinstance(row, dict)],
+        key=lambda row: safe_int(row.get("rank"), 10**6),
+    )
+    top_points = safe_int(ordered[0].get("points"), 0) if ordered else 0
+    euro_cut_points = safe_int(ordered[min(len(ordered)-1, top_zone-1)].get("points"), 0) if ordered else 0
+    relegation_cut_points = safe_int(ordered[min(len(ordered)-1, relegation_start-1)].get("points"), 0) if ordered else 0
+
+    reasons: list[str] = []
+    team_scores: list[float] = []
+    team_labels: list[str] = []
+    for label, row in (("home", home), ("away", away)):
+        rank = safe_int(row.get("rank"), team_count)
+        points = safe_int(row.get("points"), 0)
+        played = safe_int(row.get("played"), 0)
+        remaining = max(0, expected_games - played)
+        score = 35.0 + progress * 20.0
+        labels: list[str] = []
+
+        title_gap = max(0, top_points - points)
+        euro_gap = abs(points - euro_cut_points)
+        relegation_gap = abs(points - relegation_cut_points)
+        live_gap = max(3, min(12, remaining * 1.2 + 2))
+
+        if rank <= 2 and title_gap <= live_gap:
+            score += 28.0; labels.append("борьба за титул")
+        elif rank <= top_zone + 2 and euro_gap <= live_gap:
+            score += 20.0; labels.append("борьба за верхнюю зону")
+        if rank >= relegation_start - 2 and relegation_gap <= live_gap:
+            score += 24.0; labels.append("борьба за выживание")
+
+        safe_midtable = (
+            progress >= safe_float(config.get("tableLowImportanceMinimumProgress"), 0.55)
+            and rank > top_zone + 2
+            and rank < relegation_start - 2
+            and euro_gap > max(6, live_gap)
+            and relegation_gap > max(6, live_gap)
+        )
+        if safe_midtable:
+            score -= 18.0
+            labels.append("низкая турнирная острота")
+
+        team_scores.append(clamp(score, 5.0, 100.0))
+        team_labels.append("+".join(labels) if labels else "обычная турнирная мотивация")
+        reasons.append(f"{label}: место {rank}/{team_count}, очки {points}, {team_labels[-1]}")
+
+    score = mean(team_scores, 50.0)
+    both_low = all(value <= 45.0 for value in team_scores)
+    both_high = all(value >= 68.0 for value in team_scores)
+    asymmetric = abs(team_scores[0] - team_scores[1]) >= 25.0
+    classification = (
+        "LOW_IMPORTANCE_BOTH" if both_low
+        else "HIGH_IMPORTANCE_BOTH" if both_high
+        else "ASYMMETRIC_MOTIVATION" if asymmetric
+        else "NORMAL_IMPORTANCE"
+    )
+    confidence = clamp(0.35 + min(0.45, safe_float(profile.get("matches"), 0.0) / max(20.0, team_count * 3.0) * 0.45) + progress * 0.20, 0.0, 0.95)
+    return {
+        "available": True,
+        "score": round(score, 2),
+        "confidence": round(confidence, 3),
+        "classification": classification,
+        "homeScore": round(team_scores[0], 2),
+        "awayScore": round(team_scores[1], 2),
+        "bothLowImportance": both_low,
+        "bothHighImportance": both_high,
+        "asymmetricMotivation": asymmetric,
+        "seasonProgress": round(progress, 4),
+        "teamCount": team_count,
+        "reasons": reasons,
+        "source": "DERIVED_COMPETITION_TABLE",
+    }
+
+
+def binary_sequence_pattern(values: list[bool], minimum: int = 4) -> dict[str, Any]:
+    sequence = [bool(value) for value in values]
+    if len(sequence) < minimum:
+        return {
+            "available": False,
+            "samples": len(sequence),
+            "alternationRate": 0.0,
+            "sameRate": 0.0,
+            "predictedNext": None,
+            "confidence": 0.0,
+        }
+    transitions = len(sequence) - 1
+    alternations = sum(1 for left, right in zip(sequence, sequence[1:]) if left != right)
+    alternation_rate = alternations / transitions if transitions else 0.0
+    same_rate = 1.0 - alternation_rate
+    if alternation_rate >= 0.72:
+        predicted_next = not sequence[0]  # input is newest -> oldest
+        pattern = "ALTERNATING"
+        strength = alternation_rate
+    elif same_rate >= 0.72:
+        predicted_next = sequence[0]
+        pattern = "PERSISTENT"
+        strength = same_rate
+    else:
+        predicted_next = None
+        pattern = "MIXED"
+        strength = max(alternation_rate, same_rate)
+    confidence = clamp((len(sequence) - minimum + 1) / 6.0, 0.15, 1.0) * strength
+    return {
+        "available": predicted_next is not None,
+        "samples": len(sequence),
+        "pattern": pattern,
+        "alternationRate": round(alternation_rate, 4),
+        "sameRate": round(same_rate, 4),
+        "predictedNext": predicted_next,
+        "confidence": round(confidence, 4),
+        "latest": sequence[0],
+    }
+
+
 def league_profile(league: str, context: dict[str, Any]) -> dict[str, Any]:
     normalized = normalize(league)
     direct = context.get("leagueProfiles", {}).get(normalized)
@@ -923,7 +1179,9 @@ def build_match_model(
         away10 = form_summary(away_games, now, limit=10, config=config)
         away20 = form_summary(away_games, now, limit=20, config=config)
         away_venue = form_summary(away_games, now, side="away", limit=10, config=config)
-        league = league_profile(str(event.get("sport_title") or ""), context)
+        league_name = str(event.get("sport_title") or "")
+        league = league_profile(league_name, context)
+        importance = tournament_importance(league_name, home_id, away_id, context, config)
         league_home = safe_float(league.get("homeGoals"), 1.45)
         league_away = safe_float(league.get("awayGoals"), 1.15)
 
@@ -1078,6 +1336,15 @@ def build_match_model(
             home_lambda = clamp(home_lambda * (1.0 - h2h_weight) + h2h_home_avg * h2h_weight, 0.20, 4.5)
             away_lambda = clamp(away_lambda * (1.0 - h2h_weight) + h2h_away_avg * h2h_weight, 0.20, 4.5)
 
+        h2h_btts_sequence = binary_sequence_pattern(
+            [h > 0 and a > 0 for h, a in zip(h2h_home_goals, h2h_away_goals)],
+            minimum=max(4, safe_int(config.get("h2hSequenceMinimumSamples"), 4)),
+        )
+        h2h_over25_sequence = binary_sequence_pattern(
+            [h + a > 2.5 for h, a in zip(h2h_home_goals, h2h_away_goals)],
+            minimum=max(4, safe_int(config.get("h2hSequenceMinimumSamples"), 4)),
+        )
+
         source_notes = [
             f"Хозяева: {home10['gf']:.2f} забито и {home10['ga']:.2f} пропущено за 10 матчей",
             f"Гости: {away10['gf']:.2f} забито и {away10['ga']:.2f} пропущено за 10 матчей",
@@ -1085,6 +1352,12 @@ def build_match_model(
             f"Elo: {home_elo:.0f} против {away_elo:.0f}",
             f"История: {sample} матчей, эффективная выборка {effective_sample:.1f}, свежих в окне {sparse_recent}",
         ]
+        if importance.get("available"):
+            source_notes.append(
+                "Турнирный контекст: "
+                + str(importance.get("classification"))
+                + f", оценка важности {safe_float(importance.get('score')):.0f}/100"
+            )
         components.update({
             "historyAvailable": True,
             "homeForm5": home5,
@@ -1106,6 +1379,9 @@ def build_match_model(
             "h2hExpectedTotal": round(h2h_home_avg + h2h_away_avg, 4) if h2h_matches else None,
             "h2hOver25Rate": round(h2h_over25, 4) if h2h_matches else None,
             "h2hBttsRate": round(h2h_btts, 4) if h2h_matches else None,
+            "h2hBttsSequence": h2h_btts_sequence,
+            "h2hOver25Sequence": h2h_over25_sequence,
+            "tournamentImportance": importance,
             "combinedRecentTotalGoals": round(mean([home10["totalGoals"], away10["totalGoals"]]), 4),
             "combinedRecentOver15": round(mean([home10["over15"], away10["over15"], home_venue["over15"], away_venue["over15"]]), 4),
             "combinedRecentOver25": round(mean([home10["over25"], away10["over25"], home_venue["over25"], away_venue["over25"]]), 4),
@@ -5462,6 +5738,32 @@ def self_test() -> int:
     if hash_time_2 != hash_time_1 or hash_meta_2.get("freshnessEvidence") != "CONTENT_HASH_UNCHANGED":
         raise RuntimeError("SELF_TEST fixture content-hash freshness failed")
 
+    alternating = binary_sequence_pattern([True, False, True, False, True], minimum=4)
+    if not alternating.get("available") or alternating.get("pattern") != "ALTERNATING" or alternating.get("predictedNext") is not False:
+        raise RuntimeError("SELF_TEST H2H alternation detector failed")
+
+    test_table_context = copy.deepcopy(context)
+    test_table_context["competitionTables"] = {
+        "test league 0": {
+            "teams": {
+                "fd:1000": {"teamId": "fd:1000", "rank": 1, "points": 30, "played": 12},
+                "fd:1001": {"teamId": "fd:1001", "rank": 8, "points": 14, "played": 12},
+                **{
+                    f"fd:{1000+i}": {"teamId": f"fd:{1000+i}", "rank": i+1, "points": max(5, 32-i*2), "played": 12}
+                    for i in range(2, 10)
+                },
+            },
+            "teamCount": 10,
+            "averagePlayed": 12,
+            "matches": 60,
+            "latestMatchAt": iso(now),
+            "source": "SELF_TEST",
+        }
+    }
+    table_signal = tournament_importance("Test League 0", "fd:1000", "fd:1001", test_table_context, config)
+    if not table_signal.get("available"):
+        raise RuntimeError("SELF_TEST tournament importance failed")
+
     print("R15_SELF_TEST=GREEN")
     print(f"R15_DIVERSIFICATION_GUARD_ANALYSIS={len(guarded_records)}")
     print("R15_SYNTHETIC_ANALYSIS=15")
@@ -5481,6 +5783,8 @@ def self_test() -> int:
     print("R15_SECONDARY_KEY_FALLBACK=YES")
     print("R15_H2H_WEAK_PRIOR=YES")
     print("R15_SHADOW_REJECTED_LEARNING=YES")
+    print("R15_H2H_SEQUENCE_PATTERN=YES")
+    print("R15_DERIVED_TABLE_IMPORTANCE=YES")
     return 0
 
 

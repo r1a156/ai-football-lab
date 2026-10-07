@@ -2597,6 +2597,81 @@ def probability_adjustment(
     return clamp(weighted_adjustment / total_weight, -maximum, maximum), contributions
 
 
+def match_context_probability_adjustment(
+    quote: dict[str, Any],
+    model: dict[str, Any],
+    config: dict[str, Any],
+) -> tuple[float, list[dict[str, Any]]]:
+    components = model.get("components") if isinstance(model.get("components"), dict) else {}
+    market = str(quote.get("market") or "").upper()
+    point = safe_float(quote.get("point"), 0.0)
+    selection = str(quote.get("selectionCode") or "").upper()
+    adjustment = 0.0
+    evidence: list[dict[str, Any]] = []
+
+    maximum_sequence = safe_float(config.get("h2hSequenceMaximumProbabilityAdjustment"), 0.012)
+    minimum_confidence = safe_float(config.get("h2hSequenceMinimumConfidence"), 0.58)
+    sequence = None
+    wanted: bool | None = None
+    if market.startswith("TOTAL_") and abs(point - 2.5) < 1e-9:
+        sequence = components.get("h2hOver25Sequence")
+        wanted = market.endswith("_OVER")
+    elif market.startswith("BTTS") or selection in {"YES", "NO"}:
+        sequence = components.get("h2hBttsSequence")
+        wanted = selection == "YES" or market.endswith("_YES")
+    if isinstance(sequence, dict) and sequence.get("available"):
+        confidence = safe_float(sequence.get("confidence"), 0.0)
+        predicted = sequence.get("predictedNext")
+        if confidence >= minimum_confidence and isinstance(predicted, bool) and wanted is not None:
+            signed = 1.0 if predicted == wanted else -1.0
+            value = signed * maximum_sequence * clamp(confidence, 0.0, 1.0)
+            adjustment += value
+            evidence.append({
+                "type": "H2H_SEQUENCE",
+                "pattern": sequence.get("pattern"),
+                "samples": safe_int(sequence.get("samples"), 0),
+                "confidence": round(confidence, 4),
+                "supportsSelection": signed > 0,
+                "adjustment": round(value, 6),
+            })
+
+    importance = components.get("tournamentImportance")
+    if isinstance(importance, dict) and importance.get("available"):
+        importance_confidence = safe_float(importance.get("confidence"), 0.0)
+        classification = str(importance.get("classification") or "")
+        recent_over25 = safe_float(components.get("combinedRecentOver25"), 0.0)
+        recent_btts = safe_float(components.get("combinedRecentBTTS"), 0.0)
+        expected_total = safe_float(model.get("homeLambda")) + safe_float(model.get("awayLambda"))
+        maximum_motivation = safe_float(config.get("tournamentContextMaximumProbabilityAdjustment"), 0.012)
+        value = 0.0
+
+        # Low-stakes league matches can be more open, but only when form and
+        # score model already independently support goals.
+        if classification == "LOW_IMPORTANCE_BOTH" and importance_confidence >= 0.55:
+            if market == "TOTAL_OVER" and abs(point - 2.5) < 1e-9 and recent_over25 >= 0.60 and expected_total >= 2.55:
+                value = maximum_motivation * min(1.0, importance_confidence)
+            elif (market.startswith("BTTS") or selection == "YES") and selection != "NO" and recent_btts >= 0.58:
+                value = maximum_motivation * 0.65 * min(1.0, importance_confidence)
+
+        # Strongly asymmetric motivation adds uncertainty rather than inventing
+        # a direction: subtract a small amount from all selections.
+        elif classification == "ASYMMETRIC_MOTIVATION" and importance_confidence >= 0.60:
+            value = -maximum_motivation * 0.35 * min(1.0, importance_confidence)
+
+        if abs(value) > 1e-9:
+            adjustment += value
+            evidence.append({
+                "type": "TOURNAMENT_IMPORTANCE",
+                "classification": classification,
+                "confidence": round(importance_confidence, 4),
+                "importanceScore": importance.get("score"),
+                "adjustment": round(value, 6),
+            })
+
+    cap = safe_float(config.get("matchContextMaximumProbabilityAdjustment"), 0.02)
+    return clamp(adjustment, -cap, cap), evidence
+
+
 def goal_direction_diagnostics(
     quote: dict[str, Any],
     model: dict[str, Any],
@@ -2727,7 +2802,14 @@ def evaluate_event_markets(
             str(event.get("home_team") or ""),
             str(event.get("away_team") or ""),
         )
-        model_probability = clamp(preliminary_probability + adjustment, 0.03, 0.97)
+        context_adjustment, context_evidence = match_context_probability_adjustment(
+            quote, model, config
+        )
+        model_probability = clamp(
+            preliminary_probability + adjustment + context_adjustment,
+            0.03,
+            0.97,
+        )
         # Market-only rows must not invent a large edge from a model that has no
         # independent team evidence. Consensus remains useful, but conservatively.
         if data_tier == "MARKET":
@@ -2874,6 +2956,13 @@ def evaluate_event_markets(
             "scenarioConcentration": round(score_concentration, 6),
             "historicalHitRate": round(empirical_hit_rate, 6),
             "historicalSupport": round(historical_support, 4),
+            "matchContextAdjustment": round(context_adjustment, 6),
+            "matchContextEvidence": context_evidence,
+            "tournamentImportance": copy.deepcopy((model.get("components") or {}).get("tournamentImportance") or {}),
+            "h2hSequenceSignals": {
+                "btts": copy.deepcopy((model.get("components") or {}).get("h2hBttsSequence") or {}),
+                "over25": copy.deepcopy((model.get("components") or {}).get("h2hOver25Sequence") or {}),
+            },
             "goalDirection": direction,
             "goalDirectionConflict": bool(direction.get("conflict")),
             "goalDirectionSupport": safe_float(direction.get("supportScore")),
