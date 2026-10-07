@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""R15 Match Intelligence & Express Portfolio production engine.
+"""R16 Match Intelligence & One-Bank Portfolio production engine.
 
 This module deliberately separates four responsibilities that were coupled in
 R14: provider collection, persistent history, match modelling, and publication.
@@ -50,7 +50,7 @@ FOOTBALL_DATA_FIXTURE_ODDS_PATH = ROOT / "data" / "football-data-fixtures-odds.j
 UTC = dt.timezone.utc
 R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
 R15_HISTORY_MARKER = "V10_R15_PERSISTENT_FOOTBALL_HISTORY"
-R15_EXPRESS_POLICY = "THREE_BALANCED_EXPRESSES_FIVE_LEGS_TEN_PERCENT_EACH"
+R15_EXPRESS_POLICY = "THREE_BALANCED_EXPRESSES_INFORMATIONAL_ONLY_NO_BANK"
 R15_MARKET_POLICY = "FOOTBALL_STANDARD_MARKETS_ONLY_NO_ASIAN_LINES"
 TERMINAL = {"won", "lost", "push", "void", "cancelled", "unresolved"}
 
@@ -3646,11 +3646,38 @@ def build_bootstrap_preview_analysis(
     return records, diagnostics
 
 
-def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, preferred_event_ids: list[str] | None = None) -> list[dict[str, Any]]:
+def bankroll_best_three(
+    records: list[dict[str, Any]],
+    state: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    preferred_event_ids: list[str] | None = None,
+    financial_enabled: bool = True,
+) -> list[dict[str, Any]]:
+    """Freeze the three strongest published singles against one canonical bank.
+
+    Stakes are fixed at publication time. Historical records are never
+    recalculated when the policy changes.
+    """
     by_event = {str(row.get("eventId") or ""): row for row in records}
     preferred = [by_event[value] for value in (preferred_event_ids or []) if value in by_event]
-    remaining = [row for row in sorted(records, key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("obviousMarketScore"))), reverse=True) if row not in preferred]
+    remaining = [
+        row
+        for row in sorted(
+            records,
+            key=lambda row: (
+                safe_float(row.get("conservativeProbability")),
+                safe_float(row.get("obviousMarketScore")),
+            ),
+            reverse=True,
+        )
+        if row not in preferred
+    ]
     ranked = (preferred + remaining)[:3]
+    bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
+    current_bank = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000.0))
+    stake_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
+    frozen_stake = round(current_bank * stake_percent / 100.0, 2) if financial_enabled else 0.0
     result = []
     for rank, source in enumerate(ranked, start=1):
         item = copy.deepcopy(source)
@@ -3658,20 +3685,25 @@ def informational_best_three(records: list[dict[str, Any]], now: dt.datetime, pr
             "id": "ranked-" + stable_id(source.get("id"), rank, source.get("publishedAt")),
             "sourceAnalysisId": source.get("id"),
             "recordType": "BEST_BET",
-            "financialMode": "INFORMATIONAL_ONLY",
+            "financialMode": "SINGLE_BANK_TOP_THREE" if financial_enabled else "INFORMATIONAL_ONLY",
             "isBestBet": True,
             "rank": rank,
-            "rankLabel": "Самый надёжный прогноз" if rank == 1 else f"Надёжность №{rank}",
-            "stake": 0.0,
-            "stakePercent": 0.0,
-            "bankPolicy": "INFORMATIONAL_RANKING_NO_SEPARATE_STAKE",
+            "rankLabel": "Лучшая ставка дня" if rank == 1 else f"Ставка №{rank}",
+            "stake": frozen_stake,
+            "stakePercent": stake_percent if financial_enabled else 0.0,
+            "bankPolicy": (
+                "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH"
+                if financial_enabled
+                else "PREVIEW_OR_RECOVERY_NO_BANK_MUTATION"
+            ),
+            "stakeAssignedAt": iso(now) if financial_enabled else None,
+            "settlementOddsType": "BOOKMAKER_FIXED_AT_PUBLICATION",
             "publishedAt": iso(now),
             "status": "pending",
             "statusLabel": core.result_status_label("pending"),
         })
         result.append(item)
     return result
-
 
 def express_balance_score(groups: list[list[dict[str, Any]]]) -> float:
     log_probs = [sum(math.log(max(0.01, safe_float(row.get("conservativeProbability"), 0.5))) for row in group) for group in groups]
@@ -3734,7 +3766,7 @@ def ensure_express_bank(state: dict[str, Any], config: dict[str, Any], now: dt.d
 def update_express_bank_metrics(state: dict[str, Any], now: dt.datetime) -> None:
     bank = ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
     current = safe_float(bank.get("current"), safe_float(bank.get("starting"), 10000.0))
-    active = [row for row in state.get("expresses") or [] if isinstance(row, dict) and str(row.get("status") or "pending") == "pending"]
+    active = [row for row in state.get("expresses") or [] if isinstance(row, dict) and str(row.get("status") or "pending") == "pending" and safe_float(row.get("stake")) > 0.0]
     placed = round(sum(safe_float(row.get("stake")) for row in active), 2)
     starting = max(0.01, safe_float(bank.get("starting"), 10000.0))
     values = [safe_float(row.get("value"), starting) for row in bank.get("history") or [] if isinstance(row, dict)] or [starting, current]
@@ -3765,9 +3797,7 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
         update_express_bank_metrics(state, now)
         return []
     usable_records = list(records[: group_count * 5])
-    bank = ensure_express_bank(state, config, now)
-    current = safe_float(bank.get("current"), safe_float(config.get("expressStartingBank"), 10000.0))
-    configured_stake_percent = safe_float(config.get("expressStakePercent"), 2.0)
+    configured_stake_percent = 0.0
     recovery_mode = any(str(row.get("publicationMode") or "") == "RECOVERY_DAY" for row in usable_records)
     if group_count == 3 and len(usable_records) == 15:
         deterministic_groups = balanced_groups(usable_records)
@@ -3838,17 +3868,13 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
         joint_probability = round(joint_probability, 6)
         conservative_expected_value = round(joint_probability * combined_odds - 1.0, 6)
         minimum_ev = safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03)
-        bankroll_enabled = (
-            bool(config.get("expressBankrollAllowed", False))
-            and (not recovery_mode)
-            and conservative_expected_value >= minimum_ev
-        )
-        stake_percent = configured_stake_percent if bankroll_enabled else 0.0
-        stake = round(current * stake_percent / 100.0, 2)
+        bankroll_enabled = False
+        stake_percent = configured_stake_percent
+        stake = 0.0
         financial_mode = (
             "RECOVERY_INFORMATIONAL_NO_BANK"
             if recovery_mode
-            else ("EXPRESS_POSITIVE_EV" if bankroll_enabled else "EXPRESS_INFORMATIONAL_NO_BANK")
+            else "EXPRESS_INFORMATIONAL_NO_BANK"
         )
         result.append({
             "id": express_id,
@@ -3929,15 +3955,18 @@ def sync_and_settle_expresses(state: dict[str, Any], now: dt.datetime) -> dict[s
         })
         express_id = str(express.get("id") or "")
         if express_id not in history_ids:
-            bank = ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
-            bank["current"] = round(safe_float(bank.get("current"), 10000.0) + profit, 2)
-            bank.setdefault("history", []).append({
-                "timestamp": iso(now),
-                "value": bank["current"],
-                "change": round(profit, 2),
-                "expressId": express_id,
-                "reason": f"EXPRESS_{final_status.upper()}",
-            })
+            # Legacy paid expresses, if any, still settle against their original
+            # archived bank. New R16 expresses always have zero stake.
+            if stake > 0.0:
+                bank = ensure_express_bank(state, load_json(CONFIG_PATH, {}), now)
+                bank["current"] = round(safe_float(bank.get("current"), 10000.0) + profit, 2)
+                bank.setdefault("history", []).append({
+                    "timestamp": iso(now),
+                    "value": bank["current"],
+                    "change": round(profit, 2),
+                    "expressId": express_id,
+                    "reason": f"EXPRESS_{final_status.upper()}",
+                })
             state.setdefault("expressHistory", []).append(copy.deepcopy(express))
             history_ids.add(express_id)
         counters["settled"] += 1
@@ -3984,7 +4013,8 @@ def ensure_r15_state(state: dict[str, Any], config: dict[str, Any], now: dt.date
     state.setdefault("expresses", [])
     state.setdefault("expressHistory", [])
     state.setdefault("dataCoverage", {})
-    ensure_express_bank(state, config, now)
+    if isinstance(state.get("expressBank"), dict):
+        state["expressBank"]["mode"] = "LEGACY_ARCHIVE_ONLY"
     return state
 
 
@@ -4041,7 +4071,7 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "analysisDateLocal": state.get("meta", {}).get("analysisDateLocal"),
         "batch": state.get("batch", {}),
         "dataCoverage": state.get("dataCoverage", {}),
-        "expressBank": state.get("expressBank", {}),
+        "bank": state.get("bank", {}),
         "expresses": state.get("expresses", []),
         "dailyAnalysis": state.get("dailyAnalysis", []),
         "bestBets": state.get("bestBets", []),
@@ -4334,10 +4364,10 @@ def archive_legacy_publication_bridge(
         "completed": True,
         "placedAmount": 0.0,
         "availableAmount": safe_float(
-            (state.get("expressBank") or {}).get("available"),
-            safe_float((state.get("expressBank") or {}).get("current"), 10000.0),
+            (state.get("bank") or {}).get("available"),
+            safe_float((state.get("bank") or {}).get("current"), 10000.0),
         ),
-        "startingBank": safe_float((state.get("expressBank") or {}).get("starting"), 10000.0),
+        "startingBank": safe_float((state.get("bank") or {}).get("starting"), 10000.0),
         "transitionReason": "R3R5R1_LEGACY_BRIDGE_ARCHIVED",
     }
     state.setdefault("meta", {}).update({
@@ -4430,8 +4460,8 @@ def release_expired_previous_day(
             safe_float(config.get("expressStartingBank"), 10000.0),
         ),
         "startingBank": safe_float(
-            (state.get("expressBank") or {}).get("starting"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("starting"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "transitionReason": "EXPIRED_PREVIOUS_OPERATIONAL_DAY_RELEASED",
     }
@@ -4613,8 +4643,8 @@ def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now
             safe_float(config.get("expressStartingBank"), 10000.0),
         ),
         "startingBank": safe_float(
-            (state.get("expressBank") or {}).get("starting"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("starting"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "transitionReason": "BOOTSTRAP_PREVIEW_RETIRED_FOR_NORMAL_WINDOW",
     }
@@ -4647,7 +4677,7 @@ def publish_generation() -> int:
     config = copy.deepcopy(config)
     config["dynamicUncertaintyMargin"] = safe_float(calibration_guard.get("additionalUncertaintyMargin"), 0.0)
     config["dynamicMarketFamilyHaircuts"] = copy.deepcopy(calibration_guard.get("marketFamilyHaircuts") or {})
-    config["expressBankrollAllowed"] = bool(calibration_guard.get("bankrollAllowed"))
+    config["expressBankrollAllowed"] = False
     state.setdefault("meta", {})["calibrationGuard"] = copy.deepcopy(calibration_guard)
     print(f"R15_CALIBRATION_MODE={calibration_guard.get('mode')}")
     print(f"R15_CALIBRATION_SAMPLE={safe_int((calibration_guard.get('overall') or {}).get('n'), 0)}")
@@ -5039,7 +5069,7 @@ def publish_generation() -> int:
         if recovery_records:
             for row in recovery_records:
                 row["publicationMode"] = "RECOVERY_DAY"
-                row["financialMode"] = "EXPRESS_LEG"
+                row["financialMode"] = "ANALYSIS_ONLY_NO_BANK"
                 row["strategyQualified"] = False
                 row["recoveryQualified"] = True
                 row["recoveryThresholdProfile"] = "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS"
@@ -5200,12 +5230,19 @@ def publish_generation() -> int:
     records = audited_records
     audit_system_message = daily_audit.get("systemMessage") if isinstance(daily_audit.get("systemMessage"), dict) else {}
     state["dailyAudit"] = copy.deepcopy(daily_audit)
-    best = informational_best_three(records, now, list(daily_audit.get("topSingles") or []))
+    best = bankroll_best_three(
+        records,
+        state,
+        config,
+        now,
+        list(daily_audit.get("topSingles") or []),
+        financial_enabled=not bootstrap_preview and not recovery_day,
+    )
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
         row["stakePercent"] = 0.0
-        row["financialMode"] = "EXPRESS_LEG"
+        row["financialMode"] = "ANALYSIS_ONLY_NO_BANK"
     if not bootstrap_preview:
         archive_previous_expresses(state)
     batch = core.publish_new_batch(state, records, best, best, config, now)
@@ -5218,7 +5255,7 @@ def publish_generation() -> int:
     if bootstrap_preview:
         for row in records:
             row["publicationMode"] = "BOOTSTRAP_PREVIEW"
-            row["financialMode"] = "PREVIEW_EXPRESS_LEG"
+            row["financialMode"] = "PREVIEW_ANALYSIS_ONLY"
         for row in best:
             row["publicationMode"] = "BOOTSTRAP_PREVIEW"
         for express in expresses:
@@ -5237,8 +5274,8 @@ def publish_generation() -> int:
             "statusLabel": "Временный предпросмотр до штатного окна 08:00 МСК",
             "placedAmount": 0.0,
             "availableAmount": safe_float(
-                (state.get("expressBank") or {}).get("current"),
-                safe_float(config.get("expressStartingBank"), 10000.0),
+                (state.get("bank") or {}).get("current"),
+                safe_float(config.get("startingVirtualBank"), 10000.0),
             ),
             "rolloverExecutionPolicy": "AUTO_REPLACE_AT_FIRST_ACTIVE_08_MSK_WINDOW",
         })
@@ -5306,7 +5343,7 @@ def publish_generation() -> int:
         "cloudflareAiLogicalRuns": safe_int(daily_audit.get("logicalRuns"), 0),
         "predictionObjective": "FULL_MATCH_UNDERSTANDING_AND_MOST_OBVIOUS_QUALIFIED_MARKET",
         "publicationPolicy": "STRICT_24H_MOSCOW_DAY_UP_TO_FIFTEEN_REAL_QUALIFIED_MATCHES",
-        "virtualBankPolicy": R15_EXPRESS_POLICY,
+        "virtualBankPolicy": config.get("virtualBankPolicy"),
         "updatedAt": iso(now),
         "lastSuccessfulRefreshAt": iso(now),
         "apiHealth": {
@@ -5322,9 +5359,9 @@ def publish_generation() -> int:
     }
     report["diagnostics"].update({
         "dailyAnalysis": len(records),
-        "informationalTopThree": len(best),
+        "bankrollTopThree": len(best),
         "expresses": len(expresses),
-        "expressBank": state.get("expressBank"),
+        "bank": state.get("bank"),
         "russianNames": russian_names_result,
         "fonbetGate": fonbet_result,
         "dailyCloudflare Workers AIAudit": daily_audit,
@@ -5375,10 +5412,10 @@ def publish_generation() -> int:
     write_json(PROVIDER_HEALTH_PATH, client.health)
     write_public_files(state, report)
     print(f"R15F_ANALYSIS={len(records)}")
-    print(f"R15F_INFORMATIONAL_TOP_THREE={len(best)}")
+    print(f"R16_BANKROLL_TOP_THREE={len(best)}")
     print(f"R15F_EXPRESSES={len(expresses)}")
     print(f"R15F_EXPRESS_LEGS={sum(len(item.get('legs') or []) for item in expresses)}")
-    print(f"R15F_EXPRESS_BANK={state.get('expressBank', {}).get('current')}")
+    print(f"R16_ONE_BANK={state.get('bank', {}).get('current')}")
     if bootstrap_preview:
         print("R15F_BOOTSTRAP_PREVIEW=GREEN")
         print("R15F_BOOTSTRAP_PREVIEW_BANK_MUTATION=NO")
@@ -5421,8 +5458,8 @@ def validate_config(config: dict[str, Any]) -> None:
         raise RuntimeError(f"R15 config keys missing: {missing}")
     if safe_int(config.get("expressCount")) != 3 or safe_int(config.get("expressLegsPerTicket")) != 5:
         raise RuntimeError("R15 requires three expresses of five legs")
-    if safe_float(config.get("expressStakePercent")) != 2.0:
-        raise RuntimeError("R15 express nominal stake must be two percent")
+    if safe_float(config.get("expressStakePercent")) != 0.0:
+        raise RuntimeError("R16 expresses must be informational and carry zero stake")
     if safe_float(config.get("expressStartingBank")) != 10000.0:
         raise RuntimeError("R15 express starting bank must be 10000")
     search_days = safe_int(config.get("operationalWindowSearchDays"), 3)
@@ -5472,13 +5509,11 @@ def validate_state() -> int:
             if len(legs) != 5:
                 raise RuntimeError("Every R15 express must contain five legs")
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
-            expected_ev = safe_float(express.get("conservativeExpectedValue"), -1.0)
             bankroll_enabled = bool(express.get("bankrollEnabled"))
-            expected_stake_percent = 0.0 if (recovery_day or (bootstrap_preview and not recovery_day) or not bankroll_enabled) else safe_float(config.get("expressStakePercent"), 2.0)
-            if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
-                raise RuntimeError("R15 express stake percent violates risk policy")
-            if bankroll_enabled and expected_ev < safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03):
-                raise RuntimeError("R15 express bank enabled without positive conservative EV")
+            if bankroll_enabled:
+                raise RuntimeError("R16 informational express cannot enable bankroll")
+            if abs(safe_float(express.get("stakePercent"))) > 0.001 or abs(safe_float(express.get("stake"))) > 0.01:
+                raise RuntimeError("R16 informational express carries a financial stake")
         if len(leg_ids) != len(expresses) * 5 or len(set(leg_ids)) != len(leg_ids):
             raise RuntimeError("R15 express legs must be unique five-leg groups")
         daily_ids = {str(row.get("id") or "") for row in daily}
@@ -5523,23 +5558,27 @@ def validate_state() -> int:
                 raise RuntimeError("R15 contains excluded competition")
             if not core.record_uses_r14_standard_market(row):
                 raise RuntimeError("R15 contains Asian or unsupported market")
-        if any(safe_float(row.get("stake")) != 0.0 for row in best):
-            raise RuntimeError("R15 informational top three carries a separate stake")
+        expected_single_percent = 0.0 if (bootstrap_preview or recovery_day) else safe_float(config.get("stakePerBestBetPercent"), 10.0)
+        for row in best:
+            if abs(safe_float(row.get("stakePercent")) - expected_single_percent) > 0.001:
+                raise RuntimeError("R16 top-three stake percent violates one-bank policy")
+            if expected_single_percent > 0 and safe_float(row.get("stake")) <= 0.0:
+                raise RuntimeError("R16 top-three stake must be frozen at publication")
         audit = state.get("dailyAudit") if isinstance(state.get("dailyAudit"), dict) else {}
         if audit.get("schemaValid") and safe_int(audit.get("logicalRuns"), 0) > 1:
             raise RuntimeError("R15 Cloudflare Workers AI logical audit ran more than once")
         if any(safe_float(row.get("auditRiskPenalty"), 0.0) < 0 for row in daily):
             raise RuntimeError("R15 audit increased confidence")
-    update_express_bank_metrics(state, now)
-    bank = state.get("expressBank") or {}
-    active = [row for row in expresses if str(row.get("status") or "pending") == "pending"]
-    expected = round(sum(safe_float(row.get("stake")) for row in active), 2)
+    core.update_bank_metrics(state)
+    bank = state.get("bank") or {}
+    active_best = [row for row in best if str(row.get("status") or "pending") == "pending" and safe_float(row.get("stake")) > 0.0]
+    expected = round(sum(safe_float(row.get("stake")) for row in active_best), 2)
     if abs(safe_float(bank.get("placedAmount")) - expected) > 0.02:
-        raise RuntimeError("R15 express bank exposure mismatch")
-    print("R15_VALIDATION=GREEN")
-    print(f"R15_ANALYSIS={len(daily)}")
-    print(f"R15_EXPRESSES={len(expresses)}")
-    print(f"R15F_EXPRESS_BANK={bank.get('current')}")
+        raise RuntimeError("R16 one-bank exposure mismatch")
+    print("R16_VALIDATION=GREEN")
+    print(f"R16_ANALYSIS={len(daily)}")
+    print(f"R16_EXPRESSES_INFORMATIONAL={len(expresses)}")
+    print(f"R16_ONE_BANK={bank.get('current')}")
     return 0
 
 
@@ -5676,18 +5715,21 @@ def self_test() -> int:
         raise RuntimeError(f"SELF_TEST full synthetic strategy produced {len(records)}: {diag}")
     day = operational_day(now, full_test_config)
     core.apply_operational_window_metadata(records, day, now)
-    best = informational_best_three(records, now)
+    best = bankroll_best_three(records, state, full_test_config, now, financial_enabled=True)
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
         row["stakePercent"] = 0.0
     state["dailyAnalysis"] = records
     state["bestBets"] = best
+    core.update_bank_metrics(state)
     state["expresses"] = build_expresses(records, state, full_test_config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
-    if safe_float(state["expressBank"].get("placedAmount")) > 600.01:
-        raise RuntimeError("SELF_TEST express exposure exceeds 6 percent of bank")
+    if abs(safe_float(state["bank"].get("placedAmount")) - 3000.0) > 0.01:
+        raise RuntimeError("SELF_TEST top-three exposure must equal 30 percent of starting bank")
+    if abs(safe_float(state.get("expressBank", {}).get("placedAmount"))) > 0.01:
+        raise RuntimeError("SELF_TEST informational expresses must not use a separate bank")
     for row in state["dailyAnalysis"]:
         row["status"] = "won"
         row["score"] = "2:1"
@@ -5710,7 +5752,7 @@ def self_test() -> int:
         row["status"] = "won"
     records2[0]["status"] = "lost"
     state2["dailyAnalysis"] = records2
-    state2["bestBets"] = informational_best_three(records2, now)
+    state2["bestBets"] = bankroll_best_three(records2, state2, full_test_config, now, financial_enabled=True)
     state2["expresses"] = build_expresses(records2, state2, full_test_config, now)
     legacy_before = safe_float(state2.get("bank", {}).get("current"))
     sync_and_settle_expresses(state2, now + dt.timedelta(days=1))
@@ -5769,8 +5811,9 @@ def self_test() -> int:
     print("R15_SYNTHETIC_ANALYSIS=15")
     print("R15_SYNTHETIC_EXPRESSES=3")
     print("R15_SYNTHETIC_LEGS=15")
-    print("R15_EXPRESS_STARTING_BANK=10000")
-    print("R15_EXPRESS_MAX_EXPOSURE=600")
+    print("R16_ONE_BANK_STARTING=10000")
+    print("R16_TOP_THREE_EXPOSURE=3000")
+    print("R16_EXPRESS_FINANCIAL_EXPOSURE=0")
     print("R15_ASIAN_MARKETS=REMOVED")
     print("R15_RUSSIAN_MATCHES=REMOVED")
     print("R15_MARKET_ONLY_STRATEGY=FORBIDDEN")
@@ -5796,16 +5839,13 @@ def repair_state() -> int:
     before_fingerprint = json_fingerprint(before)
     state = ensure_r15_state(copy.deepcopy(before), config, now)
     changed = json_fingerprint(state) != before_fingerprint
-    for row in state.get("bestBets") or []:
-        if isinstance(row, dict) and str(row.get("sourceMarker") or "") == R15_MARKER:
-            if safe_float(row.get("stake")) != 0.0 or safe_float(row.get("stakePercent")) != 0.0:
-                row["stake"] = 0.0
-                row["stakePercent"] = 0.0
-                row["financialMode"] = "INFORMATIONAL_ONLY"
-                changed = True
-    previous_bank = json_fingerprint(state.get("expressBank") or {})
-    update_express_bank_metrics(state, now)
-    if json_fingerprint(state.get("expressBank") or {}) != previous_bank:
+    # Published picks and frozen stakes are immutable. Policy migration applies
+    # only to newly generated portfolios.
+    state.setdefault("meta", {})["virtualBankPolicy"] = config.get("virtualBankPolicy")
+    state.setdefault("bank", {})["stakePercent"] = safe_float(config.get("stakePerBestBetPercent"), 10.0)
+    previous_bank = json_fingerprint(state.get("bank") or {})
+    core.update_bank_metrics(state)
+    if json_fingerprint(state.get("bank") or {}) != previous_bank:
         changed = True
     if changed:
         state.setdefault("meta", {})["updatedAt"] = iso(now)
