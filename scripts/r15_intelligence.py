@@ -2808,7 +2808,7 @@ def fetch_advanced_markets_quota_aware(
     _, current_diag = build_strategy_analysis(featured_events, result, context, current_state, config, now)
     current_diag = enrich_rejection_diagnostics(current_diag, config)
     qualified_ids = set(str(value) for value in current_diag.get("qualifiedEventIds") or [])
-    qualified_before = safe_int(current_diag.get("eventsQualified"), 0)
+    qualified_before = top_three_pool_count(current_diag)
 
     selected_events = [event for event in ranked if str(event.get("id") or "") in priority_index][:maximum_events]
     for event in selected_events:
@@ -2817,7 +2817,7 @@ def fetch_advanced_markets_quota_aware(
         if not event_id or not sport_key or event_id in qualified_ids:
             continue
         for market_key in market_order:
-            if requested >= maximum_requests or safe_int(current_diag.get("eventsQualified"), 0) >= target:
+            if requested >= maximum_requests or top_three_pool_count(current_diag) >= target:
                 break
             pair = (event_id, market_key)
             if pair in attempted:
@@ -2881,7 +2881,7 @@ def fetch_advanced_markets_quota_aware(
         "attemptedPairs": len(attempted),
         "unsupportedMarkets": dict(unsupported),
         "qualifiedBefore": qualified_before,
-        "qualifiedAfter": safe_int(current_diag.get("eventsQualified"), 0),
+        "qualifiedAfter": top_three_pool_count(current_diag),
         "quotaRemaining": client.odds_quota.get("requestsRemaining"),
         "errors": errors[-20:],
     }, current_diag
@@ -2936,8 +2936,8 @@ def complete_portfolio_acquisition(
         "recoveredEventIds": [],
         "attemptedPairs": 0,
         "unsupportedMarkets": {},
-        "qualifiedBefore": safe_int(diagnostics.get("eventsQualified"), 0),
-        "qualifiedAfter": safe_int(diagnostics.get("eventsQualified"), 0),
+        "qualifiedBefore": top_three_pool_count(diagnostics),
+        "qualifiedAfter": top_three_pool_count(diagnostics),
         "quotaRemaining": client.odds_quota.get("requestsRemaining"),
         "errors": [],
     }
@@ -2947,7 +2947,7 @@ def complete_portfolio_acquisition(
         recovery_ids = list(diagnostics.get("advancedRecoveryEventIds") or [])
         if (
             not recovery_ids
-            or safe_int(diagnostics.get("eventsQualified"), 0) >= target
+            or top_three_pool_count(diagnostics) >= target
             or odds_quota_is_exhausted(client, config)
         ):
             return
@@ -2972,7 +2972,7 @@ def complete_portfolio_acquisition(
         for key, value in (recovery_diag.get("unsupportedMarkets") or {}).items():
             unsupported[str(key)] += safe_int(value, 0)
         total_recovery["unsupportedMarkets"] = dict(unsupported)
-        total_recovery["qualifiedAfter"] = safe_int(diagnostics.get("eventsQualified"), 0)
+        total_recovery["qualifiedAfter"] = top_three_pool_count(diagnostics)
         total_recovery["quotaRemaining"] = client.odds_quota.get("requestsRemaining")
         total_recovery["errors"] = (list(total_recovery.get("errors") or []) + list(recovery_diag.get("errors") or []))[-20:]
         if safe_int(recovery_diag.get("returned"), 0) > 0:
@@ -2988,7 +2988,7 @@ def complete_portfolio_acquisition(
     ranked = [str(value) for value in quota_plan.get("rankedCompetitionKeys") or []]
     maximum = max(len(selected), safe_int(config.get("oddsMaximumCompetitionsForPortfolio"), 8))
     completion_rounds: list[dict[str, Any]] = []
-    while safe_int(diagnostics.get("eventsQualified"), 0) < target and len(selected) < maximum:
+    while top_three_pool_count(diagnostics) < target and len(selected) < maximum:
         deferred = [key for key in ranked if key not in selected]
         if not deferred:
             break
@@ -2998,7 +2998,7 @@ def complete_portfolio_acquisition(
             break
         next_key = deferred[0]
         before_events = len(featured_events)
-        before_qualified = safe_int(diagnostics.get("eventsQualified"), 0)
+        before_qualified = top_three_pool_count(diagnostics)
         incoming, incoming_errors = fetch_featured_odds_quota_aware(
             client, api_key, [next_key], config, start, end, reserve_credits=0
         )
@@ -3015,12 +3015,12 @@ def complete_portfolio_acquisition(
             "eventsBefore": before_events,
             "eventsAfter": len(featured_events),
             "qualifiedBefore": before_qualified,
-            "qualifiedAfterFeatured": safe_int(diagnostics.get("eventsQualified"), 0),
+            "qualifiedAfterFeatured": top_three_pool_count(diagnostics),
             "quotaRemainingBeforeRecovery": client.odds_quota.get("requestsRemaining"),
         })
         if recovery_before_breadth:
             run_recovery()
-        completion_rounds[-1]["qualifiedAfterRecovery"] = safe_int(diagnostics.get("eventsQualified"), 0)
+        completion_rounds[-1]["qualifiedAfterRecovery"] = top_three_pool_count(diagnostics)
         completion_rounds[-1]["quotaRemainingAfterRecovery"] = client.odds_quota.get("requestsRemaining")
         if len(featured_events) == before_events and incoming_errors:
             break
@@ -3041,7 +3041,9 @@ def complete_portfolio_acquisition(
     quota_plan["advancedRecoveryReturned"] = total_recovery["returned"]
     quota_plan["advancedRecoveryUsefulResponses"] = total_recovery["usefulResponses"]
     quota_plan["advancedRecoveryRecoveredEvents"] = total_recovery["recoveredEvents"]
-    quota_plan["qualifiedAfterAdvanced"] = safe_int(diagnostics.get("eventsQualified"), 0)
+    quota_plan["topThreeEligibleAfterAdvanced"] = top_three_pool_count(diagnostics)
+    quota_plan["premiumQualifiedAfterAdvanced"] = safe_int(diagnostics.get("eventsQualified"), 0)
+    quota_plan["qualifiedAfterAdvanced"] = top_three_pool_count(diagnostics)
     quota_plan["competitionsDeferredByQuota"] = max(0, len(ranked) - len(selected))
     cache_save_diag = save_recent_odds_snapshot_cache(featured_events, advanced, config, now)
     quota_exhausted_after = odds_quota_is_exhausted(client, config)
@@ -3067,7 +3069,7 @@ def complete_portfolio_acquisition(
     quota_plan["quotaExhaustedAtStart"] = quota_exhausted_at_start
     quota_plan["quotaExhaustedAfterAcquisition"] = quota_exhausted_after
     quota_plan["automaticResumeOnQuotaRecovery"] = bool(config.get("oddsAutomaticResumeOnQuotaRecovery", True))
-    if safe_int(diagnostics.get("eventsQualified"), 0) >= target:
+    if top_three_pool_count(diagnostics) >= target:
         quota_plan["quotaLifecycleStatus"] = (
             "PORTFOLIO_READY_WITH_NO_KEY_FIXTURE_ODDS"
             if safe_int(fixture_odds_diag.get("events"), 0) > 0
@@ -3089,6 +3091,17 @@ def complete_portfolio_acquisition(
 
 def merge_event(featured: dict[str, Any], advanced: dict[str, Any] | None) -> dict[str, Any]:
     return core.merge_advanced_event(featured, advanced or {}) if advanced else featured
+
+
+def top_three_pool_count(diagnostics: dict[str, Any]) -> int:
+    """Count ordinary publishable events without treating premium as mandatory."""
+    return safe_int(
+        diagnostics.get("eventsTopThreeEligible"),
+        safe_int(
+            diagnostics.get("eventsEligible"),
+            safe_int(diagnostics.get("eventsQualified"), 0),
+        ),
+    )
 
 
 def candidate_is_qualified(candidate: dict[str, Any], config: dict[str, Any]) -> tuple[bool, list[str]]:
@@ -4930,7 +4943,7 @@ def publish_generation() -> int:
     if (
         bool(config.get("oddsUseSecondaryKeyFallback", True))
         and selected_identity == "PRIMARY"
-        and safe_int(preliminary_diag.get("eventsQualified"), 0) < target_records
+        and top_three_pool_count(preliminary_diag) < target_records
         and backup_key
         and bool(backup_probe.get("valid"))
         and (backup_remaining < 0 or backup_remaining > 0)
@@ -5014,7 +5027,8 @@ def publish_generation() -> int:
                 quota_plan["competitionKeysSelected"] = keys
                 quota_plan["competitionsSelected"] = len(keys)
                 quota_plan["featuredEventsCollected"] = len(odds_events)
-                quota_plan["qualifiedAfterAdvanced"] = safe_int(preliminary_diag.get("eventsQualified"), 0)
+                quota_plan["qualifiedAfterAdvanced"] = top_three_pool_count(preliminary_diag)
+                quota_plan["premiumQualifiedAfterAdvanced"] = safe_int(preliminary_diag.get("eventsQualified"), 0)
                 client.calls.extend([
                     dict(call, quotaIdentity="BACKUP")
                     for call in backup_client.calls
@@ -5031,7 +5045,7 @@ def publish_generation() -> int:
     else:
         if selected_identity != "PRIMARY":
             secondary_fallback["reason"] = "CURRENT_CREDENTIAL_ALREADY_BACKUP"
-        elif safe_int(preliminary_diag.get("eventsQualified"), 0) >= target_records:
+        elif top_three_pool_count(preliminary_diag) >= target_records:
             secondary_fallback["reason"] = "PRIMARY_PORTFOLIO_READY"
         elif not backup_key or not bool(backup_probe.get("valid")):
             secondary_fallback["reason"] = "BACKUP_UNAVAILABLE"
@@ -5124,16 +5138,15 @@ def publish_generation() -> int:
             print(f"R15_RECOVERY_DAY_ELIGIBLE={recovery_diag.get('eventsEligible', 0)}")
         else:
             analysis_diag["recoveryDayAttempt"] = recovery_diag
-    quota_plan["advancedCompletionMode"] = safe_int(analysis_diag.get("eventsQualified"), 0) < safe_int(config.get("dailyAnalysisTarget"), 15)
+    quota_plan["advancedCompletionMode"] = top_three_pool_count(analysis_diag) < safe_int(config.get("dailyAnalysisTarget"), 15)
     quota_plan["advancedRecoveryRequestedEvents"] = safe_int(advanced_recovery_diag.get("requested"), 0)
     quota_plan["advancedRecoveryReceivedEvents"] = safe_int(advanced_recovery_diag.get("returned"), 0)
     quota_plan["advancedRecoveryRecoveredEvents"] = safe_int(advanced_recovery_diag.get("recoveredEvents"), 0)
     quota_plan["advancedRecoveryAttemptedPairs"] = safe_int(advanced_recovery_diag.get("attemptedPairs"), 0)
     quota_plan["advancedRecoveryUnsupportedMarkets"] = advanced_recovery_diag.get("unsupportedMarkets") or {}
-    quota_plan["qualifiedAfterAdvanced"] = safe_int(
-        analysis_diag.get("eventsQualified"),
-        safe_int(analysis_diag.get("eventsEligible"), 0),
-    )
+    quota_plan["qualifiedAfterAdvanced"] = top_three_pool_count(analysis_diag)
+    quota_plan["topThreeEligibleAfterAdvanced"] = top_three_pool_count(analysis_diag)
+    quota_plan["premiumQualifiedAfterAdvanced"] = safe_int(analysis_diag.get("eventsQualified"), 0)
 
     shadow_watchlist = refresh_shadow_watchlist(state, analysis_diag, now, config)
 
