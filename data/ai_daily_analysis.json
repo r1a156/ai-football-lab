@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-07T00:13:37Z",
+  "updatedAt": "2026-10-07T04:29:52Z",
   "analysisDateLocal": "2026-10-06",
   "batch": {
     "id": "",
@@ -12,15 +12,15 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-07T00:13:37Z",
+    "updatedAt": "2026-10-07T04:29:52Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 62,
-    "competitionsDiscovered": 25,
-    "competitionsWithOdds": 0,
-    "oddsEvents": 0,
-    "historyMatchedEvents": 0,
+    "discoveredEvents": 66,
+    "competitionsDiscovered": 26,
+    "competitionsWithOdds": 4,
+    "oddsEvents": 26,
+    "historyMatchedEvents": 16,
     "qualifiedEvents": 0,
     "publishedEvents": 0,
     "providerHealth": {
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-07T00:15:18Z",
+        "lastSuccessAt": "2026-10-07T04:35:56Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -47,12 +47,12 @@
       }
     },
     "quota": {
-      "requestsRemaining": "456",
-      "requestsUsed": "44",
-      "requestsLast": "0",
-      "estimatedCreditsThisRun": 0
+      "requestsRemaining": "444",
+      "requestsUsed": "56",
+      "requestsLast": "2",
+      "estimatedCreditsThisRun": 8
     },
-    "historyMatches": 12979,
+    "historyMatches": 12981,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -67,29 +67,42 @@
       },
       "ingested": 2095,
       "duplicates": 2030,
-      "historyMatches": 17375,
+      "historyMatches": 17386,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 73,
-      "matchesAdded": 69,
-      "historyMatches": 17385,
+      "requests": 60,
+      "matchesAdded": 58,
+      "historyMatches": 17387,
       "errors": [
-        "133901:HTTPError",
-        "149900:HTTPError",
-        "137782:HTTPError",
-        "144737:HTTPError",
-        "136452:HTTPError",
-        "136468:HTTPError",
-        "140517:HTTPError"
+        "135887:HTTPError",
+        "135154:HTTPError",
+        "135172:HTTPError",
+        "135980:HTTPError",
+        "133916:HTTPError",
+        "136451:HTTPError",
+        "136517:HTTPError",
+        "136462:HTTPError",
+        "136469:HTTPError",
+        "134510:HTTPError",
+        "134734:HTTPError",
+        "136831:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "145212:HTTPError",
+        "137932:HTTPError",
+        "145171:HTTPError",
+        "145207:HTTPError",
+        "145176:HTTPError",
+        "145187:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-07T00:13:37Z"
+    "updatedAt": "2026-10-07T04:29:52Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -135,22 +148,19 @@
   "dailyAnalysis": [],
   "bestBets": [],
   "dailyAudit": {
-    "status": "SKIPPED",
-    "reason": "REQUIRES_15_RECORDS_GOT_1"
+    "status": "NO_CURRENT_PUBLICATION",
+    "schemaValid": true,
+    "publishedCount": 0,
+    "updatedAt": "2026-10-07T04:29:52Z",
+    "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
-    "title": "Я проверяю не количество прогнозов, а качество решения",
-    "lead": "Найдено 18 событий, контроль качества прошли 1, опубликовано 1.",
-    "body": "Среднее качество опубликованных данных — 78/100. AI-аудит: SKIPPED. Я сравниваю исходы, тоталы, обе забьют и командные тоталы, а затем учусь на каждом подтверждённом результате.",
-    "focus": [
-      "не повышать уверенность без фактов",
-      "отбрасывать слабые матчи",
-      "снижать повторяющиеся ошибки"
-    ],
-    "tone": "EVIDENCE_FIRST",
+    "status": "WAITING_FOR_NEXT_SELECTION",
+    "title": "Формируется новая подборка",
+    "lead": "Официальных прогнозов сейчас нет.",
+    "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "modelUsed": null,
-    "updatedAt": "2026-10-06T09:30:11Z"
+    "updatedAt": "2026-10-07T04:29:52Z"
   },
   "nextPortfolio": {}
 }
