@@ -4021,7 +4021,7 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "analysisDateLocal": state.get("meta", {}).get("analysisDateLocal"),
         "batch": state.get("batch", {}),
         "dataCoverage": state.get("dataCoverage", {}),
-        "expressBank": state.get("expressBank", {}),
+        "bank": state.get("bank", {}),
         "expresses": state.get("expresses", []),
         "dailyAnalysis": state.get("dailyAnalysis", []),
         "bestBets": state.get("bestBets", []),
@@ -4134,7 +4134,6 @@ def settle_current() -> int:
     released = core.release_overdue_batch_records(state, config, now)
     express_counters = sync_and_settle_expresses(state, now)
     core.maintain_prediction_history(state, config, now)
-    core.update_bank_metrics(state)
     core.update_bank_metrics(state)
     core.update_statistics(state)
     update_express_statistics(state)
@@ -4628,7 +4627,7 @@ def publish_generation() -> int:
     config = copy.deepcopy(config)
     config["dynamicUncertaintyMargin"] = safe_float(calibration_guard.get("additionalUncertaintyMargin"), 0.0)
     config["dynamicMarketFamilyHaircuts"] = copy.deepcopy(calibration_guard.get("marketFamilyHaircuts") or {})
-    config["expressBankrollAllowed"] = bool(calibration_guard.get("bankrollAllowed"))
+    config["expressBankrollAllowed"] = False
     state.setdefault("meta", {})["calibrationGuard"] = copy.deepcopy(calibration_guard)
     print(f"R15_CALIBRATION_MODE={calibration_guard.get('mode')}")
     print(f"R15_CALIBRATION_SAMPLE={safe_int((calibration_guard.get('overall') or {}).get('n'), 0)}")
