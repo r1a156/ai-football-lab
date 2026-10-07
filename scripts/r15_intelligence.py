@@ -4590,12 +4590,12 @@ def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now
         "completed": True,
         "placedAmount": 0.0,
         "availableAmount": safe_float(
-            (state.get("expressBank") or {}).get("current"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("current"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "startingBank": safe_float(
-            (state.get("expressBank") or {}).get("starting"),
-            safe_float(config.get("expressStartingBank"), 10000.0),
+            (state.get("bank") or {}).get("starting"),
+            safe_float(config.get("startingVirtualBank"), 10000.0),
         ),
         "transitionReason": "BOOTSTRAP_PREVIEW_RETIRED_FOR_NORMAL_WINDOW",
     }
