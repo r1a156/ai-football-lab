@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-08T14:32:03Z",
+  "updatedAt": "2026-10-08T20:06:07Z",
   "analysisDateLocal": "2026-10-08",
   "batch": {
     "id": "",
@@ -12,11 +12,11 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-08T14:32:03Z",
+    "updatedAt": "2026-10-08T20:06:07Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 213,
+    "discoveredEvents": 210,
     "competitionsDiscovered": 38,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-08T14:33:31Z",
+        "lastSuccessAt": "2026-10-08T20:07:50Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -73,43 +73,26 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 2095,
-      "duplicates": 2095,
+      "ingested": 10064,
+      "duplicates": 10064,
       "historyMatches": 17499,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 61,
-      "matchesAdded": 61,
+      "requests": 78,
+      "matchesAdded": 77,
       "historyMatches": 17499,
       "errors": [
-        "136469:HTTPError",
-        "134510:HTTPError",
-        "133901:HTTPError",
-        "149900:HTTPError",
-        "137782:HTTPError",
-        "144737:HTTPError",
-        "136449:HTTPError",
-        "136466:HTTPError",
-        "135981:HTTPError",
-        "136452:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError",
-        "140517:HTTPError"
+        "134734:HTTPError",
+        "134291:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-08T14:32:03Z"
+    "updatedAt": "2026-10-08T20:06:07Z"
   },
   "bank": {
     "starting": 10000,
@@ -385,7 +368,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-08T14:32:03Z",
+    "updatedAt": "2026-10-08T20:06:07Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -394,111 +377,18 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-08T14:32:03Z"
+    "updatedAt": "2026-10-08T20:06:07Z"
   },
   "shadowLearning": {
     "statistics": {
       "tracked": 17,
-      "pending": 9,
-      "settled": 8,
-      "won": 0,
+      "pending": 8,
+      "settled": 9,
+      "won": 1,
       "lost": 0,
       "push": 0
     },
     "pending": [
-      {
-        "id": "88f8d24c9acdcf69e189",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "d75814f21cf0bf28560e38a646ae8fd2",
-        "sport": "soccer",
-        "sportKey": "soccer_finland_veikkausliiga",
-        "league": "Veikkausliiga - Finland",
-        "home": "HJK Helsinki",
-        "away": "VPS Vaasa",
-        "commenceTime": "2026-10-08T15:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-07T06:13:54Z",
-        "failures": [
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность",
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-          "История и модель голов противоречат направлению тотала",
-          "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-          "Основной фильтр: Последние матчи команд противоречат выбранному направлению тотала",
-          "Основной фильтр: Ожидаемая сумма голов недостаточна для ставки на больше",
-          "Основной фильтр: Недавняя результативность недостаточна для ставки на больше"
-        ],
-        "market": "HOME_WIN",
-        "marketKey": "h2h",
-        "marketFamily": "OUTCOME",
-        "selectionCode": "HOME",
-        "pick": "Победа HJK Helsinki",
-        "pickRu": "Победа Хйк Хелсинки",
-        "bookmakerOdds": 1.62,
-        "modelProbability": 0.55551,
-        "conservativeProbability": 0.452303,
-        "marketProbability": 0.588868,
-        "expectedValue": -0.26727,
-        "edge": -0.136566,
-        "dataTier": "HYBRID",
-        "dataQuality": 47.1,
-        "quoteCount": 15,
-        "agreement": 95.9,
-        "marketStability": 69,
-        "anomaly": 19.9,
-        "obviousMarketScore": 66.0393,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание",
-            "Недостаточная полнота данных"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность"
-        ],
-        "goalDirectionConflict": false,
-        "learningAdjustment": -0.035962,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 80,
-            "bias": -0.0324,
-            "weight": 0.339,
-            "hitRate": 0.575,
-            "averagePredicted": 0.6074,
-            "brierScore": 0.245914
-          },
-          {
-            "segment": "ODDS|soccer|MID",
-            "samples": 75,
-            "bias": -0.054,
-            "weight": 0.298,
-            "hitRate": 0.5467,
-            "averagePredicted": 0.6007,
-            "brierScore": 0.256517
-          }
-        ],
-        "probability": 0.55551,
-        "odds": 1.62,
-        "shadowRankScore": 65.2063
-      },
       {
         "id": "c4e20cfb30c75d033428",
         "recordType": "SHADOW_CANDIDATE",
