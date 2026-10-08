@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-07T20:08:58Z",
-  "lastSuccessfulAt": "2026-10-07T20:08:58Z",
+  "updatedAt": "2026-10-08T00:15:15Z",
+  "lastSuccessfulAt": "2026-10-08T00:15:15Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -501652,6 +501652,72 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2406928",
+      "utcDate": "2026-10-07T00:30:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "American Major League Soccer",
+      "competitionCode": "4346",
+      "homeTeam": {
+        "id": "",
+        "name": "Chicago Fire",
+        "shortName": "Chicago Fire",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Vancouver Whitecaps",
+        "shortName": "Vancouver Whitecaps",
+        "tla": ""
+      },
+      "homeScore": 3,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-08T00:18:46Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "16",
+      "venue": "Soldier Field",
+      "theSportsDbEventId": "2406928"
+    },
+    {
+      "id": "thesportsdb_public_123:2431483",
+      "utcDate": "2026-10-07T00:35:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie B",
+      "competitionCode": "4404",
+      "homeTeam": {
+        "id": "",
+        "name": "Ponte Preta",
+        "shortName": "Ponte Preta",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Juventude",
+        "shortName": "Juventude",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 2,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-08T00:17:51Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "32",
+      "venue": "Estádio Moisés Lucarelli",
+      "theSportsDbEventId": "2431483"
+    },
+    {
       "id": "openfootball:2026-27:en.2:95:Matchday 9",
       "utcDate": "2026-10-09T00:00:00Z",
       "status": "SCHEDULED",
@@ -605696,17 +605762,16 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-07T20:08:58Z",
-      "matches": 17496
+      "updatedAt": "2026-10-08T00:15:15Z",
+      "matches": 17498
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-07T20:08:58Z",
-      "requests": 78,
-      "matchesAdded": 77,
+      "updatedAt": "2026-10-08T00:15:15Z",
+      "requests": 79,
+      "matchesAdded": 74,
       "errors": [
-        "134290:HTTPError",
-        "134018:HTTPError"
+        "136461:HTTPError"
       ]
     }
   }
