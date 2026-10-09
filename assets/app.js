@@ -13,7 +13,7 @@
   const REPORT_URL = API_BASE ? `${API_BASE}/data/last-update-report.json` : LOCAL_REPORT_URL;
   const MIN_QUALITY = 58;
   const MOSCOW = "Europe/Moscow";
-  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null, historyScope: "all", historyLimit: 30 };
+  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null, historyScope: "all", historyLimit: 30, performancePeriod: "all" };
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -124,6 +124,7 @@
     renderDecisionSummary(state, runtime.report, current);
     renderHealth(state, runtime.report);
     renderModelStats(state);
+    renderPerformance(state);
     renderMatches(current ? state.dailyAnalysis : [], state);
     renderExpresses(current ? state.expresses : [], state, current);
     renderSingles(current ? state.bestBets.slice(0, 3) : []);
@@ -337,6 +338,46 @@
       avgPredicted: pSum/windowRows.length,
       brier: brier/windowRows.length,
     };
+  }
+
+  function renderPerformance(state) {
+    const root = document.getElementById("marketPerformance");
+    if (!root) return;
+    const period = runtime.performancePeriod;
+    const cutoff = period === "all" ? 0 : Date.now() - Number(period) * 86_400_000;
+    const rows = array(state.analysisHistory).filter(row => {
+      if (!["won", "lost"].includes(String(row.status || "").toLowerCase())) return false;
+      const time = Date.parse(row.settledAt || row.commenceTime || "");
+      const probability = probabilityFraction(row);
+      return Number.isFinite(time) && time >= cutoff && Number.isFinite(probability) && probability > 0 && probability < 1;
+    });
+    const headings = [
+      ["marketFamily", "Тип рынка", {TOTAL:"Тоталы",OUTCOME:"Исходы",HANDICAP:"Форы",BTTS:"Обе забьют",OTHER:"Другие"}],
+      ["dataTier", "Полнота данных", {FULL:"Полные",HYBRID:"Смешанные",MARKET:"Только линия"}],
+      ["publicationMode", "Режим публикации", {RECOVERY_DAY:"Восстановление",BOOTSTRAP_PREVIEW:"Предпросмотр",STANDARD:"Стандартный",PRODUCTION:"Стандартный"}],
+    ];
+    root.innerHTML = rows.length ? headings.map(([field, title, labels]) => {
+      const groups = new Map();
+      for (const row of rows) {
+        const key = String(row[field] || (field === "publicationMode" ? "STANDARD" : "OTHER")).toUpperCase();
+        const bucket = groups.get(key) || { n:0, wins:0, p:0, brier:0 };
+        const y = String(row.status).toLowerCase() === "won" ? 1 : 0;
+        const p = probabilityFraction(row);
+        bucket.n += 1; bucket.wins += y; bucket.p += p; bucket.brier += (p - y) ** 2;
+        groups.set(key, bucket);
+      }
+      return `<section class="performance-group"><h4>${escapeHtml(title)}</h4>${[...groups.entries()].sort((a,b)=>b[1].n-a[1].n).map(([key,m]) => {
+        const hit = m.wins / m.n * 100;
+        return `<div class="performance-row"><div><strong>${escapeHtml(labels[key] || key)}</strong><small>${m.n} матчей · Brier ${formatNumber(m.brier/m.n,3)}</small></div><div class="performance-bar"><i style="width:${Math.max(0,Math.min(100,hit)).toFixed(1)}%"></i></div><b>${formatNumber(hit,1)}%</b></div>`;
+      }).join("")}</section>`;
+    }).join("") : '<div class="empty-mini">В выбранном периоде пока недостаточно завершённых результатов для оценки.</div>';
+    document.querySelectorAll("[data-performance-period]").forEach(button => {
+      button.classList.toggle("active", button.dataset.performancePeriod === period);
+      button.onclick = () => {
+        runtime.performancePeriod = button.dataset.performancePeriod;
+        renderPerformance(state);
+      };
+    });
   }
 
   function renderMatches(rows, state) {
