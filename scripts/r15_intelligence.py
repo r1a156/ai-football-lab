@@ -1431,7 +1431,9 @@ def discover_operational_events(
     window = operational_day(now, config)
     start = parse_time(window["queryWindowStart"])
     operational_end = parse_time(window["operationalWindowEnd"])
-    maximum_end = parse_time(window["searchWindowMaximumEnd"])
+    # Paid discovery is limited to the publication day. The rolling 72h
+    # metadata must never cause paid requests for tomorrow's fixtures.
+    maximum_end = operational_end
     if not start or not operational_end or not maximum_end or start >= maximum_end:
         return [], {**window, "events": 0, "reason": "SEARCH_WINDOW_ALREADY_CLOSED"}
     sports = core.fetch_active_sports(client, api_key)
