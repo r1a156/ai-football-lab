@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-09T08:31:02Z",
+  "updatedAt": "2026-10-09T08:44:50Z",
   "analysisDateLocal": "2026-10-09",
   "batch": {
     "version": 1,
@@ -149,7 +149,7 @@
     "stakePercent": 10,
     "roi": -26.11,
     "maxDrawdown": 66.54,
-    "activeExposure": 0.0,
+    "activeExposure": 2216.79,
     "history": [
       {
         "date": "2026-07-17",
@@ -401,9 +401,9 @@
         "profit": 418.27
       }
     ],
-    "placedAmount": 0.0,
+    "placedAmount": 2216.79,
     "activeBetsCount": 3,
-    "available": 7389.35,
+    "available": 5172.56,
     "closedBalance": 7389.35,
     "mode": "ACTIVE_SINGLE_BANK",
     "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
@@ -443,7 +443,9 @@
           "probability": 0.5572,
           "dataQuality": 84.1,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 2,
@@ -468,7 +470,9 @@
           "probability": 0.550998,
           "dataQuality": 84.5,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 3,
@@ -493,7 +497,9 @@
           "probability": 0.534426,
           "dataQuality": 83.3,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 4,
@@ -518,7 +524,9 @@
           "probability": 0.437532,
           "dataQuality": 81.1,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 5,
@@ -543,7 +551,9 @@
           "probability": 0.506252,
           "dataQuality": 82.0,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         }
       ],
       "legCount": 5,
@@ -595,7 +605,9 @@
           "probability": 0.571722,
           "dataQuality": 84.1,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 2,
@@ -620,7 +632,9 @@
           "probability": 0.244169,
           "dataQuality": 40.0,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 3,
@@ -645,7 +659,9 @@
           "probability": 0.561243,
           "dataQuality": 71.3,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 4,
@@ -670,7 +686,9 @@
           "probability": 0.479133,
           "dataQuality": 83.3,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         },
         {
           "legNumber": 5,
@@ -695,7 +713,9 @@
           "probability": 0.513788,
           "dataQuality": 80.1,
           "status": "pending",
-          "score": ""
+          "score": "",
+          "statusLabel": "Ожидается",
+          "settledAt": null
         }
       ],
       "legCount": 5,
@@ -719,7 +739,7 @@
   "dailyAnalysis": [
     {
       "id": "analysis-e1a798e0b206a372e7e4",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 1,
       "eventId": "e9cba92a87fba37b0bf50fd06d1e3244",
       "sport": "soccer",
@@ -731,8 +751,8 @@
       "leagueRu": "3. Лига - Германи",
       "home": "SC Preußen Münster",
       "away": "Rot-Weiss Essen",
-      "homeRu": "Пройссен Мюнстер",
-      "awayRu": "Рот-Вайсс",
+      "homeRu": "СК Преуßен Мунстер",
+      "awayRu": "Рот-Веисс Ессен",
       "commenceTime": "2026-10-09T17:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_OVER",
@@ -1685,13 +1705,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-bc55b12611e07ef73c06",
-      "expressLabel": "Экспресс A",
-      "expressLegNumber": 2
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-dd828db421b9c896c1fd",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 2,
       "eventId": "78773ce49c803868efcc014fce7299c2",
       "sport": "soccer",
@@ -1703,8 +1724,8 @@
       "leagueRu": "Бундеслига 2 - Германи",
       "home": "1. FC Heidenheim",
       "away": "1. FC Kaiserslautern",
-      "homeRu": "Хайденхайм",
-      "awayRu": "Кайзерслаутерн",
+      "homeRu": "1. ФК Хеиденхеим",
+      "awayRu": "1. ФК Каисерслаутерн",
       "commenceTime": "2026-10-09T16:30:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -2665,13 +2686,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-a02c2d89549c0e3f4e1f",
-      "expressLabel": "Экспресс B",
-      "expressLegNumber": 1
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-a421defad9750dbff554",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 3,
       "eventId": "8dbe13623ac23fa7d820a7d0c6c001ca",
       "sport": "soccer",
@@ -2683,8 +2705,8 @@
       "leagueRu": "Бундеслига 2 - Германи",
       "home": "Eintracht Braunschweig",
       "away": "Holstein Kiel",
-      "homeRu": "Айнтрахт",
-      "awayRu": "Хольштайн",
+      "homeRu": "Еинтрачт Браунщвеиг",
+      "awayRu": "Холстеин Киел",
       "commenceTime": "2026-10-09T16:30:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -3698,13 +3720,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-bc55b12611e07ef73c06",
-      "expressLabel": "Экспресс A",
-      "expressLegNumber": 1
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-0899b141df58549d3e4d",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 4,
       "eventId": "7fe15f7d678d65f34d147ceb6ce1313b",
       "sport": "soccer",
@@ -3716,8 +3739,8 @@
       "leagueRu": "Лигуе 2 - Франке",
       "home": "Sochaux",
       "away": "Boulogne",
-      "homeRu": "Сошо",
-      "awayRu": "Булонь",
+      "homeRu": "Сочаукс",
+      "awayRu": "Боулогне",
       "commenceTime": "2026-10-09T18:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -4619,13 +4642,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-a02c2d89549c0e3f4e1f",
-      "expressLabel": "Экспресс B",
-      "expressLegNumber": 3
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-19113d3ce9957ef44e02",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 5,
       "eventId": "7a73fcc27a988bb9be707933ea8123a7",
       "sport": "soccer",
@@ -4637,8 +4661,8 @@
       "leagueRu": "Лигуе 2 - Франке",
       "home": "Montpellier",
       "away": "Grenoble",
-      "homeRu": "Монпелье",
-      "awayRu": "Гренобль",
+      "homeRu": "Монтпеллиер",
+      "awayRu": "Гренобле",
       "commenceTime": "2026-10-09T18:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -5524,13 +5548,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-bc55b12611e07ef73c06",
-      "expressLabel": "Экспресс A",
-      "expressLegNumber": 3
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-e9c591c017bc98adf421",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 6,
       "eventId": "3fb63658405d468954f57745cd115118",
       "sport": "soccer",
@@ -5543,7 +5568,7 @@
       "home": "Borussia Dortmund",
       "away": "Werder Bremen",
       "homeRu": "Боруссия Дортмунд",
-      "awayRu": "Вердер",
+      "awayRu": "Вердер Бремен",
       "commenceTime": "2026-10-09T18:30:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -6407,13 +6432,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-a02c2d89549c0e3f4e1f",
-      "expressLabel": "Экспресс B",
-      "expressLegNumber": 5
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-09a672da958662d8a505",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 7,
       "eventId": "838aaa8567409b87835ad22ed9255e61",
       "sport": "soccer",
@@ -6425,8 +6451,8 @@
       "leagueRu": "Чемпионшип",
       "home": "West Ham United",
       "away": "Queens Park Rangers",
-      "homeRu": "Вест Хэм Юнайтед",
-      "awayRu": "Куинз Парк Рейнджерс",
+      "homeRu": "Запад Хам Юнайтед",
+      "awayRu": "Квеенс Парк Рангерс",
       "commenceTime": "2026-10-09T19:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -7301,13 +7327,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-bc55b12611e07ef73c06",
-      "expressLabel": "Экспресс A",
-      "expressLegNumber": 5
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-15d2cdb35b52e4effdf3",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 8,
       "eventId": "225881660dfe725cda7ef9c358b441d3",
       "sport": "soccer",
@@ -7319,8 +7346,8 @@
       "leagueRu": "Лигуе 2 - Франке",
       "home": "Nancy",
       "away": "Guingamp",
-      "homeRu": "Нанси",
-      "awayRu": "Генгам",
+      "homeRu": "Нанки",
+      "awayRu": "Гуингамп",
       "commenceTime": "2026-10-09T18:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_OVER",
@@ -8207,13 +8234,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-a02c2d89549c0e3f4e1f",
-      "expressLabel": "Экспресс B",
-      "expressLegNumber": 4
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-aa960911e5930709b2f9",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 9,
       "eventId": "22ce0c24a7181089c924cf68110e2203",
       "sport": "soccer",
@@ -8225,8 +8253,8 @@
       "leagueRu": "Серие Б - Итали",
       "home": "Avellino",
       "away": "Sampdoria",
-      "homeRu": "Авеллино 1912",
-      "awayRu": "Сампдория",
+      "homeRu": "Авеллино",
+      "awayRu": "Сампдориа",
       "commenceTime": "2026-10-09T18:30:00Z",
       "marketKey": "h2h",
       "market": "HOME_WIN",
@@ -9154,13 +9182,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-bc55b12611e07ef73c06",
-      "expressLabel": "Экспресс A",
-      "expressLegNumber": 4
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-e4cc920a54f2317c077d",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 10,
       "eventId": "271a6d20ede17d1858ebf2089454b948",
       "sport": "soccer",
@@ -9173,7 +9202,7 @@
       "home": "Aldosivi Mar del Plata",
       "away": "Sarmiento de Junin",
       "homeRu": "Альдосиви",
-      "awayRu": "Club Atlético Sarmiento women",
+      "awayRu": "Сармиенто де Йунин",
       "commenceTime": "2026-10-09T17:30:00Z",
       "marketKey": "h2h",
       "market": "HOME_WIN",
@@ -10141,13 +10170,14 @@
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
       "batchStatus": "ACTIVE",
-      "expressId": "express-a02c2d89549c0e3f4e1f",
-      "expressLabel": "Экспресс B",
-      "expressLegNumber": 2
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "analysis-8b5d74646a86a24c267b",
-      "recordType": "DAILY_ANALYSIS",
+      "recordType": "ANALYSIS",
       "rank": 11,
       "eventId": "f87773f0aca0cfaa154985be26336c21",
       "sport": "soccer",
@@ -10159,8 +10189,8 @@
       "leagueRu": "Примера Аргентины",
       "home": "Instituto de Córdoba",
       "away": "Boca Juniors",
-      "homeRu": "Институто",
-      "awayRu": "Бока Хуниорс",
+      "homeRu": "Институто де Кордоба",
+      "awayRu": "Бока Йуниорс",
       "commenceTime": "2026-10-09T22:30:00Z",
       "marketKey": "h2h",
       "market": "HOME_WIN",
@@ -11185,7 +11215,11 @@
       "stakePercent": 0.0,
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "statusLabel": "Ожидается",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     }
   ],
   "bestBets": [
@@ -11203,8 +11237,8 @@
       "leagueRu": "Бундеслига 2 - Германи",
       "home": "1. FC Heidenheim",
       "away": "1. FC Kaiserslautern",
-      "homeRu": "Хайденхайм",
-      "awayRu": "Кайзерслаутерн",
+      "homeRu": "1. ФК Хеиденхеим",
+      "awayRu": "1. ФК Каисерслаутерн",
       "commenceTime": "2026-10-09T16:30:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -12158,7 +12192,10 @@
       "premiumLabel": null,
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "ranked-a9cceefaf3028f7eb9dd",
@@ -12174,8 +12211,8 @@
       "leagueRu": "Лигуе 2 - Франке",
       "home": "Sochaux",
       "away": "Boulogne",
-      "homeRu": "Сошо",
-      "awayRu": "Булонь",
+      "homeRu": "Сочаукс",
+      "awayRu": "Боулогне",
       "commenceTime": "2026-10-09T18:00:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -13070,7 +13107,10 @@
       "premiumLabel": null,
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     },
     {
       "id": "ranked-51ea6c108bae1838aeb7",
@@ -13086,8 +13126,8 @@
       "leagueRu": "Бундеслига 2 - Германи",
       "home": "Eintracht Braunschweig",
       "away": "Holstein Kiel",
-      "homeRu": "Айнтрахт",
-      "awayRu": "Хольштайн",
+      "homeRu": "Еинтрачт Браунщвеиг",
+      "awayRu": "Холстеин Киел",
       "commenceTime": "2026-10-09T16:30:00Z",
       "marketKey": "totals",
       "market": "TOTAL_UNDER",
@@ -14094,7 +14134,10 @@
       "premiumLabel": null,
       "batchId": "batch-2b8e893289cf9b06f7e3",
       "batchSequence": 16,
-      "batchStatus": "ACTIVE"
+      "batchStatus": "ACTIVE",
+      "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
+      "settlementLastAttemptAt": "2026-10-09T08:44:50Z",
+      "settlementAttempts": 1
     }
   ],
   "dailyAudit": {
@@ -14118,8 +14161,8 @@
   "shadowLearning": {
     "statistics": {
       "tracked": 17,
-      "pending": 5,
-      "settled": 12,
+      "pending": 4,
+      "settled": 2,
       "won": 1,
       "lost": 1,
       "push": 0
@@ -14223,106 +14266,6 @@
         "probability": 0.621138,
         "odds": 1.74,
         "shadowRankScore": 81.922
-      },
-      {
-        "id": "f2cbf20e1ca436c754c7",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "e9cba92a87fba37b0bf50fd06d1e3244",
-        "sport": "soccer",
-        "sportKey": "soccer_germany_liga3",
-        "league": "3. Liga - Germany",
-        "home": "SC Preußen Münster",
-        "away": "Rot-Weiss Essen",
-        "commenceTime": "2026-10-09T17:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-07T06:13:54Z",
-        "failures": [
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Недостаточная консервативная вероятность",
-          "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Последние матчи команд противоречат выбранному направлению тотала",
-          "Основной фильтр: Ожидаемая сумма голов недостаточна для ставки на больше",
-          "Основной фильтр: Недавняя результативность недостаточна для ставки на больше",
-          "История и модель голов противоречат направлению тотала",
-          "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-          "Основной фильтр: Высока вероятность голов обеих команд",
-          "Основной фильтр: Команды часто пробивают тотал больше 2,5"
-        ],
-        "market": "TOTAL_OVER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "OVER",
-        "point": 2.5,
-        "pick": "Тотал больше 2.5",
-        "pickRu": "Тотал больше 2.5",
-        "bookmakerOdds": 1.6,
-        "modelProbability": 0.581828,
-        "conservativeProbability": 0.513533,
-        "marketProbability": 0.589617,
-        "expectedValue": -0.178347,
-        "edge": -0.076084,
-        "dataTier": "FULL",
-        "dataQuality": 85.2,
-        "quoteCount": 5,
-        "agreement": 91.7,
-        "marketStability": 83.6,
-        "anomaly": 10.6,
-        "obviousMarketScore": 77.0613,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Недостаточная консервативная вероятность"
-        ],
-        "goalDirectionConflict": false,
-        "learningAdjustment": -0.03662,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 80,
-            "bias": -0.0324,
-            "weight": 0.339,
-            "hitRate": 0.575,
-            "averagePredicted": 0.6074,
-            "brierScore": 0.245914
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 54,
-            "bias": -0.0725,
-            "weight": 0.124,
-            "hitRate": 0.537,
-            "averagePredicted": 0.6095,
-            "brierScore": 0.251634
-          },
-          {
-            "segment": "ODDS|soccer|MID",
-            "samples": 75,
-            "bias": -0.054,
-            "weight": 0.298,
-            "hitRate": 0.5467,
-            "averagePredicted": 0.6007,
-            "brierScore": 0.256517
-          }
-        ],
-        "probability": 0.581828,
-        "odds": 1.6,
-        "shadowRankScore": 79.5773
       },
       {
         "id": "b12c83ae45465327798b",
