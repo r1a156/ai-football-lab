@@ -13,7 +13,7 @@
   const REPORT_URL = API_BASE ? `${API_BASE}/data/last-update-report.json` : LOCAL_REPORT_URL;
   const MIN_QUALITY = 58;
   const MOSCOW = "Europe/Moscow";
-  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null };
+  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null, historyScope: "all", historyLimit: 30 };
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -124,7 +124,7 @@
     renderDecisionSummary(state, runtime.report, current);
     renderHealth(state, runtime.report);
     renderModelStats(state);
-    renderMatches(current ? state.dailyAnalysis : []);
+    renderMatches(current ? state.dailyAnalysis : [], state);
     renderExpresses(current ? state.expresses : [], state, current);
     renderSingles(current ? state.bestBets.slice(0, 3) : []);
     renderPremium(current ? state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).slice(0, 3) : [], state);
@@ -140,31 +140,44 @@
     }
   }
 
+  function currentMoscowWindow(state) {
+    const meta = object(state.meta);
+    const start = Date.parse(meta.operationalWindowStart || "");
+    const end = Date.parse(meta.operationalWindowEnd || "");
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end - start !== 86_400_000) return null;
+    const now = Date.now();
+    return now >= start && now < end ? { start, end } : null;
+  }
+
+  function inOperationalWindow(row, window) {
+    if (!window || !row) return false;
+    const kickoff = Date.parse(row.commenceTime || row.utcDate || "");
+    return Number.isFinite(kickoff) && kickoff >= window.start && kickoff < window.end;
+  }
+
   function isCurrentPortfolio(state) {
-    const daily = state.dailyAnalysis;
-    const expresses = state.expresses;
-    if (daily.length < 3 || daily.length > 15) return false;
-    if (state.bestBets.length !== 3) return false;
-    if (!state.bestBets.every(row => number(row.stakePercent) === 10 && number(row.stake) > 0)) return false;
+    const daily = array(state.dailyAnalysis);
+    const best = array(state.bestBets);
+    const window = currentMoscowWindow(state);
+    if (!window || !daily.length || daily.length > 15) return false;
+    if (!daily.every(row => inOperationalWindow(row, window) && odds(row) >= 1.55 && home(row) && away(row))) return false;
+    if (best.length > 3 || !best.every(row => inOperationalWindow(row, window))) return false;
+    const nonBanked = Boolean(state.meta.recoveryDay || state.meta.bootstrapPreview);
+    if (!nonBanked && best.some(row => number(row.stake) <= 0 || number(row.stakePercent) !== 10)) return false;
+    if (nonBanked && best.some(row => number(row.stake) > 0)) return false;
     const expectedExpresses = Math.min(3, Math.floor(daily.length / 5));
-    if (expresses.length !== expectedExpresses) return false;
-    if (!expresses.every(ticket => array(ticket.legs).length === 5)) return false;
-    const marker = String(state.meta.sourceMarker || "");
-    if (!marker.includes("R15")) return false;
-    if (!daily.every(row => odds(row) >= 1.55 && home(row) && away(row))) return false;
-    const selectionEnd = Date.parse(state.meta.selectionWindowEnd || state.meta.operationalWindowEnd || "");
+    if (state.expresses.length !== expectedExpresses) return false;
+    if (!state.expresses.every(ticket => array(ticket.legs).length === 5)) return false;
     const updated = Date.parse(state.meta.updatedAt || "");
-    if (Number.isFinite(selectionEnd) && Number.isFinite(updated)) {
-      return selectionEnd > Date.now() - 15 * 60_000 && Date.now() - updated < 30 * 60 * 60_000;
-    }
-    return Number.isFinite(updated) && Date.now() - updated < 30 * 60 * 60_000;
+    if (!Number.isFinite(updated) || Date.now() - updated >= 30 * 60 * 60_000) return false;
+    return String(state.meta.sourceMarker || "").includes("R15");
   }
 
   function renderMeta(state, current) {
     const quality = current ? average(state.dailyAnalysis.map(row => number(row.dataQuality))) : 0;
     const modelBank = bankSnapshot(state);
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
-    setText("summaryMatches", current ? String(state.dailyAnalysis.length) : "—");
+    setText("summaryMatches", String(current ? state.dailyAnalysis.length : array(state.upcomingFixtures).filter(row => inOperationalWindow(row, currentMoscowWindow(state))).length));
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryPremium", current ? String(state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).length) : "—");
@@ -326,12 +339,21 @@
     };
   }
 
-  function renderMatches(rows) {
+  function renderMatches(rows, state) {
     const root = document.getElementById("matchList");
     if (!rows.length) {
+      const window = currentMoscowWindow(state);
+      const fixtures = array(state.upcomingFixtures)
+        .filter(row => inOperationalWindow(row, window))
+        .slice(0, 24);
+      if (fixtures.length) {
+        root.innerHTML = '<div class="smart-empty"><span>ФУТБОЛ СЕГОДНЯ</span><strong>Матчи текущих московских суток</strong><p>Реальные события из источников данных. Пока расчётный рынок не прошёл проверку, ставка не предлагается.</p></div>' +
+          fixtures.map((row, i) => `<article class="match-card"><div class="rank">${i + 1}</div><div class="match-main"><div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div><div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div><div class="match-why">Ожидается проверенный прогноз</div></div><div class="match-side"><div class="pick"><small>Рынок</small><strong>Анализируется</strong></div></div></article>`).join("");
+        return;
+      }
       const analysis = object(object(runtime.report.diagnostics).analysis);
       const nearMisses = array(analysis.nearMissCandidates)
-        .filter(row => number(row.bestOdds) >= 1.55)
+        .filter(row => inOperationalWindow(row, window) && number(row.bestOdds) >= 1.55)
         .slice(0, 6);
       if (!nearMisses.length) {
         root.innerHTML = empty("Свежие матчи ещё не опубликованы");
@@ -540,22 +562,53 @@
   }
 
   function renderHistory(state) {
-    const rows = array(state.history)
-      .filter(row => row.recordType === "BEST_BET")
-      .filter(row => number(row.stake) > 0)
-      .filter(row => ["won","lost","push","void","cancelled"].includes(String(row.status || "").toLowerCase()))
-      .sort((a,b) => Date.parse(b.settledAt || b.commenceTime || b.utcDate || 0) - Date.parse(a.settledAt || a.commenceTime || a.utcDate || 0));
+    const terminal = new Set(["won", "lost", "push", "void", "cancelled"]);
+    const bets = array(state.history)
+      .filter(row => row.recordType === "BEST_BET" && number(row.stake) > 0)
+      .filter(row => terminal.has(String(row.status || "").toLowerCase()))
+      .map(row => ({ ...row, historyKind: "bank" }));
+    const analyses = array(state.analysisHistory)
+      .filter(row => terminal.has(String(row.status || "").toLowerCase()))
+      .map(row => ({ ...row, historyKind: "analysis" }));
+    const rows = [...bets, ...analyses].sort((a, b) =>
+      (Date.parse(b.settledAt || b.commenceTime || b.utcDate || "") || 0) -
+      (Date.parse(a.settledAt || a.commenceTime || a.utcDate || "") || 0));
     setText("historyCount", String(rows.length));
     const root = document.getElementById("historyList");
-    if (!rows.length) { root.innerHTML = '<div class="empty-mini">Завершённых банковских ставок пока нет</div>'; return; }
-    root.innerHTML = rows.slice(0,8).map(row => {
+    const scope = runtime.historyScope;
+    const filtered = rows.filter(row => scope === "all" || row.historyKind === scope);
+    const shown = filtered.slice(0, runtime.historyLimit);
+    const betsWon = bets.filter(row => String(row.status).toLowerCase() === "won").length;
+    const betsDecided = bets.filter(row => ["won", "lost"].includes(String(row.status).toLowerCase())).length;
+    const analysisWon = analyses.filter(row => String(row.status).toLowerCase() === "won").length;
+    const analysisDecided = analyses.filter(row => ["won", "lost"].includes(String(row.status).toLowerCase())).length;
+    const tabs = [
+      ["all", "Все результаты", rows.length],
+      ["bank", "Банк", bets.length],
+      ["analysis", "Прогнозы", analyses.length],
+    ];
+    const head = `<div class="history-controls"><div class="history-tabs">${tabs.map(([key,label,count]) =>
+      `<button type="button" class="history-tab ${scope === key ? "active" : ""}" data-history-scope="${key}">${label} · ${count}</button>`).join("")}</div>
+      <div class="history-metrics">Банк: ${betsDecided ? formatNumber(betsWon / betsDecided * 100, 1) + "%" : "—"} · Прогнозы: ${analysisDecided ? formatNumber(analysisWon / analysisDecided * 100, 1) + "%" : "—"} точных исходов</div></div>`;
+    root.innerHTML = head + (shown.length ? shown.map(row => {
       const status = String(row.status || "").toLowerCase();
       const label = status === "won" ? "Выигрыш" : status === "lost" ? "Проигрыш" : status === "push" ? "Возврат" : "Закрыто";
       const title = teamsText(row);
-      const sub = `${pick(row)} · ставка ${currency(row.stake)} · ×${formatNumber(odds(row),2)}`;
+      const source = row.historyKind === "bank" ? "Банк" : "Прогноз";
+      const sub = `${source} · ${matchTime(row)} · ${pick(row)} · ×${formatNumber(odds(row),2)}${row.historyKind === "bank" ? " · ставка " + currency(row.stake) : ""}`;
       const profit = number(row.profit ?? row.netProfit);
-      return `<div class="history-row"><div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(sub)}</small></div><span class="result-badge ${escapeHtml(status)}">${label}</span><b class="history-profit">${signedCurrency(profit)}</b></div>`;
-    }).join("");
+      return `<div class="history-row"><div><strong>${escapeHtml(title)}</strong><small>${escapeHtml(sub)}</small></div><span class="result-badge ${escapeHtml(status)}">${label}</span><b class="history-profit">${row.historyKind === "bank" ? signedCurrency(profit) : escapeHtml(row.score || "—")}</b></div>`;
+    }).join("") : '<div class="empty-mini">Завершённых записей в этой категории пока нет</div>') +
+      (filtered.length > shown.length ? `<button type="button" class="history-more" id="historyMore">Показать ещё (${filtered.length - shown.length})</button>` : "");
+    root.querySelectorAll("[data-history-scope]").forEach(node => node.addEventListener("click", () => {
+      runtime.historyScope = node.dataset.historyScope;
+      runtime.historyLimit = 30;
+      renderHistory(state);
+    }));
+    root.querySelector("#historyMore")?.addEventListener("click", () => {
+      runtime.historyLimit += 30;
+      renderHistory(state);
+    });
   }
 
   function openDetails(row) {
