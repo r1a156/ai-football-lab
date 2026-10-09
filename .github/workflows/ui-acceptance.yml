@@ -126,7 +126,10 @@ jobs:
           grep -q 'Единый виртуальный банк' /tmp/desktop-dom.html
           grep -q 'Экспресс' /tmp/desktop-dom.html
           grep -q 'bankChart' /tmp/desktop-dom.html
-          grep -q 'signal-cluster' /tmp/desktop-dom.html
+          # The strict 24h guard can intentionally suppress stale picks.
+          # In that case a visible fixture/empty state is the valid outcome.
+          grep -Eq 'signal-cluster|smart-empty|Свежие матчи ещё не опубликованы|Матчи текущих московских суток' /tmp/desktop-dom.html
+          grep -q 'historyList' /tmp/desktop-dom.html
           grep -q 'mobile-nav' /tmp/mobile-dom.html
           ! grep -q 'Загружаем подборку' /tmp/desktop-dom.html
           ! grep -q 'Live intelligence' /tmp/desktop-dom.html
