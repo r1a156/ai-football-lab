@@ -41,7 +41,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  if (url.origin === location.origin && /\\.(?:js|css)$/.test(url.pathname)) {
+  if (url.origin === location.origin && /\.(?:js|css)$/.test(url.pathname)) {
     // Network-first assets: an installed PWA must never run yesterday's UI.
     event.respondWith(fetch(request, { cache: "no-store" }).then(response => {
       if (response.ok) event.waitUntil(caches.open(CACHE).then(cache => cache.put(request, response.clone())));
