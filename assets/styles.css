@@ -2051,3 +2051,25 @@ h2{
 .history-more{width:100%;margin-top:14px}
 .history-row small{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:620px){.history-tab{font-size:11px;padding:8px}.history-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}.history-row .history-profit{grid-column:2}.history-row .result-badge{grid-column:2;grid-row:1}.history-row div{grid-row:1 / span 2}}
+
+/* Auditable prediction calibration panels */
+.performance-panel{margin-top:20px;border:1px solid rgba(255,255,255,.085);border-radius:24px;background:rgba(255,255,255,.028);padding:24px}
+.performance-header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}
+.performance-header h3{margin:5px 0 6px;font-size:19px;color:#edf4fe}
+.performance-header p{margin:0;color:#8d9bab;font-size:12px}
+.performance-filters{display:flex;gap:5px;flex-wrap:wrap}
+.performance-filters button{cursor:pointer;font:inherit;font-size:11px;padding:8px 10px;color:#b1bed0;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:rgba(255,255,255,.025)}
+.performance-filters button:hover,.performance-filters button:focus-visible{outline:none;background:rgba(255,255,255,.11)}
+.performance-filters button.active{border-color:rgba(115,191,247,.46);background:rgba(115,191,247,.12);color:white}
+.performance-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}
+.performance-group{min-width:0}
+.performance-group h4{margin:0 0 13px;font-size:12px;font-weight:600;letter-spacing:.04em;color:#c6d6e7}
+.performance-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(40px,80px) 48px;gap:10px;align-items:center;margin:0 0 12px}
+.performance-row strong,.performance-row small{display:block;overflow-wrap:anywhere}
+.performance-row strong{font-size:11px;color:#e6edf7}
+.performance-row small{font-size:10px;color:#8192a6}
+.performance-row b{font-size:11px;color:#cfdfef;text-align:right;font-variant-numeric:tabular-nums}
+.performance-bar{height:6px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.performance-bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#3c789c,#70b7dc)}
+@media(max-width:900px){.performance-groups{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.performance-panel{padding:16px}.performance-groups{grid-template-columns:1fr}.performance-row{grid-template-columns:minmax(0,1fr) 85px 48px}}
