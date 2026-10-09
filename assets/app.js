@@ -60,7 +60,11 @@
     let lastError = null;
     for (const url of urls) {
       try {
-        candidates.push(normalize(await fetchJson(url, stamp)));
+        const candidate = normalize(await fetchJson(url, stamp));
+        // Large states can exceed 4 MB. Prefer a validated same-day
+        // canonical Pages snapshot; query GitHub/Worker only on a stale state.
+        if (url === LOCAL_STATE_URL && isCurrentPortfolio(candidate)) return candidate;
+        candidates.push(candidate);
       } catch (error) {
         lastError = error;
       }
