@@ -2040,3 +2040,14 @@ h2{
 @media(max-width:1090px){
   .premium-grid{grid-template-columns:1fr}
 }
+
+/* Production history explorer: full settled bank + analytical record ledger. */
+.history-controls{display:grid;gap:10px;padding:3px 0 15px}
+.history-tabs{display:flex;flex-wrap:wrap;gap:7px}
+.history-tab,.history-more{font:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.035);color:#aebcca;border-radius:10px;padding:9px 11px;transition:background .18s,border-color .18s,color .18s}
+.history-tab:hover,.history-tab:focus-visible,.history-more:hover,.history-more:focus-visible{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:white;outline:none}
+.history-tab.active{background:rgba(112,172,218,.14);border-color:rgba(112,172,218,.45);color:#e7f3ff}
+.history-metrics{font-size:11px;color:#9cabbc;line-height:1.6}
+.history-more{width:100%;margin-top:14px}
+.history-row small{white-space:normal;overflow-wrap:anywhere}
+@media(max-width:620px){.history-tab{font-size:11px;padding:8px}.history-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}.history-row .history-profit{grid-column:2}.history-row .result-badge{grid-column:2;grid-row:1}.history-row div{grid-row:1 / span 2}}
