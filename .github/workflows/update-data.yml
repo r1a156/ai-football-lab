@@ -24,6 +24,15 @@
 name: R15F R3 cognitive morning portfolio
 
 on:
+  # A reviewed change to the production engine must rebuild public state
+  # immediately; data-only bot commits do not match these paths.
+  push:
+    branches: [main]
+    paths:
+      - "scripts/r15_intelligence.py"
+      - "scripts/update_predictions.py"
+      - "config/analysis.json"
+      - ".github/workflows/update-data.yml"
   workflow_dispatch:
     inputs:
       bootstrap_preview:
