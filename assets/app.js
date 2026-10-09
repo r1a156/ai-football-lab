@@ -481,7 +481,6 @@
     // Fill the daily football schedule with real fixtures, never invented bets.
     // Entries below are explicitly marked as fixtures rather than predictions.
     const window = currentMoscowWindow(state);
-    const officialIds = new Set(rows.map(row => String(row.eventId || "")));
     const remainingFixtures = array(state.upcomingFixtures)
       .filter(row => inOperationalWindow(row, window) && !officialIds.has(String(row.eventId || "")))
       .slice(0, Math.max(0, 15 - rows.length));
