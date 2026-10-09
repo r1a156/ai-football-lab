@@ -5126,6 +5126,34 @@ def publish_generation() -> int:
         event["sport_type"] = "soccer"
         event["country"] = core.infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
 
+    # A populated fixture board is independent from betting qualification.
+    # These are real provider fixtures, never synthetic predictions or stakes.
+    quoted_ids = {str(event.get("id") or "") for event in odds_events}
+    fixtures = []
+    for event in discovered:
+        commence = parse_time(event.get("commence_time"))
+        if commence is None or not (publication_start <= commence < publication_end):
+            continue
+        fixture_id = str(event.get("id") or "")
+        fixtures.append({
+            "eventId": fixture_id,
+            "sport": "soccer",
+            "sportKey": str(event.get("sport_key") or ""),
+            "league": str(event.get("sport_title") or ""),
+            "leagueRu": core.russian_display_text(event.get("sport_title")),
+            "home": str(event.get("home_team") or ""),
+            "homeRu": core.russian_display_text(event.get("home_team")),
+            "away": str(event.get("away_team") or ""),
+            "awayRu": core.russian_display_text(event.get("away_team")),
+            "commenceTime": iso(commence),
+            "oddsAvailable": fixture_id in quoted_ids,
+            "publicationMode": "FIXTURE_INFORMATION_ONLY",
+            "stake": 0.0,
+        })
+    fixtures.sort(key=lambda item: (not item["oddsAvailable"], item["commenceTime"]))
+    state["upcomingFixtures"] = fixtures[:80]
+    state.setdefault("meta", {})["upcomingFixturesOperationalDayId"] = day["operationalDayId"]
+
     # Public Fonbet page is used only as availability evidence. When its
     # server-rendered snapshot confirms at least 15 events, non-confirmed
     # events are excluded. If the page is unavailable or incomplete, the
