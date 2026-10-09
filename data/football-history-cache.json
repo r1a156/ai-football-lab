@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-08T20:07:50Z",
-  "lastSuccessfulAt": "2026-10-08T20:07:50Z",
+  "updatedAt": "2026-10-09T00:26:04Z",
+  "lastSuccessfulAt": "2026-10-09T00:26:04Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -501954,6 +501954,39 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2398735",
+      "utcDate": "2026-10-08T19:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Irish Premier Division",
+      "competitionCode": "4643",
+      "homeTeam": {
+        "id": "",
+        "name": "Shamrock Rovers",
+        "shortName": "Shamrock Rovers",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Drogheda United",
+        "shortName": "Drogheda United",
+        "tla": ""
+      },
+      "homeScore": 3,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-09T00:30:16Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "33",
+      "venue": "Tallaght Stadium",
+      "theSportsDbEventId": "2398735"
+    },
+    {
       "id": "openfootball:2026-27:en.2:95:Matchday 9",
       "utcDate": "2026-10-09T00:00:00Z",
       "status": "SCHEDULED",
@@ -605781,17 +605814,33 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-08T20:07:50Z",
-      "matches": 17499
+      "updatedAt": "2026-10-09T00:26:04Z",
+      "matches": 17500
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-08T20:07:50Z",
-      "requests": 78,
-      "matchesAdded": 77,
+      "updatedAt": "2026-10-09T00:26:04Z",
+      "requests": 62,
+      "matchesAdded": 62,
       "errors": [
-        "134734:HTTPError",
-        "134291:HTTPError"
+        "136469:HTTPError",
+        "134510:HTTPError",
+        "133901:HTTPError",
+        "149900:HTTPError",
+        "137782:HTTPError",
+        "144737:HTTPError",
+        "136449:HTTPError",
+        "136466:HTTPError",
+        "135981:HTTPError",
+        "145207:HTTPError",
+        "145176:HTTPError",
+        "145187:HTTPError",
+        "137889:HTTPError",
+        "137887:HTTPError",
+        "134449:HTTPError",
+        "133953:HTTPError",
+        "137878:HTTPError",
+        "134018:HTTPError"
       ]
     }
   }
