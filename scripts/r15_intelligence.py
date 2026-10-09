@@ -4846,9 +4846,17 @@ def publish_generation() -> int:
             qualification = row.get("qualification") if isinstance(row.get("qualification"), dict) else {}
             core_rejected = bool(config.get("requireCoreQualification", True)) and qualification.get("qualified") is False
             odds_below_floor = safe_float(row.get("bookmakerOdds"), safe_float(row.get("odds"))) < minimum_odds
-            if core_rejected or odds_below_floor:
+            outside_today = not (
+                (start_at := parse_time(day["operationalWindowStart"]))
+                and (end_at := parse_time(day["operationalWindowEnd"]))
+                and start_at <= commence < end_at
+            )
+            if core_rejected or odds_below_floor or outside_today:
                 invalid_future_records.append(row)
-        if invalid_future_records and future_records and not started_or_unknown:
+        if (
+            invalid_future_records and future_records and not started_or_unknown
+            and not any(safe_float(row.get("stake")) > 0 for row in state.get("bestBets") or [] if isinstance(row, dict))
+        ):
             withdrawn_daily = copy.deepcopy(current_records)
             withdrawn_best = copy.deepcopy(state.get("bestBets") or [])
             for collection in (withdrawn_daily, withdrawn_best):
@@ -4860,7 +4868,7 @@ def publish_generation() -> int:
                     row["settledAt"] = iso(now)
                     row["settlementSource"] = "PREMATCH_POLICY_REVALIDATION"
                     row["profit"] = 0.0
-                    row["withdrawalReason"] = "FAILED_CURRENT_HARD_GUARD_BEFORE_KICKOFF"
+                    row["withdrawalReason"] = "FAILED_PREMATCH_POLICY_OR_OUTSIDE_CURRENT_MOSCOW_DAY"
             core.append_new_records_to_history(state, withdrawn_daily, withdrawn_best, config)
             for express in state.get("expresses") or []:
                 if isinstance(express, dict) and str(express.get("status") or "pending") == "pending":
@@ -4934,6 +4942,21 @@ def publish_generation() -> int:
     registry = load_json(TEAM_REGISTRY_PATH, empty_registry())
     context = free_mesh.merge_external_elo(build_history_context(cache, registry, now))
     discovered, discovery = discover_operational_events(client, odds_key, config, now)
+    # Search is broad; published predictions and paid odds queries are strictly
+    # limited to the current Moscow 08:00-08:00 operational day.
+    publication_start = parse_time(day["operationalWindowStart"])
+    publication_end = parse_time(day["operationalWindowEnd"])
+    if publication_start is None or publication_end is None:
+        raise RuntimeError("Strict Moscow publication window missing")
+    discovery["allDiscoveredEvents"] = len(discovered)
+    discovered = [
+        event for event in discovered
+        if (commence := parse_time(event.get("commence_time")))
+        and max(now, publication_start) < commence < publication_end
+    ]
+    discovery["currentOperationalEvents"] = len(discovered)
+    discovery["excludedFutureOperationalEvents"] = max(0, discovery["allDiscoveredEvents"] - len(discovered))
+    discovery["publicationWindowPolicy"] = "CURRENT_MOSCOW_OPERATIONAL_24H_ONLY"
 
     current_team_names: list[str] = []
     for event in discovered:
@@ -4956,7 +4979,7 @@ def publish_generation() -> int:
 
     keys, quota_plan = select_sport_keys_by_quota(discovered, context, client, config)
     start = parse_time(discovery.get("queryWindowStart"))
-    end = parse_time(discovery.get("queryWindowEnd"))
+    end = publication_end
     if not start or not end:
         raise RuntimeError("R15 operational window unresolved")
     odds_events, advanced, acquisition_errors, quota_plan, preliminary_diag, advanced_recovery_diag = complete_portfolio_acquisition(
@@ -5308,10 +5331,10 @@ def publish_generation() -> int:
         row["publicationOperationalDayId"] = day["operationalDayId"]
         row["publicationOperationalWindowStart"] = day["operationalWindowStart"]
         row["publicationOperationalWindowEnd"] = day["operationalWindowEnd"]
-        row["operationalWindowStart"] = discovery.get("queryWindowStart")
-        row["operationalWindowEnd"] = discovery.get("queryWindowEnd")
+        row["operationalWindowStart"] = day["operationalWindowStart"]
+        row["operationalWindowEnd"] = day["operationalWindowEnd"]
         row["selectionWindowStart"] = discovery.get("queryWindowStart")
-        row["selectionWindowEnd"] = discovery.get("queryWindowEnd")
+        row["selectionWindowEnd"] = day["operationalWindowEnd"]
         row["selectionWindowPolicy"] = discovery.get("policy")
     audited_records, daily_audit = daily_auditor.audit_records(
         records,
@@ -5442,7 +5465,7 @@ def publish_generation() -> int:
         "operationalWindowStart": day["operationalWindowStart"],
         "operationalWindowEnd": day["operationalWindowEnd"],
         "selectionWindowStart": discovery.get("queryWindowStart"),
-        "selectionWindowEnd": discovery.get("queryWindowEnd"),
+        "selectionWindowEnd": day["operationalWindowEnd"],
         "selectionStagesUsed": discovery.get("stagesUsed"),
         "operationalWindowPolicy": day["policy"],
         "selectionPolicy": discovery.get("policy"),
@@ -5657,9 +5680,12 @@ def validate_state() -> int:
             raise RuntimeError("R15 rolling selection horizon exceeds configured maximum")
         for row in daily:
             commence = parse_time(row.get("commenceTime"))
-            if commence is None or commence < selection_start or commence >= selection_end:
+            if (
+                commence is None or commence < selection_start or commence >= selection_end
+                or not (public_start <= commence < public_end)
+            ):
                 raise RuntimeError(
-                    "R15 event outside rolling prematch selection horizon: "
+                    "R15 event outside current Moscow operational 24 hours: "
                     f"{row.get('eventId')} {row.get('commenceTime')}"
                 )
             if str(row.get("sport") or "") != "soccer":
