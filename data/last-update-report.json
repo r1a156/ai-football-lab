@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-09T08:31:02Z",
-  "finishedAt": "2026-10-09T19:36:00Z",
+  "finishedAt": "2026-10-09T23:32:25Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 4,
-      "matches": 17341,
+      "added": 8,
+      "matches": 17349,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -339,31 +339,31 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.179
+        "elapsedSeconds": 0.124
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.22
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.254
+        "elapsedSeconds": 0.128
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_germany_bundesliga2",
+        "label": "SCORES:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.189
+        "elapsedSeconds": 0.116
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_germany_liga3",
+        "label": "SCORES:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.155
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_turkey_super_league",
-        "status": 200,
-        "elapsedSeconds": 0.16
+        "elapsedSeconds": 0.154
       }
     ],
     "quota": {
@@ -726,12 +726,12 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 4,
-    "providerFinalResults": 6,
+    "dueRecords": 9,
+    "providerFinalResults": 11,
     "settlement": {
-      "analysisSettled": 7,
-      "bestBetsSettled": 2,
-      "unresolved": 56
+      "analysisSettled": 12,
+      "bestBetsSettled": 1,
+      "unresolved": 43
     },
     "shadowSettlement": {
       "settled": 1,
@@ -739,7 +739,7 @@
       "lost": 1,
       "push": 0,
       "superseded": 0,
-      "unresolved": 1
+      "unresolved": 0
     },
     "overdueRelease": {
       "analysis": 0,
@@ -747,8 +747,8 @@
     },
     "expressSettlement": {
       "settled": 1,
-      "won": 0,
-      "lost": 1,
+      "won": 1,
+      "lost": 0,
       "push": 0
     }
   },

@@ -2,21 +2,22 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "IDLE",
-  "updatedAt": "2026-10-09T19:35:58Z",
+  "updatedAt": "2026-10-09T23:32:24Z",
   "refreshMinutes": 10,
   "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 5,
+    "calls": 4,
     "results": 163,
     "oddsQuota": {
-      "requestsRemaining": "226",
-      "requestsUsed": "274",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": [
+      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-10-09: SOFASCORE_PUBLIC:2026-10-09 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
@@ -30,7 +31,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 10
+    "unconfirmedRemoved": 7
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
