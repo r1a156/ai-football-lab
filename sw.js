@@ -1,4 +1,4 @@
-const CACHE = "ai-football-shell-v17-top3-premium-ru";
+const CACHE = "ai-football-shell-v18-fresh-runtime-history";
 const CORE = [
   "./",
   "./index.html",
@@ -38,6 +38,15 @@ self.addEventListener("fetch", event => {
         })
         .catch(() => caches.match("./index.html"))
     );
+    return;
+  }
+
+  if (url.origin === location.origin && /\\.(?:js|css)$/.test(url.pathname)) {
+    // Network-first assets: an installed PWA must never run yesterday's UI.
+    event.respondWith(fetch(request, { cache: "no-store" }).then(response => {
+      if (response.ok) event.waitUntil(caches.open(CACHE).then(cache => cache.put(request, response.clone())));
+      return response;
+    }).catch(() => caches.match(request)));
     return;
   }
 
