@@ -1431,8 +1431,8 @@ def discover_operational_events(
     window = operational_day(now, config)
     start = parse_time(window["queryWindowStart"])
     operational_end = parse_time(window["operationalWindowEnd"])
-    # Paid discovery is limited to the publication day. The rolling 72h
-    # metadata must never cause paid requests for tomorrow's fixtures.
+    # Event discovery is quota-free but still takes network time. Do not
+    # scan tomorrow's fixtures when only today's matches can be published.
     maximum_end = operational_end
     if not start or not operational_end or not maximum_end or start >= maximum_end:
         return [], {**window, "events": 0, "reason": "SEARCH_WINDOW_ALREADY_CLOSED"}
