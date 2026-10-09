@@ -478,6 +478,21 @@
           </article>`;
         }).join("");
     }
+    // Fill the daily football schedule with real fixtures, never invented bets.
+    // Entries below are explicitly marked as fixtures rather than predictions.
+    const window = currentMoscowWindow(state);
+    const officialIds = new Set(rows.map(row => String(row.eventId || "")));
+    const remainingFixtures = array(state.upcomingFixtures)
+      .filter(row => inOperationalWindow(row, window) && !officialIds.has(String(row.eventId || "")))
+      .slice(0, Math.max(0, 15 - rows.length));
+    if (remainingFixtures.length) {
+      root.innerHTML += '<div class="smart-empty"><span>ДРУГИЕ МАТЧИ СЕГОДНЯ</span><strong>Ближайшие реальные события</strong><p>Это календарь матчей, а не дополнительные ставки. Показаны только события текущих суток.</p></div>' +
+        remainingFixtures.map((row, i) => `<article class="match-card">
+          <div class="rank">${rows.length + i + 1}</div>
+          <div class="match-main"><div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div><div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div><div class="match-why">Проверка рынков · вне официального прогноза</div></div>
+          <div class="match-side"><div class="pick"><small>Статус</small><strong>Без ставки</strong></div></div>
+        </article>`).join("");
+    }
     root.querySelectorAll("[data-record]").forEach(node => {
       node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record)));
       node.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") openDetails(runtime.records.get(node.dataset.record)); });
