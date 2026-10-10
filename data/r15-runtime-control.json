@@ -11,15 +11,15 @@
   "status": "ACTIVE",
   "activatedAt": "2026-10-05T06:46:17.740218Z",
   "lastPreparationAt": "2026-10-04T15:54:13.378813Z",
-  "lastAuditOperationalDayId": "2026-10-09-MSK-0800",
+  "lastAuditOperationalDayId": "2026-10-10-MSK-0800",
   "lastAuditFingerprint": null,
   "oddsQuotaLedger": {
-    "operationalDayId": "2026-10-09-MSK-0800",
-    "quotaIdentity": "PRIMARY",
-    "baselineMonthlyUsed": 250,
-    "lastMonthlyUsed": 256,
-    "creditsUsed": 6,
-    "updatedAt": "2026-10-09T08:36:29Z",
+    "operationalDayId": "2026-10-10-MSK-0800",
+    "quotaIdentity": "BACKUP",
+    "baselineMonthlyUsed": 110,
+    "lastMonthlyUsed": 122,
+    "creditsUsed": 12,
+    "updatedAt": "2026-10-10T09:16:57Z",
     "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY"
   },
   "oddsQuotaLedgers": {
@@ -33,12 +33,12 @@
       "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY"
     },
     "BACKUP": {
-      "operationalDayId": "2026-10-09-MSK-0800",
+      "operationalDayId": "2026-10-10-MSK-0800",
       "quotaIdentity": "BACKUP",
-      "baselineMonthlyUsed": 96,
-      "lastMonthlyUsed": 108,
+      "baselineMonthlyUsed": 110,
+      "lastMonthlyUsed": 122,
       "creditsUsed": 12,
-      "updatedAt": "2026-10-09T06:41:13Z",
+      "updatedAt": "2026-10-10T09:16:57Z",
       "policy": "PERSISTENT_PROVIDER_HEADER_DAILY_CEILING_PER_KEY"
     }
   }
