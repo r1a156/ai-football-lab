@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-10T11:07:46Z",
-  "finishedAt": "2026-10-10T11:23:18Z",
+  "finishedAt": "2026-10-10T12:23:23Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -456,7 +456,19 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.134
+        "elapsedSeconds": 0.216
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.144
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_france_ligue_two",
+        "status": 200,
+        "elapsedSeconds": 0.124
       }
     ],
     "quota": {
@@ -853,7 +865,7 @@
     },
     "topSingles": 3,
     "dueRecords": 1,
-    "providerFinalResults": 5,
+    "providerFinalResults": 10,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
@@ -865,7 +877,7 @@
       "lost": 0,
       "push": 0,
       "superseded": 0,
-      "unresolved": 0
+      "unresolved": 2
     },
     "overdueRelease": {
       "analysis": 0,
