@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-10T11:07:46Z",
-  "finishedAt": "2026-10-10T15:26:28Z",
+  "finishedAt": "2026-10-10T19:28:57Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -68,8 +68,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 9,
-      "matches": 17358,
+      "added": 17,
+      "matches": 17375,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -456,49 +456,43 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.096
+        "elapsedSeconds": 0.166
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.099
+        "elapsedSeconds": 0.156
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.142
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.115
+        "elapsedSeconds": 0.184
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.224
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_france_ligue_two",
-        "status": 200,
-        "elapsedSeconds": 0.084
+        "elapsedSeconds": 0.177
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.13
+        "elapsedSeconds": 0.186
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_germany_liga3",
+        "label": "SCORES:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.096
+        "elapsedSeconds": 0.319
       }
     ],
     "quota": {
@@ -894,29 +888,29 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 8,
-    "providerFinalResults": 31,
+    "dueRecords": 18,
+    "providerFinalResults": 60,
     "settlement": {
-      "analysisSettled": 17,
-      "bestBetsSettled": 3,
-      "unresolved": 44
+      "analysisSettled": 34,
+      "bestBetsSettled": 9,
+      "unresolved": 1
     },
     "shadowSettlement": {
-      "settled": 2,
-      "won": 1,
+      "settled": 1,
+      "won": 0,
       "lost": 1,
       "push": 0,
       "superseded": 0,
-      "unresolved": 1
+      "unresolved": 0
     },
     "overdueRelease": {
       "analysis": 0,
       "bestBets": 0
     },
     "expressSettlement": {
-      "settled": 0,
+      "settled": 1,
       "won": 0,
-      "lost": 0,
+      "lost": 1,
       "push": 0
     }
   },
