@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-10T11:07:46Z",
-  "finishedAt": "2026-10-10T12:23:23Z",
+  "finishedAt": "2026-10-10T15:26:28Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -68,8 +68,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 17349,
+      "added": 9,
+      "matches": 17358,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -456,19 +456,49 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.216
+        "elapsedSeconds": 0.096
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.099
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.144
+        "elapsedSeconds": 0.224
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.124
+        "elapsedSeconds": 0.084
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.13
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.096
       }
     ],
     "quota": {
@@ -864,20 +894,20 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 1,
-    "providerFinalResults": 10,
+    "dueRecords": 8,
+    "providerFinalResults": 31,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 64
+      "analysisSettled": 17,
+      "bestBetsSettled": 3,
+      "unresolved": 44
     },
     "shadowSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
+      "settled": 2,
+      "won": 1,
+      "lost": 1,
       "push": 0,
       "superseded": 0,
-      "unresolved": 2
+      "unresolved": 1
     },
     "overdueRelease": {
       "analysis": 0,
