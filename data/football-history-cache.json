@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-11T07:17:32Z",
-  "lastSuccessfulAt": "2026-10-11T07:17:32Z",
+  "updatedAt": "2026-10-11T08:00:17Z",
+  "lastSuccessfulAt": "2026-10-11T08:00:17Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -504990,6 +504990,72 @@
       }
     },
     {
+      "id": "thesportsdb_public_123:2407113",
+      "utcDate": "2026-10-10T18:30:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "American Major League Soccer",
+      "competitionCode": "4346",
+      "homeTeam": {
+        "id": "",
+        "name": "Chicago Fire",
+        "shortName": "Chicago Fire",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "New York City FC",
+        "shortName": "New York City FC",
+        "tla": ""
+      },
+      "homeScore": 2,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-11T08:06:45Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "28",
+      "venue": "Soldier Field",
+      "theSportsDbEventId": "2407113"
+    },
+    {
+      "id": "thesportsdb_public_123:2398490",
+      "utcDate": "2026-10-10T21:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie A",
+      "competitionCode": "4351",
+      "homeTeam": {
+        "id": "",
+        "name": "Vasco da Gama",
+        "shortName": "Vasco da Gama",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Remo",
+        "shortName": "Remo",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-11T08:06:46Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "30",
+      "venue": "Estádio São Januário",
+      "theSportsDbEventId": "2398490"
+    },
+    {
       "id": "openfootball:2026-27:pt.1:63:Matchday 8",
       "utcDate": "2026-10-11T00:00:00Z",
       "status": "SCHEDULED",
@@ -606497,15 +606563,17 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-11T07:17:32Z",
-      "matches": 17525
+      "updatedAt": "2026-10-11T08:00:17Z",
+      "matches": 17527
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-10T11:08:49Z",
-      "requests": 61,
-      "matchesAdded": 61,
+      "updatedAt": "2026-10-11T08:00:17Z",
+      "requests": 62,
+      "matchesAdded": 62,
       "errors": [
+        "136517:HTTPError",
+        "136462:HTTPError",
         "136469:HTTPError",
         "134510:HTTPError",
         "133901:HTTPError",
@@ -606513,18 +606581,15 @@
         "137782:HTTPError",
         "144737:HTTPError",
         "136449:HTTPError",
-        "136466:HTTPError",
-        "135981:HTTPError",
-        "136452:HTTPError",
+        "137932:HTTPError",
+        "145171:HTTPError",
+        "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError",
-        "140517:HTTPError"
+        "133953:HTTPError"
       ]
     }
   }
