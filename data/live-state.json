@@ -1,65 +1,22 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "TRACKING",
-  "updatedAt": "2026-10-11T11:29:15Z",
+  "status": "IDLE",
+  "updatedAt": "2026-10-11T12:39:30Z",
   "refreshMinutes": 10,
-  "events": [
-    {
-      "eventId": "ac89f943c22fc8634ca573a77548615a",
-      "analysisId": "analysis-991425a8fc4fb84c0c16",
-      "isBestBet": false,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_netherlands_eredivisie",
-      "league": "Dutch Eredivisie",
-      "leagueRu": "Дутч Ередивисие",
-      "country": "Нидерланды",
-      "countryRu": "Нидерланды",
-      "home": "SC Telstar",
-      "away": "ADO Den Haag",
-      "homeRu": "СК Телстар",
-      "awayRu": "Адо Ден Хааг",
-      "commenceTime": "2026-10-11T12:30:00Z",
-      "status": "SCHEDULED",
-      "statusRu": "Ожидается",
-      "homeScore": null,
-      "awayScore": null,
-      "score": "",
-      "clockLabel": "",
-      "minute": 0,
-      "period": null,
-      "elapsedFraction": 0.0,
-      "pick": "Победа SC Telstar",
-      "pickRu": "Победа СК Телстар",
-      "market": "HOME_WIN",
-      "marketFamily": "OUTCOME",
-      "point": null,
-      "preMatchProbability": 0.398494,
-      "liveProbability": 0.398494,
-      "liveProbabilityPercent": 39.8,
-      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
-      "calibrationEvidence": null,
-      "provider": "Ожидание источника",
-      "providerEventId": null,
-      "updatedAt": "2026-10-11T11:29:15Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    }
-  ],
+  "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 4,
+    "calls": 5,
     "results": 3,
     "oddsQuota": {
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
+      "requestsRemaining": "142",
+      "requestsUsed": "358",
+      "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-10-11: SOFASCORE_PUBLIC:2026-10-11 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "ESPN 20261011: ESPN_PUBLIC:20261011 failed after retries: HTTP Error 502: Bad Gateway"
     ],
@@ -74,7 +31,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 2
+    "unconfirmedRemoved": 3
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
