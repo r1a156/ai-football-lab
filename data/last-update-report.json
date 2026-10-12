@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-12T09:41:46Z",
-  "finishedAt": "2026-10-12T15:13:17Z",
+  "finishedAt": "2026-10-12T19:23:14Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 1,
-      "matches": 17389,
+      "added": 3,
+      "matches": 17392,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -324,13 +324,25 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.183
+        "elapsedSeconds": 0.262
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.169
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.235
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.123
+        "elapsedSeconds": 0.126
       }
     ],
     "quota": {
@@ -790,12 +802,12 @@
       "thresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
       "strictProductionThresholdsChanged": false
     },
-    "dueRecords": 2,
-    "providerFinalResults": 22,
+    "dueRecords": 4,
+    "providerFinalResults": 39,
     "settlement": {
-      "analysisSettled": 1,
-      "bestBetsSettled": 0,
-      "unresolved": 17
+      "analysisSettled": 3,
+      "bestBetsSettled": 2,
+      "unresolved": 12
     },
     "shadowSettlement": {
       "settled": 0,
@@ -810,9 +822,9 @@
       "bestBets": 0
     },
     "expressSettlement": {
-      "settled": 0,
+      "settled": 2,
       "won": 0,
-      "lost": 0,
+      "lost": 2,
       "push": 0
     }
   },
