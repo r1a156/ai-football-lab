@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-11T07:59:05Z",
-  "finishedAt": "2026-10-11T23:04:30Z",
+  "finishedAt": "2026-10-12T02:25:16Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -67,8 +67,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 3,
-      "matches": 17381,
+      "added": 2,
+      "matches": 17383,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -338,17 +338,11 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.256
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_brazil_serie_b",
-        "status": 200,
-        "elapsedSeconds": 0.153
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_italy_serie_a",
         "status": 200,
         "elapsedSeconds": 0.164
       }
@@ -815,12 +809,12 @@
       "thresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
       "strictProductionThresholdsChanged": false
     },
-    "dueRecords": 4,
-    "providerFinalResults": 23,
+    "dueRecords": 3,
+    "providerFinalResults": 18,
     "settlement": {
-      "analysisSettled": 3,
+      "analysisSettled": 2,
       "bestBetsSettled": 0,
-      "unresolved": 3
+      "unresolved": 1
     },
     "shadowSettlement": {
       "settled": 0,
