@@ -1,73 +1,29 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "LIVE",
-  "updatedAt": "2026-10-13T01:35:57Z",
+  "status": "IDLE",
+  "updatedAt": "2026-10-13T08:29:06Z",
   "refreshMinutes": 10,
-  "events": [
-    {
-      "eventId": "8e559505d4499c2eea587a6193e38bd8",
-      "analysisId": "analysis-6c0b24a844d5919004dc",
-      "isBestBet": false,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_brazil_campeonato",
-      "league": "Brazil Série A",
-      "leagueRu": "Серия A Бразилии",
-      "country": "Бразилия",
-      "countryRu": "Бразилия",
-      "home": "Bragantino-SP",
-      "away": "Cruzeiro",
-      "homeRu": "Брагантино-Сп",
-      "awayRu": "Крузеиро",
-      "commenceTime": "2026-10-13T00:00:00Z",
-      "status": "LIVE",
-      "statusRu": "Матч идёт",
-      "homeScore": 3,
-      "awayScore": 1,
-      "score": "3:1",
-      "clockLabel": "ориентировочно 90-я минута",
-      "minute": 90,
-      "period": null,
-      "elapsedFraction": 1.0,
-      "pick": "Победа Bragantino-SP",
-      "pickRu": "Победа Брагантино-Сп",
-      "market": "HOME_WIN",
-      "marketFamily": "OUTCOME",
-      "point": null,
-      "preMatchProbability": 0.3344,
-      "liveProbability": 0.999,
-      "liveProbabilityPercent": 99.9,
-      "liveReason": "Пересчёт по текущему счёту и оставшемуся времени: 0 мин. до расчётного завершения.",
-      "calibrationEvidence": null,
-      "provider": "THESPORTSDB_PUBLIC_123",
-      "providerEventId": "2398483",
-      "updatedAt": "2026-10-13T01:35:57Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    }
-  ],
-  "activeEventIds": [
-    "8e559505d4499c2eea587a6193e38bd8"
-  ],
+  "events": [],
+  "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 9,
-    "results": 191,
+    "calls": 4,
+    "results": 102,
     "oddsQuota": {
-      "requestsRemaining": "92",
-      "requestsUsed": "408",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "SofaScore 2026-10-12: SOFASCORE_PUBLIC:2026-10-12 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
+      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-10-13: SOFASCORE_PUBLIC:2026-10-13 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 185,
-      "theSportsDB": 6,
+      "espn": 99,
+      "theSportsDB": 3,
       "footballDataOptional": 0
     }
   },
@@ -75,7 +31,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 9
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
