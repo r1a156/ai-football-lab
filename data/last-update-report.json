@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-13T12:40:13Z",
-  "finishedAt": "2026-10-13T16:23:13Z",
+  "finishedAt": "2026-10-13T21:26:04Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -55,8 +55,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 17554,
+      "added": 7,
+      "matches": 17561,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -557,7 +557,19 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.316
+        "elapsedSeconds": 0.21
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.202
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.13
       }
     ],
     "quota": {
@@ -1013,12 +1025,12 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 1,
-    "providerFinalResults": 12,
+    "dueRecords": 7,
+    "providerFinalResults": 27,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 18
+      "analysisSettled": 7,
+      "bestBetsSettled": 2,
+      "unresolved": 9
     },
     "shadowSettlement": {
       "settled": 0,
@@ -1033,9 +1045,9 @@
       "bestBets": 0
     },
     "expressSettlement": {
-      "settled": 0,
+      "settled": 1,
       "won": 0,
-      "lost": 0,
+      "lost": 1,
       "push": 0
     }
   },
