@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-14T20:59:49Z",
+  "updatedAt": "2026-10-14T23:53:39Z",
   "analysisDateLocal": "2026-10-14",
   "batch": {
     "version": 1,
@@ -651,10 +651,14 @@
           "odds": 1.72,
           "probability": 0.448541,
           "dataQuality": 80.8,
-          "status": "pending",
-          "score": "",
-          "statusLabel": "Ожидается",
-          "settledAt": null
+          "status": "won",
+          "score": "4:1",
+          "statusLabel": "Выигрыш",
+          "settledAt": "2026-10-14T23:53:39Z",
+          "homeScore": 4,
+          "awayScore": 1,
+          "settlementSource": "THE_ODDS_API_SCORES",
+          "resultUpdatedAt": "2026-10-14T23:53:39Z"
         },
         {
           "legNumber": 4,
@@ -742,8 +746,8 @@
       "id": "express-1e2aa3957785d1b87c8a",
       "label": "Экспресс B",
       "rank": 2,
-      "status": "pending",
-      "statusLabel": "Ожидается",
+      "status": "lost",
+      "statusLabel": "Проигрыш",
       "publishedAt": "2026-10-14T10:07:18Z",
       "operationalDayId": "2026-10-14-MSK-0800",
       "legs": [
@@ -831,10 +835,14 @@
           "odds": 1.55,
           "probability": 0.576262,
           "dataQuality": 86.0,
-          "status": "pending",
-          "score": "",
-          "statusLabel": "Ожидается",
-          "settledAt": null
+          "status": "lost",
+          "score": "0:1",
+          "statusLabel": "Проигрыш",
+          "settledAt": "2026-10-14T23:53:39Z",
+          "homeScore": 0,
+          "awayScore": 1,
+          "settlementSource": "THE_ODDS_API_SCORES",
+          "resultUpdatedAt": "2026-10-14T23:53:39Z"
         },
         {
           "legNumber": 4,
@@ -893,7 +901,7 @@
       ],
       "legCount": 5,
       "combinedOdds": 11.775,
-      "settledCombinedOdds": null,
+      "settledCombinedOdds": 2.705,
       "jointProbability": 0.04722,
       "jointProbabilityPercent": 4.72,
       "conservativeExpectedValue": -0.443985,
@@ -904,9 +912,11 @@
       "stake": 0.0,
       "potentialPayout": 0.0,
       "potentialProfit": 0.0,
-      "profit": 0.0,
+      "profit": -0.0,
       "financialMode": "EXPRESS_INFORMATIONAL_NO_BANK",
-      "bankPolicy": "THREE_BALANCED_EXPRESSES_FIVE_LEGS_INFORMATIONAL_ONLY"
+      "bankPolicy": "THREE_BALANCED_EXPRESSES_FIVE_LEGS_INFORMATIONAL_ONLY",
+      "settledAt": "2026-10-14T23:53:39Z",
+      "payout": 0.0
     }
   ],
   "dailyAnalysis": [
@@ -4566,10 +4576,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:1",
       "publishedAt": "2026-10-14T05:26:33Z",
-      "settledAt": null,
+      "settledAt": "2026-10-14T23:53:39Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -4959,9 +4969,14 @@
       "batchSequence": 23,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 7
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 8,
+      "homeScore": 0,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-10-14T23:53:39Z"
     },
     {
       "id": "analysis-14eda1b78f3fdcae5d5d",
@@ -8868,8 +8883,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 8
     },
     {
       "id": "analysis-44d38d82d92ad6e05b4f",
@@ -9400,10 +9415,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "4:1",
       "publishedAt": "2026-10-14T05:26:33Z",
-      "settledAt": null,
+      "settledAt": "2026-10-14T23:53:39Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -9776,9 +9791,14 @@
       "batchSequence": 23,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 7
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 8,
+      "homeScore": 4,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-10-14T23:53:39Z"
     },
     {
       "id": "analysis-33c48f251221a58ae806",
@@ -10751,8 +10771,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 8
     },
     {
       "id": "analysis-276df8096cadbba1be4f",
@@ -11284,10 +11304,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "0:6",
       "publishedAt": "2026-10-14T05:26:33Z",
-      "settledAt": null,
+      "settledAt": "2026-10-14T23:53:39Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -11660,9 +11680,14 @@
       "batchSequence": 23,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 7
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 8,
+      "homeScore": 0,
+      "awayScore": 6,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-10-14T23:53:39Z"
     },
     {
       "id": "analysis-2bd283d3947cbfb9b91c",
@@ -12077,8 +12102,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T20:59:49Z",
-      "settlementAttempts": 6
+      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
+      "settlementAttempts": 7
     }
   ],
   "bestBets": [
