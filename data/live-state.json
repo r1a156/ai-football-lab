@@ -2,29 +2,27 @@
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
   "status": "IDLE",
-  "updatedAt": "2026-10-15T04:26:02Z",
+  "updatedAt": "2026-10-15T09:21:40Z",
   "refreshMinutes": 10,
   "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 8,
-    "results": 188,
+    "calls": 5,
+    "results": 125,
     "oddsQuota": {
-      "requestsRemaining": null,
-      "requestsUsed": null,
-      "requestsLast": null,
+      "requestsRemaining": "14",
+      "requestsUsed": "486",
+      "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "Ключ глобального источника счёта не настроен",
-      "SofaScore 2026-10-14: SOFASCORE_PUBLIC:2026-10-14 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "SofaScore 2026-10-15: SOFASCORE_PUBLIC:2026-10-15 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 182,
-      "theSportsDB": 6,
+      "espn": 122,
+      "theSportsDB": 3,
       "footballDataOptional": 0
     }
   },
@@ -32,7 +30,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 3
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
