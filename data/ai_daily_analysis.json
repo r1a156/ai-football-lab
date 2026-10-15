@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-14T23:53:39Z",
+  "updatedAt": "2026-10-15T04:26:05Z",
   "analysisDateLocal": "2026-10-14",
   "batch": {
     "version": 1,
@@ -866,10 +866,14 @@
           "odds": 1.56,
           "probability": 0.541976,
           "dataQuality": 52.0,
-          "status": "pending",
-          "score": "",
-          "statusLabel": "Ожидается",
-          "settledAt": null
+          "status": "won",
+          "score": "2:0",
+          "statusLabel": "Выигрыш",
+          "settledAt": "2026-10-15T04:26:05Z",
+          "homeScore": 2,
+          "awayScore": 0,
+          "settlementSource": "THE_ODDS_API_SCORES",
+          "resultUpdatedAt": "2026-10-15T04:26:05Z"
         },
         {
           "legNumber": 5,
@@ -893,10 +897,14 @@
           "odds": 1.8,
           "probability": 0.492101,
           "dataQuality": 40.0,
-          "status": "pending",
-          "score": "",
-          "statusLabel": "Ожидается",
-          "settledAt": null
+          "status": "lost",
+          "score": "3:1",
+          "statusLabel": "Проигрыш",
+          "settledAt": "2026-10-15T04:26:05Z",
+          "homeScore": 3,
+          "awayScore": 1,
+          "settlementSource": "THE_ODDS_API_SCORES",
+          "resultUpdatedAt": "2026-10-15T04:26:05Z"
         }
       ],
       "legCount": 5,
@@ -8504,10 +8512,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "2:0",
       "publishedAt": "2026-10-14T05:26:33Z",
-      "settledAt": null,
+      "settledAt": "2026-10-15T04:26:05Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -8882,9 +8890,14 @@
       "batchSequence": 23,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
-      "settlementAttempts": 8
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-10-15T04:26:05Z",
+      "settlementAttempts": 9,
+      "homeScore": 2,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-10-15T04:26:05Z"
     },
     {
       "id": "analysis-44d38d82d92ad6e05b4f",
@@ -10385,10 +10398,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:1",
       "publishedAt": "2026-10-14T05:26:33Z",
-      "settledAt": null,
+      "settledAt": "2026-10-15T04:26:05Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -10770,9 +10783,14 @@
       "batchSequence": 23,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
-      "settlementAttempts": 8
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-10-15T04:26:05Z",
+      "settlementAttempts": 9,
+      "homeScore": 3,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-10-15T04:26:05Z"
     },
     {
       "id": "analysis-276df8096cadbba1be4f",
@@ -12102,8 +12120,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-14T23:53:39Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-15T04:26:05Z",
+      "settlementAttempts": 8
     }
   ],
   "bestBets": [
@@ -15086,125 +15104,13 @@
   "shadowLearning": {
     "statistics": {
       "tracked": 20,
-      "pending": 1,
-      "settled": 8,
-      "won": 3,
+      "pending": 0,
+      "settled": 9,
+      "won": 4,
       "lost": 5,
       "push": 0
     },
-    "pending": [
-      {
-        "id": "bfb58473c7779647803c",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "602bc4a2f3d21e3ad18091b4e39c5f1a",
-        "sport": "soccer",
-        "sportKey": "soccer_usa_mls",
-        "league": "MLS",
-        "home": "Nashville SC",
-        "away": "Sporting Kansas City",
-        "commenceTime": "2026-10-15T00:30:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-14T05:26:33Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_OVER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "OVER",
-        "point": 3.5,
-        "pick": "Тотал больше 3.5",
-        "pickRu": "Тотал больше 3.5",
-        "bookmakerOdds": 1.83,
-        "modelProbability": 0.496404,
-        "conservativeProbability": 0.366775,
-        "marketProbability": 0.546571,
-        "expectedValue": -0.328802,
-        "edge": -0.179796,
-        "dataTier": "MARKET",
-        "dataQuality": 34.0,
-        "quoteCount": 13,
-        "agreement": 59.9,
-        "marketStability": 61.7,
-        "anomaly": 24.3,
-        "obviousMarketScore": 53.3585,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Модель счёта не подтверждает выбранное направление тотала",
-            "Ожидаемая сумма голов недостаточна для ставки на больше",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание",
-            "Недостаточная полнота данных",
-            "Модели недостаточно согласованы",
-            "Линия недостаточно стабильна",
-            "Нет независимой статистической модели команд"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-          "Основной фильтр: Ожидаемая сумма голов недостаточна для ставки на больше",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Основной фильтр: Модели недостаточно согласованы",
-          "Основной фильтр: Линия недостаточно стабильна",
-          "Основной фильтр: Нет независимой статистической модели команд",
-          "Нет полноценной истории обеих команд",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.027108,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 213,
-            "bias": -0.018,
-            "weight": 1.0,
-            "hitRate": 0.5493,
-            "averagePredicted": 0.5673,
-            "brierScore": 0.249955
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 138,
-            "bias": -0.0654,
-            "weight": 0.818,
-            "hitRate": 0.5362,
-            "averagePredicted": 0.6016,
-            "brierScore": 0.251968
-          },
-          {
-            "segment": "ODDS|soccer|UPPER_MID",
-            "samples": 45,
-            "bias": 0.0071,
-            "weight": 0.05,
-            "hitRate": 0.5333,
-            "averagePredicted": 0.5262,
-            "brierScore": 0.2552
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 63,
-            "bias": -0.0282,
-            "weight": 0.198,
-            "hitRate": 0.5397,
-            "averagePredicted": 0.5679,
-            "brierScore": 0.248138
-          }
-        ],
-        "probability": 0.496404,
-        "odds": 1.83,
-        "shadowRankScore": 50.5675
-      }
-    ]
+    "pending": []
   },
   "nextPortfolio": {}
 }
