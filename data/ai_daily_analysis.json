@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-15T21:42:41Z",
+  "updatedAt": "2026-10-15T23:55:22Z",
   "analysisDateLocal": "2026-10-15",
   "batch": {
     "version": 1,
@@ -142,7 +142,7 @@
     "stakePercent": 10,
     "roi": -40.9,
     "maxDrawdown": 68.58,
-    "activeExposure": 1086.44,
+    "activeExposure": 543.22,
     "history": [
       {
         "date": "2026-07-17",
@@ -564,9 +564,9 @@
         "profit": 478.03
       }
     ],
-    "placedAmount": 1086.44,
-    "activeBetsCount": 2,
-    "available": 4823.74,
+    "placedAmount": 543.22,
+    "activeBetsCount": 1,
+    "available": 5366.96,
     "closedBalance": 5910.18,
     "mode": "ACTIVE_SINGLE_BANK",
     "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
@@ -636,10 +636,11 @@
           "odds": 1.87,
           "probability": 0.553747,
           "dataQuality": 40.0,
-          "status": "pending",
+          "status": "unresolved",
           "score": "",
-          "statusLabel": "Ожидается",
-          "settledAt": null
+          "statusLabel": "Результат не подтверждён",
+          "settledAt": "2026-10-15T23:55:22Z",
+          "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL"
         },
         {
           "legNumber": 3,
@@ -1836,8 +1837,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-15T21:42:41Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-15T23:55:22Z",
+      "settlementAttempts": 8
     },
     {
       "id": "analysis-7e7ea2cbe91cf316af8e",
@@ -2319,10 +2320,10 @@
           }
         }
       ],
-      "status": "pending",
+      "status": "unresolved",
       "score": "",
       "publishedAt": "2026-10-15T09:21:44Z",
-      "settledAt": null,
+      "settledAt": "2026-10-15T23:55:22Z",
       "isBestBet": true,
       "stake": 0.0,
       "profit": 0.0,
@@ -2700,9 +2701,11 @@
       "batchSequence": 25,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-15T21:42:41Z",
-      "settlementAttempts": 7
+      "statusLabel": "Результат не подтверждён",
+      "settlementLastAttemptAt": "2026-10-15T23:55:22Z",
+      "settlementAttempts": 8,
+      "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
+      "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
     {
       "id": "analysis-bea2438b3b457701e9d0",
@@ -6586,8 +6589,8 @@
       "batchSequence": 26,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-10-15T21:42:41Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-15T23:55:22Z",
+      "settlementAttempts": 8
     },
     {
       "id": "ranked-86b31649f1219e2b6863",
@@ -7069,10 +7072,10 @@
           }
         }
       ],
-      "status": "pending",
+      "status": "unresolved",
       "score": "",
       "publishedAt": "2026-10-15T09:48:37Z",
-      "settledAt": null,
+      "settledAt": "2026-10-15T23:55:22Z",
       "isBestBet": true,
       "stake": 543.22,
       "stakePercent": 10.0,
@@ -7438,14 +7441,16 @@
       "rankLabel": "Надёжность №2",
       "stakeAssignedAt": "2026-10-15T09:48:37Z",
       "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Результат не подтверждён",
       "premiumLabel": null,
       "batchId": "batch-f6f196ed09f6fb6745a3",
       "batchSequence": 26,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-10-15T21:42:41Z",
-      "settlementAttempts": 7
+      "settlementLastAttemptAt": "2026-10-15T23:55:22Z",
+      "settlementAttempts": 8,
+      "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
+      "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
     {
       "id": "ranked-951a30d9ac0c25d29490",

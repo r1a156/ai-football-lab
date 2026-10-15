@@ -1,57 +1,15 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "TRACKING",
-  "updatedAt": "2026-10-15T21:42:39Z",
+  "status": "IDLE",
+  "updatedAt": "2026-10-15T23:55:06Z",
   "refreshMinutes": 10,
-  "events": [
-    {
-      "eventId": "314b3d8f825f3886ce4a2187d693d720",
-      "analysisId": "ranked-6e15b86ed5f656677bf0",
-      "isBestBet": true,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_argentina_primera_division",
-      "league": "Primera División - Argentina",
-      "leagueRu": "Примера Аргентины",
-      "country": "Аргентина",
-      "countryRu": "Аргентина",
-      "home": "Atlético Huracán",
-      "away": "Gimnasia La Plata",
-      "homeRu": "Атлетико Хуракан",
-      "awayRu": "Гимнасиа Ла Плата",
-      "commenceTime": "2026-10-15T23:00:00Z",
-      "status": "SCHEDULED",
-      "statusRu": "Ожидается",
-      "homeScore": null,
-      "awayScore": null,
-      "score": "",
-      "clockLabel": "",
-      "minute": 0,
-      "period": null,
-      "elapsedFraction": 0.0,
-      "pick": "Тотал меньше 2.5",
-      "pickRu": "Тотал меньше 2.5",
-      "market": "TOTAL_UNDER",
-      "marketFamily": "TOTAL",
-      "point": 2.5,
-      "preMatchProbability": 0.642352,
-      "liveProbability": 0.642352,
-      "liveProbabilityPercent": 64.2,
-      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
-      "calibrationEvidence": null,
-      "provider": "THESPORTSDB_PUBLIC_123",
-      "providerEventId": "2398139",
-      "updatedAt": "2026-10-15T21:42:39Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    }
-  ],
+  "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
     "calls": 4,
-    "results": 125,
+    "results": 122,
     "oddsQuota": {
       "requestsRemaining": null,
       "requestsUsed": null,
@@ -60,12 +18,13 @@
     },
     "errors": [
       "Ключ глобального источника счёта не настроен",
-      "SofaScore 2026-10-15: SOFASCORE_PUBLIC:2026-10-15 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+      "SofaScore 2026-10-15: SOFASCORE_PUBLIC:2026-10-15 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
+      "TheSportsDB 2026-10-15: THESPORTSDB_PUBLIC:2026-10-15 failed after retries: The read operation timed out"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
       "espn": 122,
-      "theSportsDB": 3,
+      "theSportsDB": 0,
       "footballDataOptional": 0
     }
   },
@@ -73,7 +32,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 4
+    "unconfirmedRemoved": 2
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }

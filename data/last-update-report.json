@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-15T09:48:37Z",
-  "finishedAt": "2026-10-15T21:42:41Z",
+  "finishedAt": "2026-10-15T23:55:22Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -68,7 +68,7 @@
       ]
     },
     "trackedHistory": {
-      "added": 6,
+      "added": 0,
       "matches": 17597,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
@@ -717,31 +717,19 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.095
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_england_league1",
-        "status": 200,
-        "elapsedSeconds": 0.157
+        "elapsedSeconds": 0.12
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.108
+        "elapsedSeconds": 0.113
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.155
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_uefa_europa_league",
-        "status": 200,
-        "elapsedSeconds": 0.135
+        "elapsedSeconds": 0.183
       }
     ],
     "quota": {
@@ -1261,29 +1249,29 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 9,
-    "providerFinalResults": 41,
+    "dueRecords": 3,
+    "providerFinalResults": 22,
     "settlement": {
-      "analysisSettled": 6,
-      "bestBetsSettled": 2,
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
       "unresolved": 7
     },
     "shadowSettlement": {
-      "settled": 6,
-      "won": 5,
-      "lost": 1,
+      "settled": 0,
+      "won": 0,
+      "lost": 0,
       "push": 0,
       "superseded": 0,
       "unresolved": 0
     },
     "overdueRelease": {
-      "analysis": 0,
-      "bestBets": 0
+      "analysis": 2,
+      "bestBets": 1
     },
     "expressSettlement": {
-      "settled": 1,
+      "settled": 0,
       "won": 0,
-      "lost": 1,
+      "lost": 0,
       "push": 0
     }
   },
