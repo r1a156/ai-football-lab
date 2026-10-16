@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-16T09:12:26Z",
-  "lastSuccessfulAt": "2026-10-16T09:12:26Z",
+  "updatedAt": "2026-10-16T09:42:53Z",
+  "lastSuccessfulAt": "2026-10-16T09:42:53Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -614451,18 +614451,19 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-16T09:12:26Z",
+      "updatedAt": "2026-10-16T09:42:53Z",
       "matches": 17753
     },
     "THESPORTSDB_PUBLIC_123": {
-      "status": "DEGRADED",
-      "updatedAt": "2026-10-16T09:12:26Z",
-      "requests": 0,
-      "matchesAdded": 0,
+      "status": "GREEN",
+      "updatedAt": "2026-10-16T09:42:53Z",
+      "requests": 2,
+      "matchesAdded": 1,
       "errors": [
+        "134742:HTTPError",
         "136186:HTTPError",
         "134737:HTTPError",
-        "134734:HTTPError",
+        "134734:TimeoutError",
         "136831:HTTPError",
         "134294:HTTPError",
         "134291:HTTPError",
@@ -614470,15 +614471,14 @@
         "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
-        "145176:HTTPError",
+        "145176:TimeoutError",
         "145187:HTTPError",
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
         "133953:HTTPError",
         "137878:HTTPError",
-        "134018:HTTPError",
-        "140517:HTTPError",
+        "140517:TimeoutError",
         "133978:HTTPError"
       ]
     }
