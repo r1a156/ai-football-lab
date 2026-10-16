@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-15T09:48:37Z",
-  "finishedAt": "2026-10-15T23:55:22Z",
+  "finishedAt": "2026-10-16T04:21:05Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -68,8 +68,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 17597,
+      "added": 3,
+      "matches": 17600,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -717,19 +717,25 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.179
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.159
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.17
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.183
+        "elapsedSeconds": 0.191
       }
     ],
     "quota": {
@@ -1249,12 +1255,12 @@
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
     },
     "topSingles": 3,
-    "dueRecords": 3,
-    "providerFinalResults": 22,
+    "dueRecords": 5,
+    "providerFinalResults": 26,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 7
+      "analysisSettled": 3,
+      "bestBetsSettled": 2,
+      "unresolved": 2
     },
     "shadowSettlement": {
       "settled": 0,
@@ -1265,8 +1271,8 @@
       "unresolved": 0
     },
     "overdueRelease": {
-      "analysis": 2,
-      "bestBets": 1
+      "analysis": 0,
+      "bestBets": 0
     },
     "expressSettlement": {
       "settled": 0,
