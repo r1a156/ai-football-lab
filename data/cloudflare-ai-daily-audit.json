@@ -1,13 +1,173 @@
 {
   "version": "V10_R15F_CF_AI_R1",
-  "operationalDayId": "2026-10-11-MSK-0800",
-  "inputFingerprint": "f9db3221819d09f762149e007bd300665b9edf78179f6a4b01c2b8fd9929a5a0",
-  "createdAt": "2026-10-11T07:59:05.782830Z",
+  "operationalDayId": "2026-10-17-MSK-0800",
+  "inputFingerprint": "6948d05197c0294f260658d3b97bb851f77aa79cbbb5cc581c8ee7e3e756114a",
+  "createdAt": "2026-10-17T06:07:08.865720Z",
   "logicalRunConsumed": true,
-  "technicalAttempts": 3,
-  "schemaValid": false,
-  "status": "FAILED_FALLBACK",
+  "technicalAttempts": 1,
   "modelRequested": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-  "modelUsed": null,
-  "error": "HTTP_503:{\"error\":\"Workers AI unavailable or free quota exhausted; use deterministic fallback\"}"
+  "modelUsed": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "requestId": "789a2c57-b148-444e-971c-69a2008979ea",
+  "usage": {
+    "prompt_tokens": 17959,
+    "completion_tokens": 1772,
+    "total_tokens": 19731,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "neurons": 841.8397216796875
+  },
+  "latencySeconds": 78.569,
+  "schemaValid": true,
+  "response": {
+    "status": "PASS",
+    "orderedEventIds": [
+      "f19a3f3cf0c89e06ca5bc5b285290034",
+      "51f8e297d780bc417cf03e153414dace",
+      "b6bf48e65d78b5615da5f3ab904fa5d4",
+      "6f2f6652a091df4d41de08076b188f4e",
+      "0b71693d447f2da7496164d1ee5c1e7d",
+      "07d6950f415c69b97bce3cc2790f24f1",
+      "e97f18154aef5cf89c6f02e8c7b4bcdc",
+      "76764ef249a00bb0197ce49f896a4e53",
+      "4e8e2947ea40233bd9fd3f062d69bb7b",
+      "45f6101375ac1b19d3bcedfe04394ee5",
+      "1d647c4a829133678cfb3a0425b1cd16",
+      "0bd70fa7386ced9e79937d82f726bfe3",
+      "37d564daa14e4724b53830d610cf5868",
+      "db12f79e515d84944ce07addb7e64313",
+      "d03e0b96ac6d72039584b0ee2bd8838b"
+    ],
+    "decisions": [
+      {
+        "eventId": "f19a3f3cf0c89e06ca5bc5b285290034",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал меньше 3.5"
+      },
+      {
+        "eventId": "51f8e297d780bc417cf03e153414dace",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал больше 2.5"
+      },
+      {
+        "eventId": "b6bf48e65d78b5615da5f3ab904fa5d4",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал больше 2.5"
+      },
+      {
+        "eventId": "6f2f6652a091df4d41de08076b188f4e",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал меньше 3.5"
+      },
+      {
+        "eventId": "0b71693d447f2da7496164d1ee5c1e7d",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал больше 2.5"
+      },
+      {
+        "eventId": "07d6950f415c69b97bce3cc2790f24f1",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал меньше 3.5"
+      },
+      {
+        "eventId": "e97f18154aef5cf89c6f02e8c7b4bcdc",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Реадинг"
+      },
+      {
+        "eventId": "76764ef249a00bb0197ce49f896a4e53",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал меньше 2.5"
+      },
+      {
+        "eventId": "4e8e2947ea40233bd9fd3f062d69bb7b",
+        "selectedMarketKey": "totals",
+        "riskPenalty": 0,
+        "reason": "Тотал меньше 3.5"
+      },
+      {
+        "eventId": "45f6101375ac1b19d3bcedfe04394ee5",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Барнет"
+      },
+      {
+        "eventId": "1d647c4a829133678cfb3a0425b1cd16",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Миллвалл"
+      },
+      {
+        "eventId": "0bd70fa7386ced9e79937d82f726bfe3",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Спалдинг Юнайтед ФК"
+      },
+      {
+        "eventId": "37d564daa14e4724b53830d610cf5868",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Запад Бромвич Албион"
+      },
+      {
+        "eventId": "db12f79e515d84944ce07addb7e64313",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Хартлепоол Юнайтед ФК"
+      },
+      {
+        "eventId": "d03e0b96ac6d72039584b0ee2bd8838b",
+        "selectedMarketKey": "h2h",
+        "riskPenalty": 0,
+        "reason": "Победа Хорнчурч ФК"
+      }
+    ],
+    "topSingles": [
+      "f19a3f3cf0c89e06ca5bc5b285290034",
+      "51f8e297d780bc417cf03e153414dace",
+      "b6bf48e65d78b5615da5f3ab904fa5d4"
+    ],
+    "expresses": {
+      "A": [
+        "f19a3f3cf0c89e06ca5bc5b285290034",
+        "51f8e297d780bc417cf03e153414dace",
+        "b6bf48e65d78b5615da5f3ab904fa5d4",
+        "6f2f6652a091df4d41de08076b188f4e",
+        "0b71693d447f2da7496164d1ee5c1e7d"
+      ],
+      "B": [
+        "07d6950f415c69b97bce3cc2790f24f1",
+        "e97f18154aef5cf89c6f02e8c7b4bcdc",
+        "76764ef249a00bb0197ce49f896a4e53",
+        "4e8e2947ea40233bd9fd3f062d69bb7b",
+        "45f6101375ac1b19d3bcedfe04394ee5"
+      ],
+      "C": [
+        "1d647c4a829133678cfb3a0425b1cd16",
+        "0bd70fa7386ced9e79937d82f726bfe3",
+        "37d564daa14e4724b53830d610cf5868",
+        "db12f79e515d84944ce07addb7e64313",
+        "d03e0b96ac6d72039584b0ee2bd8838b"
+      ]
+    },
+    "systemMessage": {
+      "title": "Проверка завершена",
+      "lead": "Система проверила все события и сделала свои прогнозы.",
+      "body": "Система проанализировала все 15 событий и выбрала лучшие варианты для ординаров и экспрессов. Рекомендуем обратить внимание на топ-3 ординара и экспрессы A, B и C.",
+      "focus": [
+        "f19a3f3cf0c89e06ca5bc5b285290034",
+        "51f8e297d780bc417cf03e153414dace",
+        "b6bf48e65d78b5615da5f3ab904fa5d4"
+      ]
+    },
+    "globalWarnings": []
+  }
 }
