@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-10-17T19:42:14Z",
+    "updatedAt": "2026-10-17T21:46:49Z",
     "analysisDateLocal": "2026-10-17",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -132,7 +132,7 @@
     "operationalDayId": "2026-10-17-MSK-0800",
     "operationalWindowStart": "2026-10-17T05:00:00Z",
     "operationalWindowEnd": "2026-10-18T05:00:00Z",
-    "selectionWindowStart": "2026-10-17T20:27:14Z",
+    "selectionWindowStart": "2026-10-17T22:31:49Z",
     "selectionWindowEnd": "2026-10-18T05:00:00Z",
     "operationalWindowPolicy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
@@ -144,7 +144,7 @@
       "bestBets": 1
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-10-17T19:42:11Z",
+    "r15SettlementAt": "2026-10-17T21:46:47Z",
     "nextPortfolioStatus": "PUBLISHED",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -15614,8 +15614,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-17T19:42:11Z",
-      "settlementAttempts": 1054,
+      "settlementLastAttemptAt": "2026-10-17T21:46:47Z",
+      "settlementAttempts": 1055,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -160780,8 +160780,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-17T19:42:11Z",
-      "settlementAttempts": 28,
+      "settlementLastAttemptAt": "2026-10-17T21:46:47Z",
+      "settlementAttempts": 29,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -238819,7 +238819,7 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-10-17T19:42:11Z",
+    "updatedAt": "2026-10-17T21:46:47Z",
     "segments": {
       "SPORT|soccer": {
         "settled": 280,
@@ -262667,7 +262667,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-10-17T19:42:13Z"
+      "updatedAt": "2026-10-17T21:46:48Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -262684,7 +262684,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-17T19:42:14Z",
+    "updatedAt": "2026-10-17T21:46:49Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "batchHistory": [
@@ -262855,7 +262855,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-10-17T19:42:11Z",
+    "updatedAt": "2026-10-17T21:46:47Z",
     "analysisHistory": {
       "input": 261,
       "output": 261,
@@ -270559,8 +270559,8 @@
     }
   ],
   "dataCoverage": {
-    "discoveredEvents": 29,
-    "competitionsDiscovered": 8,
+    "discoveredEvents": 22,
+    "competitionsDiscovered": 7,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -270581,7 +270581,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-17T19:43:33Z",
+        "lastSuccessAt": "2026-10-17T21:48:07Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -270590,15 +270590,15 @@
       }
     },
     "quota": {
-      "requestsRemaining": "124",
-      "requestsUsed": "376",
+      "requestsRemaining": "118",
+      "requestsUsed": "382",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "124",
-        "requestsUsed": "376",
+        "requestsRemaining": "118",
+        "requestsUsed": "382",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
@@ -270624,12 +270624,13 @@
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 43,
+      "requests": 44,
+      "matchesAdded": 44,
       "historyMatches": 17775,
       "errors": [
+        "136449:HTTPError",
         "136466:HTTPError",
-        "135981:HTTPError",
+        "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
@@ -270638,7 +270639,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
+        "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -270646,14 +270647,13 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "133953:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-17T19:42:14Z"
+    "updatedAt": "2026-10-17T21:46:49Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -270704,7 +270704,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-17T19:42:14Z"
+    "updatedAt": "2026-10-17T21:46:49Z"
   },
   "legacyBridgeHistory": [
     {
@@ -270778,7 +270778,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-17T19:42:14Z",
+    "updatedAt": "2026-10-17T21:46:49Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "operationalDayRolloverHistory": [
@@ -274827,7 +274827,7 @@
         "financialMode": "SHADOW_LEARNING_ONLY"
       }
     ],
-    "updatedAt": "2026-10-17T19:42:14Z",
+    "updatedAt": "2026-10-17T21:46:49Z",
     "statistics": {
       "tracked": 33,
       "pending": 1,
@@ -274839,111 +274839,6 @@
     "version": 1
   },
   "upcomingFixtures": [
-    {
-      "eventId": "8830fe1a1fae1fcb125b305812cc023b",
-      "sport": "soccer",
-      "sportKey": "soccer_argentina_primera_division",
-      "league": "Primera División - Argentina",
-      "leagueRu": "Примера Аргентины",
-      "home": "Independiente Rivadavia",
-      "homeRu": "Индепендиенте Ривадавиа",
-      "away": "CA Tigre BA",
-      "awayRu": "Тигре",
-      "commenceTime": "2026-10-17T20:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "c67c926373064675b0603019cc8ee888",
-      "sport": "soccer",
-      "sportKey": "soccer_argentina_primera_division",
-      "league": "Primera División - Argentina",
-      "leagueRu": "Примера Аргентины",
-      "home": "Platense",
-      "homeRu": "Платенсе",
-      "away": "Lanus",
-      "awayRu": "Ланус",
-      "commenceTime": "2026-10-17T20:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "6d09159511da77074640f6d4a9683b12",
-      "sport": "soccer",
-      "sportKey": "soccer_usa_mls",
-      "league": "MLS",
-      "leagueRu": "Млс",
-      "home": "Minnesota United FC",
-      "homeRu": "Миннесота Юнайтед ФК",
-      "away": "St. Louis City SC",
-      "awayRu": "Ст. Лоуис Сити СК",
-      "commenceTime": "2026-10-17T20:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "8ccb6090c136959fa9cd76853ae202ca",
-      "sport": "soccer",
-      "sportKey": "soccer_brazil_campeonato",
-      "league": "Brazil Série A",
-      "leagueRu": "Серия A Бразилии",
-      "home": "Botafogo",
-      "homeRu": "Ботафого",
-      "away": "Chapecoense",
-      "awayRu": "Чапекоенсе",
-      "commenceTime": "2026-10-17T21:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "1fae3cfd7cbdf025c4d16f834b5939b0",
-      "sport": "soccer",
-      "sportKey": "soccer_brazil_campeonato",
-      "league": "Brazil Série A",
-      "leagueRu": "Серия A Бразилии",
-      "home": "Atletico Mineiro",
-      "homeRu": "Атлетико Минеиро",
-      "away": "Coritiba",
-      "awayRu": "Коритиба",
-      "commenceTime": "2026-10-17T21:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "ff71ea520003843fa0b7717c53e0c767",
-      "sport": "soccer",
-      "sportKey": "soccer_brazil_serie_b",
-      "league": "Brazil Série B",
-      "leagueRu": "Серия B Бразилии",
-      "home": "América Mineiro",
-      "homeRu": "Америка Минеиро",
-      "away": "Operario PR",
-      "awayRu": "Операрио Пр",
-      "commenceTime": "2026-10-17T21:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "0e1fb1dc3fd0c2731f58346a269ca782",
-      "sport": "soccer",
-      "sportKey": "soccer_brazil_campeonato",
-      "league": "Brazil Série A",
-      "leagueRu": "Серия A Бразилии",
-      "home": "Atletico Paranaense",
-      "homeRu": "Атлетико Паранаенсе",
-      "away": "Palmeiras",
-      "awayRu": "Палмеирас",
-      "commenceTime": "2026-10-17T22:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
     {
       "eventId": "77da9d57f8682e024e36434435d1567c",
       "sport": "soccer",
