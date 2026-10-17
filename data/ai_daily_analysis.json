@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-17T09:41:25Z",
+  "updatedAt": "2026-10-17T10:33:43Z",
   "analysisDateLocal": "2026-10-17",
   "batch": {
     "id": "",
@@ -12,11 +12,11 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-17T09:41:25Z",
+    "updatedAt": "2026-10-17T10:33:43Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 181,
+    "discoveredEvents": 172,
     "competitionsDiscovered": 36,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
@@ -26,7 +26,7 @@
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-10-17T09:40:29Z",
+        "updatedAt": "2026-10-17T10:32:46Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-17T09:42:32Z",
+        "lastSuccessAt": "2026-10-17T10:34:46Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -47,15 +47,15 @@
       }
     },
     "quota": {
-      "requestsRemaining": "162",
-      "requestsUsed": "338",
+      "requestsRemaining": "158",
+      "requestsUsed": "342",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "162",
-        "requestsUsed": "338",
+        "requestsRemaining": "158",
+        "requestsUsed": "342",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
@@ -81,12 +81,13 @@
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 43,
+      "requests": 44,
+      "matchesAdded": 44,
       "historyMatches": 17673,
       "errors": [
+        "136449:HTTPError",
         "136466:HTTPError",
-        "135981:HTTPError",
+        "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
@@ -95,7 +96,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
+        "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -103,14 +104,13 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "133953:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-17T09:41:25Z"
+    "updatedAt": "2026-10-17T10:33:43Z"
   },
   "bank": {
     "starting": 10000,
@@ -576,7 +576,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-17T09:41:25Z",
+    "updatedAt": "2026-10-17T10:33:43Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -585,7 +585,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-17T09:41:25Z"
+    "updatedAt": "2026-10-17T10:33:43Z"
   },
   "shadowLearning": {
     "statistics": {
