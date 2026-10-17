@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-10-16T23:29:10Z",
+    "updatedAt": "2026-10-17T01:30:28Z",
     "analysisDateLocal": "2026-10-16",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -132,7 +132,7 @@
     "operationalDayId": "2026-10-16-MSK-0800",
     "operationalWindowStart": "2026-10-16T05:00:00Z",
     "operationalWindowEnd": "2026-10-17T05:00:00Z",
-    "selectionWindowStart": "2026-10-17T00:14:10Z",
+    "selectionWindowStart": "2026-10-17T02:15:28Z",
     "selectionWindowEnd": "2026-10-17T05:00:00Z",
     "operationalWindowPolicy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
@@ -144,7 +144,7 @@
       "bestBets": 1
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-10-16T23:29:08Z",
+    "r15SettlementAt": "2026-10-17T01:30:26Z",
     "nextPortfolioStatus": "PUBLISHED",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -15614,8 +15614,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-16T23:29:08Z",
-      "settlementAttempts": 1044,
+      "settlementLastAttemptAt": "2026-10-17T01:30:26Z",
+      "settlementAttempts": 1045,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -160780,8 +160780,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-16T23:29:08Z",
-      "settlementAttempts": 18,
+      "settlementLastAttemptAt": "2026-10-17T01:30:26Z",
+      "settlementAttempts": 19,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -168488,8 +168488,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-10-16T23:29:08Z",
-      "settlementAttempts": 8
+      "settlementLastAttemptAt": "2026-10-17T01:30:26Z",
+      "settlementAttempts": 9
     },
     {
       "id": "analysis-d771ee076e30e7555368",
@@ -222060,30 +222060,30 @@
     "windows": {
       "7": {
         "allPredictions": {
-          "total": 145,
-          "settled": 143,
-          "decided": 143,
-          "won": 76,
-          "lost": 67,
+          "total": 133,
+          "settled": 131,
+          "decided": 131,
+          "won": 69,
+          "lost": 62,
           "push": 0,
           "void": 0,
           "unresolved": 1,
           "pending": 1,
-          "accuracy": 53.1,
+          "accuracy": 52.7,
           "profit": 0.0
         },
         "bestBets": {
-          "total": 34,
-          "settled": 34,
-          "decided": 34,
-          "won": 17,
+          "total": 33,
+          "settled": 33,
+          "decided": 33,
+          "won": 16,
           "lost": 17,
           "push": 0,
           "void": 0,
           "unresolved": 0,
           "pending": 0,
-          "accuracy": 50.0,
-          "profit": -2480.85
+          "accuracy": 48.5,
+          "profit": -2975.93
         }
       },
       "30": {
@@ -222596,39 +222596,39 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-10-16T23:29:08Z",
+    "updatedAt": "2026-10-17T01:30:26Z",
     "segments": {
       "SPORT|soccer": {
-        "settled": 258,
-        "wins": 144,
+        "settled": 259,
+        "wins": 145,
         "losses": 114,
         "pushes": 0,
-        "predictedSum": 146.193046,
-        "actualSum": 144.0,
-        "brierSum": 63.95576212544003,
-        "logLossSum": 177.82783114654504,
+        "predictedSum": 146.733542,
+        "actualSum": 145.0,
+        "brierSum": 64.16690605145604,
+        "logLossSum": 178.44309918903033,
         "profit": 0.0,
-        "hitRate": 0.5581,
-        "averagePredicted": 0.5666,
-        "probabilityBias": -0.0085,
-        "brierScore": 0.247891,
-        "logLoss": 0.689255
+        "hitRate": 0.5598,
+        "averagePredicted": 0.5665,
+        "probabilityBias": -0.006693,
+        "brierScore": 0.247749,
+        "logLoss": 0.688969
       },
       "MARKET|soccer|TOTAL": {
-        "settled": 170,
-        "wins": 96,
+        "settled": 171,
+        "wins": 97,
         "losses": 74,
         "pushes": 0,
-        "predictedSum": 101.85132600000003,
-        "actualSum": 96.0,
-        "brierSum": 42.39899129595799,
-        "logLossSum": 117.68008280528589,
+        "predictedSum": 102.39182200000003,
+        "actualSum": 97.0,
+        "brierSum": 42.61013522197399,
+        "logLossSum": 118.29535084777119,
         "profit": 0.0,
-        "hitRate": 0.5647,
-        "averagePredicted": 0.5991,
-        "probabilityBias": -0.03442,
-        "brierScore": 0.249406,
-        "logLoss": 0.692236
+        "hitRate": 0.5673,
+        "averagePredicted": 0.5988,
+        "probabilityBias": -0.031531,
+        "brierScore": 0.249182,
+        "logLoss": 0.691786
       },
       "LEAGUE|soccer|uefa champions league qualification": {
         "settled": 18,
@@ -222775,36 +222775,36 @@
         "logLoss": 0.676838
       },
       "LEAGUE|soccer|brazil serie b": {
-        "settled": 13,
-        "wins": 9,
+        "settled": 14,
+        "wins": 10,
         "losses": 4,
         "pushes": 0,
-        "predictedSum": 7.790040000000001,
-        "actualSum": 9.0,
-        "brierSum": 2.9255259736860006,
-        "logLossSum": 8.36454638108518,
+        "predictedSum": 8.330536,
+        "actualSum": 10.0,
+        "brierSum": 3.136669899702001,
+        "logLossSum": 8.97981442357048,
         "profit": 0.0,
-        "hitRate": 0.6923,
-        "averagePredicted": 0.5992,
-        "probabilityBias": 0.093074,
-        "brierScore": 0.22504,
-        "logLoss": 0.643427
+        "hitRate": 0.7143,
+        "averagePredicted": 0.595,
+        "probabilityBias": 0.119247,
+        "brierScore": 0.224048,
+        "logLoss": 0.641415
       },
       "LEAGUE_MARKET|soccer|brazil serie b|TOTAL": {
-        "settled": 12,
-        "wins": 9,
+        "settled": 13,
+        "wins": 10,
         "losses": 3,
         "pushes": 0,
-        "predictedSum": 7.262885000000001,
-        "actualSum": 9.0,
-        "brierSum": 2.6476335796610004,
-        "logLossSum": 7.6155587413308,
+        "predictedSum": 7.803381000000001,
+        "actualSum": 10.0,
+        "brierSum": 2.8587775056770006,
+        "logLossSum": 8.2308267838161,
         "profit": 0.0,
-        "hitRate": 0.75,
-        "averagePredicted": 0.6052,
-        "probabilityBias": 0.14476,
-        "brierScore": 0.220636,
-        "logLoss": 0.63463
+        "hitRate": 0.7692,
+        "averagePredicted": 0.6003,
+        "probabilityBias": 0.168971,
+        "brierScore": 0.219906,
+        "logLoss": 0.633141
       },
       "LEAGUE|soccer|copa sudamericana": {
         "settled": 6,
@@ -222983,20 +222983,20 @@
         "logLoss": 0.688512
       },
       "PROBABILITY|soccer|P50": {
-        "settled": 82,
-        "wins": 45,
+        "settled": 83,
+        "wins": 46,
         "losses": 37,
         "pushes": 0,
-        "predictedSum": 46.46583799999999,
-        "actualSum": 45.0,
-        "brierSum": 20.281787917790005,
-        "logLossSum": 56.406969498010604,
+        "predictedSum": 47.00633399999999,
+        "actualSum": 46.0,
+        "brierSum": 20.492931843806005,
+        "logLossSum": 57.0222375404959,
         "profit": 0.0,
-        "hitRate": 0.5488,
-        "averagePredicted": 0.5667,
-        "probabilityBias": -0.017876,
-        "brierScore": 0.247339,
-        "logLoss": 0.68789
+        "hitRate": 0.5542,
+        "averagePredicted": 0.5663,
+        "probabilityBias": -0.012125,
+        "brierScore": 0.246903,
+        "logLoss": 0.687015
       },
       "LEAGUE_MARKET|soccer|ekstraklasa poland|TOTAL": {
         "settled": 1,
@@ -223159,20 +223159,20 @@
         "logLoss": 0.982839
       },
       "MARKET_DETAIL|soccer|TOTAL_UNDER@2.5": {
-        "settled": 37,
-        "wins": 21,
+        "settled": 38,
+        "wins": 22,
         "losses": 16,
         "pushes": 0,
-        "predictedSum": 22.019818999999995,
-        "actualSum": 21.0,
-        "brierSum": 9.174479490109,
-        "logLossSum": 25.507443369381114,
+        "predictedSum": 22.560314999999996,
+        "actualSum": 22.0,
+        "brierSum": 9.385623416125,
+        "logLossSum": 26.122711411866415,
         "profit": 0.0,
-        "hitRate": 0.5676,
-        "averagePredicted": 0.5951,
-        "probabilityBias": -0.027563,
-        "brierScore": 0.247959,
-        "logLoss": 0.68939
+        "hitRate": 0.5789,
+        "averagePredicted": 0.5937,
+        "probabilityBias": -0.014745,
+        "brierScore": 0.24699,
+        "logLoss": 0.68744
       },
       "LEAGUE|soccer|premier league russia": {
         "settled": 1,
@@ -224215,20 +224215,20 @@
         "logLoss": 0.702594
       },
       "DATA_TIER|soccer|HYBRID": {
-        "settled": 84,
-        "wins": 45,
+        "settled": 85,
+        "wins": 46,
         "losses": 39,
         "pushes": 0,
-        "predictedSum": 46.041996999999995,
-        "actualSum": 45.0,
-        "brierSum": 20.421104390888996,
-        "logLossSum": 57.06554328763939,
+        "predictedSum": 46.58249299999999,
+        "actualSum": 46.0,
+        "brierSum": 20.632248316904995,
+        "logLossSum": 57.68081133012469,
         "profit": 0.0,
-        "hitRate": 0.5357,
-        "averagePredicted": 0.5481,
-        "probabilityBias": -0.012405,
-        "brierScore": 0.243108,
-        "logLoss": 0.679352
+        "hitRate": 0.5412,
+        "averagePredicted": 0.548,
+        "probabilityBias": -0.006853,
+        "brierScore": 0.242732,
+        "logLoss": 0.678598
       },
       "LEAGUE_MARKET|soccer|uefa nations league|TOTAL": {
         "settled": 7,
@@ -224263,20 +224263,20 @@
         "logLoss": 1.094998
       },
       "MARKET_TIER|soccer|TOTAL|HYBRID": {
-        "settled": 48,
-        "wins": 30,
+        "settled": 49,
+        "wins": 31,
         "losses": 18,
         "pushes": 0,
-        "predictedSum": 29.490983000000003,
-        "actualSum": 30.0,
-        "brierSum": 11.569179542387001,
-        "logLossSum": 32.40239899674286,
+        "predictedSum": 30.031479000000004,
+        "actualSum": 31.0,
+        "brierSum": 11.780323468403001,
+        "logLossSum": 33.01766703922816,
         "profit": 0.0,
-        "hitRate": 0.625,
-        "averagePredicted": 0.6144,
-        "probabilityBias": 0.010605,
-        "brierScore": 0.241025,
-        "logLoss": 0.67505
+        "hitRate": 0.6327,
+        "averagePredicted": 0.6129,
+        "probabilityBias": 0.019766,
+        "brierScore": 0.240415,
+        "logLoss": 0.67383
       },
       "MARKET_DETAIL_TIER|soccer|TOTAL_UNDER@3.5|HYBRID": {
         "settled": 14,
@@ -224391,20 +224391,20 @@
         "logLoss": 0.715239
       },
       "MARKET_DETAIL_TIER|soccer|TOTAL_UNDER@2.5|HYBRID": {
-        "settled": 22,
-        "wins": 13,
+        "settled": 23,
+        "wins": 14,
         "losses": 9,
         "pushes": 0,
-        "predictedSum": 13.188488000000001,
-        "actualSum": 13.0,
-        "brierSum": 5.517044513685999,
-        "logLossSum": 15.301695895497714,
+        "predictedSum": 13.728984,
+        "actualSum": 14.0,
+        "brierSum": 5.728188439701999,
+        "logLossSum": 15.916963937983013,
         "profit": 0.0,
-        "hitRate": 0.5909,
-        "averagePredicted": 0.5995,
-        "probabilityBias": -0.008568,
-        "brierScore": 0.250775,
-        "logLoss": 0.695532
+        "hitRate": 0.6087,
+        "averagePredicted": 0.5969,
+        "probabilityBias": 0.011783,
+        "brierScore": 0.249052,
+        "logLoss": 0.692042
       },
       "PROBABILITY|soccer|P70": {
         "settled": 4,
@@ -224487,20 +224487,20 @@
         "logLoss": 0.390698
       },
       "LEAGUE_MARKET_DETAIL|soccer|brazil serie b|TOTAL_UNDER@2.5": {
-        "settled": 9,
-        "wins": 6,
+        "settled": 10,
+        "wins": 7,
         "losses": 3,
         "pushes": 0,
-        "predictedSum": 5.501645000000001,
-        "actualSum": 6.0,
-        "brierSum": 2.1359554545990003,
-        "logLossSum": 6.017529068503607,
+        "predictedSum": 6.042141000000001,
+        "actualSum": 7.0,
+        "brierSum": 2.3470993806150005,
+        "logLossSum": 6.632797110988907,
         "profit": 0.0,
-        "hitRate": 0.6667,
-        "averagePredicted": 0.6113,
-        "probabilityBias": 0.055373,
-        "brierScore": 0.237328,
-        "logLoss": 0.668614
+        "hitRate": 0.7,
+        "averagePredicted": 0.6042,
+        "probabilityBias": 0.095786,
+        "brierScore": 0.23471,
+        "logLoss": 0.66328
       },
       "SAMPLE_SOURCE|soccer|PUBLISHED": {
         "settled": 163,
@@ -225527,20 +225527,20 @@
         "logLoss": 0.587869
       },
       "SAMPLE_SOURCE|soccer|SHADOW_REJECTED": {
-        "settled": 15,
-        "wins": 9,
+        "settled": 16,
+        "wins": 10,
         "losses": 6,
         "pushes": 0,
-        "predictedSum": 8.021176,
-        "actualSum": 9.0,
-        "brierSum": 3.7805009968859995,
-        "logLossSum": 10.465052803871773,
+        "predictedSum": 8.561672,
+        "actualSum": 10.0,
+        "brierSum": 3.9916449229019997,
+        "logLossSum": 11.080320846357072,
         "profit": 0.0,
-        "hitRate": 0.6,
-        "averagePredicted": 0.5347,
-        "probabilityBias": 0.065255,
-        "brierScore": 0.252033,
-        "logLoss": 0.69767
+        "hitRate": 0.625,
+        "averagePredicted": 0.5351,
+        "probabilityBias": 0.089896,
+        "brierScore": 0.249478,
+        "logLoss": 0.69252
       },
       "TEAM|soccer|hjk helsinki": {
         "settled": 1,
@@ -226279,20 +226279,20 @@
         "logLoss": 0.513815
       },
       "ODDS|soccer|HIGH": {
-        "settled": 22,
-        "wins": 8,
+        "settled": 23,
+        "wins": 9,
         "losses": 14,
         "pushes": 0,
-        "predictedSum": 8.507743000000001,
-        "actualSum": 8.0,
-        "brierSum": 5.187382295837001,
-        "logLossSum": 14.64117058091367,
+        "predictedSum": 9.048239,
+        "actualSum": 9.0,
+        "brierSum": 5.398526221853,
+        "logLossSum": 15.256438623398969,
         "profit": 0.0,
-        "hitRate": 0.3636,
-        "averagePredicted": 0.3867,
-        "probabilityBias": -0.023079,
-        "brierScore": 0.23579,
-        "logLoss": 0.665508
+        "hitRate": 0.3913,
+        "averagePredicted": 0.3934,
+        "probabilityBias": -0.002097,
+        "brierScore": 0.234719,
+        "logLoss": 0.663323
       },
       "PROBABILITY|soccer|P30": {
         "settled": 15,
@@ -243973,6 +243973,134 @@
         "probabilityBias": -0.50139,
         "brierScore": 0.251392,
         "logLoss": 0.695931
+      },
+      "TEAM|soccer|ponte preta": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "TEAM_HOME|soccer|ponte preta": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "TEAM_MARKET|soccer|ponte preta|TOTAL_UNDER@2.5": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "TEAM|soccer|atletico goianiense": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "TEAM_AWAY|soccer|atletico goianiense": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "TEAM_MARKET|soccer|atletico goianiense|TOTAL_UNDER@2.5": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "MATCHUP|soccer|atletico goianiense~ponte preta": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
+      },
+      "MATCHUP_MARKET|soccer|atletico goianiense~ponte preta|TOTAL_UNDER@2.5": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.540496,
+        "actualSum": 1.0,
+        "brierSum": 0.21114392601600002,
+        "logLossSum": 0.6152680424853,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5405,
+        "probabilityBias": 0.459504,
+        "brierScore": 0.211144,
+        "logLoss": 0.615268
       }
     },
     "calibrationBins": {
@@ -243984,11 +244112,11 @@
         "actualRate": 0.5686
       },
       "50-59": {
-        "count": 102,
-        "predictedSum": 57.906422000000006,
-        "actualSum": 57.0,
-        "averagePredicted": 0.5677,
-        "actualRate": 0.5588
+        "count": 103,
+        "predictedSum": 58.446918000000004,
+        "actualSum": 58.0,
+        "averagePredicted": 0.5674,
+        "actualRate": 0.5631
       },
       "40-49": {
         "count": 33,
@@ -244028,7 +244156,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-10-16T23:29:09Z"
+      "updatedAt": "2026-10-17T01:30:27Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -244045,7 +244173,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-16T23:29:10Z",
+    "updatedAt": "2026-10-17T01:30:28Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "batchHistory": [
@@ -244216,7 +244344,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-10-16T23:29:08Z",
+    "updatedAt": "2026-10-17T01:30:26Z",
     "analysisHistory": {
       "input": 246,
       "output": 246,
@@ -251428,8 +251556,8 @@
     }
   ],
   "dataCoverage": {
-    "discoveredEvents": 6,
-    "competitionsDiscovered": 4,
+    "discoveredEvents": 4,
+    "competitionsDiscovered": 3,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -251450,7 +251578,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-16T23:30:24Z",
+        "lastSuccessAt": "2026-10-17T01:31:49Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -251459,20 +251587,20 @@
       }
     },
     "quota": {
-      "requestsRemaining": "196",
-      "requestsUsed": "304",
+      "requestsRemaining": "190",
+      "requestsUsed": "310",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "196",
-        "requestsUsed": "304",
+        "requestsRemaining": "190",
+        "requestsUsed": "310",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 13328,
+    "historyMatches": 13329,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -251486,7 +251614,7 @@
         "CLUBELO": "RED"
       },
       "ingested": 2095,
-      "duplicates": 2037,
+      "duplicates": 2095,
       "historyMatches": 17669,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
@@ -251494,8 +251622,8 @@
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
       "requests": 44,
-      "matchesAdded": 42,
-      "historyMatches": 17669,
+      "matchesAdded": 43,
+      "historyMatches": 17670,
       "errors": [
         "136449:HTTPError",
         "136466:HTTPError",
@@ -251522,7 +251650,7 @@
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-16T23:29:10Z"
+    "updatedAt": "2026-10-17T01:30:28Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -251573,7 +251701,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-16T23:29:10Z"
+    "updatedAt": "2026-10-17T01:30:28Z"
   },
   "legacyBridgeHistory": [
     {
@@ -251647,7 +251775,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-16T23:29:10Z",
+    "updatedAt": "2026-10-17T01:30:28Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "operationalDayRolloverHistory": [
@@ -252100,112 +252228,7 @@
     }
   ],
   "shadowLearning": {
-    "pending": [
-      {
-        "id": "d0d97b94a00d2c6300cf",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "e441779f9fb6304f9e29ac5de3416df2",
-        "sport": "soccer",
-        "sportKey": "soccer_brazil_serie_b",
-        "league": "Brazil Série B",
-        "home": "Ponte Preta",
-        "away": "Atletico Goianiense",
-        "commenceTime": "2026-10-16T22:30:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-16T09:11:07Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_UNDER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "UNDER",
-        "point": 2.5,
-        "pick": "Тотал меньше 2.5",
-        "pickRu": "Тотал меньше 2.5",
-        "bookmakerOdds": 2.2,
-        "modelProbability": 0.540496,
-        "conservativeProbability": 0.485272,
-        "marketProbability": 0.4445,
-        "expectedValue": 0.067599,
-        "edge": 0.040772,
-        "dataTier": "HYBRID",
-        "dataQuality": 62.0,
-        "quoteCount": 11,
-        "agreement": 64.8,
-        "marketStability": 76.7,
-        "anomaly": 15.0,
-        "obviousMarketScore": 71.14319,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Консенсус букмекеров не подтверждает выбранное направление тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.020518,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 247,
-            "bias": -0.0078,
-            "weight": 1.0,
-            "hitRate": 0.5587,
-            "averagePredicted": 0.5665,
-            "brierScore": 0.249611
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 163,
-            "bias": -0.0462,
-            "weight": 1.0,
-            "hitRate": 0.5521,
-            "averagePredicted": 0.5983,
-            "brierScore": 0.251824
-          },
-          {
-            "segment": "DATA_TIER|soccer|HYBRID",
-            "samples": 80,
-            "bias": -0.0085,
-            "weight": 0.339,
-            "hitRate": 0.5375,
-            "averagePredicted": 0.546,
-            "brierScore": 0.242763
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 78,
-            "bias": -0.0165,
-            "weight": 0.322,
-            "hitRate": 0.5513,
-            "averagePredicted": 0.5678,
-            "brierScore": 0.247351
-          },
-          {
-            "segment": "MARKET_TIER|soccer|TOTAL|HYBRID",
-            "samples": 45,
-            "bias": 0.0082,
-            "weight": 0.05,
-            "hitRate": 0.6222,
-            "averagePredicted": 0.614,
-            "brierScore": 0.240456
-          }
-        ],
-        "probability": 0.540496,
-        "odds": 2.2,
-        "shadowRankScore": 70.4452
-      }
-    ],
+    "pending": [],
     "settled": [
       {
         "id": "a2de99253d29251ecff3",
@@ -254895,50 +254918,132 @@
         "settlementSource": "THE_ODDS_API_SCORES",
         "profit": 0.0,
         "financialMode": "SHADOW_LEARNING_ONLY"
+      },
+      {
+        "id": "d0d97b94a00d2c6300cf",
+        "recordType": "SHADOW_CANDIDATE",
+        "learningSampleSource": "SHADOW_REJECTED",
+        "eventId": "e441779f9fb6304f9e29ac5de3416df2",
+        "sport": "soccer",
+        "sportKey": "soccer_brazil_serie_b",
+        "league": "Brazil Série B",
+        "home": "Ponte Preta",
+        "away": "Atletico Goianiense",
+        "commenceTime": "2026-10-16T22:30:00Z",
+        "status": "won",
+        "trackedAt": "2026-10-16T09:11:07Z",
+        "failures": [
+          "Направление тотала противоречит модели матча"
+        ],
+        "market": "TOTAL_UNDER",
+        "marketKey": "totals",
+        "marketFamily": "TOTAL",
+        "selectionCode": "UNDER",
+        "point": 2.5,
+        "pick": "Тотал меньше 2.5",
+        "pickRu": "Тотал меньше 2.5",
+        "bookmakerOdds": 2.2,
+        "modelProbability": 0.540496,
+        "conservativeProbability": 0.485272,
+        "marketProbability": 0.4445,
+        "expectedValue": 0.067599,
+        "edge": 0.040772,
+        "dataTier": "HYBRID",
+        "dataQuality": 62.0,
+        "quoteCount": 11,
+        "agreement": 64.8,
+        "marketStability": 76.7,
+        "anomaly": 15.0,
+        "obviousMarketScore": 71.14319,
+        "qualification": {
+          "qualified": false,
+          "failures": [
+            "Консенсус букмекеров не подтверждает выбранное направление тотала",
+            "Недостаточная консервативная вероятность",
+            "Недостаточная расчётная вероятность"
+          ]
+        },
+        "strategyFailures": [
+          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
+          "Основной фильтр: Недостаточная консервативная вероятность",
+          "Основной фильтр: Недостаточная расчётная вероятность",
+          "Недостаточная консервативная вероятность",
+          "История и модель голов противоречат направлению тотала"
+        ],
+        "goalDirectionConflict": true,
+        "learningAdjustment": -0.020518,
+        "learningEvidence": [
+          {
+            "segment": "SPORT|soccer",
+            "samples": 247,
+            "bias": -0.0078,
+            "weight": 1.0,
+            "hitRate": 0.5587,
+            "averagePredicted": 0.5665,
+            "brierScore": 0.249611
+          },
+          {
+            "segment": "MARKET|soccer|TOTAL",
+            "samples": 163,
+            "bias": -0.0462,
+            "weight": 1.0,
+            "hitRate": 0.5521,
+            "averagePredicted": 0.5983,
+            "brierScore": 0.251824
+          },
+          {
+            "segment": "DATA_TIER|soccer|HYBRID",
+            "samples": 80,
+            "bias": -0.0085,
+            "weight": 0.339,
+            "hitRate": 0.5375,
+            "averagePredicted": 0.546,
+            "brierScore": 0.242763
+          },
+          {
+            "segment": "PROBABILITY|soccer|P50",
+            "samples": 78,
+            "bias": -0.0165,
+            "weight": 0.322,
+            "hitRate": 0.5513,
+            "averagePredicted": 0.5678,
+            "brierScore": 0.247351
+          },
+          {
+            "segment": "MARKET_TIER|soccer|TOTAL|HYBRID",
+            "samples": 45,
+            "bias": 0.0082,
+            "weight": 0.05,
+            "hitRate": 0.6222,
+            "averagePredicted": 0.614,
+            "brierScore": 0.240456
+          }
+        ],
+        "probability": 0.540496,
+        "odds": 2.2,
+        "shadowRankScore": 70.4452,
+        "statusLabel": "Выигрыш",
+        "score": "1:1",
+        "homeScore": 1,
+        "awayScore": 1,
+        "settledAt": "2026-10-17T01:30:26Z",
+        "settlementSource": "THE_ODDS_API_SCORES",
+        "profit": 0.0,
+        "financialMode": "SHADOW_LEARNING_ONLY"
       }
     ],
-    "updatedAt": "2026-10-16T23:29:10Z",
+    "updatedAt": "2026-10-17T01:30:28Z",
     "statistics": {
       "tracked": 27,
-      "pending": 1,
-      "settled": 26,
-      "won": 9,
+      "pending": 0,
+      "settled": 27,
+      "won": 10,
       "lost": 6,
       "push": 0
     },
     "version": 1
   },
   "upcomingFixtures": [
-    {
-      "eventId": "f790decc9e73ba69db2d636a70afc110",
-      "sport": "soccer",
-      "sportKey": "soccer_argentina_primera_division",
-      "league": "Primera División - Argentina",
-      "leagueRu": "Примера Аргентины",
-      "home": "Boca Juniors",
-      "homeRu": "Бока Йуниорс",
-      "away": "Talleres",
-      "awayRu": "Таллерес",
-      "commenceTime": "2026-10-17T00:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
-    {
-      "eventId": "a16dd30c67c32f12e0b4879034895cf9",
-      "sport": "soccer",
-      "sportKey": "soccer_mexico_ligamx",
-      "league": "Liga MX",
-      "leagueRu": "Лига Мкс",
-      "home": "Necaxa",
-      "homeRu": "Некакса",
-      "away": "Atlas",
-      "awayRu": "Атлас",
-      "commenceTime": "2026-10-17T01:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0
-    },
     {
       "eventId": "02a5db366cb0660f86092f9d119a95ef",
       "sport": "soccer",
