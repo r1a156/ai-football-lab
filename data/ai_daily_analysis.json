@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-18T18:20:50Z",
+  "updatedAt": "2026-10-18T20:56:50Z",
   "analysisDateLocal": "2026-10-18",
   "batch": {
     "id": "",
@@ -12,12 +12,12 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-18T18:20:50Z",
+    "updatedAt": "2026-10-18T20:56:50Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 8,
-    "competitionsDiscovered": 5,
+    "discoveredEvents": 3,
+    "competitionsDiscovered": 3,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-10-18T18:23:04Z",
+        "lastSuccessAt": "2026-10-18T20:58:03Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-09-30T22:56:47Z",
         "lastStatus": 401,
@@ -47,20 +47,20 @@
       }
     },
     "quota": {
-      "requestsRemaining": "38",
-      "requestsUsed": "462",
+      "requestsRemaining": "24",
+      "requestsUsed": "476",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "38",
-        "requestsUsed": "462",
+        "requestsRemaining": "24",
+        "requestsUsed": "476",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 13379,
+    "historyMatches": 13374,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -73,9 +73,9 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 18141,
-      "duplicates": 17990,
-      "historyMatches": 17790,
+      "ingested": 2095,
+      "duplicates": 2038,
+      "historyMatches": 17701,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -83,7 +83,7 @@
       "status": "GREEN",
       "requests": 44,
       "matchesAdded": 44,
-      "historyMatches": 17790,
+      "historyMatches": 17701,
       "errors": [
         "136449:HTTPError",
         "136466:HTTPError",
@@ -110,7 +110,7 @@
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-18T18:20:50Z"
+    "updatedAt": "2026-10-18T20:56:50Z"
   },
   "bank": {
     "starting": 10000,
@@ -576,7 +576,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-18T18:20:50Z",
+    "updatedAt": "2026-10-18T20:56:50Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -585,14 +585,14 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-18T18:20:50Z"
+    "updatedAt": "2026-10-18T20:56:50Z"
   },
   "shadowLearning": {
     "statistics": {
       "tracked": 37,
-      "pending": 3,
-      "settled": 34,
-      "won": 16,
+      "pending": 1,
+      "settled": 36,
+      "won": 18,
       "lost": 7,
       "push": 0
     },
@@ -712,263 +712,6 @@
         "probability": 0.489452,
         "odds": 1.75,
         "shadowRankScore": 55.1572
-      },
-      {
-        "id": "0b37318b5f059a63f238",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "f5f058db1f3692fe9aff846162be3065",
-        "sport": "soccer",
-        "sportKey": "soccer_netherlands_eredivisie",
-        "league": "Dutch Eredivisie",
-        "home": "FC Twente Enschede",
-        "away": "FC Utrecht",
-        "commenceTime": "2026-10-18T18:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-18T06:37:29Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_UNDER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "UNDER",
-        "point": 3.5,
-        "pick": "Тотал меньше 3.5",
-        "pickRu": "Тотал меньше 3.5",
-        "bookmakerOdds": 1.95,
-        "modelProbability": 0.539817,
-        "conservativeProbability": 0.514817,
-        "marketProbability": 0.495711,
-        "expectedValue": 0.003894,
-        "edge": 0.019106,
-        "dataTier": "FULL",
-        "dataQuality": 85.7,
-        "quoteCount": 13,
-        "agreement": 85.9,
-        "marketStability": 81.2,
-        "anomaly": 12.5,
-        "obviousMarketScore": 77.49164,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Консенсус букмекеров не подтверждает выбранное направление тотала",
-            "Последние матчи команд противоречат выбранному направлению тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Последние матчи команд противоречат выбранному направлению тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.006425,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 280,
-            "bias": 0.0006,
-            "weight": 1.0,
-            "hitRate": 0.5679,
-            "averagePredicted": 0.5672,
-            "brierScore": 0.246455
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 185,
-            "bias": -0.0145,
-            "weight": 1.0,
-            "hitRate": 0.5838,
-            "averagePredicted": 0.5982,
-            "brierScore": 0.246097
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-            "samples": 57,
-            "bias": -0.0789,
-            "weight": 0.149,
-            "hitRate": 0.5263,
-            "averagePredicted": 0.6052,
-            "brierScore": 0.257696
-          },
-          {
-            "segment": "ODDS|soccer|UPPER_MID",
-            "samples": 71,
-            "bias": 0.0263,
-            "weight": 0.264,
-            "hitRate": 0.5634,
-            "averagePredicted": 0.537,
-            "brierScore": 0.253311
-          },
-          {
-            "segment": "DATA_TIER|soccer|FULL",
-            "samples": 101,
-            "bias": 0.0061,
-            "weight": 0.512,
-            "hitRate": 0.5743,
-            "averagePredicted": 0.5682,
-            "brierScore": 0.255957
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 96,
-            "bias": -0.0033,
-            "weight": 0.471,
-            "hitRate": 0.5625,
-            "averagePredicted": 0.5658,
-            "brierScore": 0.244905
-          },
-          {
-            "segment": "MARKET_TIER|soccer|TOTAL|FULL",
-            "samples": 77,
-            "bias": -0.0529,
-            "weight": 0.314,
-            "hitRate": 0.5455,
-            "averagePredicted": 0.5983,
-            "brierScore": 0.253495
-          }
-        ],
-        "probability": 0.539817,
-        "odds": 1.95,
-        "shadowRankScore": 79.5452
-      },
-      {
-        "id": "f79499a9a78e08777b65",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "16becef7f9b957a6f7a70b19750c4bc3",
-        "sport": "soccer",
-        "sportKey": "soccer_greece_super_league",
-        "league": "Super League - Greece",
-        "home": "PAOK Thessaloniki",
-        "away": "Iraklis FC",
-        "commenceTime": "2026-10-18T18:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-10-18T06:37:29Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_OVER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "OVER",
-        "point": 2.5,
-        "pick": "Тотал больше 2.5",
-        "pickRu": "Тотал больше 2.5",
-        "bookmakerOdds": 1.72,
-        "modelProbability": 0.525116,
-        "conservativeProbability": 0.462116,
-        "marketProbability": 0.563471,
-        "expectedValue": -0.20516,
-        "edge": -0.101355,
-        "dataTier": "HYBRID",
-        "dataQuality": 52.0,
-        "quoteCount": 6,
-        "agreement": 88.1,
-        "marketStability": 80.8,
-        "anomaly": 12.4,
-        "obviousMarketScore": 68.1256,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Модель счёта не подтверждает выбранное направление тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание",
-            "Недостаточная полнота данных"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.004431,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 280,
-            "bias": 0.0006,
-            "weight": 1.0,
-            "hitRate": 0.5679,
-            "averagePredicted": 0.5672,
-            "brierScore": 0.246455
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 185,
-            "bias": -0.0145,
-            "weight": 1.0,
-            "hitRate": 0.5838,
-            "averagePredicted": 0.5982,
-            "brierScore": 0.246097
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_OVER@2.5",
-            "samples": 48,
-            "bias": 0.0452,
-            "weight": 0.074,
-            "hitRate": 0.6458,
-            "averagePredicted": 0.6006,
-            "brierScore": 0.235091
-          },
-          {
-            "segment": "ODDS|soccer|MID",
-            "samples": 182,
-            "bias": -0.0154,
-            "weight": 1.0,
-            "hitRate": 0.5824,
-            "averagePredicted": 0.5979,
-            "brierScore": 0.248787
-          },
-          {
-            "segment": "DATA_TIER|soccer|HYBRID",
-            "samples": 95,
-            "bias": 0.0076,
-            "weight": 0.463,
-            "hitRate": 0.5579,
-            "averagePredicted": 0.5503,
-            "brierScore": 0.239301
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 96,
-            "bias": -0.0033,
-            "weight": 0.471,
-            "hitRate": 0.5625,
-            "averagePredicted": 0.5658,
-            "brierScore": 0.244905
-          },
-          {
-            "segment": "MARKET_TIER|soccer|TOTAL|HYBRID",
-            "samples": 57,
-            "bias": 0.0588,
-            "weight": 0.149,
-            "hitRate": 0.6667,
-            "averagePredicted": 0.6078,
-            "brierScore": 0.233324
-          }
-        ],
-        "probability": 0.525116,
-        "odds": 1.72,
-        "shadowRankScore": 67.8396
       }
     ]
   },
