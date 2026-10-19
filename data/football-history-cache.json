@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-19T14:37:31Z",
-  "lastSuccessfulAt": "2026-10-19T14:37:31Z",
+  "updatedAt": "2026-10-19T20:18:58Z",
+  "lastSuccessfulAt": "2026-10-19T20:18:58Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -518296,6 +518296,39 @@
       "theSportsDbEventId": "2398132"
     },
     {
+      "id": "thesportsdb_public_123:2618647",
+      "utcDate": "2026-10-17T18:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Argentinian Primera C",
+      "competitionCode": "5524",
+      "homeTeam": {
+        "id": "",
+        "name": "Central Córdoba de Rosario",
+        "shortName": "Central Córdoba de Rosario",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Centro Español",
+        "shortName": "Centro Español",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-19T20:21:03Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "16",
+      "venue": "Estadio Gabino Sosa",
+      "theSportsDbEventId": "2618647"
+    },
+    {
       "id": "openligadb:83627",
       "utcDate": "2026-10-17T18:30:00Z",
       "status": "FINISHED",
@@ -520330,6 +520363,39 @@
       "group": "",
       "lastUpdated": "2026-10-18T20:56:47Z",
       "source": "AI_FOOTBALL_TRACKED_RESULT"
+    },
+    {
+      "id": "thesportsdb_public_123:2431503",
+      "utcDate": "2026-10-18T19:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie B",
+      "competitionCode": "4404",
+      "homeTeam": {
+        "id": "",
+        "name": "São Bernardo",
+        "shortName": "São Bernardo",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Criciúma",
+        "shortName": "Criciúma",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-19T20:21:31Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "34",
+      "venue": "Estádio 1º de Maio",
+      "theSportsDbEventId": "2431503"
     },
     {
       "id": "thesportsdb_public_123:2398138",
@@ -615848,35 +615914,32 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-19T14:37:31Z",
-      "matches": 17800
+      "updatedAt": "2026-10-19T20:18:58Z",
+      "matches": 17802
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-19T14:37:31Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-10-19T20:18:58Z",
+      "requests": 63,
+      "matchesAdded": 62,
       "errors": [
-        "136449:HTTPError",
-        "136466:HTTPError",
-        "134506:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
-        "145389:HTTPError",
+        "136456:HTTPError",
+        "133733:HTTPError",
+        "135987:HTTPError",
+        "133840:HTTPError",
+        "135154:HTTPError",
+        "135988:HTTPError",
         "134295:HTTPError",
-        "134154:HTTPError",
-        "134147:HTTPError",
-        "134280:HTTPError",
         "134464:HTTPError",
-        "137932:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError"
+        "134285:HTTPError",
+        "134282:HTTPError",
+        "134742:HTTPError",
+        "136186:HTTPError",
+        "134737:HTTPError",
+        "134734:HTTPError",
+        "136831:HTTPError",
+        "134291:HTTPError",
+        "145212:HTTPError"
       ]
     }
   }
