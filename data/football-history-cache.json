@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-19T06:27:28Z",
-  "lastSuccessfulAt": "2026-10-19T06:27:28Z",
+  "updatedAt": "2026-10-19T10:56:02Z",
+  "lastSuccessfulAt": "2026-10-19T10:56:02Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -517528,6 +517528,39 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2599022",
+      "utcDate": "2026-10-17T13:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Finnish Veikkausliiga",
+      "competitionCode": "4636",
+      "homeTeam": {
+        "id": "",
+        "name": "HJK Helsinki",
+        "shortName": "HJK Helsinki",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Gnistan",
+        "shortName": "Gnistan",
+        "tla": ""
+      },
+      "homeScore": 4,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-19T11:04:13Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "28",
+      "venue": "Bolt Arena",
+      "theSportsDbEventId": "2599022"
+    },
+    {
       "id": "openligadb:83203",
       "utcDate": "2026-10-17T13:30:00Z",
       "status": "SCHEDULED",
@@ -615815,17 +615848,19 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-19T06:27:28Z",
-      "matches": 17799
+      "updatedAt": "2026-10-19T10:56:02Z",
+      "matches": 17800
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-19T01:10:23Z",
-      "requests": 43,
-      "matchesAdded": 43,
+      "updatedAt": "2026-10-19T10:56:02Z",
+      "requests": 44,
+      "matchesAdded": 44,
       "errors": [
-        "136466:HTTPError",
-        "135981:HTTPError",
+        "144737:HTTPError",
+        "136449:HTTPError",
+        "135983:HTTPError",
+        "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
@@ -615833,17 +615868,15 @@
         "134154:HTTPError",
         "134147:HTTPError",
         "134280:HTTPError",
-        "134464:HTTPError",
-        "134285:HTTPError",
+        "145212:HTTPError",
+        "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
         "137889:HTTPError",
         "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "134449:HTTPError"
       ]
     }
   }
