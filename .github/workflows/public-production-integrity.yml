@@ -67,7 +67,7 @@ jobs:
           best = state.get("bestBets") or []
           expresses = state.get("expresses") or []
           print("LIVE_SITE=GREEN; DAY=" + expected_date + "; PICKS=" + str(len(daily)) + "; TOP=" + str(len(best)) + "; EXPRESSES=" + str(len(expresses)))
-          if len(best) != min(3,len(daily)) or len(expresses) != min(3,len(daily)//5):
+          if len(best) != min(3,len(daily)) or len(expresses) > min(3,len(daily)//5):
               raise RuntimeError("PUBLIC_PORTFOLIO_CARDINALITY_INVALID")
           def as_msk(value):
               return dt.datetime.fromisoformat(str(value).replace("Z","+00:00")).astimezone(msk)
@@ -105,7 +105,8 @@ jobs:
               leg_ids += [str(x.get("eventId") or "") for x in legs]
               stake = float(ticket.get("stake") or 0)
               pct = float(ticket.get("stakePercent") or 0)
-              if pct < 0 or pct > 2 or stake < 0 or (stake>0 and (meta.get("recoveryDay") or float(ticket.get("conservativeExpectedValue") or -1)<=0)):
+              ev = float(ticket.get("conservativeExpectedValue") or -1)
+              if not (ev > 0) or pct < 0 or pct > 2 or stake < 0 or (stake>0 and meta.get("recoveryDay")):
                   raise RuntimeError("PUBLIC_EXPRESS_FINANCIAL_POLICY_FAILED")
           if len(leg_ids) != len(set(leg_ids)):
               raise RuntimeError("PUBLIC_EXPRESS_DUPLICATE_EVENT")

@@ -3960,13 +3960,24 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
                 "status": "pending",
                 "score": "",
             })
+        # Do not publish ordinary expresses with non-positive or below-policy
+        # conservative EV. Keep all underlying event analyses visible.
+        minimum_ev = max(0.0, safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03))
+        raw_ev = joint_probability * combined_odds - 1.0
+        valid_legs = all(
+            0.0 < safe_float(leg.get("probability"), 0.0) <= 1.0
+            and safe_float(leg.get("odds"), 0.0) > 1.0
+            for leg in legs
+        )
+        if not valid_legs or not math.isfinite(raw_ev) or raw_ev <= minimum_ev:
+            continue
+        for leg_index, row in enumerate(group, start=1):
             row["expressId"] = express_id
             row["expressLabel"] = labels[group_index]
             row["expressLegNumber"] = leg_index
         combined_odds = round(combined_odds, 3)
         joint_probability = round(joint_probability, 6)
-        conservative_expected_value = round(joint_probability * combined_odds - 1.0, 6)
-        minimum_ev = safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03)
+        conservative_expected_value = round(raw_ev, 6)
         bankroll_enabled = False
         stake_percent = 0.0
         stake = 0.0
@@ -3974,7 +3985,7 @@ def build_expresses(records: list[dict[str, Any]], state: dict[str, Any], config
         result.append({
             "id": express_id,
             "label": labels[group_index],
-            "rank": group_index + 1,
+            "rank": len(result) + 1,
             "status": "pending",
             "statusLabel": "Ожидается",
             "publishedAt": iso(now),
@@ -5719,8 +5730,8 @@ def validate_state() -> int:
         if len(best) != expected_best:
             raise RuntimeError(f"R15 informational top rows must be {expected_best}, got {len(best)}")
         expected_expresses = min(3, len(daily) // 5)
-        if len(expresses) != expected_expresses:
-            raise RuntimeError(f"R15 expresses must be {expected_expresses}, got {len(expresses)}")
+        if len(expresses) > expected_expresses:
+            raise RuntimeError(f"R15 expresses exceed {expected_expresses}, got {len(expresses)}")
         event_ids = [str(row.get("eventId") or "") for row in daily]
         if any(not value for value in event_ids) or len(event_ids) != len(set(event_ids)):
             raise RuntimeError("R15 duplicate or missing event IDs")
@@ -5731,6 +5742,9 @@ def validate_state() -> int:
                 raise RuntimeError("Every R15 express must contain five legs")
             leg_ids.extend(str(leg.get("analysisId") or "") for leg in legs)
             expected_ev = safe_float(express.get("conservativeExpectedValue"), -1.0)
+            minimum_ev = max(0.0, safe_float(config.get("expressMinimumConservativeExpectedValue"), 0.03))
+            if not math.isfinite(expected_ev) or expected_ev <= minimum_ev:
+                raise RuntimeError("R15 ordinary express violates conservative EV floor")
             bankroll_enabled = bool(express.get("bankrollEnabled"))
             expected_stake_percent = 0.0
             if abs(safe_float(express.get("stakePercent")) - expected_stake_percent) > 0.001:
@@ -6062,7 +6076,20 @@ def self_test() -> int:
         raise RuntimeError("SELF_TEST top-three stake amount mismatch")
     if abs(safe_float(state.get("bank", {}).get("placedAmount")) - sum(expected_stakes)) > 0.02:
         raise RuntimeError("SELF_TEST single-bank exposure mismatch")
-    state["expresses"] = build_expresses(records, state, full_test_config, now)
+    negative_express_records = copy.deepcopy(records[:5])
+    for row in negative_express_records:
+        row["bookmakerOdds"] = 2.0
+        row["conservativeProbability"] = 0.1
+    if build_expresses(negative_express_records, copy.deepcopy(state), full_test_config, now):
+        raise RuntimeError("SELF_TEST negative-EV express must not be published")
+    if any(row.get("expressId") for row in negative_express_records):
+        raise RuntimeError("SELF_TEST rejected express left orphan leg references")
+    positive_express_records = copy.deepcopy(records)
+    for row in positive_express_records:
+        row["bookmakerOdds"] = 2.0
+        row["conservativeProbability"] = 0.9
+    state["dailyAnalysis"] = positive_express_records
+    state["expresses"] = build_expresses(positive_express_records, state, full_test_config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
     if any(safe_float(row.get("stake")) != 0.0 or bool(row.get("bankrollEnabled")) for row in state["expresses"]):

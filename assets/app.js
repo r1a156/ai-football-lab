@@ -182,8 +182,14 @@
       if (stake > 0 && (percent !== 10 || nonBanked || !calibrationAllowed || Math.min(computedEv, storedEv) <= 0)) return false;
     }
     const expectedExpresses = Math.min(3, Math.floor(daily.length / 5));
-    if (state.expresses.length !== expectedExpresses) return false;
-    if (!state.expresses.every(ticket => array(ticket.legs).length === 5)) return false;
+    if (!Array.isArray(state.expresses) || state.expresses.length > expectedExpresses) return false;
+    if (!state.expresses.every(ticket =>
+      array(ticket.legs).length === 5 &&
+      Number.isFinite(Number(ticket.conservativeExpectedValue)) &&
+      Number(ticket.conservativeExpectedValue) > 0 &&
+      number(ticket.stake) === 0 &&
+      number(ticket.stakePercent) === 0
+    )) return false;
     const updated = Date.parse(state.meta.updatedAt || "");
     if (!Number.isFinite(updated) || Date.now() - updated >= 30 * 60 * 60_000) return false;
     return String(state.meta.sourceMarker || "").includes("R15");

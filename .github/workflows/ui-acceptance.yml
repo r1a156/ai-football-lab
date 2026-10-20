@@ -82,6 +82,16 @@ jobs:
           state.bestBets.push({ ...match, eventId: "event-2", stake: 0, stakePercent: 0 });
           state.dailyAnalysis.push({ ...match, eventId: "event-2" });
           assert(validate(state), "Valid partial Top-2 must be visible");
+          for (let n = 3; n <= 5; n++) {
+            const next = { ...match, eventId: "event-" + n };
+            state.dailyAnalysis.push(next);
+            if (n === 3) state.bestBets.push({ ...next, stake: 0, stakePercent: 0 });
+          }
+          assert(validate(state), "Five analyses without a qualifying express must remain visible");
+          state.expresses = [{ legs: Array(5).fill({}), conservativeExpectedValue: -0.1, stake: 0, stakePercent: 0 }];
+          assert(!validate(state), "Negative-EV express must be rejected");
+          state.expresses[0].conservativeExpectedValue = 0.1;
+          assert(validate(state), "Positive-EV informational express should remain visible");
           console.log("INFORMATIONAL_TOP3_UI_REGRESSION=GREEN");
           JS
 
