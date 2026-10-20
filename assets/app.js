@@ -5,15 +5,17 @@
   const LOCAL_STATE_URL = "data/state.json";
   const LOCAL_LIVE_URL = "data/live-state.json";
   const LOCAL_REPORT_URL = "data/last-update-report.json";
+  const LOCAL_BOARD_URL = "data/full-day-board.json";
   const RAW_STATE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/state.json";
   const RAW_LIVE_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/live-state.json";
   const RAW_REPORT_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/last-update-report.json";
+  const RAW_BOARD_URL = "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/full-day-board.json";
   const STATE_URL = API_BASE ? `${API_BASE}/data/state.json` : LOCAL_STATE_URL;
   const LIVE_URL = API_BASE ? `${API_BASE}/data/live-state.json` : LOCAL_LIVE_URL;
   const REPORT_URL = API_BASE ? `${API_BASE}/data/last-update-report.json` : LOCAL_REPORT_URL;
   const MIN_QUALITY = 58;
   const MOSCOW = "Europe/Moscow";
-  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null, historyScope: "all", historyLimit: 30, performancePeriod: "all" };
+  const runtime = { state: null, live: null, report: {}, records: new Map(), installPrompt: null, historyScope: "all", historyLimit: 30, performancePeriod: "all", board: null };
 
   document.addEventListener("DOMContentLoaded", init);
 
@@ -28,20 +30,22 @@
     setConnection("loading", "Обновление");
     try {
       const stamp = Date.now();
-      const [state, live, report] = await Promise.all([
+      const [state, live, report, board] = await Promise.all([
         loadBestState(stamp),
         loadLiveState(stamp),
         loadReport(stamp),
+        loadFullDayBoard(stamp),
       ]);
       runtime.state = state;
       runtime.live = live;
       runtime.report = report;
+      runtime.board = board;
       render(runtime.state);
       const current = isCurrentPortfolio(runtime.state);
       const degraded = String(report.status || "").toUpperCase() === "DEGRADED"
         || array(runtime.state.dailyAnalysis).length < 3;
       if (!current) setConnection("error", "Нет свежей подборки");
-      else if (degraded) setConnection("loading", "Данные ограничены");
+      else if (degraded) setConnection("loading", historyOnlyForecasts(runtime.state).length ? "Статистика без линии" : "Данные ограничены");
       else setConnection("ready", "Актуально");
     } catch (error) {
       console.error(error);
@@ -112,6 +116,45 @@
     return {};
   }
 
+  function validatedFullDayBoard(candidate) {
+    if (!candidate || !Array.isArray(candidate.fixtures)) return null;
+    const start = Date.parse(candidate.operationalWindowStart || "");
+    const end = Date.parse(candidate.operationalWindowEnd || "");
+    const time = Date.now();
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end - start !== 86_400_000
+      || time < start || time >= end) return null;
+    const ids = new Set();
+    for (const row of candidate.fixtures) {
+      const kickoff = Date.parse(row?.commenceTime || "");
+      const id = String(row?.eventId || "");
+      if (!id || ids.has(id) || !Number.isFinite(kickoff) || kickoff < start || kickoff >= end) return null;
+      ids.add(id);
+      if (Number(row?.stake || 0) !== 0) return null;
+      if (row.forecast) {
+        if (row.forecast.mode !== "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS"
+          || Number(row.forecast.stake || 0) !== 0
+          || row.forecast.verifiedBookmakerOdds != null
+          || !Number.isFinite(Number(row.forecast.modelProbability))) return null;
+      }
+    }
+    return candidate;
+  }
+
+  async function loadFullDayBoard(stamp) {
+    let best = null;
+    for (const url of [LOCAL_BOARD_URL, RAW_BOARD_URL]) {
+      try {
+        const board = validatedFullDayBoard(await fetchJson(url, stamp));
+        if (board && (!best || (Date.parse(board.updatedAt || "") || 0) > (Date.parse(best.updatedAt || "") || 0))) {
+          best = board;
+        }
+      } catch (error) {
+        console.warn("Full-day board unavailable at", url, error?.message || error);
+      }
+    }
+    return best;
+  }
+
   function normalize(value) {
     const state = value && typeof value === "object" ? value : {};
     state.meta = object(state.meta);
@@ -170,8 +213,14 @@
   // A second, explicitly non-financial view: every real fixture in the
   // current Moscow day, with evidence-based history-only estimates if available.
   function currentFixtureBoard(state) {
-    const window = currentMoscowWindow(state);
-    return array(state.upcomingFixtures)
+    // The compact independently published board remains visible even if the
+    // much larger canonical state is temporarily delayed by GitHub Pages.
+    const board = validatedFullDayBoard(runtime.board);
+    const rows = board ? board.fixtures : array(state.upcomingFixtures);
+    const window = board
+      ? { start: Date.parse(board.operationalWindowStart), end: Date.parse(board.operationalWindowEnd) }
+      : currentMoscowWindow(state);
+    return array(rows)
       .filter(row => inOperationalWindow(row, window))
       .sort((a, b) => (Date.parse(a.commenceTime || "") || 0) - (Date.parse(b.commenceTime || "") || 0));
   }
@@ -250,7 +299,7 @@
     const quality = current ? average(state.dailyAnalysis.map(row => number(row.dataQuality))) : 0;
     const modelBank = bankSnapshot(state);
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
-    setText("summaryMatches", String(current ? state.dailyAnalysis.length : array(state.upcomingFixtures).filter(row => inOperationalWindow(row, currentMoscowWindow(state))).length));
+    setText("summaryMatches", String(currentFixtureBoard(state).length));
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryPremium", current ? String(state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).length) : "—");
