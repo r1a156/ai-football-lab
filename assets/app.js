@@ -46,8 +46,10 @@
   }
 
   async function fetchJson(url, stamp) {
-    const separator = url.includes("?") ? "&" : "?";
-    const response = await fetch(`${url}${separator}v=${stamp}`, { cache: "no-store" });
+    // Revalidate the stable asset URL with the origin's ETag/Last-Modified.
+    // Cache-busting a 10 MB state.json every minute defeats HTTP 304 and
+    // wastes bandwidth, especially on mobile. "no-cache" always revalidates.
+    const response = await fetch(url, { cache: "no-cache" });
     if (!response.ok) throw new Error(`${url} ${response.status}`);
     return response.json();
   }
