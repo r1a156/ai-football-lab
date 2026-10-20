@@ -166,10 +166,21 @@
     const window = currentMoscowWindow(state);
     if (!window || !daily.length || daily.length > 15) return false;
     if (!daily.every(row => inOperationalWindow(row, window) && odds(row) >= 1.55 && home(row) && away(row))) return false;
-    if (best.length > 3 || !best.every(row => inOperationalWindow(row, window))) return false;
+    if (best.length !== Math.min(3, daily.length) || !best.every(row => inOperationalWindow(row, window))) return false;
     const nonBanked = Boolean(state.meta.recoveryDay || state.meta.bootstrapPreview);
-    if (!nonBanked && best.some(row => number(row.stake) <= 0 || number(row.stakePercent) !== 10)) return false;
-    if (nonBanked && best.some(row => number(row.stake) > 0)) return false;
+    const calibrationAllowed = object(state.meta.calibrationGuard).bankrollAllowed === true;
+    for (const row of best) {
+      const stake = number(row.stake);
+      const percent = number(row.stakePercent);
+      const probability = Number(row.conservativeProbability);
+      const price = odds(row);
+      const computedEv = Number.isFinite(probability) && probability > 0 && probability <= 1 && price > 1
+        ? probability * price - 1 : Number.NEGATIVE_INFINITY;
+      const storedEv = row.conservativeExpectedValue == null ? computedEv : Number(row.conservativeExpectedValue);
+      if (stake < 0 || percent < 0 || percent > 10) return false;
+      if (stake === 0 && percent !== 0) return false;
+      if (stake > 0 && (percent !== 10 || nonBanked || !calibrationAllowed || Math.min(computedEv, storedEv) <= 0)) return false;
+    }
     const expectedExpresses = Math.min(3, Math.floor(daily.length / 5));
     if (state.expresses.length !== expectedExpresses) return false;
     if (!state.expresses.every(ticket => array(ticket.legs).length === 5)) return false;
@@ -246,7 +257,7 @@
     const economicReason = banked
       ? "Прогноз входит в зафиксированный Топ‑3: ставка равна 10% банка на момент публикации."
       : inTopThree
-        ? "Прогноз входит в Топ‑3, но эта публикация работает без финансового риска (предпросмотр или recovery-режим)."
+        ? "Прогноз входит в Топ‑3, но финансовая ставка не разрешена: контроль калибровки, положительного EV и дублирования событий."
         : "Банк используется только для трёх зафиксированных одиночных ставок Топ‑3; этот матч остаётся аналитическим.";
     setHtml("spotlightReasons", [...reasons, economicReason].map(item => `<li>${escapeHtml(item)}</li>`).join(""));
   }
