@@ -46,6 +46,7 @@ LIVE_STATE_PATH = ROOT / "data" / "live-state.json"
 LIVE_LEARNING_PATH = ROOT / "data" / "live-learning.json"
 ODDS_CACHE_PATH = ROOT / "data" / "r15-odds-cache.json"
 FOOTBALL_DATA_FIXTURE_ODDS_PATH = ROOT / "data" / "football-data-fixtures-odds.json"
+FULL_DAY_BOARD_PATH = ROOT / "data" / "full-day-board.json"
 
 UTC = dt.timezone.utc
 R15_MARKER = "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO"
@@ -4335,6 +4336,17 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
     losses = audit_bank_losses(state)
     state["lossDiagnostics"] = losses
     report.setdefault("diagnostics", {})["lossDiagnostics"] = copy.deepcopy(losses)
+    full_day_window = state.get("meta") or {}
+    write_json(FULL_DAY_BOARD_PATH, {
+        "version": 1,
+        "updatedAt": full_day_window.get("updatedAt"),
+        "operationalDayId": full_day_window.get("operationalDayId"),
+        "operationalWindowStart": full_day_window.get("operationalWindowStart"),
+        "operationalWindowEnd": full_day_window.get("operationalWindowEnd"),
+        "coverage": full_day_window.get("fullDayFixtureCoverage") or {},
+        "fixtures": state.get("upcomingFixtures") or [],
+        "policy": "VERIFIED_SCHEDULE_HISTORY_PREVIEW_NO_ODDS_NO_BANK",
+    })
     write_json(STATE_PATH, state)
     write_json(REPORT_PATH, report)
     write_json(SNAPSHOT_PATH, {
