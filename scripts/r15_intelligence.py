@@ -3776,7 +3776,14 @@ def informational_best_three(
     result = []
     for rank, source in enumerate(ranked, start=1):
         event_id = str(source.get("eventId") or "")
-        ev = safe_float(source.get("conservativeExpectedValue"), float("-inf"))
+        # The daily prediction record may omit conservativeExpectedValue even
+        # though the candidate has one. Recompute from the persisted conservative
+        # probability and actual bookmaker price; fail closed for missing fields.
+        probability = safe_float(source.get("conservativeProbability"), -1.0)
+        odds = safe_float(source.get("bookmakerOdds"), 0.0)
+        reconstructed_ev = probability * odds - 1.0 if 0.0 < probability <= 1.0 and odds > 1.0 else float("-inf")
+        stored_ev = safe_float(source.get("conservativeExpectedValue"), reconstructed_ev)
+        ev = min(stored_ev, reconstructed_ev)
         eligible = (
             bank_enabled and guard_allows
             and str(source.get("publicationMode") or "") != "RECOVERY_DAY"
@@ -5954,7 +5961,19 @@ def self_test() -> int:
         raise RuntimeError(f"SELF_TEST full synthetic strategy produced {len(records)}: {diag}")
     day = operational_day(now, full_test_config)
     core.apply_operational_window_metadata(records, day, now)
+    # Explicit financial admission fixture, independent of arbitrary model
+    # performance on synthetic matches. No real probabilities are modified.
+    state.setdefault("meta", {})["calibrationGuard"] = {"bankrollAllowed": True}
     best = informational_best_three(records, state, full_test_config, now)
+    guard_blocked_state = copy.deepcopy(state)
+    guard_blocked_state["meta"]["calibrationGuard"]["bankrollAllowed"] = False
+    if any(safe_float(row.get("stake")) > 0 for row in informational_best_three(records, guard_blocked_state, full_test_config, now)):
+        raise RuntimeError("SELF_TEST calibration financial guard failed")
+    recovery_records = copy.deepcopy(records)
+    for row in recovery_records:
+        row["publicationMode"] = "RECOVERY_DAY"
+    if any(safe_float(row.get("stake")) > 0 for row in informational_best_three(recovery_records, state, full_test_config, now)):
+        raise RuntimeError("SELF_TEST recovery charged bank")
     core.apply_best_bets_to_daily_analysis(records, best)
     for row in records:
         row["stake"] = 0.0
@@ -5964,13 +5983,19 @@ def self_test() -> int:
     core.update_bank_metrics(state)
     if len(best) != 3:
         raise RuntimeError("SELF_TEST top-three size mismatch")
-    if any(abs(safe_float(row.get("stakePercent")) - 10.0) > 0.001 for row in best):
-        raise RuntimeError("SELF_TEST top-three stake percent is not 10")
-    expected_single_stake = round(safe_float(state.get("bank", {}).get("current"), 10000.0) * 0.10, 2)
-    if any(abs(safe_float(row.get("stake")) - expected_single_stake) > 0.01 for row in best):
+    expected_stakes = []
+    for row in best:
+        p = safe_float(row.get("conservativeProbability"), -1.0)
+        odds = safe_float(row.get("bookmakerOdds"), 0.0)
+        computed_ev = p * odds - 1.0 if 0.0 < p <= 1.0 and odds > 1.0 else float("-inf")
+        expected_pct = 10.0 if computed_ev > 0 else 0.0
+        if abs(safe_float(row.get("stakePercent")) - expected_pct) > 0.001:
+            raise RuntimeError("SELF_TEST singles financial gate failed")
+        expected_stakes.append(round(safe_float(state.get("bank", {}).get("current"), 10000.0) * expected_pct / 100.0, 2))
+    if any(abs(safe_float(row.get("stake")) - expected_stakes[i]) > 0.01 for i, row in enumerate(best)):
         raise RuntimeError("SELF_TEST top-three stake amount mismatch")
-    if abs(safe_float(state.get("bank", {}).get("placedAmount")) - expected_single_stake * 3) > 0.02:
-        raise RuntimeError("SELF_TEST single-bank exposure is not 30 percent")
+    if abs(safe_float(state.get("bank", {}).get("placedAmount")) - sum(expected_stakes)) > 0.02:
+        raise RuntimeError("SELF_TEST single-bank exposure mismatch")
     state["expresses"] = build_expresses(records, state, full_test_config, now)
     if len(state["expresses"]) != 3 or any(len(row.get("legs") or []) != 5 for row in state["expresses"]):
         raise RuntimeError("SELF_TEST express structure failed")
