@@ -5468,7 +5468,10 @@ def publish_generation() -> int:
     # Full Moscow-day board: all real fixtures, ranked informational history
     # forecasts when evidence exists, and an explicit no-odds label otherwise.
     # Daily banked candidates remain governed by the independent strict engine.
-    quoted_ids = {str(event.get("id") or "") for event in odds_events}
+    quoted_ids = {
+        str(event.get("id") or "") for event in odds_events
+        if core.parse_event_quotes(event, now, config)
+    }
     previous_fixtures = (
         state.get("upcomingFixtures") or []
         if str((state.get("meta") or {}).get("upcomingFixturesOperationalDayId") or "") == day["operationalDayId"]
