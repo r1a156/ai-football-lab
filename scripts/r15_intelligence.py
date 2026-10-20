@@ -5368,6 +5368,23 @@ def publish_generation() -> int:
             "apiCalls": client.calls,
             "quota": client.odds_quota,
             "quotaByKey": quota_by_key,
+            # Show both zero-cost subscription probes even when only one key
+            # was used. No credential or authorization header is persisted.
+            "credentialHealth": {
+                "selected": odds_key_selection.get("selected"),
+                "primary": {
+                    "valid": bool((odds_key_selection.get("primary") or {}).get("valid")),
+                    "httpStatus": safe_int((odds_key_selection.get("primary") or {}).get("status"), 0),
+                    "remaining": safe_int((odds_key_selection.get("primary") or {}).get("remaining"), -1),
+                    "used": safe_int((odds_key_selection.get("primary") or {}).get("used"), -1),
+                },
+                "backup": {
+                    "valid": bool((odds_key_selection.get("backup") or {}).get("valid")),
+                    "httpStatus": safe_int((odds_key_selection.get("backup") or {}).get("status"), 0),
+                    "remaining": safe_int((odds_key_selection.get("backup") or {}).get("remaining"), -1),
+                    "used": safe_int((odds_key_selection.get("backup") or {}).get("used"), -1),
+                },
+            },
             "fonbet": {
                 "status": fonbet_snapshot.get("status"),
                 "mode": fonbet_mode,
