@@ -5024,6 +5024,7 @@ def history_only_fixture_forecast(
         "conservativeExpectedValue": None,
         "stake": 0.0,
         "financialEligible": False,
+        "computedAt": iso(now),
     }
 
 
