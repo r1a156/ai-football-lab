@@ -5687,9 +5687,11 @@ def validate_state() -> int:
     bootstrap_preview = bool(validation_meta.get("bootstrapPreview"))
     recovery_day = bool(validation_meta.get("recoveryDay"))
     if is_r15_publication:
-        if not (3 <= len(daily) <= safe_int(config.get("dailyAnalysisTarget"), 15)):
-            raise RuntimeError(f"R17 daily analysis must contain 3..15 current-day rows, got {len(daily)}")
-        expected_best = 3
+        # Quality filters choose the available records; never demand three
+        # events if only one or two legitimately qualify in the Moscow day.
+        if not (1 <= len(daily) <= safe_int(config.get("dailyAnalysisTarget"), 15)):
+            raise RuntimeError(f"R17 daily analysis must contain 1..15 current-day rows, got {len(daily)}")
+        expected_best = min(3, len(daily))
         if len(best) != expected_best:
             raise RuntimeError(f"R15 informational top rows must be {expected_best}, got {len(best)}")
         expected_expresses = min(3, len(daily) // 5)
@@ -5757,12 +5759,28 @@ def validate_state() -> int:
                 raise RuntimeError("R17 contains excluded competition")
             if not core.record_uses_r14_standard_market(row):
                 raise RuntimeError("R17 contains Asian or unsupported market")
-        expected_best_percent = 0.0 if (bootstrap_preview or recovery_day) else safe_float(config.get("stakePerBestBetPercent"), 10.0)
+        # The Top-3 may be informational even on an ordinary day: never
+        # force an unaffordable or negative-EV pick to risk the virtual bank.
+        configured_single_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
+        guard_allows = ((validation_meta.get("calibrationGuard") or {}).get("bankrollAllowed") is True)
         for row in best:
-            if abs(safe_float(row.get("stakePercent")) - expected_best_percent) > 0.001:
-                raise RuntimeError("R15 top-three single-bank stake percent mismatch")
-            if expected_best_percent > 0.0 and safe_float(row.get("stake")) <= 0.0:
-                raise RuntimeError("R15 top-three single-bank stake must be positive")
+            stake = safe_float(row.get("stake"), 0.0)
+            percent = safe_float(row.get("stakePercent"), 0.0)
+            p = safe_float(row.get("conservativeProbability"), -1.0)
+            odds = safe_float(row.get("bookmakerOdds"), 0.0)
+            reconstructed_ev = p * odds - 1.0 if 0.0 < p <= 1.0 and odds > 1.0 else float("-inf")
+            stored_ev = safe_float(row.get("conservativeExpectedValue"), reconstructed_ev)
+            if stake < 0.0 or percent < 0.0 or percent > configured_single_percent + 0.001:
+                raise RuntimeError("R15 top-three stake exceeds configured risk or is negative")
+            if stake > 0.0:
+                if bootstrap_preview or recovery_day or not guard_allows or min(reconstructed_ev, stored_ev) <= 0.0:
+                    raise RuntimeError("R15 unsafe top-three bank stake")
+                if abs(percent - configured_single_percent) > 0.001:
+                    raise RuntimeError("R15 top-three stake percent mismatch")
+            elif percent != 0.0:
+                raise RuntimeError("R15 unstaked top-three pick has nonzero stake percent")
+        if sum(safe_float(row.get("stakePercent"), 0.0) for row in best) > safe_float(config.get("maximumDailyExposurePercent"), 30.0) + 0.001:
+            raise RuntimeError("R15 maximum daily exposure exceeded")
         audit = state.get("dailyAudit") if isinstance(state.get("dailyAudit"), dict) else {}
         if audit.get("schemaValid") and safe_int(audit.get("logicalRuns"), 0) > 1:
             raise RuntimeError("R15 Cloudflare Workers AI logical audit ran more than once")
@@ -5983,6 +6001,15 @@ def self_test() -> int:
     core.update_bank_metrics(state)
     if len(best) != 3:
         raise RuntimeError("SELF_TEST top-three size mismatch")
+    for partial_size in (1, 2):
+        partial_best = informational_best_three(records[:partial_size], state, full_test_config, now, bank_enabled=False)
+        if len(partial_best) != partial_size:
+            raise RuntimeError("SELF_TEST partial Top-3 cardinality failed")
+        if any(safe_float(row.get("stake")) > 0 for row in partial_best):
+            raise RuntimeError("SELF_TEST partial informational stake failed")
+        partial_expresses = build_expresses(copy.deepcopy(records[:partial_size]), copy.deepcopy(state), full_test_config, now)
+        if partial_expresses:
+            raise RuntimeError("SELF_TEST partial day invented five-leg express")
     expected_stakes = []
     for row in best:
         p = safe_float(row.get("conservativeProbability"), -1.0)
