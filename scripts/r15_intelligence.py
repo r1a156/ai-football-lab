@@ -6006,6 +6006,12 @@ def self_test() -> int:
     guard_blocked_state["meta"]["calibrationGuard"]["bankrollAllowed"] = False
     if any(safe_float(row.get("stake")) > 0 for row in informational_best_three(records, guard_blocked_state, full_test_config, now)):
         raise RuntimeError("SELF_TEST calibration financial guard failed")
+    duplicate_state = copy.deepcopy(state)
+    duplicate_event = str(best[0].get("eventId"))
+    duplicate_state["history"] = [{"eventId": duplicate_event, "stake": 100.0}]
+    dup = informational_best_three(records, duplicate_state, full_test_config, now, preferred_event_ids=[duplicate_event])
+    if safe_float(dup[0].get("stake")) != 0.0:
+        raise RuntimeError("SELF_TEST repeat single event staked twice")
     recovery_records = copy.deepcopy(records)
     for row in recovery_records:
         row["publicationMode"] = "RECOVERY_DAY"
