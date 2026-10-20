@@ -5010,13 +5010,27 @@ def publish_generation() -> int:
         registry = load_json(TEAM_REGISTRY_PATH, empty_registry())
         context = free_mesh.merge_external_elo(build_history_context(cache, registry, now))
 
-    keys, quota_plan = select_sport_keys_by_quota(discovered, context, client, config)
+    # A one-credit h2h request still uses genuine prematch odds. Keep every
+    # model-quality threshold unchanged if two-market requests are unaffordable.
+    primary_acquisition_config = config
+    primary_budget = free_odds_daily_budget(client, config, now)
+    featured_region_count = len([x for x in str(config.get("oddsRegions") or "eu").split(",") if x])
+    normal_featured_cost = max(1, featured_region_count * len(config.get("featuredMarkets") or ["h2h", "totals"]))
+    if (
+        0 < safe_int(primary_budget.get("portfolioAvailableThisRun"), 0) < normal_featured_cost
+        and featured_region_count == 1
+        and "h2h" in (config.get("featuredMarkets") or [])
+    ):
+        primary_acquisition_config = copy.deepcopy(config)
+        primary_acquisition_config["featuredMarkets"] = ["h2h"]
+        print("R15_LOW_QUOTA_STANDARD_H2H_ONLY=YES")
+    keys, quota_plan = select_sport_keys_by_quota(discovered, context, client, primary_acquisition_config)
     start = parse_time(discovery.get("queryWindowStart"))
     end = publication_end
     if not start or not end:
         raise RuntimeError("R15 operational window unresolved")
     odds_events, advanced, acquisition_errors, quota_plan, preliminary_diag, advanced_recovery_diag = complete_portfolio_acquisition(
-        client, odds_key, keys, quota_plan, discovered, config, start, end, context, state, now
+        client, odds_key, keys, quota_plan, discovered, primary_acquisition_config, start, end, context, state, now
     )
     featured_errors = list(acquisition_errors)
     keys = list(quota_plan.get("competitionKeysSelected") or keys)
