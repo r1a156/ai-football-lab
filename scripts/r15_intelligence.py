@@ -6344,6 +6344,37 @@ def self_test() -> int:
         or json_fingerprint(diagnostic_state) != loss_before
     ):
         raise RuntimeError("SELF_TEST immutable historical loss audit failed")
+    # Verified finished-match samples produce an independent, non-financial
+    # historical preview. This cannot produce prices or bookmaker EV.
+    valid_context = {
+        "aliases": {"example home": "team-home", "example away": "team-away"},
+        "teamGames": {
+            "team-home": [
+                {"utcDate": iso(now - dt.timedelta(days=i * 5 + 2)),
+                 "side": "home" if i % 2 == 0 else "away",
+                 "goalsFor": 2, "goalsAgainst": 1, "opponentElo": 1500}
+                for i in range(12)
+            ],
+            "team-away": [
+                {"utcDate": iso(now - dt.timedelta(days=i * 5 + 2)),
+                 "side": "away" if i % 2 == 0 else "home",
+                 "goalsFor": 1, "goalsAgainst": 1, "opponentElo": 1500}
+                for i in range(12)
+            ],
+        },
+    }
+    history_preview = history_only_fixture_forecast(
+        {"home_team": "Example Home", "away_team": "Example Away"},
+        valid_context, config, now,
+    )
+    if (
+        not isinstance(history_preview, dict)
+        or not 0 < safe_float(history_preview.get("modelProbability")) < 1
+        or history_preview.get("verifiedBookmakerOdds") is not None
+        or history_preview.get("conservativeExpectedValue") is not None
+        or safe_float(history_preview.get("stake")) != 0
+    ):
+        raise RuntimeError("SELF_TEST valid history preview missing or financially unsafe")
     # Structural synthetic fixtures predate the core qualification layer and are
     # intentionally unrealistic. The explicit guard checks above exercise the
     # production rule; the remaining synthetic tests isolate diversification,
