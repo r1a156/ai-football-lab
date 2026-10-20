@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-10-20T15:47:32Z",
+  "updatedAt": "2026-10-20T18:30:16Z",
   "analysisDateLocal": "2026-10-20",
   "batch": {
     "id": "",
@@ -12,21 +12,21 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-20T15:47:32Z",
+    "updatedAt": "2026-10-20T18:30:16Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 53,
+    "discoveredEvents": 48,
     "competitionsDiscovered": 10,
     "competitionsWithOdds": 0,
-    "oddsEvents": 3,
+    "oddsEvents": 0,
     "historyMatchedEvents": 0,
     "qualifiedEvents": 0,
     "publishedEvents": 0,
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-10-20T15:46:36Z",
+        "updatedAt": "2026-10-20T18:29:19Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -38,9 +38,9 @@
       },
       "THE_ODDS_API": {
         "status": "LOW_ODDS_QUOTA",
-        "lastSuccessAt": "2026-10-20T15:48:39Z",
+        "lastSuccessAt": "2026-10-20T18:31:21Z",
         "consecutiveFailures": 0,
-        "lastFailureAt": "2026-10-20T15:47:31Z",
+        "lastFailureAt": "2026-10-20T18:30:14Z",
         "lastStatus": 401,
         "lastError": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
         "retryAfterSeconds": 0
@@ -81,11 +81,10 @@
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 44,
-      "matchesAdded": 44,
+      "requests": 43,
+      "matchesAdded": 43,
       "historyMatches": 17802,
       "errors": [
-        "136449:HTTPError",
         "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
@@ -104,13 +103,264 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "133953:HTTPError",
+        "137878:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-20T15:47:32Z"
+    "updatedAt": "2026-10-20T18:30:16Z"
+  },
+  "lossDiagnostics": {
+    "settledFinancialEntriesAudited": 41,
+    "recordLookupFailures": 0,
+    "duplicateLedgerRecordIds": 0,
+    "auditedLedgerProfit": -4873.77,
+    "historicalNegativeConservativeEv": {
+      "count": 20,
+      "profit": -4514.09,
+      "note": "Исторические показатели; новые ставки по неположительному EV запрещены."
+    },
+    "mostNegativeMarketFamilies": [
+      {
+        "name": "TOTAL",
+        "count": 32,
+        "won": 15,
+        "lost": 13,
+        "profit": -6858.49,
+        "sampleSufficientForConclusion": true
+      },
+      {
+        "name": "BTTS",
+        "count": 2,
+        "won": 1,
+        "lost": 1,
+        "profit": -977.55,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "HANDICAP",
+        "count": 5,
+        "won": 3,
+        "lost": 2,
+        "profit": 397.72,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "OUTCOME",
+        "count": 2,
+        "won": 2,
+        "lost": 0,
+        "profit": 2564.55,
+        "sampleSufficientForConclusion": false
+      }
+    ],
+    "mostNegativeMarketSelections": [
+      {
+        "name": "Тотал больше 1.5",
+        "count": 4,
+        "won": 1,
+        "lost": 3,
+        "profit": -7373.26,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Ларне ФК с форой +3",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -3458.27,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Ифк Мариехамн с форой +1.5",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -2766.61,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Обе команды забьют — да",
+        "count": 2,
+        "won": 1,
+        "lost": 1,
+        "profit": -977.55,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал меньше 4.5",
+        "count": 2,
+        "won": 1,
+        "lost": 1,
+        "profit": -250.89,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал больше 2,5",
+        "count": 3,
+        "won": 0,
+        "lost": 0,
+        "profit": 0.0,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал меньше 2,5",
+        "count": 1,
+        "won": 0,
+        "lost": 0,
+        "profit": 0.0,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал больше 2.5",
+        "count": 5,
+        "won": 3,
+        "lost": 2,
+        "profit": 39.92,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал меньше 3.5",
+        "count": 14,
+        "won": 8,
+        "lost": 6,
+        "profit": 355.61,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Тотал меньше 2.5",
+        "count": 3,
+        "won": 2,
+        "lost": 1,
+        "profit": 370.13,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Победа Фенербахке",
+        "count": 1,
+        "won": 1,
+        "lost": 0,
+        "profit": 1185.95,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Победа Даейеон Китизен",
+        "count": 1,
+        "won": 1,
+        "lost": 0,
+        "profit": 1378.6,
+        "sampleSufficientForConclusion": false
+      }
+    ],
+    "mostNegativeLeagues": [
+      {
+        "name": "Примера Аргентины",
+        "count": 4,
+        "won": 1,
+        "lost": 3,
+        "profit": -5149.87,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Леагуес Кубок",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -2892.56,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Серия A Бразилии",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -2766.61,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Веиккауслиига - Финланд",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -2766.61,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Свисс Суперлеагуе",
+        "count": 1,
+        "won": 0,
+        "lost": 1,
+        "profit": -2506.55,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Чемпионшип",
+        "count": 3,
+        "won": 0,
+        "lost": 3,
+        "profit": -2343.97,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Лига 2",
+        "count": 2,
+        "won": 0,
+        "lost": 2,
+        "profit": -1620.48,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Лига чемпионов УЕФА",
+        "count": 4,
+        "won": 1,
+        "lost": 3,
+        "profit": -1499.07,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Квалификация Лиги чемпионов УЕФА",
+        "count": 3,
+        "won": 2,
+        "lost": 1,
+        "profit": -922.44,
+        "sampleSufficientForConclusion": false
+      },
+      {
+        "name": "Кампеонато Брасилеиро Серие А",
+        "count": 4,
+        "won": 0,
+        "lost": 0,
+        "profit": 0.0,
+        "sampleSufficientForConclusion": false
+      }
+    ],
+    "multiplyFundedEvents": [
+      {
+        "eventId": "25c7d39ef0b719e54043c88173c61d2b",
+        "recordIds": [
+          "ranked-cda8670cdaab9b23c343",
+          "ranked-bd2317c3312ebf248001"
+        ]
+      },
+      {
+        "eventId": "95ef1765c140859061160bc568599547",
+        "recordIds": [
+          "ranked-1cd4863f628ece9760ab",
+          "ranked-4d8a727cc438cc368a9c"
+        ]
+      },
+      {
+        "eventId": "96673c1fdea1d48aa7440246f5e00bd6",
+        "recordIds": [
+          "ranked-84da225240e0fb3e9bff",
+          "ranked-6f7622a1cdda9f9e7f04"
+        ]
+      }
+    ],
+    "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
+    "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
   },
   "bank": {
     "starting": 10000,
@@ -118,7 +368,7 @@
     "stakePercent": 10,
     "roi": -41.6,
     "maxDrawdown": 68.96,
-    "activeExposure": 0.0,
+    "activeExposure": 0,
     "history": [
       {
         "date": "2026-07-17",
@@ -560,8 +810,8 @@
         "profit": 472.6
       }
     ],
-    "placedAmount": 0.0,
-    "activeBetsCount": 2,
+    "placedAmount": 0,
+    "activeBetsCount": 0,
     "available": 5839.56,
     "closedBalance": 5839.56,
     "mode": "ACTIVE_SINGLE_BANK",
@@ -576,7 +826,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-20T15:47:32Z",
+    "updatedAt": "2026-10-20T18:30:16Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -585,7 +835,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-20T15:47:32Z"
+    "updatedAt": "2026-10-20T18:30:16Z"
   },
   "shadowLearning": {
     "statistics": {
