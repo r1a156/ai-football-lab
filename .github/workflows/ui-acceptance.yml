@@ -34,6 +34,57 @@ jobs:
           node --check assets/app.js
           node --check sw.js
 
+      - name: Regression for informational Top-3 visibility and stake guard
+        shell: bash
+        run: |
+          node <<'JS'
+          const fs = require("node:fs");
+          const assert = require("node:assert/strict");
+          const js = fs.readFileSync("assets/app.js", "utf8");
+          const begin = js.indexOf("function isCurrentPortfolio(state)");
+          const end = js.indexOf("function renderMeta(", begin);
+          assert(begin >= 0 && end > begin, "Current portfolio renderer missing");
+          const validate = new Function(
+            "array", "currentMoscowWindow", "inOperationalWindow",
+            "odds", "home", "away", "number", "object",
+            js.slice(begin, end) + "\nreturn isCurrentPortfolio;"
+          )(
+            value => Array.isArray(value) ? value : [],
+            () => ({}),
+            () => true,
+            row => Number(row.bookmakerOdds),
+            row => row.home,
+            row => row.away,
+            value => Number(value || 0),
+            value => value && typeof value === "object" ? value : {}
+          );
+          const match = { eventId: "event-1", commenceTime: "2026-10-20T12:00:00Z", home: "A", away: "B", bookmakerOdds: 1.8, conservativeProbability: 0.6 };
+          const state = {
+            meta: { sourceMarker: "V10_R15F_R3", updatedAt: new Date().toISOString(), calibrationGuard: { bankrollAllowed: false } },
+            dailyAnalysis: [{ ...match }],
+            bestBets: [{ ...match, stake: 0, stakePercent: 0 }],
+            expresses: [],
+          };
+          assert(validate(state), "Valid Top-1 zero-stake portfolio must be visible");
+          state.bestBets[0].stake = 100;
+          state.bestBets[0].stakePercent = 10;
+          assert(!validate(state), "Uncalibrated stake must be rejected");
+          state.meta.calibrationGuard.bankrollAllowed = true;
+          assert(validate(state), "Calibrated positive-EV stake should be visible");
+          state.bestBets[0].conservativeProbability = 0.5;
+          assert(!validate(state), "Negative-EV stake must be rejected");
+          state.bestBets[0].stake = 0;
+          state.bestBets[0].stakePercent = 0;
+          assert(validate(state), "Negative-EV informational prediction must remain visible");
+          state.meta.recoveryDay = true;
+          assert(validate(state), "Recovery informational prediction must remain visible");
+          state.meta.recoveryDay = false;
+          state.bestBets.push({ ...match, eventId: "event-2", stake: 0, stakePercent: 0 });
+          state.dailyAnalysis.push({ ...match, eventId: "event-2" });
+          assert(validate(state), "Valid partial Top-2 must be visible");
+          console.log("INFORMATIONAL_TOP3_UI_REGRESSION=GREEN");
+          JS
+
       - name: Validate premium DOM and PWA
         shell: bash
         run: |
