@@ -1435,7 +1435,10 @@ def discover_operational_events(
     now: dt.datetime,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     window = operational_day(now, config)
-    start = parse_time(window["queryWindowStart"])
+    # Discovery covers the ENTIRE Moscow day, including games that have
+    # already kicked off. Only downstream premium/bank selection applies the
+    # current prematch lead-time. No post-kickoff forecast is created.
+    start = parse_time(window["operationalWindowStart"])
     operational_end = parse_time(window["operationalWindowEnd"])
     # Event discovery is quota-free but still takes network time. Do not
     # scan tomorrow's fixtures when only today's matches can be published.
@@ -1501,8 +1504,9 @@ def discover_operational_events(
     diagnostics = {
         **window,
         "queryWindowEnd": iso(actual_end),
-        "selectionWindowStart": iso(start),
-        "selectionWindowEnd": iso(actual_end),
+        "calendarWindowStart": iso(start),
+        "selectionWindowStart": window["queryWindowStart"],
+        "selectionWindowEnd": window["operationalWindowEnd"],
         "activeFootballCompetitions": len(football),
         "events": len(ordered),
         "targetEvents": target,
@@ -5269,6 +5273,7 @@ def publish_generation() -> int:
     if publication_start is None or publication_end is None:
         raise RuntimeError("Strict Moscow publication window missing")
     discovery["allDiscoveredEvents"] = len(discovered)
+    full_day_discovered = list(discovered)
     discovered = [
         event for event in discovered
         if (commence := parse_time(event.get("commence_time")))
@@ -5470,7 +5475,7 @@ def publish_generation() -> int:
         else []
     )
     fixtures, fixture_coverage = full_day_fixture_board(
-        discovered, previous_fixtures, context, config, now,
+        full_day_discovered, previous_fixtures, context, config, now,
         publication_start, publication_end, quoted_ids,
     )
     state["upcomingFixtures"] = fixtures
