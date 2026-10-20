@@ -30,23 +30,41 @@
     setConnection("loading", "Обновление");
     try {
       const stamp = Date.now();
-      const [state, live, report, board] = await Promise.all([
+      const [stateResult, liveResult, reportResult, boardResult] = await Promise.allSettled([
         loadBestState(stamp),
         loadLiveState(stamp),
         loadReport(stamp),
         loadFullDayBoard(stamp),
       ]);
+      runtime.board = boardResult.status === "fulfilled" ? boardResult.value : null;
+      const boardOnly = stateResult.status !== "fulfilled";
+      if (boardOnly && !validatedFullDayBoard(runtime.board)) {
+        throw stateResult.reason || new Error("No current canonical state or verified fixture board");
+      }
+      const state = !boardOnly ? stateResult.value : normalize({
+        meta: {
+          version: "10.0.0", sourceMarker: "BOARD_ONLY_UNVERIFIED_FINANCES",
+          updatedAt: runtime.board.updatedAt,
+          analysisDateLocal: String(runtime.board.operationalDayId || "").slice(0, 10),
+          operationalWindowStart: runtime.board.operationalWindowStart,
+          operationalWindowEnd: runtime.board.operationalWindowEnd,
+        },
+        bank: {}, dailyAnalysis: [], bestBets: [], expresses: [],
+        upcomingFixtures: runtime.board.fixtures,
+      });
       runtime.state = state;
-      runtime.live = live;
-      runtime.report = report;
-      runtime.board = board;
+      runtime.live = liveResult.status === "fulfilled" ? liveResult.value : {};
+      runtime.report = reportResult.status === "fulfilled" ? reportResult.value : {};
       render(runtime.state);
-      const current = isCurrentPortfolio(runtime.state);
-      const degraded = String(report.status || "").toUpperCase() === "DEGRADED"
-        || array(runtime.state.dailyAnalysis).length < 3;
-      if (!current) setConnection("error", "Нет свежей подборки");
-      else if (degraded) setConnection("loading", historyOnlyForecasts(runtime.state).length ? "Статистика без линии" : "Данные ограничены");
-      else setConnection("ready", "Актуально");
+      if (boardOnly) setConnection("error", "Календарь доступен · банк не загружен");
+      else {
+        const current = isCurrentPortfolio(runtime.state);
+        const degraded = String(runtime.report.status || "").toUpperCase() === "DEGRADED"
+          || array(runtime.state.dailyAnalysis).length < 3;
+        if (!current) setConnection("loading", historyOnlyForecasts(runtime.state).length ? "Статистика без линии" : "Нет подтверждённого Топ-3");
+        else if (degraded) setConnection("loading", "Данные ограничены");
+        else setConnection("ready", "Актуально");
+      }
     } catch (error) {
       console.error(error);
       setConnection("error", "Нет связи");
@@ -303,8 +321,11 @@
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
     setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
     setText("summaryPremium", current ? String(state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).length) : "—");
-    setText("summaryBank", currency(modelBank.current));
-    setText("summaryExposure", `Доходность ${signedPercent(modelBank.roi)} · ${modelBank.count} закрытых ставок`);
+    const bankAvailable = Number.isFinite(Number(state.bank?.current));
+    setText("summaryBank", bankAvailable ? currency(modelBank.current) : "—");
+    setText("summaryExposure", bankAvailable
+      ? `Доходность ${signedPercent(modelBank.roi)} · ${modelBank.count} закрытых ставок`
+      : "Финансовые данные временно недоступны");
     const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
@@ -680,6 +701,14 @@
 
   function renderBank(state) {
     const snapshot = bankSnapshot(state);
+    if (!Number.isFinite(Number(state.bank?.current))) {
+      for (const id of ["bankCurrent", "bankStarting", "bankPlaced", "bankAvailable",
+        "bankProfit", "bankRoi", "bankDrawdown", "bankChange", "bankHistoryCount",
+        "bankChartStart", "bankChartEnd"]) setText(id, "—");
+      const chart = document.getElementById("bankChart");
+      if (chart) chart.innerHTML = "";
+      return;
+    }
     setText("bankCurrent", currency(snapshot.current));
     setText("bankStarting", currency(snapshot.starting));
     setText("bankPlaced", currency(snapshot.placed));
