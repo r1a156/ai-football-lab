@@ -3779,7 +3779,7 @@ def informational_best_three(
     guard_allows = guard.get("bankrollAllowed") is True
     historical_events = {
         str(row.get("eventId"))
-        for row in (state.get("bestBetsHistory") or []) + (state.get("bankHistory") or [])
+        for row in (state.get("history") or []) + (state.get("bestBets") or [])
         if isinstance(row, dict) and safe_float(row.get("stake"), 0.0) > 0 and row.get("eventId")
     }
     assigned_events: set[str] = set()
