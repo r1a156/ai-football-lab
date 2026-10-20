@@ -152,7 +152,10 @@
         if (row.forecast.mode !== "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS"
           || Number(row.forecast.stake || 0) !== 0
           || row.forecast.verifiedBookmakerOdds != null
-          || !Number.isFinite(Number(row.forecast.modelProbability))) return null;
+          || !Number.isFinite(Number(row.forecast.modelProbability))
+          || Number(row.forecast.modelProbability) <= 0
+          || Number(row.forecast.modelProbability) > 1
+          || (row.forecast.computedAt && Date.parse(row.forecast.computedAt) >= kickoff)) return null;
       }
     }
     return candidate;
