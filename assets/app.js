@@ -98,7 +98,39 @@
         lastError = error;
       }
     }
-    if (!candidates.length) throw lastError || new Error("state unavailable");
+    if (!candidates.length) {
+      // The canonical JSON is ~10 MB. Recover the truthful financial snapshot
+      // from the smaller daily JSON while keeping its picks informational until
+      // the canonical guard and exact state version are available again.
+      const smallUrls = [
+        "data/ai_daily_analysis.json",
+        "https://raw.githubusercontent.com/r1a156/ai-football-lab/main/data/ai_daily_analysis.json",
+      ];
+      for (const url of smallUrls) {
+        try {
+          const snap = await fetchJson(url, stamp);
+          const start = Date.parse(snap?.batch?.operationalWindowStart || "");
+          const end = Date.parse(snap?.batch?.operationalWindowEnd || "");
+          if (!Number.isFinite(Number(snap?.bank?.current))
+            || !Number.isFinite(start) || end - start !== 86_400_000) continue;
+          return normalize({
+            meta: {
+              version: snap.version,
+              sourceMarker: "DAILY_SNAPSHOT_RECOVERY_NON_FINANCIAL",
+              updatedAt: snap.updatedAt,
+              analysisDateLocal: snap.analysisDateLocal,
+              operationalWindowStart: snap.batch.operationalWindowStart,
+              operationalWindowEnd: snap.batch.operationalWindowEnd,
+              recoveryDay: true,
+            },
+            bank: snap.bank,
+            dailyAnalysis: [], bestBets: [], expresses: [],
+            lossDiagnostics: snap.lossDiagnostics || {},
+          });
+        } catch {}
+      }
+      throw lastError || new Error("canonical state and daily snapshot unavailable");
+    }
     candidates.sort((a, b) => {
       const currentDelta = Number(isCurrentPortfolio(b)) - Number(isCurrentPortfolio(a));
       if (currentDelta) return currentDelta;
