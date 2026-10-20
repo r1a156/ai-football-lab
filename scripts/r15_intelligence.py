@@ -3818,8 +3818,19 @@ def informational_best_three(
         stored_ev = safe_float(source.get("conservativeExpectedValue"), reconstructed_ev)
         ev = min(stored_ev, reconstructed_ev)
         fixture = fixture_key(source)
+        # Do not finance a persistently miscalibrated market family even when
+        # the global model still passes. Require the configured sample minimum
+        # and reuse the existing Brier ceiling; never boost probabilities.
+        family = str(source.get("marketFamily") or source.get("marketKey") or "OTHER").upper()
+        family_metrics = (guard.get("marketFamilies") or {}).get(family) or {}
+        family_sample = safe_int(family_metrics.get("n"), 0)
+        family_brier = safe_float(family_metrics.get("brier"), 1.0)
+        family_allowed = (
+            family_sample < max(30, safe_int(config.get("calibrationMinimumBankrollSample"), 30))
+            or family_brier <= safe_float(config.get("calibrationMaximumBankrollBrier"), 0.255)
+        )
         eligible = (
-            bank_enabled and guard_allows
+            bank_enabled and guard_allows and family_allowed
             and str(source.get("publicationMode") or "") != "RECOVERY_DAY"
             and ev > 0 and bool(event_id)
             and event_id not in historical_events and event_id not in assigned_events
@@ -6084,6 +6095,16 @@ def self_test() -> int:
     baseline_funded = informational_best_three([funded_candidate], state, full_test_config, now)
     if safe_float(baseline_funded[0].get("stake")) <= 0:
         raise RuntimeError("SELF_TEST fixture admission baseline failed")
+    bad_family_state = copy.deepcopy(state)
+    bad_family_state["meta"]["calibrationGuard"]["marketFamilies"] = {
+        "TOTAL": {"n": 40, "brier": 0.30}
+    }
+    bad_family_candidate = dict(funded_candidate, marketFamily="TOTAL")
+    if safe_float(informational_best_three([bad_family_candidate], bad_family_state, full_test_config, now)[0].get("stake")) != 0:
+        raise RuntimeError("SELF_TEST losing market family incorrectly charged bank")
+    bad_family_state["meta"]["calibrationGuard"]["marketFamilies"]["TOTAL"]["n"] = 5
+    if safe_float(informational_best_three([bad_family_candidate], bad_family_state, full_test_config, now)[0].get("stake")) <= 0:
+        raise RuntimeError("SELF_TEST immature market family was overblocked")
     ledger_state = copy.deepcopy(state)
     ledger_state.setdefault("bank", {})["history"] = [
         {"event": "PREDICTION_LOST", "recordId": "previous-bank-ticket", "eventId": "bank-fixture-1", "profit": -100.0}
