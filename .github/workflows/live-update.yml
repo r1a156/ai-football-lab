@@ -84,5 +84,14 @@ jobs:
             exit 0
           fi
           git commit -m "R15F settle live scores and express tickets [skip ci]"
-          git pull --rebase origin main
+          # Never replay a computed bank settlement onto a newer public state.
+          # A concurrent writer must be reconciled by a fresh workflow run.
+          git fetch origin main --prune
+          BASE="$(git rev-parse HEAD^)"
+          REMOTE="$(git rev-parse origin/main)"
+          if [[ "$REMOTE" != "$BASE" ]]; then
+            echo "R15F_CONCURRENT_STATE_CHANGE_ABORT=YES"
+            echo "Local settlement is stale; refuse rebase and financial replay."
+            exit 1
+          fi
           git push origin HEAD:main
