@@ -138,7 +138,7 @@
     renderPerformance(state);
     renderMatches(current ? state.dailyAnalysis : [], state);
     renderExpresses(current ? state.expresses : [], state, current);
-    renderSingles(current ? state.bestBets.slice(0, 3) : []);
+    renderSingles(current ? state.bestBets.slice(0, 3) : [], historyOnlyForecasts(state));
     renderPremium(current ? state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).slice(0, 3) : [], state);
     renderBank(state);
     renderHistory(state);
@@ -165,6 +165,50 @@
     if (!window || !row) return false;
     const kickoff = Date.parse(row.commenceTime || row.utcDate || "");
     return Number.isFinite(kickoff) && kickoff >= window.start && kickoff < window.end;
+  }
+
+  // A second, explicitly non-financial view: every real fixture in the
+  // current Moscow day, with evidence-based history-only estimates if available.
+  function currentFixtureBoard(state) {
+    const window = currentMoscowWindow(state);
+    return array(state.upcomingFixtures)
+      .filter(row => inOperationalWindow(row, window))
+      .sort((a, b) => (Date.parse(a.commenceTime || "") || 0) - (Date.parse(b.commenceTime || "") || 0));
+  }
+
+  function historyOnlyForecasts(state) {
+    return currentFixtureBoard(state)
+      .filter(row => row.forecast && row.forecast.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS"
+        && Number.isFinite(Number(row.forecast.modelProbability)) && Number(row.forecast.modelProbability) > 0
+        && Number(row.stake || 0) === 0)
+      .sort((a, b) => Number(b.forecast.modelProbability) - Number(a.forecast.modelProbability));
+  }
+
+  function fixtureCards(rows, startingRank = 0) {
+    return rows.map((row, index) => {
+      const forecast = object(row.forecast);
+      const hasForecast = forecast.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS";
+      const kickoff = Date.parse(row.commenceTime || "");
+      const alreadyStarted = Number.isFinite(kickoff) && kickoff <= Date.now();
+      const source = hasForecast
+        ? "История команд · " + number(forecast.historyHomeMatches) + " и " + number(forecast.historyAwayMatches) + " матчей"
+        : "Недостаточно подтверждённой истории для численного прогноза";
+      const probability = hasForecast ? number(forecast.modelProbability) * 100 : 0;
+      return `<article class="match-card">
+        <div class="rank">${startingRank + index + 1}</div>
+        <div class="match-main">
+          <div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div>
+          <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
+          <div class="match-why">${escapeHtml(source)}${alreadyStarted ? " · начало матча уже прошло" : ""}</div>
+        </div>
+        <div class="match-side">
+          <div class="pick"><small>${hasForecast ? "Статистическая оценка" : "Календарь"}</small>
+            <strong>${escapeHtml(hasForecast ? forecast.pickRu : "Без проверенного прогноза")}</strong>
+            <span class="pick-odds">Без подтверждённого коэффициента · без ставки</span></div>
+          ${hasForecast ? signalHtml("Вероятность", probability, probability) : ""}
+        </div>
+      </article>`;
+    }).join("");
   }
 
   function isCurrentPortfolio(state) {
@@ -215,7 +259,9 @@
     const preview = Boolean(state.meta.bootstrapPreview) && !Boolean(state.meta.recoveryDay);
     setText("portfolioStatus", current
       ? (preview ? "Предпросмотр текущей подборки" : "Свежая подборка опубликована")
-      : "Новая подборка формируется");
+      : (historyOnlyForecasts(state).length
+        ? `Проверено ${currentFixtureBoard(state).length} матчей · ${historyOnlyForecasts(state).length} статистических оценок · без ставок`
+        : `Проверено ${currentFixtureBoard(state).length} матчей · нет подтверждённых прогнозов`));
     setText("portfolioUpdated", state.meta.updatedAt ? `Обновлено ${formatDateTime(state.meta.updatedAt)}` : "Ожидаем обновление");
     setText("matchesUpdated", current && state.meta.updatedAt ? formatShortDateTime(state.meta.updatedAt) : "ожидание");
     setText("footerUpdated", state.meta.updatedAt ? `Данные: ${formatDateTime(state.meta.updatedAt)}` : "Данные загружаются");
@@ -225,17 +271,21 @@
   function renderSpotlight(state, report, current) {
     const row = current ? state.dailyAnalysis[0] : null;
     if (!row) {
-      setText("spotlightTeams", "Новая подборка формируется");
-      setText("spotlightPick", "—");
-      setText("spotlightProbability", "—");
+      const history = historyOnlyForecasts(state);
+      const top = history[0];
+      setText("spotlightTeams", top ? teamsText(top) : "Подтверждённой подборки нет");
+      setText("spotlightPick", top ? top.forecast.pickRu : "—");
+      setText("spotlightProbability", top ? percent(number(top.forecast.modelProbability) * 100) : "—");
       setText("spotlightQuality", "—");
       setText("spotlightStability", "—");
       setText("spotlightOdds", "—");
       setText("spotlightEv", "—");
       setText("spotlightBankroll", "Отключён");
-      setText("spotlightMode", "Ожидание");
-      setHtml("spotlightReasons", "<li>Система не публикует слабые события ради заполнения списка.</li>");
-      setBar("spotlightProbabilityBar", 0);
+      setText("spotlightMode", top ? "Статистика · без ставок" : "Ожидание котировок");
+      setHtml("spotlightReasons", top
+        ? "<li>Оценка основана только на прошлых результатах команд. Действующей линии букмекера нет, консервативный EV не подтверждён.</li>"
+        : "<li>Нет достоверных предматчевых коэффициентов или достаточной истории. События текущих суток показаны ниже.</li>");
+      setBar("spotlightProbabilityBar", top ? number(top.forecast.modelProbability) * 100 : 0);
       setBar("spotlightQualityBar", 0);
       setBar("spotlightStabilityBar", 0);
       return;
@@ -280,7 +330,7 @@
     const analysis = object(diagnostics.analysis);
     const discovery = object(diagnostics.discovery);
     const rejectionReasons = object(analysis.rejectionReasons);
-    const checked = number(state.meta.candidateMatchesAnalyzed || discovery.events || analysis.oddsEvents);
+    const checked = currentFixtureBoard(state).length || number(discovery.events || analysis.oddsEvents);
     const qualified = number(analysis.premiumQualifiedEvents ?? analysis.eventsQualified ?? 0);
     const published = current ? state.dailyAnalysis.length : 0;
     const rejected = Math.max(0, checked - qualified);
@@ -411,44 +461,17 @@
   function renderMatches(rows, state) {
     const root = document.getElementById("matchList");
     if (!rows.length) {
-      const window = currentMoscowWindow(state);
-      const fixtures = array(state.upcomingFixtures)
-        .filter(row => inOperationalWindow(row, window))
-        .slice(0, 24);
-      if (fixtures.length) {
-        root.innerHTML = '<div class="smart-empty"><span>ФУТБОЛ СЕГОДНЯ</span><strong>Матчи текущих московских суток</strong><p>Реальные события из источников данных. Пока расчётный рынок не прошёл проверку, ставка не предлагается.</p></div>' +
-          fixtures.map((row, i) => `<article class="match-card"><div class="rank">${i + 1}</div><div class="match-main"><div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div><div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div><div class="match-why">Ожидается проверенный прогноз</div></div><div class="match-side"><div class="pick"><small>Рынок</small><strong>Анализируется</strong></div></div></article>`).join("");
+      const fixtures = currentFixtureBoard(state);
+      const forecasts = historyOnlyForecasts(state);
+      if (!fixtures.length) {
+        root.innerHTML = empty("Реальные события на текущие московские сутки не получены. Данные и котировки не подменяются.");
         return;
       }
-      const analysis = object(object(runtime.report.diagnostics).analysis);
-      const nearMisses = array(analysis.nearMissCandidates)
-        .filter(row => inOperationalWindow(row, window) && number(row.bestOdds) >= 1.55)
-        .slice(0, 6);
-      if (!nearMisses.length) {
-        root.innerHTML = empty("Свежие матчи ещё не опубликованы");
-        return;
-      }
-      root.innerHTML = `<div class="smart-empty"><span>ЛУЧШИЕ МАТЧИ ПО МОДЕЛИ</span><strong>Строгих прогнозов пока нет — показываем лучшие аналитические матчи</strong><p>Эти матчи зафиксированы до начала и участвуют в shadow-learning. Они не считаются официальными ставками, пока не пройдут строгий фильтр.</p></div>` +
-        nearMisses.map((row, index) => {
-          const failures = [...array(row.hardFailures), ...array(row.marketFailures)].filter(Boolean).slice(0, 2);
-          const probabilityValue = number(row.bestProbability) <= 1 ? number(row.bestProbability) * 100 : number(row.bestProbability);
-          return `<article class="match-card">
-            <div class="rank">${index + 1}</div>
-            <div class="match-main">
-              <div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><span>аналитический кандидат · обучение</span></div>
-              <div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div>
-              <div class="match-why">${escapeHtml(failures.join("; ") || "Не прошёл полный контроль качества")}</div>
-            </div>
-            <div class="match-side">
-              <div class="pick"><small>Лучший рынок модели</small><strong>${escapeHtml(row.bestCandidate || "—")}</strong><span class="pick-odds">× ${formatNumber(row.bestOdds,2)}</span></div>
-              <div class="signal-cluster">
-                ${signalHtml("Вероятность", probabilityValue, probabilityValue)}
-                ${signalHtml("Качество", number(row.dataQuality), number(row.dataQuality))}
-              </div>
-            </div>
-            <div class="chevron">×</div>
-          </article>`;
-        }).join("");
+      const ranked = [...forecasts, ...fixtures.filter(row => !forecasts.some(f => String(f.eventId) === String(row.eventId)))];
+      root.innerHTML = `<div class="smart-empty"><span>ВСЕ МАТЧИ МОСКОВСКИХ СУТОК</span>
+        <strong>Проверено ${fixtures.length} реальных матчей · ${forecasts.length} статистических прогнозов</strong>
+        <p>В первую очередь показаны оценки по подтверждённой истории команд. Это не букмекерские ставки: коэффициенты отсутствуют или устарели; банк не используется. После начала матча прогноз не пересчитывается.</p></div>` +
+        fixtureCards(ranked);
       return;
     }
     root.innerHTML = rows.map((row, index) => {
@@ -505,16 +528,11 @@
     // Fill the daily football schedule with real fixtures, never invented bets.
     // Entries below are explicitly marked as fixtures rather than predictions.
     const window = currentMoscowWindow(state);
-    const remainingFixtures = array(state.upcomingFixtures)
-      .filter(row => inOperationalWindow(row, window) && !officialIds.has(String(row.eventId || "")))
-      .slice(0, Math.max(0, 15 - rows.length));
+    const remainingFixtures = currentFixtureBoard(state)
+      .filter(row => !officialIds.has(String(row.eventId || "")));
     if (remainingFixtures.length) {
       root.innerHTML += '<div class="smart-empty"><span>ДРУГИЕ МАТЧИ СЕГОДНЯ</span><strong>Ближайшие реальные события</strong><p>Это календарь матчей, а не дополнительные ставки. Показаны только события текущих суток.</p></div>' +
-        remainingFixtures.map((row, i) => `<article class="match-card">
-          <div class="rank">${rows.length + i + 1}</div>
-          <div class="match-main"><div class="match-meta"><span>${escapeHtml(league(row))}</span><span>•</span><time>${escapeHtml(matchTime(row))}</time></div><div class="teams"><span>${escapeHtml(home(row))}</span><i>—</i><span>${escapeHtml(away(row))}</span></div><div class="match-why">Проверка рынков · вне официального прогноза</div></div>
-          <div class="match-side"><div class="pick"><small>Статус</small><strong>Без ставки</strong></div></div>
-        </article>`).join("");
+        fixtureCards(remainingFixtures, rows.length);
     }
     root.querySelectorAll("[data-record]").forEach(node => {
       node.addEventListener("click", () => openDetails(runtime.records.get(node.dataset.record)));
@@ -542,9 +560,24 @@
     }).join("");
   }
 
-  function renderSingles(rows) {
+  function renderSingles(rows, historicalRows = []) {
     const root = document.getElementById("singleGrid");
-    if (!rows.length) { root.innerHTML = empty("Топ‑3 появится после публикации свежего рейтинга"); return; }
+    if (!rows.length) {
+      const top = historicalRows.slice(0, 3);
+      root.innerHTML = top.length ? `<div class="smart-empty"><span>ТОП СТАТИСТИЧЕСКИХ ОЦЕНОК</span>
+        <strong>Топ-${top.length} по истории команд · не букмекерский Топ-3</strong>
+        <p>Ни одна оценка без действующих реальных коэффициентов не является финансовой ставкой.</p></div>` +
+        top.map((row, index) => `<article class="single-card">
+          <div class="single-rank">${index + 1}</div>
+          <div class="single-teams"><small>${escapeHtml(league(row))} · ${escapeHtml(matchTime(row))}</small>
+            <span>${escapeHtml(home(row))}</span><span>${escapeHtml(away(row))}</span></div>
+          <div class="single-pick"><span>Прогноз по истории</span><strong>${escapeHtml(row.forecast.pickRu)}</strong></div>
+          <div class="single-metrics"><div><span>Модель</span><strong>${percent(number(row.forecast.modelProbability) * 100)}</strong></div>
+            <div><span>Коэффициент</span><strong>нет</strong></div>
+            <div><span>Ставка</span><strong>0 ₽</strong></div></div>
+        </article>`).join("") : empty("Нет подтверждённых прогнозов или достаточной истории матчей");
+      return;
+    }
     root.innerHTML = rows.map((row, index) => {
       const key = remember(row, `single-${index}`);
       return `<article class="single-card" data-record="${escapeHtml(key)}" tabindex="0" role="button">
