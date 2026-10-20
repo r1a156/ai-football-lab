@@ -4237,7 +4237,104 @@ def clear_completed_current_batch(state: dict[str, Any], now: dt.datetime, reaso
     update_express_bank_metrics(state, now)
 
 
+def audit_bank_losses(state: dict[str, Any]) -> dict[str, Any]:
+    """Explain historical losses from settled ledger, without rewriting funds.
+
+    Bank history is authoritative for cash flow. Legacy rows with no record ID
+    are reported separately; a duplicate event is an audit finding, not a
+    retroactive balance correction.
+    """
+    by_id = {str(row.get("id") or ""): row for row in (state.get("history") or [])
+             if isinstance(row, dict) and row.get("id")}
+    by_family: dict[str, dict[str, Any]] = {}
+    by_market: dict[str, dict[str, Any]] = {}
+    by_league: dict[str, dict[str, Any]] = {}
+    seen_records: set[str] = set()
+    events: dict[str, list[str]] = defaultdict(list)
+    negative_ev_count = 0
+    negative_ev_profit = 0.0
+    unmatched_count = 0
+    duplicate_ledger_records = 0
+    accounted = 0
+    total_profit = 0.0
+
+    def add(group: dict[str, dict[str, Any]], name: str, gain: float) -> None:
+        item = group.setdefault(name or "НЕИЗВЕСТНО", {"count": 0, "won": 0, "lost": 0, "profit": 0.0})
+        item["count"] += 1
+        item["won"] += int(gain > 0)
+        item["lost"] += int(gain < 0)
+        item["profit"] = round(item["profit"] + gain, 2)
+
+    for row in (state.get("bank") or {}).get("history") or []:
+        if not isinstance(row, dict):
+            continue
+        record_id = str(row.get("recordId") or "")
+        if not record_id or str(row.get("event") or "") not in {"PREDICTION_WON", "PREDICTION_LOST", "PREDICTION_PUSH"}:
+            continue
+        if record_id in seen_records:
+            duplicate_ledger_records += 1
+            continue
+        seen_records.add(record_id)
+        profit_value = row.get("profit")
+        try:
+            profit = float(profit_value)
+        except (ValueError, TypeError):
+            unmatched_count += 1
+            continue
+        if not math.isfinite(profit):
+            unmatched_count += 1
+            continue
+        profit = round(profit, 2)
+        accounted += 1
+        total_profit += profit
+        record = by_id.get(record_id)
+        if record is None:
+            unmatched_count += 1
+            continue
+        event_id = str(row.get("eventId") or record.get("eventId") or "")
+        if event_id and profit != 0:
+            events[event_id].append(record_id)
+        add(by_family, str(record.get("marketFamily") or record.get("marketKey") or "OTHER"), profit)
+        add(by_market, str(record.get("pickRu") or record.get("market") or "OTHER"), profit)
+        add(by_league, str(record.get("leagueRu") or record.get("league") or "OTHER"), profit)
+        p = safe_float(record.get("conservativeProbability"), -1.0)
+        odds = safe_float(record.get("bookmakerOdds") or record.get("odds"), 0.0)
+        if 0 < p <= 1 and odds > 1 and p * odds - 1 <= 0:
+            negative_ev_count += 1
+            negative_ev_profit += profit
+
+    def ranked(group: dict[str, dict[str, Any]], count: int) -> list[dict[str, Any]]:
+        return [
+            {"name": key, **value, "sampleSufficientForConclusion": value["count"] >= 20}
+            for key, value in sorted(group.items(), key=lambda item: (item[1]["profit"], -item[1]["count"]))[:count]
+        ]
+
+    return {
+        "settledFinancialEntriesAudited": accounted,
+        "recordLookupFailures": unmatched_count,
+        "duplicateLedgerRecordIds": duplicate_ledger_records,
+        "auditedLedgerProfit": round(total_profit, 2),
+        "historicalNegativeConservativeEv": {
+            "count": negative_ev_count,
+            "profit": round(negative_ev_profit, 2),
+            "note": "Исторические показатели; новые ставки по неположительному EV запрещены.",
+        },
+        "mostNegativeMarketFamilies": ranked(by_family, 8),
+        "mostNegativeMarketSelections": ranked(by_market, 12),
+        "mostNegativeLeagues": ranked(by_league, 10),
+        "multiplyFundedEvents": [
+            {"eventId": event_id, "recordIds": ids}
+            for event_id, ids in sorted(events.items()) if len(ids) > 1
+        ][:25],
+        "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
+        "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE",
+    }
+
+
 def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
+    losses = audit_bank_losses(state)
+    state["lossDiagnostics"] = losses
+    report.setdefault("diagnostics", {})["lossDiagnostics"] = copy.deepcopy(losses)
     write_json(STATE_PATH, state)
     write_json(REPORT_PATH, report)
     write_json(SNAPSHOT_PATH, {
@@ -4247,6 +4344,7 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
         "analysisDateLocal": state.get("meta", {}).get("analysisDateLocal"),
         "batch": state.get("batch", {}),
         "dataCoverage": state.get("dataCoverage", {}),
+        "lossDiagnostics": state.get("lossDiagnostics", {}),
         "bank": state.get("bank", {}),
         "expresses": state.get("expresses", []),
         "dailyAnalysis": state.get("dailyAnalysis", []),
@@ -6200,6 +6298,32 @@ def self_test() -> int:
     )
     if len(board_again) != 53 or again_coverage["realFixtures"] != 53:
         raise RuntimeError("SELF_TEST day fixtures disappeared after kickoff")
+    # An incident with two separately funded tickets for one event must be
+    # exposed in diagnostics without mutating the historical bankroll.
+    diagnostic_state = {
+        "bank": {"current": 975.0, "history": [
+            {"event": "PREDICTION_LOST", "recordId": "r1", "eventId": "same-event", "profit": -10.0},
+            {"event": "PREDICTION_LOST", "recordId": "r2", "eventId": "same-event", "profit": -15.0},
+        ]},
+        "history": [
+            {"id": "r1", "eventId": "same-event", "marketFamily": "TOTAL",
+             "pickRu": "Тотал больше 1,5", "bookmakerOdds": 1.55,
+             "conservativeProbability": 0.55},
+            {"id": "r2", "eventId": "same-event", "marketFamily": "TOTAL",
+             "pickRu": "Тотал больше 1,5", "bookmakerOdds": 1.55,
+             "conservativeProbability": 0.55},
+        ],
+    }
+    loss_before = json_fingerprint(diagnostic_state)
+    audited_losses = audit_bank_losses(diagnostic_state)
+    if (
+        audited_losses["settledFinancialEntriesAudited"] != 2
+        or audited_losses["auditedLedgerProfit"] != -25.0
+        or len(audited_losses["multiplyFundedEvents"]) != 1
+        or audited_losses["historicalNegativeConservativeEv"]["count"] != 2
+        or json_fingerprint(diagnostic_state) != loss_before
+    ):
+        raise RuntimeError("SELF_TEST immutable historical loss audit failed")
     # Structural synthetic fixtures predate the core qualification layer and are
     # intentionally unrealistic. The explicit guard checks above exercise the
     # production rule; the remaining synthetic tests isolate diversification,
