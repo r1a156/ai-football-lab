@@ -2,9 +2,9 @@
   "status": "DEGRADED",
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "mode": "recovery-day",
-  "startedAt": "2026-10-20T13:42:42Z",
-  "finishedAt": "2026-10-20T13:52:16Z",
+  "mode": "generate",
+  "startedAt": "2026-10-20T15:47:32Z",
+  "finishedAt": "2026-10-20T15:56:56Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -17,8 +17,8 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "ingested": 2095,
-        "duplicates": 2095,
+        "ingested": 0,
+        "duplicates": 0,
         "historyMatches": 17802,
         "coverageStart": "2019-06-01T00:00:00Z",
         "coverageEnd": "2027-05-30T00:00:00Z"
@@ -34,18 +34,19 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 2095,
-      "duplicates": 2095,
+      "ingested": 0,
+      "duplicates": 0,
       "historyMatches": 17802,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 43,
+      "requests": 44,
+      "matchesAdded": 44,
       "historyMatches": 17802,
       "errors": [
+        "136449:HTTPError",
         "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
@@ -64,8 +65,7 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "133953:HTTPError"
       ]
     },
     "trackedHistory": {
@@ -79,18 +79,18 @@
       "operationalDateLocal": "2026-10-20",
       "operationalWindowStart": "2026-10-20T05:00:00Z",
       "operationalWindowEnd": "2026-10-21T05:00:00Z",
-      "queryWindowStart": "2026-10-20T14:27:42Z",
+      "queryWindowStart": "2026-10-20T16:32:32Z",
       "queryWindowEnd": "2026-10-21T05:00:00Z",
-      "searchWindowMaximumEnd": "2026-10-23T14:27:42Z",
+      "searchWindowMaximumEnd": "2026-10-23T16:32:32Z",
       "windowStartLocal": "2026-10-20T08:00:00+03:00",
       "windowEndLocal": "2026-10-21T08:00:00+03:00",
       "durationHours": 24,
       "searchHorizonHours": 72,
       "policy": "ROLLING_PREMATCH_HORIZON_72H_BREADTH_FIRST",
-      "selectionWindowStart": "2026-10-20T14:27:42Z",
+      "selectionWindowStart": "2026-10-20T16:32:32Z",
       "selectionWindowEnd": "2026-10-21T05:00:00Z",
       "activeFootballCompetitions": 48,
-      "events": 55,
+      "events": 53,
       "targetEvents": 120,
       "targetReached": false,
       "stagesUsed": 1,
@@ -98,18 +98,18 @@
         {
           "stage": 0,
           "name": "CURRENT_OPERATIONAL_REMAINDER",
-          "start": "2026-10-20T14:27:42Z",
+          "start": "2026-10-20T16:32:32Z",
           "end": "2026-10-21T05:00:00Z",
-          "newEvents": 55,
-          "cumulativeEvents": 55,
+          "newEvents": 53,
+          "cumulativeEvents": 53,
           "providerErrors": 0
         }
       ],
       "sportKeysWithEvents": 10,
       "eventsBySportKey": {
-        "soccer_saudi_arabia_pro_league": 4,
         "soccer_uefa_champs_league": 9,
         "soccer_sweden_superettan": 1,
+        "soccer_saudi_arabia_pro_league": 2,
         "soccer_efl_champ": 1,
         "soccer_england_league1": 11,
         "soccer_england_league2": 12,
@@ -119,8 +119,8 @@
         "soccer_conmebol_copa_sudamericana": 1
       },
       "errors": [],
-      "allDiscoveredEvents": 55,
-      "currentOperationalEvents": 55,
+      "allDiscoveredEvents": 53,
+      "currentOperationalEvents": 53,
       "excludedFutureOperationalEvents": 0,
       "publicationWindowPolicy": "CURRENT_MOSCOW_OPERATIONAL_24H_ONLY"
     },
@@ -162,14 +162,14 @@
         "soccer_efl_champ",
         "soccer_brazil_serie_b",
         "soccer_conmebol_copa_sudamericana",
-        "soccer_saudi_arabia_pro_league",
         "soccer_mexico_ligamx",
+        "soccer_saudi_arabia_pro_league",
         "soccer_sweden_superettan"
       ],
       "initialCompetitionKeys": [],
       "completionCompetitionKeys": [],
       "completionRounds": [],
-      "allEventsHistoricallyInspected": 55,
+      "allEventsHistoricallyInspected": 53,
       "competitionKeysSelected": [],
       "portfolioCompletionBurstActual": false,
       "featuredEventsCollected": 3,
@@ -178,9 +178,9 @@
       "advancedRecoveryReturned": 0,
       "advancedRecoveryUsefulResponses": 0,
       "advancedRecoveryRecoveredEvents": 0,
-      "topThreeEligibleAfterAdvanced": 2,
+      "topThreeEligibleAfterAdvanced": 0,
       "premiumQualifiedAfterAdvanced": 0,
-      "qualifiedAfterAdvanced": 2,
+      "qualifiedAfterAdvanced": 0,
       "noKeyFixtureOddsEnabled": true,
       "noKeyFixtureOddsStatus": "GREEN",
       "noKeyFixtureOddsEvents": 3,
@@ -189,10 +189,10 @@
       "noKeyFixtureOddsUsedCache": false,
       "noKeyFixtureOddsError": null,
       "oddsCacheEnabled": true,
-      "oddsCacheLoadedFeatured": 3,
+      "oddsCacheLoadedFeatured": 0,
       "oddsCacheLoadedAdvanced": 0,
-      "oddsCacheExpired": 0,
-      "oddsCacheSavedFeatured": 3,
+      "oddsCacheExpired": 3,
+      "oddsCacheSavedFeatured": 0,
       "oddsCacheSavedAdvanced": 0,
       "oddsCacheMaximumAgeMinutes": 180,
       "quotaExhaustedAtStart": true,
@@ -217,23 +217,32 @@
     "advancedOddsEvents": 0,
     "analysis": {
       "oddsEvents": 3,
-      "eventsWithHistory": 3,
-      "eventsWithMarkets": 3,
+      "eventsWithHistory": 0,
+      "eventsWithMarkets": 0,
       "eventsQualified": 0,
-      "eventsTopThreeEligible": 2,
+      "eventsTopThreeEligible": 0,
       "premiumQualifiedEvents": 0,
-      "marketCandidates": 3,
-      "rejectedByQuality": 1,
-      "rejectedWithoutMarkets": 0,
+      "marketCandidates": 0,
+      "rejectedByQuality": 0,
+      "rejectedWithoutMarkets": 3,
       "rejectionReasons": {
-        "Премиум: Недостаточная консервативная вероятность": 2,
-        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 2,
-        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 2,
-        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 2,
-        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 2,
-        "Нет рынка, пригодного даже для базового Топ‑3": 1
+        "Нет пригодных рынков или котировок": 3
       },
       "rejectedEvents": [
+        {
+          "eventId": "e75561b9944ca60383c20ccda733dcce",
+          "sportKey": "soccer_england_league1",
+          "league": "League 1",
+          "leagueRu": "Лига 1",
+          "home": "Blackpool",
+          "homeRu": "Блакпоол",
+          "away": "Milton Keynes Dons",
+          "awayRu": "Милтон Кеинес Донс",
+          "commenceTime": "2026-10-20T18:45:00Z",
+          "failures": [
+            "Нет пригодных рынков или котировок"
+          ]
+        },
         {
           "eventId": "aa8765390b2b5d44502ecb31b4047caa",
           "sportKey": "soccer_england_league1",
@@ -244,41 +253,60 @@
           "away": "Barnsley",
           "awayRu": "Барнслеи",
           "commenceTime": "2026-10-20T18:45:00Z",
-          "dataTier": "FULL",
-          "dataQuality": 86.0,
-          "quoteCount": null,
-          "candidateCount": 0,
-          "bestCandidate": null,
-          "bestProbability": null,
-          "bestOdds": null,
-          "bestScore": null,
-          "shadowCandidate": {},
           "failures": [
-            "Нет рынка, пригодного даже для базового Топ‑3"
+            "Нет пригодных рынков или котировок"
+          ]
+        },
+        {
+          "eventId": "6f691b959ff8d2206570c1a2d17fffd1",
+          "sportKey": "soccer_england_league2",
+          "league": "League 2",
+          "leagueRu": "Лига 2",
+          "home": "Gillingham",
+          "homeRu": "Гиллингхам",
+          "away": "Port Vale",
+          "awayRu": "Порт Вале",
+          "commenceTime": "2026-10-20T19:00:00Z",
+          "failures": [
+            "Нет пригодных рынков или котировок"
           ]
         }
       ],
-      "dataTiers": {
-        "FULL": 3
-      },
-      "marketFamilies": {
-        "OUTCOME": 2
-      },
+      "dataTiers": {},
+      "marketFamilies": {},
       "qualifiedEventIds": [],
       "premiumEventIds": [],
-      "published": 2,
+      "published": 0,
       "required": 15,
-      "shortage": 13,
-      "partialPublication": true,
-      "status": "GREEN_PARTIAL_PRODUCTION",
-      "marketFamilyCap": 8,
-      "premiumPublished": 0,
-      "selectionObjective": "BEST_AVAILABLE_TOP_THREE_ALWAYS_WITH_SEPARATE_STRICT_PREMIUM_LABEL",
+      "shortage": 15,
+      "status": "NO_TOP_THREE_ELIGIBLE_EVENTS",
+      "partialPublication": false,
       "hardRejectionReasons": {},
       "marketRejectionReasons": {
-        "Нет рынка, пригодного даже для базового Топ‑3": 1
+        "Нет пригодных рынков или котировок": 3
       },
       "nearMissCandidates": [
+        {
+          "eventId": "e75561b9944ca60383c20ccda733dcce",
+          "league": "League 1",
+          "leagueRu": "Лига 1",
+          "home": "Blackpool",
+          "homeRu": "Блакпоол",
+          "away": "Milton Keynes Dons",
+          "awayRu": "Милтон Кеинес Донс",
+          "bestCandidate": null,
+          "bestProbability": 0.0,
+          "bestOdds": null,
+          "dataQuality": 0.0,
+          "quoteCount": 0,
+          "probabilityGap": 0.56,
+          "qualityGap": 58.0,
+          "bookmakerGap": 3,
+          "hardFailures": [],
+          "marketFailures": [
+            "Нет пригодных рынков или котировок"
+          ]
+        },
         {
           "eventId": "aa8765390b2b5d44502ecb31b4047caa",
           "league": "League 1",
@@ -290,28 +318,51 @@
           "bestCandidate": null,
           "bestProbability": 0.0,
           "bestOdds": null,
-          "dataQuality": 86.0,
+          "dataQuality": 0.0,
           "quoteCount": 0,
           "probabilityGap": 0.56,
-          "qualityGap": 0.0,
+          "qualityGap": 58.0,
           "bookmakerGap": 3,
           "hardFailures": [],
           "marketFailures": [
-            "Нет рынка, пригодного даже для базового Топ‑3"
+            "Нет пригодных рынков или котировок"
+          ]
+        },
+        {
+          "eventId": "6f691b959ff8d2206570c1a2d17fffd1",
+          "league": "League 2",
+          "leagueRu": "Лига 2",
+          "home": "Gillingham",
+          "homeRu": "Гиллингхам",
+          "away": "Port Vale",
+          "awayRu": "Порт Вале",
+          "bestCandidate": null,
+          "bestProbability": 0.0,
+          "bestOdds": null,
+          "dataQuality": 0.0,
+          "quoteCount": 0,
+          "probabilityGap": 0.56,
+          "qualityGap": 58.0,
+          "bookmakerGap": 3,
+          "hardFailures": [],
+          "marketFailures": [
+            "Нет пригодных рынков или котировок"
           ]
         }
       ],
       "advancedRecoveryEventIds": [
-        "aa8765390b2b5d44502ecb31b4047caa"
+        "e75561b9944ca60383c20ccda733dcce",
+        "aa8765390b2b5d44502ecb31b4047caa",
+        "6f691b959ff8d2206570c1a2d17fffd1"
       ]
     },
     "shadowLearning": {
-      "pending": 1,
+      "pending": 0,
       "settled": 36,
       "addedPool": 0,
       "statistics": {
-        "tracked": 37,
-        "pending": 1,
+        "tracked": 36,
+        "pending": 0,
         "settled": 36,
         "won": 18,
         "lost": 7,
@@ -323,295 +374,295 @@
         "provider": "THE_ODDS_API",
         "label": "ODDS_SPORTS",
         "status": 200,
-        "elapsedSeconds": 0.167
+        "elapsedSeconds": 0.134
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.147
+        "elapsedSeconds": 0.112
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_australia_aleague",
         "status": 200,
-        "elapsedSeconds": 0.121
+        "elapsedSeconds": 0.192
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_austria_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.149
+        "elapsedSeconds": 0.11
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_belgium_first_div",
         "status": 200,
-        "elapsedSeconds": 0.136
+        "elapsedSeconds": 0.2
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.13
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.109
+        "elapsedSeconds": 0.128
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_chile_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.245
+        "elapsedSeconds": 0.259
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_china_superleague",
         "status": 200,
-        "elapsedSeconds": 0.136
+        "elapsedSeconds": 0.174
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_libertadores",
         "status": 200,
-        "elapsedSeconds": 0.109
+        "elapsedSeconds": 0.18
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_sudamericana",
         "status": 200,
-        "elapsedSeconds": 0.107
+        "elapsedSeconds": 0.147
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.117
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.126
+        "elapsedSeconds": 0.143
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_efl_cup",
         "status": 200,
-        "elapsedSeconds": 0.11
+        "elapsedSeconds": 0.136
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.12
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.119
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.126
+        "elapsedSeconds": 0.12
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_fa_cup",
         "status": 200,
-        "elapsedSeconds": 0.115
+        "elapsedSeconds": 0.176
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_finland_veikkausliiga",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_one",
         "status": 200,
-        "elapsedSeconds": 0.112
+        "elapsedSeconds": 0.134
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.14
+        "elapsedSeconds": 0.126
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.108
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga2",
         "status": 200,
-        "elapsedSeconds": 0.155
+        "elapsedSeconds": 0.121
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_dfb_pokal",
         "status": 200,
-        "elapsedSeconds": 0.125
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_liga3",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.131
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_greece_super_league",
         "status": 200,
-        "elapsedSeconds": 0.108
+        "elapsedSeconds": 0.145
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_japan_j_league",
         "status": 200,
-        "elapsedSeconds": 0.136
+        "elapsedSeconds": 0.135
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_korea_kleague1",
         "status": 200,
-        "elapsedSeconds": 0.107
+        "elapsedSeconds": 0.18
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_league_of_ireland",
         "status": 200,
-        "elapsedSeconds": 0.114
+        "elapsedSeconds": 0.124
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_mexico_ligamx",
         "status": 200,
-        "elapsedSeconds": 0.104
+        "elapsedSeconds": 0.136
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.124
+        "elapsedSeconds": 0.121
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_norway_eliteserien",
         "status": 200,
-        "elapsedSeconds": 0.2
+        "elapsedSeconds": 0.12
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.112
+        "elapsedSeconds": 0.127
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_portugal_primeira_liga",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.101
+        "elapsedSeconds": 0.131
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_la_liga",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.123
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.116
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spl",
         "status": 200,
-        "elapsedSeconds": 0.124
+        "elapsedSeconds": 0.192
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_allsvenskan",
         "status": 200,
-        "elapsedSeconds": 0.113
+        "elapsedSeconds": 0.126
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_superettan",
         "status": 200,
-        "elapsedSeconds": 0.105
+        "elapsedSeconds": 0.119
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_switzerland_superleague",
         "status": 200,
-        "elapsedSeconds": 0.106
+        "elapsedSeconds": 0.18
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_turkey_super_league",
         "status": 200,
-        "elapsedSeconds": 0.115
+        "elapsedSeconds": 0.113
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league",
         "status": 200,
-        "elapsedSeconds": 0.099
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.11
+        "elapsedSeconds": 0.118
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_league",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_nations_league",
         "status": 200,
-        "elapsedSeconds": 0.099
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_usa_mls",
         "status": 200,
-        "elapsedSeconds": 0.107
+        "elapsedSeconds": 0.14
       }
     ],
     "quota": {
@@ -628,538 +679,26 @@
         "estimatedCreditsThisRun": 0
       }
     },
+    "credentialHealth": {
+      "selected": "PRIMARY_LOW_OR_EXHAUSTED",
+      "primary": {
+        "valid": true,
+        "httpStatus": 200,
+        "remaining": 0,
+        "used": 500
+      },
+      "backup": {
+        "valid": true,
+        "httpStatus": 200,
+        "remaining": 0,
+        "used": 500
+      }
+    },
     "fonbet": {
       "status": "GREEN",
       "mode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
       "confirmedEvents": 0,
-      "sourceUpdatedAt": "2026-10-20T13:52:15Z"
-    },
-    "dailyAnalysis": 2,
-    "bankedTopThree": 0,
-    "premiumBets": 0,
-    "premiumEventIds": [],
-    "expresses": 0,
-    "singleBank": {
-      "starting": 10000,
-      "current": 5839.56,
-      "stakePercent": 10,
-      "roi": -41.6,
-      "maxDrawdown": 68.96,
-      "activeExposure": 0.0,
-      "history": [
-        {
-          "date": "2026-07-17",
-          "value": 10000,
-          "event": "REAL_MODE_START"
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9333.33,
-          "event": "PREDICTION_LOST",
-          "matchId": 554925
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9646.66,
-          "event": "PREDICTION_WON",
-          "matchId": 554928
-        },
-        {
-          "date": "2026-07-25",
-          "value": 9973.33,
-          "event": "PREDICTION_WON",
-          "matchId": 554923
-        },
-        {
-          "date": "2026-07-25",
-          "value": 10713.33,
-          "event": "PREDICTION_WON",
-          "matchId": 554926
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554935-over_2_5",
-          "eventId": "b2ae0c5388431d8a811f3ead9312fed1",
-          "match": "Grêmio — Fluminense",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554932-over_2_5",
-          "eventId": "d9d1726d183975de80ce176cd8e4a6ab",
-          "match": "Bragantino — Coritiba",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554934-under_2_5",
-          "eventId": "19fc51f8fad955615b5d08db4ec89e1f",
-          "match": "Flamengo — São Paulo",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T06:48:07Z",
-          "value": 10713.33,
-          "event": "PREDICTION_PUSH",
-          "recordId": "real-554936-over_2_5",
-          "eventId": "51474caaaca9d0664acc4c445caf0c64",
-          "match": "Palmeiras — Mineiro",
-          "profit": 0
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T19:55:36Z",
-          "value": 12598.88,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-083420965b660d3abf43",
-          "eventId": "16da0ac17df035ef762b98ba1a3b3bf9",
-          "match": "Helsingborgs IF — Nordic United FC",
-          "profit": 1885.55
-        },
-        {
-          "date": "2026-07-28",
-          "timestamp": "2026-07-28T22:18:45Z",
-          "value": 13948.76,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-4f65e7b27ccb4106f4ef",
-          "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
-          "match": "Hearts — SK Sturm Graz",
-          "profit": 1349.88
-        },
-        {
-          "date": "2026-07-29",
-          "timestamp": "2026-07-29T03:44:43Z",
-          "value": 15127.23,
-          "event": "PREDICTION_WON",
-          "recordId": "analysis-b4c6761c07a745d1183a",
-          "eventId": "5746af78ef429ff259802e90e744590b",
-          "match": "Banfield — Sarmiento de Junin",
-          "profit": 1178.47
-        },
-        {
-          "date": "2026-07-29",
-          "timestamp": "2026-07-29T03:44:43Z",
-          "value": 17291.33,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-634d1548e80a0d8cbef0",
-          "eventId": "7f97e1ad452a6c39dab72ee7a0c99130",
-          "match": "Ponte Preta — Athletic Club (MG)",
-          "profit": 2164.1
-        },
-        {
-          "date": "2026-07-30",
-          "timestamp": "2026-07-30T18:13:30Z",
-          "value": 13833.06,
-          "event": "PREDICTION_LOST",
-          "recordId": "analysis-06396867c56d708cdac2",
-          "eventId": "f858d26e25a166ffd0ea372e3efa3520",
-          "match": "Red Star Belgrade — Larne FC",
-          "profit": -3458.27
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T01:54:59Z",
-          "value": 11066.45,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-30764579a953f3980f93",
-          "eventId": "4f68110ae33722f386ddcd2aa17cc01c",
-          "match": "Corinthians — Atletico Paranaense",
-          "profit": -2766.61
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T01:54:59Z",
-          "value": 13639.4,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-f34fa34b4ea7a79c192d",
-          "eventId": "c56c0611b78cf2c9b19aaf7403def23b",
-          "match": "Grêmio — Club Bolívar",
-          "profit": 2572.95
-        },
-        {
-          "date": "2026-07-31",
-          "timestamp": "2026-07-31T14:39:44Z",
-          "value": 15299.37,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-2d1c8a1a3b43fcdebd0a",
-          "eventId": "b2dafd55f589fced90359c3f3bfe6f09",
-          "match": "Henan FC — Dalian Yingbo",
-          "profit": 1659.97
-        },
-        {
-          "date": "2026-08-01",
-          "timestamp": "2026-08-01T14:47:48Z",
-          "value": 12532.76,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-39081d38d4f03d85d557",
-          "eventId": "2f75420bd3bb24996d73b1e23cecd77b",
-          "match": "TPS Turku — IFK Mariehamn",
-          "profit": -2766.61
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T13:56:05Z",
-          "value": 13911.36,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-6ea5004ac829d8e22db3",
-          "eventId": "7ebdca8fb4ef84a455589ea024dda075",
-          "match": "Daejeon Citizen — Gwangju FC",
-          "profit": 1378.6
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T17:11:59Z",
-          "value": 11404.81,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-57fec456f1627bf39201",
-          "eventId": "71c389f15d960e817660cd85c03c0001",
-          "match": "FC Sion — FC Luzern",
-          "profit": -2506.55
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T17:11:59Z",
-          "value": 12933.81,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-9b33d072340741c258ef",
-          "eventId": "9d49893900d172d53f16771f82984160",
-          "match": "AIK — Örgryte IS",
-          "profit": 1529
-        },
-        {
-          "date": "2026-08-02",
-          "timestamp": "2026-08-02T19:33:36Z",
-          "value": 14462.81,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-5c5c8e9940dd8ea0f6a7",
-          "eventId": "4f9650822cbd8cff1a72231bd04a1f1c",
-          "match": "Silkeborg IF — FC Copenhagen",
-          "profit": 1529
-        },
-        {
-          "date": "2026-08-04",
-          "timestamp": "2026-08-04T03:44:10Z",
-          "value": 11570.25,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-7f18e124f93ebef000af",
-          "eventId": "004b0d634351d34f62dc5ebb339f8f50",
-          "match": "Atlético Huracán — Atlético Tucuman",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-04",
-          "timestamp": "2026-08-04T03:44:10Z",
-          "value": 8677.69,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-4c209c3fed9d9dffbdd3",
-          "eventId": "fadd514709eaad344a2d7f3bdc1b20b5",
-          "match": "Central Córdoba — San Lorenzo",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-05",
-          "timestamp": "2026-08-05T03:40:27Z",
-          "value": 5785.13,
-          "event": "PREDICTION_LOST",
-          "recordId": "bet-87af9ab11c8e5d2fe916",
-          "eventId": "da7597293509b90e5b048ed138133638",
-          "match": "Columbus Crew SC — Atlas",
-          "profit": -2892.56
-        },
-        {
-          "date": "2026-08-05",
-          "timestamp": "2026-08-05T21:37:31Z",
-          "value": 6971.08,
-          "event": "PREDICTION_WON",
-          "recordId": "bet-95b7c092f58d0a80ffa1",
-          "eventId": "713ff08f1bd3e066b0f281e2788c3554",
-          "match": "Fenerbahce — SK Sturm Graz",
-          "profit": 1185.95
-        },
-        {
-          "date": "2026-10-08",
-          "timestamp": "2026-10-08T06:17:05Z",
-          "value": 7389.35,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-0451578c7f0c1c8d7233",
-          "eventId": "8c828219431dbc2cf98601993f8de842",
-          "match": "Vila Nova — Cuiabá",
-          "profit": 418.27
-        },
-        {
-          "date": "2026-10-09",
-          "timestamp": "2026-10-09T19:36:00Z",
-          "value": 7847.49,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-34a9d7897bb83d81cf46",
-          "eventId": "78773ce49c803868efcc014fce7299c2",
-          "match": "1. FC Heidenheim — 1. FC Kaiserslautern",
-          "profit": 458.14
-        },
-        {
-          "date": "2026-10-09",
-          "timestamp": "2026-10-09T19:36:00Z",
-          "value": 8320.41,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-51ea6c108bae1838aeb7",
-          "eventId": "8dbe13623ac23fa7d820a7d0c6c001ca",
-          "match": "Eintracht Braunschweig — Holstein Kiel",
-          "profit": 472.92
-        },
-        {
-          "date": "2026-10-09",
-          "timestamp": "2026-10-09T23:32:25Z",
-          "value": 8815.49,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-a9cceefaf3028f7eb9dd",
-          "eventId": "7fe15f7d678d65f34d147ceb6ce1313b",
-          "match": "Sochaux — Boulogne",
-          "profit": 495.08
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 8076.56,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-1cd4863f628ece9760ab",
-          "eventId": "95ef1765c140859061160bc568599547",
-          "match": "Crawley Town — Chesterfield FC",
-          "profit": -738.93
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 7337.63,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-84da225240e0fb3e9bff",
-          "eventId": "96673c1fdea1d48aa7440246f5e00bd6",
-          "match": "Middlesbrough — Wolverhampton Wanderers",
-          "profit": -738.93
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 7847.49,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-cda8670cdaab9b23c343",
-          "eventId": "25c7d39ef0b719e54043c88173c61d2b",
-          "match": "Wycombe Wanderers — Luton",
-          "profit": 509.86
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 8372.13,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-87b047c469b83ea640a6",
-          "eventId": "39c218d909fdac4a2a1d91d301a55f9b",
-          "match": "Mansfield Town — Bromley FC",
-          "profit": 524.64
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 7490.58,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-6f7622a1cdda9f9e7f04",
-          "eventId": "96673c1fdea1d48aa7440246f5e00bd6",
-          "match": "Middlesbrough — Wolverhampton Wanderers",
-          "profit": -881.55
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 6609.03,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-4d8a727cc438cc368a9c",
-          "eventId": "95ef1765c140859061160bc568599547",
-          "match": "Crawley Town — Chesterfield FC",
-          "profit": -881.55
-        },
-        {
-          "date": "2026-10-10",
-          "timestamp": "2026-10-10T19:28:57Z",
-          "value": 7234.93,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-bd2317c3312ebf248001",
-          "eventId": "25c7d39ef0b719e54043c88173c61d2b",
-          "match": "Wycombe Wanderers — Luton",
-          "profit": 625.9
-        },
-        {
-          "date": "2026-10-13",
-          "timestamp": "2026-10-13T21:26:04Z",
-          "value": 6511.44,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-9bd11d643f2181387fb3",
-          "eventId": "3cd5667183559b0598e304d98a23cc20",
-          "match": "Cardiff City — Watford",
-          "profit": -723.49
-        },
-        {
-          "date": "2026-10-14",
-          "timestamp": "2026-10-14T00:34:09Z",
-          "value": 6988.94,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-7c1773c6dce5c4a56307",
-          "eventId": "93177465a42a0fb7802f1c8b06d6ee3a",
-          "match": "Arsenal — Lille",
-          "profit": 477.5
-        },
-        {
-          "date": "2026-10-14",
-          "timestamp": "2026-10-14T00:34:09Z",
-          "value": 6265.45,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-32409c8ca6182a5c3650",
-          "eventId": "dd431688ed5c8f383b6434fd4f01e883",
-          "match": "Galatasaray — Barcelona",
-          "profit": -723.49
-        },
-        {
-          "date": "2026-10-14",
-          "timestamp": "2026-10-14T20:59:49Z",
-          "value": 5638.91,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-f5058113b30ea989d804",
-          "eventId": "d4ef112438afa4c2cdbbfc9376a009c9",
-          "match": "AS Roma — Real Madrid",
-          "profit": -626.54
-        },
-        {
-          "date": "2026-10-14",
-          "timestamp": "2026-10-14T20:59:49Z",
-          "value": 6058.69,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-16bb979f06808e8e063b",
-          "eventId": "ce8f9e56366ffb0bec82ad3cb12ead16",
-          "match": "Waldhof Mannheim — FC Ingolstadt 04",
-          "profit": 419.78
-        },
-        {
-          "date": "2026-10-14",
-          "timestamp": "2026-10-14T20:59:49Z",
-          "value": 5432.15,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-d0714df887af1bef95cc",
-          "eventId": "5d6f9accd6f79ae4216dfd29ccc342b2",
-          "match": "Feyenoord — Como",
-          "profit": -626.54
-        },
-        {
-          "date": "2026-10-15",
-          "timestamp": "2026-10-15T21:42:41Z",
-          "value": 5910.18,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-951a30d9ac0c25d29490",
-          "eventId": "7de91b956526f0f5f519d7d50fb4f453",
-          "match": "SK Brann — Lincoln Red Imps FC",
-          "profit": 478.03
-        },
-        {
-          "date": "2026-10-16",
-          "timestamp": "2026-10-16T04:21:05Z",
-          "value": 5366.96,
-          "event": "PREDICTION_LOST",
-          "recordId": "ranked-6e15b86ed5f656677bf0",
-          "eventId": "314b3d8f825f3886ce4a2187d693d720",
-          "match": "Atlético Huracán — Gimnasia La Plata",
-          "profit": -543.22
-        },
-        {
-          "date": "2026-10-16",
-          "timestamp": "2026-10-16T04:21:05Z",
-          "value": 5839.56,
-          "event": "PREDICTION_WON",
-          "recordId": "ranked-86b31649f1219e2b6863",
-          "eventId": "5ff465ad69bca8753070b0d3bb7dd3d5",
-          "match": "Brighton and Hove Albion — FK Kauno Žalgiris",
-          "profit": 472.6
-        }
-      ],
-      "placedAmount": 0.0,
-      "activeBetsCount": 2,
-      "available": 5839.56,
-      "closedBalance": 5839.56,
-      "mode": "ACTIVE_SINGLE_BANK",
-      "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
-      "policyEffectiveAt": "2026-10-07T07:44:56Z",
-      "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
-    },
-    "russianNames": {
-      "resolved": 4,
-      "teams": 4,
-      "theSportsDbResolved": 579
-    },
-    "fonbetGate": {
-      "status": "GREEN",
-      "confirmed": 0,
-      "unknown": 0,
-      "total": 2
-    },
-    "dailyCloudflare Workers AIAudit": {
-      "status": "SKIPPED",
-      "reason": "REQUIRES_15_RECORDS_GOT_2"
-    },
-    "calibrationGuard": {
-      "mode": "CALIBRATED",
-      "rollingWindow": 60,
-      "overall": {
-        "n": 60,
-        "wins": 34,
-        "losses": 26,
-        "hitRate": 0.566667,
-        "avgPredicted": 0.526417,
-        "brier": 0.25165,
-        "overconfidence": 0.0,
-        "shrunkOverconfidence": 0.0
-      },
-      "marketFamilies": {
-        "OUTCOME": {
-          "n": 22,
-          "wins": 12,
-          "losses": 10,
-          "hitRate": 0.545455,
-          "avgPredicted": 0.460536,
-          "brier": 0.263544,
-          "overconfidence": 0.0,
-          "shrunkOverconfidence": 0.0
-        },
-        "TOTAL": {
-          "n": 38,
-          "wins": 22,
-          "losses": 16,
-          "hitRate": 0.578947,
-          "avgPredicted": 0.564559,
-          "brier": 0.244764,
-          "overconfidence": 0.0,
-          "shrunkOverconfidence": 0.0
-        }
-      },
-      "additionalUncertaintyMargin": 0.0,
-      "marketFamilyHaircuts": {
-        "OUTCOME": 0.0,
-        "TOTAL": 0.0
-      },
-      "bankrollAllowed": true,
-      "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
-    },
-    "topSingles": 2,
-    "recoveryDay": {
-      "enabled": true,
-      "bankEngaged": false,
-      "thresholdProfile": "HYBRID_Q58_P56_BOOKS3_GUARDED_MARKETS",
-      "strictProductionThresholdsChanged": false
+      "sourceUpdatedAt": "2026-10-20T15:56:55Z"
     }
   },
   "warnings": [],
