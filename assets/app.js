@@ -37,7 +37,12 @@
       runtime.live = live;
       runtime.report = report;
       render(runtime.state);
-      setConnection("ready", "Актуально");
+      const current = isCurrentPortfolio(runtime.state);
+      const degraded = String(report.status || "").toUpperCase() === "DEGRADED"
+        || array(runtime.state.dailyAnalysis).length < 3;
+      if (!current) setConnection("error", "Нет свежей подборки");
+      else if (degraded) setConnection("loading", "Данные ограничены");
+      else setConnection("ready", "Актуально");
     } catch (error) {
       console.error(error);
       setConnection("error", "Нет связи");
