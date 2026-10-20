@@ -4844,6 +4844,133 @@ def discard_bootstrap_preview(state: dict[str, Any], config: dict[str, Any], now
     return True
 
 
+def history_only_fixture_forecast(
+    event: dict[str, Any],
+    context: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any] | None:
+    """Historical pre-match estimate independent of bookmaker prices.
+
+    No quote, market EV, qualifying bet, or financial exposure is inferred.
+    Insufficient or stale team histories produce no numerical forecast.
+    """
+    home_id, home_match = match_team(str(event.get("home_team") or ""), context)
+    away_id, away_match = match_team(str(event.get("away_team") or ""), context)
+    if not home_id or not away_id or home_id == away_id:
+        return None
+    home = form_summary(list(context.get("teamGames", {}).get(home_id) or []), now, limit=10, config=config)
+    away = form_summary(list(context.get("teamGames", {}).get(away_id) or []), now, limit=10, config=config)
+    if (
+        min(safe_int(home.get("matches")), safe_int(away.get("matches"))) < 5
+        or min(safe_float(home.get("effectiveSample")), safe_float(away.get("effectiveSample"))) < 3.0
+        or max(safe_float(home.get("freshnessDays"), 999), safe_float(away.get("freshnessDays"), 999)) > 90.0
+        or min(home_match, away_match) < 0.78
+    ):
+        return None
+
+    home_venue = form_summary(list(context.get("teamGames", {}).get(home_id) or []), now, side="home", limit=8, config=config)
+    away_venue = form_summary(list(context.get("teamGames", {}).get(away_id) or []), now, side="away", limit=8, config=config)
+    home_attack = safe_float(home_venue.get("adjustedGF")) if safe_int(home_venue.get("matches")) >= 3 else safe_float(home.get("adjustedGF"))
+    away_defence = safe_float(away_venue.get("adjustedGA")) if safe_int(away_venue.get("matches")) >= 3 else safe_float(away.get("adjustedGA"))
+    away_attack = safe_float(away_venue.get("adjustedGF")) if safe_int(away_venue.get("matches")) >= 3 else safe_float(away.get("adjustedGF"))
+    home_defence = safe_float(home_venue.get("adjustedGA")) if safe_int(home_venue.get("matches")) >= 3 else safe_float(home.get("adjustedGA"))
+    expected_home = clamp(0.5 * home_attack + 0.5 * away_defence, 0.25, 4.0)
+    expected_away = clamp(0.5 * away_attack + 0.5 * home_defence, 0.25, 4.0)
+    matrix = core.score_matrix(expected_home, expected_away, 10)
+    probabilities = {
+        "HOME_WIN": core.matrix_outcome_probability(matrix, "HOME"),
+        "DRAW": core.matrix_outcome_probability(matrix, "DRAW"),
+        "AWAY_WIN": core.matrix_outcome_probability(matrix, "AWAY"),
+        "OVER_2_5": core.matrix_total_probability(matrix, "OVER", 2.5),
+        "UNDER_2_5": core.matrix_total_probability(matrix, "UNDER", 2.5),
+        "BTTS_YES": sum(p for home_goals, row in enumerate(matrix) for away_goals, p in enumerate(row) if home_goals > 0 and away_goals > 0),
+    }
+    probabilities["BTTS_NO"] = 1.0 - probabilities["BTTS_YES"]
+    titles = {
+        "HOME_WIN": "Победа хозяев", "DRAW": "Ничья", "AWAY_WIN": "Победа гостей",
+        "OVER_2_5": "Тотал больше 2,5", "UNDER_2_5": "Тотал меньше 2,5",
+        "BTTS_YES": "Обе забьют — да", "BTTS_NO": "Обе забьют — нет",
+    }
+    ranked = sorted(probabilities.items(), key=lambda row: (row[1], row[0]), reverse=True)
+    selected, probability = ranked[0]
+    return {
+        "market": selected,
+        "pickRu": titles[selected],
+        "modelProbability": round(probability, 6),
+        "marketProbabilities": {key: round(value, 6) for key, value in probabilities.items()},
+        "expectedHomeGoals": round(expected_home, 3),
+        "expectedAwayGoals": round(expected_away, 3),
+        "historyHomeMatches": safe_int(home.get("matches")),
+        "historyAwayMatches": safe_int(away.get("matches")),
+        "historyFreshnessDays": round(max(safe_float(home.get("freshnessDays")), safe_float(away.get("freshnessDays"))), 1),
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": None,
+        "conservativeExpectedValue": None,
+        "stake": 0.0,
+        "financialEligible": False,
+    }
+
+
+def full_day_fixture_board(
+    discovered: list[dict[str, Any]],
+    previous: list[dict[str, Any]],
+    context: dict[str, Any],
+    config: dict[str, Any],
+    now: dt.datetime,
+    window_start: dt.datetime,
+    window_end: dt.datetime,
+    quoted_ids: set[str],
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Evaluate every discovered game in the Moscow day; never cap at 15."""
+    by_id: dict[str, dict[str, Any]] = {}
+    for old in previous:
+        if not isinstance(old, dict):
+            continue
+        kickoff = parse_time(old.get("commenceTime"))
+        event_id = str(old.get("eventId") or "")
+        if event_id and kickoff and window_start <= kickoff < window_end:
+            by_id[event_id] = copy.deepcopy(old)
+            by_id[event_id]["oddsAvailable"] = False  # old market quotes are not proof of freshness
+    for event in discovered:
+        kickoff = parse_time(event.get("commence_time"))
+        if kickoff is None or not (window_start <= kickoff < window_end):
+            continue
+        event_id = str(event.get("id") or "")
+        if not event_id:
+            continue
+        old = by_id.get(event_id) or {}
+        forecast = old.get("forecast") if isinstance(old.get("forecast"), dict) else None
+        if forecast is None and kickoff > now:
+            forecast = history_only_fixture_forecast(event, context, config, now)
+        row = {
+            "eventId": event_id,
+            "sport": "soccer",
+            "sportKey": str(event.get("sport_key") or ""),
+            "league": str(event.get("sport_title") or ""),
+            "leagueRu": core.russian_display_text(event.get("sport_title")),
+            "home": str(event.get("home_team") or ""),
+            "homeRu": core.russian_display_text(event.get("home_team")),
+            "away": str(event.get("away_team") or ""),
+            "awayRu": core.russian_display_text(event.get("away_team")),
+            "commenceTime": iso(kickoff),
+            "oddsAvailable": event_id in quoted_ids,
+            "publicationMode": "FIXTURE_INFORMATION_ONLY",
+            "stake": 0.0,
+            "forecast": copy.deepcopy(forecast) if forecast else None,
+            "analysisStatus": "HISTORY_MODEL_PREMATCH" if forecast else "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+        }
+        by_id[event_id] = row
+    rows = sorted(by_id.values(), key=lambda row: str(row.get("commenceTime") or ""))
+    return rows, {
+        "realFixtures": len(rows),
+        "historicalModelForecasts": sum(bool(row.get("forecast")) for row in rows),
+        "withoutReliableHistoricalForecast": sum(not bool(row.get("forecast")) for row in rows),
+        "verifiedOddsEvents": sum(bool(row.get("oddsAvailable")) for row in rows),
+    }
+
+
 def publish_generation() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
@@ -5223,33 +5350,24 @@ def publish_generation() -> int:
         event["sport_type"] = "soccer"
         event["country"] = core.infer_country(str(event.get("sport_key") or ""), str(event.get("sport_title") or ""))
 
-    # A populated fixture board is independent from betting qualification.
-    # These are real provider fixtures, never synthetic predictions or stakes.
+    # Full Moscow-day board: all real fixtures, ranked informational history
+    # forecasts when evidence exists, and an explicit no-odds label otherwise.
+    # Daily banked candidates remain governed by the independent strict engine.
     quoted_ids = {str(event.get("id") or "") for event in odds_events}
-    fixtures = []
-    for event in discovered:
-        commence = parse_time(event.get("commence_time"))
-        if commence is None or not (publication_start <= commence < publication_end):
-            continue
-        fixture_id = str(event.get("id") or "")
-        fixtures.append({
-            "eventId": fixture_id,
-            "sport": "soccer",
-            "sportKey": str(event.get("sport_key") or ""),
-            "league": str(event.get("sport_title") or ""),
-            "leagueRu": core.russian_display_text(event.get("sport_title")),
-            "home": str(event.get("home_team") or ""),
-            "homeRu": core.russian_display_text(event.get("home_team")),
-            "away": str(event.get("away_team") or ""),
-            "awayRu": core.russian_display_text(event.get("away_team")),
-            "commenceTime": iso(commence),
-            "oddsAvailable": fixture_id in quoted_ids,
-            "publicationMode": "FIXTURE_INFORMATION_ONLY",
-            "stake": 0.0,
-        })
-    fixtures.sort(key=lambda item: (not item["oddsAvailable"], item["commenceTime"]))
-    state["upcomingFixtures"] = fixtures[:80]
+    previous_fixtures = (
+        state.get("upcomingFixtures") or []
+        if str((state.get("meta") or {}).get("upcomingFixturesOperationalDayId") or "") == day["operationalDayId"]
+        else []
+    )
+    fixtures, fixture_coverage = full_day_fixture_board(
+        discovered, previous_fixtures, context, config, now,
+        publication_start, publication_end, quoted_ids,
+    )
+    state["upcomingFixtures"] = fixtures
     state.setdefault("meta", {})["upcomingFixturesOperationalDayId"] = day["operationalDayId"]
+    state["meta"]["fullDayFixtureCoverage"] = copy.deepcopy(fixture_coverage)
+    print("R15_FULL_DAY_FIXTURES=" + str(fixture_coverage["realFixtures"]))
+    print("R15_HISTORY_ONLY_FORECASTS=" + str(fixture_coverage["historicalModelForecasts"]))
 
     # Public Fonbet page is used only as availability evidence. When its
     # server-rendered snapshot confirms at least 15 events, non-confirmed
@@ -5356,6 +5474,7 @@ def publish_generation() -> int:
             "freeDataMesh": free_mesh_result,
             "theSportsDbCurrentHistory": thesportsdb_history,
             "trackedHistory": tracked_history,
+            "fixtureCoverage": fixture_coverage,
             "discovery": discovery,
             "quotaPlan": quota_plan,
             "featuredOddsEvents": len(odds_events),
@@ -6057,6 +6176,30 @@ def self_test() -> int:
     if str((retention_state.get("dailyAudit") or {}).get("status")) != "CURRENT_PUBLICATION_RETAINED":
         raise RuntimeError("SELF_TEST active publication retention marker missing")
 
+    # Full day must never silently truncate to 15, and absent history must
+    # never create a numerical prediction or a paid bet.
+    board_start = now - dt.timedelta(hours=2)
+    board_end = now + dt.timedelta(hours=24)
+    full_day_events = [
+        {"id": f"all-day-{i}", "sport_key": "soccer_test", "sport_title": "Test League",
+         "home_team": f"Home {i}", "away_team": f"Away {i}",
+         "commence_time": iso(now + dt.timedelta(minutes=i + 1))}
+        for i in range(53)
+    ]
+    board, coverage = full_day_fixture_board(
+        full_day_events, [], {"aliases": {}, "teamGames": {}},
+        config, now, board_start, board_end, set(),
+    )
+    if len(board) != 53 or coverage["realFixtures"] != 53 or coverage["historicalModelForecasts"] != 0:
+        raise RuntimeError("SELF_TEST full-day calendar was truncated or invented odds")
+    if any(item.get("forecast") or safe_float(item.get("stake")) > 0 for item in board):
+        raise RuntimeError("SELF_TEST no-history board emitted a financial forecast")
+    board_again, again_coverage = full_day_fixture_board(
+        [], board, {"aliases": {}, "teamGames": {}},
+        config, now + dt.timedelta(minutes=5), board_start, board_end, set(),
+    )
+    if len(board_again) != 53 or again_coverage["realFixtures"] != 53:
+        raise RuntimeError("SELF_TEST day fixtures disappeared after kickoff")
     # Structural synthetic fixtures predate the core qualification layer and are
     # intentionally unrealistic. The explicit guard checks above exercise the
     # production rule; the remaining synthetic tests isolate diversification,
