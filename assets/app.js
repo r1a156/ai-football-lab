@@ -354,7 +354,7 @@
     setText("summaryDate", new Intl.DateTimeFormat("ru-RU", { timeZone: MOSCOW, day: "numeric", month: "long" }).format(new Date()));
     setText("summaryMatches", String(currentFixtureBoard(state).length));
     setText("summaryExpresses", current ? String(state.expresses.length) : "—");
-    setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : "—");
+    setText("summarySingles", current ? String(Math.min(3, state.bestBets.length)) : (historyOnlyForecasts(state).length ? String(Math.min(3, historyOnlyForecasts(state).length)) + " стат." : "0"));
     setText("summaryPremium", current ? String(state.dailyAnalysis.filter(row => Boolean(row.premiumQualified)).length) : "—");
     const bankAvailable = Number.isFinite(Number(state.bank?.current));
     setText("summaryBank", bankAvailable ? currency(modelBank.current) : "—");
@@ -367,9 +367,10 @@
       : (historyOnlyForecasts(state).length
         ? `Проверено ${currentFixtureBoard(state).length} матчей · ${historyOnlyForecasts(state).length} статистических оценок · без ставок`
         : `Проверено ${currentFixtureBoard(state).length} матчей · нет подтверждённых прогнозов`));
-    setText("portfolioUpdated", state.meta.updatedAt ? `Обновлено ${formatDateTime(state.meta.updatedAt)}` : "Ожидаем обновление");
-    setText("matchesUpdated", current && state.meta.updatedAt ? formatShortDateTime(state.meta.updatedAt) : "ожидание");
-    setText("footerUpdated", state.meta.updatedAt ? `Данные: ${formatDateTime(state.meta.updatedAt)}` : "Данные загружаются");
+    const latestDataAt = !current && validatedFullDayBoard(runtime.board) ? runtime.board.updatedAt : state.meta.updatedAt;
+    setText("portfolioUpdated", latestDataAt ? `Обновлено ${formatDateTime(latestDataAt)}` : "Ожидаем обновление");
+    setText("matchesUpdated", latestDataAt ? formatShortDateTime(latestDataAt) : "ожидание");
+    setText("footerUpdated", latestDataAt ? `Данные: ${formatDateTime(latestDataAt)}` : "Данные загружаются");
     document.getElementById("heroStatus")?.classList.toggle("is-ready", current);
   }
 
@@ -443,7 +444,7 @@
 
     setText("checkedCount", checked || "—");
     setText("qualifiedCount", qualified || "0");
-    setText("publishedCount", published || "0");
+    setText("publishedCount", current ? String(published) : (historyOnlyForecasts(state).length ? `${historyOnlyForecasts(state).length} стат.` : "0"));
     setText("topRejectionReason", top ? top[0] : "Нет достаточных данных");
     setText("rejectedCount", checked ? `${qualified} премиум из ${checked} проверенных матчей` : "Ожидаем цикл анализа");
   }
