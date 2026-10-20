@@ -5279,22 +5279,76 @@ def settle_pending_records(
 
 
 def apply_bank_profit(state: dict[str, Any], record: dict[str, Any], profit: float, now: dt.datetime) -> None:
+    """Apply a settlement at most once, including after a failed workflow retry.
+
+    The recorded financial ledger is the idempotency key. An older snapshot
+    can contain a pending copy of a bet that has already been credited: do not
+    credit it a second time. Conflicting historical amounts fail closed.
+    """
+    record_id = str(record.get("id") or "").strip()
+    if not record_id:
+        raise RuntimeError("BANK_SETTLEMENT_MISSING_RECORD_ID")
+    profit = safe_float(profit, float("nan"))
+    if not math.isfinite(profit):
+        raise RuntimeError("BANK_SETTLEMENT_NONFINITE_PROFIT")
+    profit = round(profit, 2)
+
     bank = state.setdefault("bank", {})
+    history = bank.setdefault("history", [])
+    if not isinstance(history, list):
+        raise RuntimeError("BANK_SETTLEMENT_INVALID_LEDGER")
+    for previous in history:
+        if not isinstance(previous, dict) or str(previous.get("recordId") or "").strip() != record_id:
+            continue
+        previous_profit = safe_float(previous.get("profit"), float("nan"))
+        if not math.isfinite(previous_profit) or abs(previous_profit - profit) > 0.011:
+            raise RuntimeError("BANK_SETTLEMENT_LEDGER_CONFLICT")
+        return
+
     current = safe_float(bank.get("current"), bank.get("starting", 10000.0))
     current = round(current + profit, 2)
     bank["current"] = current
-    bank.setdefault("history", []).append(
+    history.append(
         {
             "date": now.date().isoformat(),
             "timestamp": iso_z(now),
             "value": current,
             "event": "PREDICTION_WON" if profit > 0 else "PREDICTION_LOST" if profit < 0 else "PREDICTION_PUSH",
-            "recordId": record.get("id"),
+            "recordId": record_id,
             "eventId": record.get("eventId"),
             "match": f"{record.get('home')} — {record.get('away')}",
-            "profit": round(profit, 2),
+            "profit": profit,
         }
     )
+
+
+def self_test_bank_settlement_idempotency() -> None:
+    """Offline regression: retries never create money or erase real losses."""
+    now = dt.datetime(2026, 10, 20, 10, 0, tzinfo=UTC)
+    win = {"id": "bank-test-win", "eventId": "bank-test-a", "home": "A", "away": "B"}
+    loss = {"id": "bank-test-loss", "eventId": "bank-test-b", "home": "C", "away": "D"}
+    state = {"bank": {"starting": 10000.0, "current": 10000.0, "history": []}}
+    apply_bank_profit(state, win, 75.0, now)
+    assert state["bank"]["current"] == 10075.0
+    apply_bank_profit(state, win, 75.0, now)
+    assert state["bank"]["current"] == 10075.0
+    assert len(state["bank"]["history"]) == 1
+    apply_bank_profit(state, loss, -100.0, now)
+    apply_bank_profit(state, loss, -100.0, now)
+    assert state["bank"]["current"] == 9975.0
+    assert len(state["bank"]["history"]) == 2
+    for invalid_record, invalid_profit, expected in (
+        (win, 76.0, "BANK_SETTLEMENT_LEDGER_CONFLICT"),
+        ({}, 10.0, "BANK_SETTLEMENT_MISSING_RECORD_ID"),
+    ):
+        try:
+            apply_bank_profit(state, invalid_record, invalid_profit, now)
+        except RuntimeError as exc:
+            assert str(exc) == expected, str(exc)
+        else:
+            raise AssertionError("Invalid or conflicting bank settlement accepted")
+    assert state["bank"]["current"] == 9975.0
+    assert len(state["bank"]["history"]) == 2
 
 
 def update_bank_metrics(state: dict[str, Any]) -> None:
@@ -6446,6 +6500,7 @@ def synthetic_bookmaker_event(
 
 
 def run_self_test() -> int:
+    self_test_bank_settlement_idempotency()
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     # Synthetic tests are intentionally less strict on edge/data thresholds so
