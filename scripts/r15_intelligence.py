@@ -301,8 +301,13 @@ class ProviderClient:
 
     def _mark_success(self, provider: str) -> None:
         row = self.health.setdefault(provider, {})
+        # Listing sports and fixtures is free, but does not prove we can
+        # purchase a featured odds response. Each featured football request
+        # needs two credits; keep provider health honest under low quota.
+        remaining = safe_int(self.odds_quota.get("requestsRemaining"), -1)
+        status = "LOW_ODDS_QUOTA" if provider == "THE_ODDS_API" and 0 <= remaining < 2 else "GREEN"
         row.update({
-            "status": "GREEN",
+            "status": status,
             "lastSuccessAt": iso(now_utc()),
             "consecutiveFailures": 0,
         })
@@ -3086,6 +3091,11 @@ def complete_portfolio_acquisition(
             if safe_int(fixture_odds_diag.get("events"), 0) > 0
             else "WAITING_FOR_ODDS_QUOTA_RESET"
         )
+    elif safe_int(quota_plan.get("quotaRemainingBeforeOdds"), -1) >= 0 and (
+        safe_int(quota_plan.get("portfolioAvailableBeforeFeatured"), 0)
+        < max(1, safe_int(quota_plan.get("featuredCostPerCompetition"), 2))
+    ) and not featured_events:
+        quota_plan["quotaLifecycleStatus"] = "INSUFFICIENT_CREDITS_FOR_FEATURED_ODDS"
     else:
         quota_plan["quotaLifecycleStatus"] = "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE"
     return featured_events, advanced, errors, quota_plan, diagnostics, total_recovery
@@ -5875,6 +5885,15 @@ def synthetic_context(now: dt.datetime) -> tuple[dict[str, Any], dict[str, Any]]
 def self_test() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
+    health_client = ProviderClient()
+    health_client.odds_quota["requestsRemaining"] = "1"
+    health_client._mark_success("THE_ODDS_API")
+    if health_client.health["THE_ODDS_API"]["status"] != "LOW_ODDS_QUOTA":
+        raise RuntimeError("SELF_TEST low-odds-quota provider health")
+    health_client.odds_quota["requestsRemaining"] = "10"
+    health_client._mark_success("THE_ODDS_API")
+    if health_client.health["THE_ODDS_API"]["status"] != "GREEN":
+        raise RuntimeError("SELF_TEST recovered-odds-quota provider health")
     now = dt.datetime(2026, 8, 3, 6, 0, tzinfo=UTC)
     context, _ = synthetic_context(now)
     state = ensure_r15_state({}, config, now)
