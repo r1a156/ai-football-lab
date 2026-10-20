@@ -3757,11 +3757,7 @@ def informational_best_three(
     *,
     bank_enabled: bool = True,
 ) -> list[dict[str, Any]]:
-    """Freeze the visible top three and prospectively stake one bank at 10% each.
-
-    Historical records are never recalculated. Preview/recovery publications may
-    call this with bank_enabled=False, keeping their stake at zero.
-    """
+    """Rank up to three selections; only individually eligible picks risk virtual bank."""
     by_event = {str(row.get("eventId") or ""): row for row in records}
     preferred = [by_event[value] for value in (preferred_event_ids or []) if value in by_event]
     remaining = [row for row in sorted(records, key=lambda row: (safe_float(row.get("conservativeProbability")), safe_float(row.get("obviousMarketScore"))), reverse=True) if row not in preferred]
@@ -3769,23 +3765,41 @@ def informational_best_three(
     bank = state.get("bank") if isinstance(state.get("bank"), dict) else {}
     bank_value = safe_float(bank.get("current"), config.get("startingVirtualBank", 10000.0))
     configured_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
-    stake_percent = configured_percent if bank_enabled else 0.0
-    stake = round(bank_value * stake_percent / 100.0, 2) if bank_enabled else 0.0
+    guard = (state.get("meta") or {}).get("calibrationGuard") or {}
+    guard_allows = guard.get("bankrollAllowed") is True
+    historical_events = {
+        str(row.get("eventId"))
+        for row in (state.get("bestBetsHistory") or []) + (state.get("bankHistory") or [])
+        if isinstance(row, dict) and safe_float(row.get("stake"), 0.0) > 0 and row.get("eventId")
+    }
+    assigned_events: set[str] = set()
     result = []
     for rank, source in enumerate(ranked, start=1):
+        event_id = str(source.get("eventId") or "")
+        ev = safe_float(source.get("conservativeExpectedValue"), float("-inf"))
+        eligible = (
+            bank_enabled and guard_allows
+            and str(source.get("publicationMode") or "") != "RECOVERY_DAY"
+            and ev > 0 and bool(event_id)
+            and event_id not in historical_events and event_id not in assigned_events
+        )
+        stake_percent = configured_percent if eligible else 0.0
+        stake = round(bank_value * stake_percent / 100.0, 2) if eligible else 0.0
+        if eligible:
+            assigned_events.add(event_id)
         item = copy.deepcopy(source)
         item.update({
             "id": "ranked-" + stable_id(source.get("id"), rank, source.get("publishedAt")),
             "sourceAnalysisId": source.get("id"),
             "recordType": "BEST_BET",
-            "financialMode": "SINGLE_BANK_TOP_THREE" if bank_enabled else "INFORMATIONAL_ONLY",
+            "financialMode": "SINGLE_BANK_TOP_THREE" if eligible else "INFORMATIONAL_ONLY",
             "isBestBet": True,
             "rank": rank,
             "rankLabel": "Самый надёжный прогноз" if rank == 1 else f"Надёжность №{rank}",
             "stake": stake,
             "stakePercent": stake_percent,
-            "stakeAssignedAt": iso(now) if bank_enabled else None,
-            "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH" if bank_enabled else "NO_BANK_PREVIEW_OR_RECOVERY",
+            "stakeAssignedAt": iso(now) if eligible else None,
+            "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH" if eligible else "NO_BANK_UNLESS_GUARD_AND_POSITIVE_EV",
             "publishedAt": iso(now),
             "status": "pending",
             "statusLabel": core.result_status_label("pending"),
