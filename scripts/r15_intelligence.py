@@ -3777,12 +3777,35 @@ def informational_best_three(
     configured_percent = safe_float(config.get("stakePerBestBetPercent"), 10.0)
     guard = (state.get("meta") or {}).get("calibrationGuard") or {}
     guard_allows = guard.get("bankrollAllowed") is True
+    # A bookmaker may change the provider event ID, and a completed batch
+    # may be archived before its financial ledger is removed. Block new stakes
+    # against both the persistent bank ledger and the scheduled fixture itself.
+    def fixture_key(row: dict[str, Any]) -> tuple[str, str, str] | None:
+        kickoff = parse_time(row.get("commenceTime") or row.get("commence_time"))
+        home = normalize(row.get("home") or row.get("home_team") or "")
+        away = normalize(row.get("away") or row.get("away_team") or "")
+        return (home, away, kickoff.date().isoformat()) if kickoff and home and away else None
+
+    funded_records = [
+        row for row in (state.get("history") or []) + (state.get("bestBets") or [])
+        if isinstance(row, dict) and safe_float(row.get("stake"), 0.0) > 0
+    ]
     historical_events = {
-        str(row.get("eventId"))
-        for row in (state.get("history") or []) + (state.get("bestBets") or [])
-        if isinstance(row, dict) and safe_float(row.get("stake"), 0.0) > 0 and row.get("eventId")
+        str(row.get("eventId")) for row in funded_records if row.get("eventId")
     }
+    historical_fixtures = {
+        key for row in funded_records if (key := fixture_key(row)) is not None
+    }
+    ledger = bank.get("history") if isinstance(bank.get("history"), list) else []
+    historical_events.update(
+        str(row.get("eventId"))
+        for row in ledger
+        if isinstance(row, dict)
+        and row.get("eventId")
+        and str(row.get("event") or "") in {"PREDICTION_WON", "PREDICTION_LOST"}
+    )
     assigned_events: set[str] = set()
+    assigned_fixtures: set[tuple[str, str, str]] = set()
     result = []
     for rank, source in enumerate(ranked, start=1):
         event_id = str(source.get("eventId") or "")
@@ -3794,16 +3817,21 @@ def informational_best_three(
         reconstructed_ev = probability * odds - 1.0 if 0.0 < probability <= 1.0 and odds > 1.0 else float("-inf")
         stored_ev = safe_float(source.get("conservativeExpectedValue"), reconstructed_ev)
         ev = min(stored_ev, reconstructed_ev)
+        fixture = fixture_key(source)
         eligible = (
             bank_enabled and guard_allows
             and str(source.get("publicationMode") or "") != "RECOVERY_DAY"
             and ev > 0 and bool(event_id)
             and event_id not in historical_events and event_id not in assigned_events
+            and (fixture is None or fixture not in historical_fixtures)
+            and (fixture is None or fixture not in assigned_fixtures)
         )
         stake_percent = configured_percent if eligible else 0.0
         stake = round(bank_value * stake_percent / 100.0, 2) if eligible else 0.0
         if eligible:
             assigned_events.add(event_id)
+            if fixture is not None:
+                assigned_fixtures.add(fixture)
         item = copy.deepcopy(source)
         item.update({
             "id": "ranked-" + stable_id(source.get("id"), rank, source.get("publishedAt")),
@@ -6040,6 +6068,38 @@ def self_test() -> int:
     dup = informational_best_three(records, duplicate_state, full_test_config, now, preferred_event_ids=[duplicate_event])
     if safe_float(dup[0].get("stake")) != 0.0:
         raise RuntimeError("SELF_TEST repeat single event staked twice")
+    # Funded same-fixture events must not be purchased twice, even after
+    # a provider changes event IDs or only the bank ledger survives.
+    funded_candidate = {
+        "id": "bank-fixture-regression",
+        "eventId": "bank-fixture-1",
+        "home": "Example Home",
+        "away": "Example Away",
+        "commenceTime": iso(now + dt.timedelta(hours=2)),
+        "bookmakerOdds": 1.8,
+        "conservativeProbability": 0.75,
+        "conservativeExpectedValue": 0.35,
+        "publicationMode": "NORMAL",
+    }
+    baseline_funded = informational_best_three([funded_candidate], state, full_test_config, now)
+    if safe_float(baseline_funded[0].get("stake")) <= 0:
+        raise RuntimeError("SELF_TEST fixture admission baseline failed")
+    ledger_state = copy.deepcopy(state)
+    ledger_state.setdefault("bank", {})["history"] = [
+        {"event": "PREDICTION_LOST", "recordId": "previous-bank-ticket", "eventId": "bank-fixture-1", "profit": -100.0}
+    ]
+    if safe_float(informational_best_three([funded_candidate], ledger_state, full_test_config, now)[0].get("stake")) != 0:
+        raise RuntimeError("SELF_TEST persistent ledger failed to block double purchase")
+    fixture_state = copy.deepcopy(state)
+    fixture_state["history"] = [{
+        "eventId": "different-provider-id",
+        "home": "Example Home",
+        "away": "Example Away",
+        "commenceTime": funded_candidate["commenceTime"],
+        "stake": 100.0,
+    }]
+    if safe_float(informational_best_three([funded_candidate], fixture_state, full_test_config, now)[0].get("stake")) != 0:
+        raise RuntimeError("SELF_TEST provider fixture identity failed to block double purchase")
     recovery_records = copy.deepcopy(records)
     for row in recovery_records:
         row["publicationMode"] = "RECOVERY_DAY"
