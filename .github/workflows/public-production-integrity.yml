@@ -1,0 +1,112 @@
+name: Public production integrity
+
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  schedule:
+    - cron: '35 6,9,13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  published-state:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify live Pages availability and state
+        shell: bash
+        run: |
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import time
+          import urllib.request
+
+          base = "https://r1a156.github.io/ai-football-lab/"
+          utc = dt.timezone.utc
+          msk = dt.timezone(dt.timedelta(hours=3))
+          def fetch(path):
+              last = None
+              for attempt in range(4):
+                  try:
+                      url = base + path + "?check=" + str(int(time.time()))
+                      request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "AI-Football-Integrity/1.0"})
+                      with urllib.request.urlopen(request, timeout=35) as response:
+                          if response.status != 200:
+                              raise RuntimeError("HTTP " + str(response.status))
+                          return response.read()
+                  except Exception as error:
+                      last = error
+                      if attempt < 3:
+                          time.sleep(12)
+              raise RuntimeError("PUBLIC_HTTP_UNREACHABLE " + path + " " + str(last))
+
+          if b"<html" not in fetch("index.html").lower():
+              raise RuntimeError("PUBLIC_SITE_INVALID_HTML")
+          if len(fetch("assets/app.js")) < 1000:
+              raise RuntimeError("PUBLIC_SITE_MISSING_APP")
+          state = json.loads(fetch("data/state.json"))
+          snapshot = json.loads(fetch("data/ai_daily_analysis.json"))
+          meta = state.get("meta") or {}
+          now = dt.datetime.now(msk)
+          start = now.replace(hour=8, minute=0, second=0, microsecond=0)
+          if now < start:
+              start -= dt.timedelta(days=1)
+          end = start + dt.timedelta(days=1)
+          expected_date = start.date().isoformat()
+          if meta.get("analysisDateLocal") != expected_date or snapshot.get("analysisDateLocal") != expected_date:
+              raise RuntimeError("PUBLIC_STATE_STALE_MOSCOW_DATE")
+          daily = state.get("dailyAnalysis") or []
+          best = state.get("bestBets") or []
+          expresses = state.get("expresses") or []
+          print("LIVE_SITE=GREEN; DAY=" + expected_date + "; PICKS=" + str(len(daily)) + "; TOP=" + str(len(best)) + "; EXPRESSES=" + str(len(expresses)))
+          if len(best) != min(3,len(daily)) or len(expresses) != min(3,len(daily)//5):
+              raise RuntimeError("PUBLIC_PORTFOLIO_CARDINALITY_INVALID")
+          def as_msk(value):
+              return dt.datetime.fromisoformat(str(value).replace("Z","+00:00")).astimezone(msk)
+          ids = []
+          for row in daily:
+              event_id = str(row.get("eventId") or "")
+              when = as_msk(row.get("commenceTime"))
+              if not event_id or not start <= when < end:
+                  raise RuntimeError("PUBLIC_INVALID_EVENT_OR_OUTSIDE_24H")
+              ids.append(event_id)
+          if len(ids) != len(set(ids)):
+              raise RuntimeError("PUBLIC_DUPLICATE_MATCH")
+          guard = (meta.get("calibrationGuard") or {}).get("bankrollAllowed") is True
+          for row in best:
+              stake = float(row.get("stake") or 0)
+              pct = float(row.get("stakePercent") or 0)
+              prob = float(row.get("conservativeProbability") or 0)
+              price = float(row.get("bookmakerOdds") or 0)
+              ev = prob*price-1
+              if row.get("conservativeExpectedValue") is not None:
+                  ev = min(ev,float(row["conservativeExpectedValue"]))
+              if stake < 0 or pct < 0 or pct > 10:
+                  raise RuntimeError("PUBLIC_SINGLE_STAKE_INVALID")
+              if stake == 0 and pct != 0:
+                  raise RuntimeError("PUBLIC_SINGLE_STAKE_PERCENT_INCONSISTENT")
+              if stake > 0 and (pct != 10 or not guard or meta.get("recoveryDay") or ev <= 0):
+                  raise RuntimeError("PUBLIC_SINGLE_STAKE_UNSAFE")
+          if sum(float(x.get("stakePercent") or 0) for x in best) > 30:
+              raise RuntimeError("PUBLIC_EXCESSIVE_DAILY_EXPOSURE")
+          leg_ids = []
+          for ticket in expresses:
+              legs = ticket.get("legs") or []
+              if len(legs)!=5:
+                  raise RuntimeError("PUBLIC_EXPRESS_NOT_FIVE_LEGS")
+              leg_ids += [str(x.get("eventId") or "") for x in legs]
+              stake = float(ticket.get("stake") or 0)
+              pct = float(ticket.get("stakePercent") or 0)
+              if pct < 0 or pct > 2 or stake < 0 or (stake>0 and (meta.get("recoveryDay") or float(ticket.get("conservativeExpectedValue") or -1)<=0)):
+                  raise RuntimeError("PUBLIC_EXPRESS_FINANCIAL_POLICY_FAILED")
+          if len(leg_ids) != len(set(leg_ids)):
+              raise RuntimeError("PUBLIC_EXPRESS_DUPLICATE_EVENT")
+          if not daily:
+              print("PUBLIC_STATUS=DEGRADED_NO_PRICED_QUALIFIED_PICKS")
+              raise RuntimeError("PUBLIC_NO_PREDICTIONS")
+          print("PUBLIC_STATUS=GREEN")
+          PY
