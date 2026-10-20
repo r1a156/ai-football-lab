@@ -1,6 +1,10 @@
 name: Public production integrity
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/public-production-integrity.yml"
   workflow_run:
     workflows: ["pages build and deployment"]
     types: [completed]
