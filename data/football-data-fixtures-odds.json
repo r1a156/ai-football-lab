@@ -1,25 +1,183 @@
 {
   "version": 2,
   "sourceMarker": "V10_R15F_R3R24_FIXTURE_FRESHNESS_CHAIN",
-  "updatedAt": "2026-10-21T04:53:54Z",
+  "updatedAt": "2026-10-21T10:04:28Z",
   "sourceUpdatedAt": "2026-10-20T10:57:39Z",
   "sourceUrl": "https://football-data.co.uk/fixtures.csv",
   "metadataUrl": "https://www.football-data.co.uk/matches.php",
-  "status": "NO_MATCHED_EVENTS",
+  "status": "GREEN",
   "contentSha256": "8f870ced36ee4f03194139ba93bde3fc3b673268f915859a0945a38a505a9ab9",
-  "contentObservedAt": "2026-10-21T04:53:54Z",
+  "contentObservedAt": "2026-10-21T10:04:28Z",
   "contentChangedAt": "2026-10-20T11:25:06Z",
   "freshnessEvidence": "HTTP_LAST_MODIFIED",
   "freshnessConfidence": "HIGH",
-  "events": [],
+  "events": [
+    {
+      "id": "0599bf0c4147293ec40e4e4f894461c2",
+      "sport_key": "soccer_england_league1",
+      "sport_title": "League 1",
+      "commence_time": "2026-10-21T19:00:00Z",
+      "home_team": "Reading",
+      "away_team": "Leyton Orient",
+      "sport_type": "soccer",
+      "country": "Англия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-10-20T10:57:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Reading",
+                  "price": 1.49
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.1
+                },
+                {
+                  "name": "Leyton Orient",
+                  "price": 5.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.62,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.25,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-10-20T10:57:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Reading",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Leyton Orient",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-10-20T10:57:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Reading",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.33
+                },
+                {
+                  "name": "Leyton Orient",
+                  "price": 5.75
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-10-20T10:57:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Reading",
+                  "price": 1.53
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Leyton Orient",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-10-20T10:57:39Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-10-20T10:57:39Z",
+              "outcomes": [
+                {
+                  "name": "Reading",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.4
+                },
+                {
+                  "name": "Leyton Orient",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-10-20T10:57:39Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "E2",
+      "_r15FixtureSourceUpdatedAt": "2026-10-20T10:57:39Z"
+    }
+  ],
   "diagnostics": {
     "enabled": true,
-    "status": "NO_MATCHED_EVENTS",
+    "status": "GREEN",
     "url": "https://football-data.co.uk/fixtures.csv",
     "metadataUrl": "https://www.football-data.co.uk/matches.php",
     "cachePath": "/home/runner/work/ai-football-lab/ai-football-lab/data/football-data-fixtures-odds.json",
-    "events": 0,
-    "eventsWithThreeBookmakers": 0,
+    "events": 1,
+    "eventsWithThreeBookmakers": 1,
     "sourceUpdatedAt": "2026-10-20T10:57:39Z",
     "usedCache": false,
     "error": null,
@@ -27,10 +185,10 @@
     "freshnessEvidence": "HTTP_LAST_MODIFIED",
     "freshnessConfidence": "HIGH",
     "contentSha256": "8f870ced36ee4f03194139ba93bde3fc3b673268f915859a0945a38a505a9ab9",
-    "contentObservedAt": "2026-10-21T04:53:54Z",
+    "contentObservedAt": "2026-10-21T10:04:28Z",
     "contentChangedAt": "2026-10-20T11:25:06Z",
     "rows": 27,
-    "matchedRows": 0,
+    "matchedRows": 1,
     "stale": false,
     "invalidHeaders": false,
     "asianMarketsImported": 0
