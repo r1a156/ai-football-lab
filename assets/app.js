@@ -81,6 +81,27 @@
     return response.json();
   }
 
+  // The compact daily snapshot has no batch window while waiting for picks.
+  // Reconstruct only the published Moscow 08:00–08:00 accounting window,
+  // verify freshness, and expose its bank read-only with zero new bets.
+  function recoveryWindowFromDailySnapshot(snap, now = Date.now()) {
+    const day = String(snap?.analysisDateLocal || "");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+    const start = Date.parse(day + "T08:00:00+03:00");
+    const end = start + 86_400_000;
+    const updated = Date.parse(snap?.updatedAt || "");
+    const current = Number(snap?.bank?.current);
+    if (!Number.isFinite(start) || new Date(start).toISOString().slice(0, 10) !== day
+      || !Number.isFinite(now) || now < start || now >= end
+      || !Number.isFinite(updated) || updated < start || updated > now + 300_000
+      || !Number.isFinite(current) || current < 0) return null;
+    const batchStart = snap?.batch?.operationalWindowStart;
+    const batchEnd = snap?.batch?.operationalWindowEnd;
+    if ((batchStart && Date.parse(batchStart) !== start)
+      || (batchEnd && Date.parse(batchEnd) !== end)) return null;
+    return { start: new Date(start).toISOString(), end: new Date(end).toISOString() };
+  }
+
   async function loadBestState(stamp) {
     const urls = API_BASE
       ? [LOCAL_STATE_URL, RAW_STATE_URL, STATE_URL]
@@ -109,18 +130,16 @@
       for (const url of smallUrls) {
         try {
           const snap = await fetchJson(url, stamp);
-          const start = Date.parse(snap?.batch?.operationalWindowStart || "");
-          const end = Date.parse(snap?.batch?.operationalWindowEnd || "");
-          if (!Number.isFinite(Number(snap?.bank?.current))
-            || !Number.isFinite(start) || end - start !== 86_400_000) continue;
+          const window = recoveryWindowFromDailySnapshot(snap);
+          if (!window) continue;
           return normalize({
             meta: {
               version: snap.version,
               sourceMarker: "DAILY_SNAPSHOT_RECOVERY_NON_FINANCIAL",
               updatedAt: snap.updatedAt,
               analysisDateLocal: snap.analysisDateLocal,
-              operationalWindowStart: snap.batch.operationalWindowStart,
-              operationalWindowEnd: snap.batch.operationalWindowEnd,
+              operationalWindowStart: window.start,
+              operationalWindowEnd: window.end,
               recoveryDay: true,
             },
             bank: snap.bank,
@@ -279,10 +298,19 @@
   }
 
   function historyOnlyForecasts(state) {
+    const now = Date.now();
     return currentFixtureBoard(state)
-      .filter(row => row.forecast && row.forecast.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS"
-        && Number.isFinite(Number(row.forecast.modelProbability)) && Number(row.forecast.modelProbability) > 0
-        && Number(row.stake || 0) === 0)
+      .filter(row => {
+        const kickoff = Date.parse(row.commenceTime || "");
+        const computed = Date.parse(row.forecast?.computedAt || "");
+        return Number.isFinite(kickoff) && kickoff > now
+          && Number.isFinite(computed) && computed < kickoff
+          && row.forecast?.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS"
+          && Number.isFinite(Number(row.forecast.modelProbability))
+          && Number(row.forecast.modelProbability) > 0
+          && Number(row.forecast.modelProbability) <= 1
+          && Number(row.stake || 0) === 0;
+      })
       .sort((a, b) => Number(b.forecast.modelProbability) - Number(a.forecast.modelProbability));
   }
 
