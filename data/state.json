@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-10-22T10:42:20Z",
+    "updatedAt": "2026-10-22T17:25:26Z",
     "analysisDateLocal": "2026-10-22",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -132,7 +132,7 @@
     "operationalDayId": "2026-10-22-MSK-0800",
     "operationalWindowStart": "2026-10-22T05:00:00Z",
     "operationalWindowEnd": "2026-10-23T05:00:00Z",
-    "selectionWindowStart": "2026-10-22T11:27:20Z",
+    "selectionWindowStart": "2026-10-22T18:10:26Z",
     "selectionWindowEnd": "2026-10-23T05:00:00Z",
     "operationalWindowPolicy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
@@ -144,7 +144,7 @@
       "bestBets": 5
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-10-22T10:42:17Z",
+    "r15SettlementAt": "2026-10-22T17:25:24Z",
     "nextPortfolioStatus": "PUBLISHED",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -15620,8 +15620,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-22T10:42:17Z",
-      "settlementAttempts": 1098,
+      "settlementLastAttemptAt": "2026-10-22T17:25:24Z",
+      "settlementAttempts": 1099,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -160786,8 +160786,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-10-22T10:42:17Z",
-      "settlementAttempts": 72,
+      "settlementLastAttemptAt": "2026-10-22T17:25:24Z",
+      "settlementAttempts": 73,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -260604,7 +260604,7 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-10-22T10:42:17Z",
+    "updatedAt": "2026-10-22T17:25:24Z",
     "segments": {
       "SPORT|soccer": {
         "settled": 300,
@@ -286676,7 +286676,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-10-22T10:42:19Z"
+      "updatedAt": "2026-10-22T17:25:25Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -286693,7 +286693,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-10-22T10:42:20Z",
+    "updatedAt": "2026-10-22T17:25:26Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "batchHistory": [
@@ -286864,7 +286864,7 @@
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-10-22T10:42:17Z",
+    "updatedAt": "2026-10-22T17:25:24Z",
     "analysisHistory": {
       "input": 277,
       "output": 277,
@@ -294896,8 +294896,8 @@
     }
   ],
   "dataCoverage": {
-    "discoveredEvents": 40,
-    "competitionsDiscovered": 4,
+    "discoveredEvents": 19,
+    "competitionsDiscovered": 3,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -294906,7 +294906,7 @@
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-10-22T10:41:24Z",
+        "updatedAt": "2026-10-22T17:24:30Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -294914,13 +294914,13 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "historyMatches": 17827
+        "historyMatches": 17975
       },
       "THE_ODDS_API": {
         "status": "LOW_ODDS_QUOTA",
-        "lastSuccessAt": "2026-10-22T10:43:26Z",
+        "lastSuccessAt": "2026-10-22T17:26:30Z",
         "consecutiveFailures": 0,
-        "lastFailureAt": "2026-10-22T10:42:18Z",
+        "lastFailureAt": "2026-10-22T17:25:25Z",
         "lastStatus": 401,
         "lastError": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
         "retryAfterSeconds": 0
@@ -294940,7 +294940,7 @@
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 13544,
+    "historyMatches": 13573,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -294955,42 +294955,42 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 17827,
+      "historyMatches": 17975,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 43,
-      "historyMatches": 17827,
+      "requests": 56,
+      "matchesAdded": 55,
+      "historyMatches": 17975,
       "errors": [
+        "136456:HTTPError",
+        "134700:HTTPError",
+        "133733:HTTPError",
+        "133915:HTTPError",
+        "135987:HTTPError",
+        "136462:HTTPError",
+        "136469:HTTPError",
+        "134510:HTTPError",
+        "133901:HTTPError",
+        "149900:HTTPError",
+        "137782:HTTPError",
+        "136449:HTTPError",
         "136466:HTTPError",
         "135981:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
-        "145389:HTTPError",
-        "134295:HTTPError",
-        "134154:HTTPError",
         "134147:HTTPError",
-        "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
+        "136831:HTTPError",
         "145171:HTTPError",
-        "145207:HTTPError",
         "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "145187:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-10-22T10:42:20Z"
+    "updatedAt": "2026-10-22T17:25:26Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -295041,7 +295041,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-10-22T10:42:20Z"
+    "updatedAt": "2026-10-22T17:25:26Z"
   },
   "legacyBridgeHistory": [
     {
@@ -295115,7 +295115,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-10-22T10:42:20Z",
+    "updatedAt": "2026-10-22T17:25:26Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "operationalDayRolloverHistory": [
@@ -299587,7 +299587,7 @@
         "financialMode": "SHADOW_LEARNING_ONLY"
       }
     ],
-    "updatedAt": "2026-10-22T10:42:20Z",
+    "updatedAt": "2026-10-22T17:25:26Z",
     "statistics": {
       "tracked": 36,
       "pending": 0,
@@ -299665,7 +299665,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "92763f910f6f9d76ccffca6e6d1a13ae",
@@ -299682,7 +299684,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f359af083324f7a2b6a6df792ab6c7e0",
@@ -299699,7 +299703,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "bfb607123a8580286115b375b77a947f",
@@ -299716,7 +299722,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "330997c9e81a23c5ebe39ade1d6a6e12",
@@ -299733,7 +299741,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6b5caf555b23eba02e4d090c61e8f665",
@@ -299750,7 +299760,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "63b70726ca31b8e4ed61f37edfba2989",
@@ -299792,7 +299804,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "4960e19f7f68f29919f7cbf1ca879dce",
@@ -299809,7 +299823,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "dca36309ad244cd8cbc2e3311fde5a26",
@@ -299826,7 +299842,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "0c104f64573962dd1a690f53ba969caa",
@@ -299843,7 +299861,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "ffcb32a8a5597aacba7b654852d47b67",
@@ -299860,7 +299880,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "13c0a92ee5159d2f1d2e0368811c9421",
@@ -299877,7 +299899,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "4e761167a147b5282b086d0f801819d3",
@@ -299894,7 +299918,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "382e017f27a6fbffbc48f736ca1680f2",
@@ -299911,7 +299937,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "953ffa67dff5e7704dd0f77fe48fe614",
@@ -299953,7 +299981,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "dc02d531f844fa790c5dcae1918efd22",
@@ -299970,7 +300000,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "fcbdc440ac1bfd04e900e145e84ffaca",
@@ -300012,7 +300044,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "faae81fd95e9a57be8492b9573a527e9",
@@ -300046,7 +300080,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "7a11fc32685c99c9ed6ec787445d8f08",
@@ -300088,7 +300124,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "bfeac7c5e82e272db139b6b0bba91304",
@@ -300130,7 +300168,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "94de0a2ab801eb05de1cd843fe81be37",
@@ -300147,7 +300187,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "d96bdb46a20ce9e66021e2356a90f7cf",
@@ -300164,7 +300206,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "cd9065192081742e3e287645d0c2de00",
@@ -300181,7 +300225,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "31593142c4077b2efdb19f5ce52c2972",
@@ -300198,7 +300244,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "e2bf033627c92831f81ad76703839d72",
@@ -300240,7 +300288,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "af99d0f507da72d045d9403ae167a5a8",
@@ -300282,7 +300332,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "573ca8b5bb0abdb338c4004d610b1824",
@@ -300299,7 +300351,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "86b70325b671e4bdf5b970aa6cd85bb3",
@@ -300316,7 +300370,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "7b1674efd0f6f93a16f202822f4b64b5",
@@ -300333,7 +300389,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "c614844f2e3b782814e4f4e77f98bf2a",
@@ -300375,7 +300433,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "9be240eead573e6718f4ba21ed1a6472",
@@ -300392,7 +300452,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "b3c60081286aa25692de7e0a482b6c01",
@@ -300434,7 +300496,9 @@
         "financialEligible": false,
         "computedAt": "2026-10-22T05:06:15Z"
       },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH"
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
       "eventId": "e342a49042c35c6a3f3e8720324b3f3c",
@@ -300451,7 +300515,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "5290ae078657c841a4e1d4ebb626825a",
@@ -300468,7 +300534,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "410fd021774146ae969af3713990ed87",
@@ -300485,7 +300553,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "3fd77104fe7fadd096c167edafffb43e",
@@ -300502,7 +300572,9 @@
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED"
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     }
   ],
   "lossDiagnostics": {
