@@ -4375,24 +4375,77 @@ def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
     })
 
 
-def settlement_context_from_cache(cache: dict[str, Any]) -> dict[str, Any]:
+def settlement_context_from_cache(
+    cache: dict[str, Any],
+    now: dt.datetime | None = None,
+) -> dict[str, Any]:
+    """Use only completed matches whose real kickoff is safely in the past.
+
+    Cached provider labels can be wrong or pre-filled for future schedules;
+    neither FINISHED nor AWARDED alone authorizes a virtual-bank settlement.
+    Records without a parseable timestamp or completed score fail closed.
+    """
+    reference = now or now_utc()
+    if reference.tzinfo is None:
+        raise RuntimeError("SETTLEMENT_CLOCK_MUST_BE_TIMEZONE_AWARE")
+    reference = reference.astimezone(UTC)
+    earliest_final = reference - dt.timedelta(minutes=90)
     completed = []
     for match in cache.get("matches") or []:
-        if not isinstance(match, dict) or str(match.get("status") or "") not in {"FINISHED", "AWARDED"}:
+        if not isinstance(match, dict) or str(match.get("status") or "").upper() not in {"FINISHED", "AWARDED"}:
+            continue
+        kickoff = parse_time(match.get("utcDate"))
+        if kickoff is None or kickoff.tzinfo is None:
+            continue
+        kickoff = kickoff.astimezone(UTC)
+        if kickoff > earliest_final:
+            # Reject future, currently playing and implausibly early finals.
             continue
         home = match.get("homeTeam") if isinstance(match.get("homeTeam"), dict) else {}
         away = match.get("awayTeam") if isinstance(match.get("awayTeam"), dict) else {}
         if match.get("homeScore") is None or match.get("awayScore") is None:
             continue
+        try:
+            home_score = int(match["homeScore"])
+            away_score = int(match["awayScore"])
+        except (ValueError, TypeError):
+            continue
+        if not (0 <= home_score <= 30 and 0 <= away_score <= 30):
+            continue
         completed.append({
             "eventId": str(match.get("id") or ""),
-            "utcDate": parse_time(match.get("utcDate")),
+            "utcDate": kickoff,
             "home": str(home.get("name") or ""),
             "away": str(away.get("name") or ""),
-            "homeScore": safe_int(match.get("homeScore")),
-            "awayScore": safe_int(match.get("awayScore")),
+            "homeScore": home_score,
+            "awayScore": away_score,
         })
     return {"completedLookup": completed}
+
+
+def self_test_settlement_cache_time_guard() -> None:
+    """Regression: stale/future FINISHED records never mutate the bank."""
+    reference = dt.datetime(2026, 10, 22, 10, 0, tzinfo=UTC)
+    def fixture(event_id: str, kickoff: dt.datetime | None, score: object = 2) -> dict[str, Any]:
+        return {
+            "id": event_id,
+            "status": "FINISHED",
+            "utcDate": iso(kickoff) if kickoff else None,
+            "homeTeam": {"name": "Home"},
+            "awayTeam": {"name": "Away"},
+            "homeScore": score,
+            "awayScore": 1,
+        }
+    cache = {"matches": [
+        fixture("valid", reference - dt.timedelta(hours=3)),
+        fixture("too-early", reference - dt.timedelta(minutes=40)),
+        fixture("future", reference + dt.timedelta(days=220)),
+        fixture("no-time", None),
+        fixture("invalid-score", reference - dt.timedelta(days=1), "not-a-score"),
+    ]}
+    selected = settlement_context_from_cache(cache, reference)["completedLookup"]
+    if len(selected) != 1 or selected[0]["eventId"] != "valid":
+        raise RuntimeError("SETTLEMENT_CACHE_TIME_GUARD_FAILED")
 
 
 def settle_current() -> int:
@@ -4462,7 +4515,7 @@ def settle_current() -> int:
         provider_scores, score_errors = core.fetch_scores_for_sport_keys(client, odds_key, sport_keys)
         score_results.update(provider_scores)
     cache = load_json(HISTORY_CACHE_PATH, empty_history_cache())
-    football_context = settlement_context_from_cache(cache)
+    football_context = settlement_context_from_cache(cache, now)
     counters = core.settle_pending_records(state, score_results, football_context, now, config) if due else {
         "analysisSettled": 0, "bestBetsSettled": 0, "unresolved": 0
     }
@@ -6205,6 +6258,7 @@ def synthetic_context(now: dt.datetime) -> tuple[dict[str, Any], dict[str, Any]]
 
 
 def self_test() -> int:
+    self_test_settlement_cache_time_guard()
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     health_client = ProviderClient()
