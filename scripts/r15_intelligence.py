@@ -658,7 +658,16 @@ def build_history_context(cache: dict[str, Any], registry: dict[str, Any], now: 
         if match.get("homeScore") is None or match.get("awayScore") is None:
             continue
         when = parse_time(match.get("utcDate"))
-        if not when or when > now + dt.timedelta(hours=2):
+        # Never train on a fake future FINISHED label or on an ongoing match.
+        # This mirrors the settlement safety window without changing weights.
+        if not when or when.tzinfo is None or when.astimezone(UTC) > now.astimezone(UTC) - dt.timedelta(minutes=90):
+            continue
+        try:
+            scored_home = int(match.get("homeScore"))
+            scored_away = int(match.get("awayScore"))
+        except (TypeError, ValueError):
+            continue
+        if not (0 <= scored_home <= 30 and 0 <= scored_away <= 30):
             continue
         home = match.get("homeTeam") if isinstance(match.get("homeTeam"), dict) else {}
         away = match.get("awayTeam") if isinstance(match.get("awayTeam"), dict) else {}
@@ -4446,6 +4455,13 @@ def self_test_settlement_cache_time_guard() -> None:
     selected = settlement_context_from_cache(cache, reference)["completedLookup"]
     if len(selected) != 1 or selected[0]["eventId"] != "valid":
         raise RuntimeError("SETTLEMENT_CACHE_TIME_GUARD_FAILED")
+    # Future-labeled matches are excluded from Elo/form training as well.
+    for match in cache["matches"]:
+        match["homeTeam"]["id"] = 101
+        match["awayTeam"]["id"] = 102
+    context = build_history_context(cache, {}, reference)
+    if safe_int((context.get("cacheMeta") or {}).get("matches"), -1) != 1:
+        raise RuntimeError("PREMATCH_TRAINING_USED_FUTURE_OR_INVALID_FINAL")
 
 
 def settle_current() -> int:
