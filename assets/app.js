@@ -322,7 +322,7 @@
       const alreadyStarted = Number.isFinite(kickoff) && kickoff <= Date.now();
       const source = hasForecast
         ? "История команд · " + number(forecast.historyHomeMatches) + " и " + number(forecast.historyAwayMatches) + " матчей"
-        : "Недостаточно подтверждённой истории для численного прогноза";
+        : (forecast.reasonRu || row.reasonRu || row.historyReasonRu || "Нет подтверждённой статистической оценки: проверьте историю команд и сопоставление названий");
       const probability = hasForecast ? number(forecast.modelProbability) * 100 : 0;
       return `<article class="match-card">
         <div class="rank">${startingRank + index + 1}</div>
@@ -345,7 +345,7 @@
     const daily = array(state.dailyAnalysis);
     const best = array(state.bestBets);
     const window = currentMoscowWindow(state);
-    if (!window || !daily.length || daily.length > 15) return false;
+    if (!window || !daily.length) return false;
     if (!daily.every(row => inOperationalWindow(row, window) && odds(row) >= 1.55 && home(row) && away(row))) return false;
     if (best.length !== Math.min(3, daily.length) || !best.every(row => inOperationalWindow(row, window))) return false;
     const nonBanked = Boolean(state.meta.recoveryDay || state.meta.bootstrapPreview);
