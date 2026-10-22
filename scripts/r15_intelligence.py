@@ -5139,6 +5139,32 @@ def full_day_fixture_board(
     }
 
 
+def assert_generation_still_in_original_moscow_day(
+    day: dict[str, Any],
+    config: dict[str, Any],
+    at: dt.datetime | None = None,
+) -> None:
+    """Refuse stale publication after 08:00 Moscow day rollover."""
+    current = operational_day(at or now_utc(), config)
+    if str(day.get("operationalDayId") or "") != str(current.get("operationalDayId") or ""):
+        raise RuntimeError("R15_STALE_GENERATION_CROSSED_MOSCOW_0800")
+
+
+def self_test_generation_day_rollover() -> None:
+    config = load_json(CONFIG_PATH, {})
+    old = dt.datetime(2026, 10, 22, 4, 59, tzinfo=UTC)
+    new = dt.datetime(2026, 10, 22, 5, 0, tzinfo=UTC)
+    day = operational_day(old, config)
+    assert_generation_still_in_original_moscow_day(day, config, old)
+    try:
+        assert_generation_still_in_original_moscow_day(day, config, new)
+    except RuntimeError as exc:
+        if str(exc) != "R15_STALE_GENERATION_CROSSED_MOSCOW_0800":
+            raise
+    else:
+        raise RuntimeError("SELF_TEST_CROSS_DAY_PUBLICATION_NOT_BLOCKED")
+
+
 def publish_generation() -> int:
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
@@ -5726,6 +5752,7 @@ def publish_generation() -> int:
             "updatedAt": iso(now),
         }
         update_express_statistics(state)
+        assert_generation_still_in_original_moscow_day(day, config)
         write_json(PROVIDER_HEALTH_PATH, client.health)
         if previous_preview_state:
             fallback = previous_preview_state
@@ -5947,6 +5974,7 @@ def publish_generation() -> int:
     })
     state.pop("nextPortfolio", None)
     state.setdefault("meta", {})["nextPortfolioStatus"] = "PUBLISHED"
+    assert_generation_still_in_original_moscow_day(day, config)
     if bootstrap_preview:
         control = daily_auditor.load_control()
         state["meta"].update({
@@ -6259,6 +6287,7 @@ def synthetic_context(now: dt.datetime) -> tuple[dict[str, Any], dict[str, Any]]
 
 def self_test() -> int:
     self_test_settlement_cache_time_guard()
+    self_test_generation_day_rollover()
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     health_client = ProviderClient()
