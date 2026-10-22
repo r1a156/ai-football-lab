@@ -317,10 +317,10 @@
   function fixtureCards(rows, startingRank = 0) {
     return rows.map((row, index) => {
       const forecast = object(row.forecast);
-      const hasForecast = forecast.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS";
       const kickoff = Date.parse(row.commenceTime || "");
       const alreadyStarted = Number.isFinite(kickoff) && kickoff <= Date.now();
-      const source = hasForecast
+      const hasForecast = !alreadyStarted && forecast.mode === "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS";
+      const source = alreadyStarted ? "Матч уже начался: предматчевый прогноз скрыт" : hasForecast
         ? "История команд · " + number(forecast.historyHomeMatches) + " и " + number(forecast.historyAwayMatches) + " матчей"
         : (forecast.reasonRu || row.reasonRu || row.historyReasonRu || "Нет подтверждённой статистической оценки: проверьте историю команд и сопоставление названий");
       const probability = hasForecast ? number(forecast.modelProbability) * 100 : 0;
@@ -333,7 +333,7 @@
         </div>
         <div class="match-side">
           <div class="pick"><small>${hasForecast ? "Статистическая оценка" : "Календарь"}</small>
-            <strong>${escapeHtml(hasForecast ? forecast.pickRu : "Без проверенного прогноза")}</strong>
+            <strong>${escapeHtml(hasForecast ? forecast.pickRu : alreadyStarted ? "Предматчевый прогноз закрыт" : "Без проверенного прогноза")}</strong>
             <span class="pick-odds">Без подтверждённого коэффициента · без ставки</span></div>
           ${hasForecast ? signalHtml("Вероятность", probability, probability) : ""}
         </div>
