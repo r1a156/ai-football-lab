@@ -3438,7 +3438,7 @@ def build_strategy_analysis(
         diagnostics["marketFamilies"][str(selected.get("marketFamily"))] += 1
         evaluated_rows.append((event, selected, alternatives, model))
 
-    target = safe_int(config.get("dailyAnalysisTarget"), 15)
+    target = max(1, safe_int(config.get("dailyAnalysisTarget"), 120))
     max_league = max(1, safe_int(config.get("maximumSameLeagueDailyAnalysis"), 3))
     evaluated_rows.sort(
         key=lambda row: (
