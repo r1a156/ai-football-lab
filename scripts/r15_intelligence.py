@@ -5147,7 +5147,8 @@ def full_day_fixture_board(
             "reasonRu": (None if forecast else (
                 "Матч уже начался: предматчевый прогноз не рассчитывается" if kickoff <= now else
                 "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности"
-            )), 
+            )),
+            "historyDiagnostic": ("ALREADY_STARTED" if kickoff <= now else ("FORECAST_AVAILABLE" if forecast else "HISTORY_OR_TEAM_MATCH_UNVERIFIED")),
         }
         by_id[event_id] = row
     rows = sorted(by_id.values(), key=lambda row: str(row.get("commenceTime") or ""))
