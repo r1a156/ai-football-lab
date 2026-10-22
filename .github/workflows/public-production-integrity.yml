@@ -9,7 +9,9 @@ on:
     workflows: ["pages build and deployment"]
     types: [completed]
   schedule:
-    - cron: '35 6,9,13 * * *'
+    # Independent hourly check: generated Pages deployments do not reliably
+    # emit workflow_run events for this repository's GitHub Pages builder.
+    - cron: '35 * * * *'
   workflow_dispatch:
 
 permissions:
