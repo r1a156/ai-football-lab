@@ -1640,7 +1640,7 @@ def free_odds_daily_budget(client: ProviderClient, config: dict[str, Any], now: 
     now = now or now_utc()
     remaining_raw = client.odds_quota.get("requestsRemaining")
     assumed = max(0, safe_int(config.get("oddsQuotaAssumedRemainingWhenUnknown"), 0))
-    remaining = safe_int(remaining_raw, assumed) if remaining_raw is not None else assumed
+    remaining = max(0, safe_int(remaining_raw, assumed)) if remaining_raw is not None else assumed
     next_month = (now.replace(day=28) + dt.timedelta(days=4)).replace(day=1)
     days_left = max(1, (next_month.date() - now.date()).days)
     fair_share = max(1, remaining // days_left)
