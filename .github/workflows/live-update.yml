@@ -45,7 +45,14 @@ jobs:
           python -m py_compile scripts/update_predictions.py scripts/r15_free_mesh.py scripts/r15_intelligence.py scripts/r15_daily_auditor.py scripts/update_live.py
           python scripts/update_live.py --update
           python scripts/r15_intelligence.py --settle
-          python scripts/r15_intelligence.py --generate
+          # A run started before 08:00 MSK may finish after rollover.
+          # Defer only generation; retain score settlement and validation.
+          python scripts/r15_rollover_gate.py --self-test
+          if python scripts/r15_rollover_gate.py --should-defer; then
+            echo "R15_WATCHDOG_GENERATION_DEFERRED_NEAR_MOSCOW_0800=YES"
+          else
+            python scripts/r15_intelligence.py --generate
+          fi
           python scripts/r15_intelligence.py --validate
           python scripts/update_live.py --validate
 
