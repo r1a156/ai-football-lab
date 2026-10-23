@@ -67,8 +67,12 @@ const backupAvailable = checkHealth(
 );
 assert.match(backupAvailable, /Котировки букмекеров — резервный ключ/, "Backup provider must be independently visible");
 
+assert(!index.includes("обязательно выбирает три лучших доступных прогноза"), "Hero must not promise three picks when no events qualify");
+assert(index.includes("до трёх лучших предматчевых прогнозов"), "Hero must describe picks as conditional on verified odds and filters");
+assert(index.includes("подборка остаётся пустой"), "Hero must explicitly explain the safe no-pick outcome");
+
 const blobSha = crypto.createHash("sha1")
   .update("blob " + Buffer.byteLength(app) + "\0")
   .update(app).digest("hex").slice(0, 12);
 assert(index.includes("assets/app.js?v=" + blobSha), "HTML must reference current JS Git blob SHA for cache busting");
-console.log("UI_HEALTH_REGRESSION=GREEN (7 checks)");
+console.log("UI_HEALTH_REGRESSION=GREEN (9 scenarios)");
