@@ -30,6 +30,8 @@ on:
     branches: [main]
     paths:
       - "scripts/r15_intelligence.py"
+      - "scripts/r15_rollover_gate.py"
+      - ".github/workflows/live-update.yml"
       - "scripts/update_predictions.py"
       - "config/analysis.json"
       - ".github/workflows/update-data.yml"
@@ -109,6 +111,8 @@ jobs:
           python scripts/r15_free_mesh.py --self-test
           python scripts/r15_daily_auditor.py --self-test
           python scripts/r15_intelligence.py --self-test
+          python scripts/r15_rollover_gate.py --self-test
+          python -c "import pathlib; s=pathlib.Path('.github/workflows/live-update.yml').read_text(encoding='utf-8'); assert 'if python scripts/r15_rollover_gate.py --should-defer; then' in s; assert 'python scripts/r15_intelligence.py --settle' in s and 'python scripts/r15_intelligence.py --validate' in s"
           python scripts/update_live.py --self-test
 
       - name: Refresh no-key historical intelligence first
