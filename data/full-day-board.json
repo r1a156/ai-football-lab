@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-23T12:53:28Z",
+  "updatedAt": "2026-10-23T14:31:23Z",
   "operationalDayId": "2026-10-23-MSK-0800",
   "operationalWindowStart": "2026-10-23T05:00:00Z",
   "operationalWindowEnd": "2026-10-24T05:00:00Z",
@@ -8,7 +8,7 @@
     "realFixtures": 48,
     "historicalModelForecasts": 18,
     "withoutReliableHistoricalForecast": 30,
-    "verifiedOddsEvents": 0
+    "verifiedOddsEvents": 9
   },
   "fixtures": [
     {
@@ -46,8 +46,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "4b149cdf49f5d677fe57fed9173b28fe",
@@ -350,7 +350,7 @@
       "away": "Kocaelispor",
       "awayRu": "Кокаелиспор",
       "commenceTime": "2026-10-23T17:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -413,7 +413,7 @@
       "away": "Annecy FC",
       "awayRu": "Аннеки ФК",
       "commenceTime": "2026-10-23T18:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -457,7 +457,7 @@
       "away": "Guingamp",
       "awayRu": "Гуингамп",
       "commenceTime": "2026-10-23T18:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -501,7 +501,7 @@
       "away": "Grenoble",
       "awayRu": "Гренобле",
       "commenceTime": "2026-10-23T18:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -608,7 +608,7 @@
       "away": "SC Telstar",
       "awayRu": "СК Телстар",
       "commenceTime": "2026-10-23T18:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -734,7 +734,7 @@
       "away": "Vicenza",
       "awayRu": "Викенза",
       "commenceTime": "2026-10-23T18:30:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -860,7 +860,7 @@
       "away": "Nice",
       "awayRu": "Нике",
       "commenceTime": "2026-10-23T18:45:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -904,7 +904,7 @@
       "away": "Monza",
       "awayRu": "Монза",
       "commenceTime": "2026-10-23T18:45:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1131,7 +1131,7 @@
       "away": "Málaga",
       "awayRu": "Малага",
       "commenceTime": "2026-10-23T19:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
