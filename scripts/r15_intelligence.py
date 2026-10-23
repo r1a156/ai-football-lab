@@ -4407,7 +4407,14 @@ def synchronize_public_quota_metadata(state: dict[str, Any], report: dict[str, A
         odds_health = provider_health.get("THE_ODDS_API") if isinstance(provider_health.get("THE_ODDS_API"), dict) else {}
         provider_status = str(odds_health.get("status") or "").upper()
         if primary_remaining == 0 and not any(value > 0 for value in known_remaining):
-            odds_status = "LIMIT" if not credential_rows or (known_remaining and all(value == 0 for value in known_remaining)) else "DEGRADED"
+            all_credentials_known_exhausted = (
+                not credential_rows
+                or (
+                    len(known_remaining) == len(credential_rows)
+                    and all(value == 0 for value in known_remaining)
+                )
+            )
+            odds_status = "LIMIT" if all_credentials_known_exhausted else "DEGRADED"
         elif provider_status in {"DEGRADED", "RATE_LIMITED", "ERROR"}:
             odds_status = "DEGRADED"
         elif provider_status == "LOW_ODDS_QUOTA":
@@ -4471,7 +4478,13 @@ def self_test_public_quota_metadata() -> None:
         raise RuntimeError("SELF_TEST live backup quota must remain visible as PARTIAL")
     if safe_int(backup_state["meta"]["oddsQuotaByKey"]["BACKUP"].get("requestsRemaining"), -1) != 12:
         raise RuntimeError("SELF_TEST backup quota metadata missing")
-    print("R3R26_PUBLIC_QUOTA_METADATA_REGRESSION=GREEN")
+
+    unknown_backup_state = copy.deepcopy(state)
+    unknown_backup_report = copy.deepcopy(report)
+    unknown_backup_report["diagnostics"]["credentialHealth"]["backup"] = {"valid": True, "remaining": -1, "used": -1}
+    if synchronize_public_quota_metadata(unknown_backup_state, unknown_backup_report) != "DEGRADED":
+        raise RuntimeError("SELF_TEST unknown backup quota must not be reported as fully exhausted")
+    print("R3R26_PUBLIC_QUOTA_METADATA_REGRESSION=GREEN (3 scenarios)")
 
 
 def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
