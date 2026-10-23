@@ -239,7 +239,7 @@ jobs:
                 --header "X-GitHub-Api-Version: 2022-11-28" \
                 "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages/builds")"
               echo "$PAGES_BUILD_RESPONSE"
-              python -c 'import json,sys; d=json.loads(sys.argv[1]); assert d.get("status") in {"queued","built"}, d' "$PAGES_BUILD_RESPONSE"
+              python -c 'import json,sys; d=json.loads(sys.argv[1]); assert d.get("status") in {"queued","building","built"}, d' "$PAGES_BUILD_RESPONSE"
               echo "R3R8_PAGES_BUILD_REQUESTED=GREEN"
               python - <<'PY'
               import json, time, urllib.request
