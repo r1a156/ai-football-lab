@@ -78,6 +78,13 @@ jobs:
               raise RuntimeError("PUBLIC_PORTFOLIO_CARDINALITY_INVALID")
           def as_msk(value):
               return dt.datetime.fromisoformat(str(value).replace("Z","+00:00")).astimezone(msk)
+          state_updated = as_msk(meta.get("updatedAt"))
+          snapshot_updated = as_msk(snapshot.get("updatedAt"))
+          if abs((state_updated - snapshot_updated).total_seconds()) > 300:
+              raise RuntimeError("PUBLIC_STATE_SNAPSHOT_TIMESTAMP_MISMATCH")
+          if not (start <= state_updated < end and start <= snapshot_updated < end):
+              raise RuntimeError("PUBLIC_STATE_STALE_TIMESTAMP_OUTSIDE_MOSCOW_WINDOW")
+          print("PUBLIC_STATE_UPDATED_AT=" + state_updated.isoformat())
           ids = []
           for row in daily:
               event_id = str(row.get("eventId") or "")
