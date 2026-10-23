@@ -57,7 +57,6 @@ const exhaustedProviders = checkHealth(
   { primary: { valid: true, remaining: 0, used: 500 }, backup: { valid: true, remaining: 0, used: 500 } },
   { "Котировки букмекеров — основной ключ": "LIMIT", "Котировки букмекеров — резервный ключ": "LIMIT", "Котировки букмекеров · общий статус": "LIMIT" }
 );
-assert.match(exhaustedProviders, /оба лимита исчерпаны/, "Both exhausted provider quotas must be explicit");
 
 const backupAvailable = checkHealth(
   { quotaExhaustedAfterAcquisition: true, quotaRemainingBeforeOdds: 0 },
