@@ -57,6 +57,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 concurrency:
   group: v10-production-state-writer
@@ -115,6 +116,14 @@ jobs:
           python scripts/r15_rollover_gate.py --self-test
           python -c "import pathlib; s=pathlib.Path('.github/workflows/live-update.yml').read_text(encoding='utf-8'); assert 'if python scripts/r15_rollover_gate.py --should-defer; then' in s; assert 'python scripts/r15_intelligence.py --settle' in s and 'python scripts/r15_intelligence.py --validate' in s"
           python scripts/update_live.py --self-test
+          python - <<'PY'
+          from pathlib import Path
+          workflow = Path(".github/workflows/update-data.yml").read_text(encoding="utf-8")
+          assert "pages: write" in workflow, "Pages build API requires least-privilege Pages write permission"
+          assert '"/pages/builds"' in workflow, "Production must explicitly request a Pages build after publishing data"
+          assert "R3R8_PAGES_BUILD_REQUESTED=GREEN" in workflow, "Pages refresh must emit a verifiable success marker"
+          print("R3R8_PAGES_REFRESH_REGRESSION=GREEN")
+          PY
 
       - name: Refresh no-key historical intelligence first
         shell: bash
@@ -152,6 +161,8 @@ jobs:
 
       - name: Commit one atomic public state
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           EXPECTED_ENGINE_BLOB="$(git rev-parse HEAD:scripts/r15_intelligence.py)"
@@ -221,6 +232,15 @@ jobs:
 
             if git push origin HEAD:main; then
               echo "R3R8_PUBLIC_DATA_PUSH=GREEN"
+              PAGES_BUILD_RESPONSE="$(curl --fail-with-body --silent --show-error \\
+                --request POST \\
+                --header "Accept: application/vnd.github+json" \\
+                --header "Authorization: Bearer $GH_TOKEN" \\
+                --header "X-GitHub-Api-Version: 2022-11-28" \\
+                "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/pages/builds")"
+              echo "$PAGES_BUILD_RESPONSE"
+              python -c 'import json,sys; d=json.loads(sys.argv[1]); assert d.get("status") in {"queued","built"}, d' "$PAGES_BUILD_RESPONSE"
+              echo "R3R8_PAGES_BUILD_REQUESTED=GREEN"
               exit 0
             fi
             sleep $((attempt * 5))
