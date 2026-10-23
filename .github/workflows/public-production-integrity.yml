@@ -56,6 +56,11 @@ jobs:
               raise RuntimeError("PUBLIC_SITE_MISSING_APP")
           state = json.loads(fetch("data/state.json"))
           snapshot = json.loads(fetch("data/ai_daily_analysis.json"))
+          fonbet = json.loads(fetch("data/fonbet-public-snapshot.json"))
+          fonbet_text = str(fonbet.get("normalizedText") or "").casefold()
+          if fonbet.get("status") == "GREEN" and "your browser does not support javascript" in fonbet_text:
+              raise RuntimeError("PUBLIC_FONBET_FALSE_GREEN_JS_SHELL")
+          print("PUBLIC_FONBET_STATUS=" + str(fonbet.get("status")))
           meta = state.get("meta") or {}
           now = dt.datetime.now(msk)
           start = now.replace(hour=8, minute=0, second=0, microsecond=0)
