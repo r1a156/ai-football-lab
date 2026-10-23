@@ -483,11 +483,32 @@
     const sources = object(mesh.sources);
     const sportsDb = object(diagnostics.theSportsDbCurrentHistory);
     const quota = object(diagnostics.quotaPlan);
+    const credentials = object(diagnostics.credentialHealth);
+    const primary = object(credentials.primary);
+    const backup = object(credentials.backup);
+    const secondary = object(quota.secondaryKeyFallback);
     const apiHealth = object(state.meta.apiHealth);
     const items = Object.entries(sources).map(([name,status]) => [sourceLabel(name), String(status || "UNKNOWN")]);
     if (sportsDb.status) items.push(["Дополнительная база результатов", String(sportsDb.status)]);
     const quotaExhausted = quota.quotaExhaustedAfterAcquisition === true || quota.quotaLifecycleStatus === "WAITING_FOR_ODDS_QUOTA_RESET";
-    items.push(["Котировки букмекеров", quotaExhausted ? "LIMIT" : (apiHealth.status || "UNKNOWN")]);
+    const remainingOf = provider => provider.remaining != null && Number.isFinite(Number(provider.remaining)) ? Number(provider.remaining) : null;
+    const primaryRemaining = remainingOf(primary);
+    const backupRemaining = remainingOf(backup);
+    const primaryStatus = primary.valid === false ? "ERROR"
+      : primaryRemaining !== null ? (primaryRemaining <= 0 ? "LIMIT" : "GREEN")
+      : quotaExhausted ? "LIMIT" : (apiHealth.status || "UNKNOWN");
+    items.push(["Котировки букмекеров — основной ключ", primaryStatus]);
+    const hasBackupEvidence = Object.keys(backup).length > 0 || Boolean(secondary.reason);
+    if (hasBackupEvidence) {
+      const backupStatus = backup.valid === false ? "ERROR"
+        : backupRemaining !== null ? (backupRemaining <= 0 ? "LIMIT" : "GREEN")
+        : secondary.reason === "BACKUP_QUOTA_EMPTY" ? "LIMIT" : "UNKNOWN";
+      items.push(["Котировки букмекеров — резервный ключ", backupStatus]);
+    }
+    items.push(["Котировки букмекеров · общий статус", primaryStatus === "ERROR" || (hasBackupEvidence && backup.valid === false) ? "ERROR"
+      : primaryStatus === "LIMIT" && (!hasBackupEvidence || backupRemaining === 0 || secondary.reason === "BACKUP_QUOTA_EMPTY") ? "LIMIT"
+      : primaryStatus === "LIMIT" || (hasBackupEvidence && (backup.valid === false || (backupRemaining !== null && backupRemaining <= 0) || secondary.reason === "BACKUP_QUOTA_EMPTY")) ? "PARTIAL"
+      : primaryStatus]);
 
     const root = document.getElementById("healthGrid");
     if (root) {
@@ -500,8 +521,15 @@
       : statuses.some(x => x === "PARTIAL" || x === "LIMIT" || x === "DEGRADED") ? "PARTIAL" : "GREEN";
     setText("healthOverall", healthLabel(overall));
     setText("healthUpdated", state.meta.updatedAt ? `Обновлено ${formatShortDateTime(state.meta.updatedAt)}` : "—");
-    const remaining = number(quota.quotaRemainingBeforeOdds);
-    setText("quotaStatus", quotaExhausted ? "Квота: 0 · лимит исчерпан" : quota.quotaRemainingBeforeOdds != null ? `Квота: ${formatNumber(remaining,0)}` : "Квота: нет данных");
+    const quotaParts = [];
+    if (primaryRemaining !== null) quotaParts.push(`основной ${formatNumber(primaryRemaining,0)}`);
+    if (backupRemaining !== null) quotaParts.push(`резерв ${formatNumber(backupRemaining,0)}`);
+    const allKnownExhausted = primaryRemaining !== null && primaryRemaining <= 0 && backupRemaining !== null && backupRemaining <= 0;
+    setText("quotaStatus", quotaParts.length
+      ? `Квота: ${quotaParts.join(" · ")}${allKnownExhausted ? " · оба лимита исчерпаны" : ""}`
+      : quotaExhausted ? "Квота: 0 · лимит исчерпан"
+      : quota.quotaRemainingBeforeOdds != null ? `Квота: ${formatNumber(number(quota.quotaRemainingBeforeOdds),0)}`
+      : "Квота: нет данных");
   }
 
   function renderModelStats(state) {
