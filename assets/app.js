@@ -486,11 +486,12 @@
     const apiHealth = object(state.meta.apiHealth);
     const items = Object.entries(sources).map(([name,status]) => [sourceLabel(name), String(status || "UNKNOWN")]);
     if (sportsDb.status) items.push(["Дополнительная база результатов", String(sportsDb.status)]);
-    items.push(["Котировки букмекеров", apiHealth.status || (quota.quotaExhaustedAfterAcquisition ? "LIMIT" : "GREEN")]);
+    const quotaExhausted = quota.quotaExhaustedAfterAcquisition === true || quota.quotaLifecycleStatus === "WAITING_FOR_ODDS_QUOTA_RESET";
+    items.push(["Котировки букмекеров", quotaExhausted ? "LIMIT" : (apiHealth.status || "UNKNOWN")]);
 
     const root = document.getElementById("healthGrid");
     if (root) {
-      root.innerHTML = items.slice(0,6).map(([name,status]) =>
+      root.innerHTML = items.map(([name,status]) =>
         `<div class="health-line"><span>${escapeHtml(name)}</span><strong class="${healthClass(status)}">${escapeHtml(healthLabel(status))}</strong></div>`
       ).join("");
     }
@@ -500,7 +501,7 @@
     setText("healthOverall", healthLabel(overall));
     setText("healthUpdated", state.meta.updatedAt ? `Обновлено ${formatShortDateTime(state.meta.updatedAt)}` : "—");
     const remaining = number(quota.quotaRemainingBeforeOdds);
-    setText("quotaStatus", remaining ? `Квота: ${formatNumber(remaining,0)}` : "Квота контролируется");
+    setText("quotaStatus", quotaExhausted ? "Квота: 0 · лимит исчерпан" : quota.quotaRemainingBeforeOdds != null ? `Квота: ${formatNumber(remaining,0)}` : "Квота: нет данных");
   }
 
   function renderModelStats(state) {
