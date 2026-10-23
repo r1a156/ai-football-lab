@@ -39,9 +39,8 @@ function checkHealth(quotaPlan, expectedStatus, expectedQuota, credentialHealth 
   assert(oddsRow.includes(expectedStatus), "Odds provider status must match quota evidence");
   assert.equal(fields.quotaStatus, expectedQuota);
   for (const [label, status] of Object.entries(expectedProviderStatuses)) {
-    const escaped = label.replace(/[.*+?^${}()|[\\]\\]/g, "\\\\  assert.equal(fields.quotaStatus, expectedQuota);
-}");
-    assert.match(healthGrid.innerHTML, new RegExp(escaped + "[\\s\\S]*?<strong class=\\\"" + status + "\\\">" + status + "<\\/strong>"), label + " must show its own verified status");
+    const expectedRow = `<span>${label}</span><strong class="${status}">${status}</strong>`;
+    assert(healthGrid.innerHTML.includes(expectedRow), `${label} must show its own verified status`);
   }
   return healthGrid.innerHTML;
 }
