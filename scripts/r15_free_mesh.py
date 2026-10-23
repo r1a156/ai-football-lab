@@ -1088,11 +1088,27 @@ def apply_russian_names(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _fonbet_public_text_usable(normalized_text: str) -> bool:
+    """Fail closed on a 200-OK JavaScript bootstrap with no visible market data."""
+    text = str(normalized_text or "").casefold()
+    if not text.strip():
+        return False
+    if "your browser does not support javascript" in text:
+        return False
+    if "global area load message" in text and "noscript" in text:
+        return False
+    return True
+
+
 def refresh_fonbet_public_snapshot(*, force: bool = False) -> dict[str, Any]:
     now = utc_now()
     existing = load_json(FONBET_PATH, {"version": 1, "sourceMarker": MESH_MARKER, "updatedAt": None})
     last = parse_dt(existing.get("updatedAt"))
     if not force and last and (now - last).total_seconds() < 15 * 60:
+        if existing.get("status") == "GREEN" and not _fonbet_public_text_usable(existing.get("normalizedText")):
+            existing["status"] = "UNAVAILABLE"
+            existing["errors"] = list(existing.get("errors") or []) + ["STATIC_HTML_JS_BOOTSTRAP_ONLY"]
+            write_json(FONBET_PATH, existing)
         return existing
     urls = ["https://fonbet.com/sports/football", "https://fonbet.com/sports"]
     errors = []
@@ -1103,15 +1119,17 @@ def refresh_fonbet_public_snapshot(*, force: bool = False) -> dict[str, Any]:
                 text = body.decode("utf-8", errors="replace")
                 text = html.unescape(re.sub(r"<[^>]+>", " ", text))
                 text = " ".join(text.split())
+                normalized_text = normalize(text)[:750000]
+                usable = _fonbet_public_text_usable(normalized_text)
                 snapshot = {
                     "version": 1,
                     "sourceMarker": MESH_MARKER,
                     "updatedAt": iso(now),
                     "sourceUrl": url,
-                    "status": "GREEN",
-                    "normalizedText": normalize(text)[:750000],
+                    "status": "GREEN" if usable else "UNAVAILABLE",
+                    "normalizedText": normalized_text,
                     "textLength": len(text),
-                    "errors": errors,
+                    "errors": errors if usable else errors + ["STATIC_HTML_JS_BOOTSTRAP_ONLY"],
                 }
                 write_json(FONBET_PATH, snapshot)
                 return snapshot
@@ -1125,7 +1143,7 @@ def refresh_fonbet_public_snapshot(*, force: bool = False) -> dict[str, Any]:
 
 def fonbet_event_confirmed(home: str, away: str, snapshot: dict[str, Any] | None = None) -> bool:
     snapshot = snapshot or load_json(FONBET_PATH, {})
-    if snapshot.get("status") != "GREEN":
+    if snapshot.get("status") != "GREEN" or not _fonbet_public_text_usable(snapshot.get("normalizedText")):
         return False
     text = str(snapshot.get("normalizedText") or "")
     home_key = normalize(home)
@@ -1146,6 +1164,8 @@ def fonbet_event_confirmed(home: str, away: str, snapshot: dict[str, Any] | None
 
 def fonbet_gate(records: list[dict[str, Any]]) -> dict[str, Any]:
     snapshot = refresh_fonbet_public_snapshot()
+    if snapshot.get("status") == "GREEN" and not _fonbet_public_text_usable(snapshot.get("normalizedText")):
+        snapshot["status"] = "UNAVAILABLE"
     text = str(snapshot.get("normalizedText") or "")
     confirmed = 0
     unknown = 0
@@ -1178,6 +1198,18 @@ def self_test() -> int:
     merged = merge_history(history, rows + open_rows, utc_now())
     if merged["matches"] != 2:
         raise RuntimeError("R15F merge failed")
+    if _fonbet_public_text_usable("global area load message noscript your browser does not support javascript"):
+        raise RuntimeError("R15F Fonbet JS-only HTML incorrectly accepted")
+    if _fonbet_public_text_usable(""):
+        raise RuntimeError("R15F Fonbet empty HTML incorrectly accepted")
+    if not _fonbet_public_text_usable("alpha united beta city 1 85 3 40 4 20"):
+        raise RuntimeError("R15F Fonbet market-bearing text incorrectly rejected")
+    if fonbet_event_confirmed("Alpha United", "Beta City", {
+        "status": "GREEN",
+        "normalizedText": "alpha united beta city your browser does not support javascript",
+    }):
+        raise RuntimeError("R15F Fonbet JS-only snapshot incorrectly confirmed")
+    print("R15F_FONBET_JS_BOOTSTRAP_GUARD=GREEN")
     print("R15F_FREE_MESH_SELF_TEST=GREEN")
     print("R15F_NO_USER_KEYS_REQUIRED=YES")
     print("R15F_FDCUK_PARSER=GREEN")
