@@ -4487,8 +4487,110 @@ def self_test_public_quota_metadata() -> None:
     print("R3R26_PUBLIC_QUOTA_METADATA_REGRESSION=GREEN (3 scenarios)")
 
 
+def synchronize_publication_count_metadata(state: dict[str, Any], report: dict[str, Any]) -> None:
+    """Make public counters/status describe the arrays actually being published."""
+    meta = state.setdefault("meta", {})
+    daily = [row for row in state.get("dailyAnalysis") or [] if isinstance(row, dict)]
+    best = [row for row in state.get("bestBets") or [] if isinstance(row, dict)]
+    expresses = [row for row in state.get("expresses") or [] if isinstance(row, dict)]
+    coverage = state.get("dataCoverage") if isinstance(state.get("dataCoverage"), dict) else {}
+    diagnostics = report.get("diagnostics") if isinstance(report.get("diagnostics"), dict) else {}
+    analysis = diagnostics.get("analysis") if isinstance(diagnostics.get("analysis"), dict) else {}
+    target = max(1, safe_int(meta.get("analysisTarget"), 15))
+    event_markets = analysis.get("eventsWithMarkets")
+    if event_markets is None:
+        event_markets = coverage.get("oddsEvents", 0)
+
+    meta.update({
+        "analysisPublished": len(daily),
+        "bestBetsPublished": len(best),
+        "premiumBetsPublished": sum(1 for row in daily if row.get("premiumQualified") is True),
+        "expressesPublished": len(expresses),
+        "expressLegsPublished": sum(len(row.get("legs") or []) for row in expresses),
+        "soccerAnalyses": len(daily),
+        "candidateMatchesAnalyzed": safe_int(event_markets, 0),
+        "selectedPredictions": len(best),
+        "newPredictions": len(daily),
+        "partialDailyPortfolio": bool(daily) and len(daily) < target,
+        "analysisGeneratedAt": meta.get("updatedAt"),
+        "batchStatus": str((state.get("batch") or {}).get("status") or ("PUBLISHED" if daily else "WAITING_FOR_NEXT_SELECTION")),
+        "batchStatusLabel": str((state.get("batch") or {}).get("statusLabel") or ("Подборка опубликована" if daily else "Ожидается качественная подборка")),
+        "nextPortfolioStatus": "PUBLISHED" if daily else "WAITING_FOR_QUALITY_SELECTION",
+        "analysisStatus": "R15_PORTFOLIO_PUBLISHED" if daily else "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY",
+    })
+
+
+def self_test_publication_count_metadata() -> None:
+    """Regression: empty current arrays cannot retain counters/status from an older batch."""
+    state = {
+        "meta": {
+            "updatedAt": "2026-10-23T11:54:50Z",
+            "analysisGeneratedAt": "2026-10-20T13:42:42Z",
+            "analysisTarget": 15,
+            "analysisPublished": 2,
+            "bestBetsPublished": 2,
+            "premiumBetsPublished": 0,
+            "expressesPublished": 0,
+            "expressLegsPublished": 0,
+            "soccerAnalyses": 2,
+            "candidateMatchesAnalyzed": 3,
+            "selectedPredictions": 0,
+            "newPredictions": 4,
+            "partialDailyPortfolio": True,
+            "batchStatus": "ACTIVE",
+            "batchStatusLabel": "Подборка активна",
+            "nextPortfolioStatus": "PUBLISHED",
+            "analysisStatus": "BOOKMAKER_PREDICTIONS_SELECTED",
+        },
+        "dailyAnalysis": [],
+        "bestBets": [],
+        "expresses": [],
+        "batch": {
+            "status": "WAITING_FOR_NEXT_SELECTION",
+            "statusLabel": "Ожидается качественная подборка",
+        },
+        "dataCoverage": {"oddsEvents": 0},
+    }
+    report = {"diagnostics": {"analysis": {"eventsWithMarkets": 0}}}
+    synchronize_publication_count_metadata(state, report)
+    meta = state["meta"]
+    for key in ("analysisPublished", "bestBetsPublished", "premiumBetsPublished",
+                "expressesPublished", "expressLegsPublished", "soccerAnalyses",
+                "candidateMatchesAnalyzed", "selectedPredictions", "newPredictions"):
+        if safe_int(meta.get(key), -1) != 0:
+            raise RuntimeError("SELF_TEST stale publication counter: " + key)
+    if meta.get("partialDailyPortfolio") is not False:
+        raise RuntimeError("SELF_TEST empty publication incorrectly marked partial")
+    if meta.get("batchStatus") != "WAITING_FOR_NEXT_SELECTION":
+        raise RuntimeError("SELF_TEST stale batchStatus was not synchronized")
+    if meta.get("nextPortfolioStatus") != "WAITING_FOR_QUALITY_SELECTION":
+        raise RuntimeError("SELF_TEST stale nextPortfolioStatus was not synchronized")
+    if meta.get("analysisStatus") != "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY":
+        raise RuntimeError("SELF_TEST stale analysisStatus was not synchronized")
+    if meta.get("analysisGeneratedAt") != meta.get("updatedAt"):
+        raise RuntimeError("SELF_TEST analysisGeneratedAt is stale")
+
+    published = copy.deepcopy(state)
+    published["dailyAnalysis"] = [{"premiumQualified": True}, {"premiumQualified": False}]
+    published["bestBets"] = [{"id": "top-1"}]
+    published["expresses"] = [{"legs": [{}, {}, {}, {}, {}]}]
+    published["batch"] = {"status": "ACTIVE", "statusLabel": "Подборка активна"}
+    published["meta"]["updatedAt"] = "2026-10-23T12:00:00Z"
+    published_report = {"diagnostics": {"analysis": {"eventsWithMarkets": 6}}}
+    synchronize_publication_count_metadata(published, published_report)
+    pm = published["meta"]
+    if (pm.get("analysisPublished"), pm.get("bestBetsPublished"),
+        pm.get("premiumBetsPublished"), pm.get("expressesPublished"),
+        pm.get("expressLegsPublished"), pm.get("candidateMatchesAnalyzed")) != (2, 1, 1, 1, 5, 6):
+        raise RuntimeError("SELF_TEST published counters do not match actual arrays")
+    if pm.get("nextPortfolioStatus") != "PUBLISHED" or pm.get("analysisStatus") != "R15_PORTFOLIO_PUBLISHED":
+        raise RuntimeError("SELF_TEST published status metadata mismatch")
+    print("R3R27_PUBLICATION_COUNTER_METADATA_REGRESSION=GREEN (2 scenarios)")
+
+
 def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
     synchronize_public_quota_metadata(state, report)
+    synchronize_publication_count_metadata(state, report)
     losses = audit_bank_losses(state)
     state["lossDiagnostics"] = losses
     report.setdefault("diagnostics", {})["lossDiagnostics"] = copy.deepcopy(losses)
@@ -6453,6 +6555,7 @@ def self_test() -> int:
     self_test_settlement_cache_time_guard()
     self_test_generation_day_rollover()
     self_test_public_quota_metadata()
+    self_test_publication_count_metadata()
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     health_client = ProviderClient()
