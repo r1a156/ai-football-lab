@@ -4345,7 +4345,137 @@ def audit_bank_losses(state: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def synchronize_public_quota_metadata(state: dict[str, Any], report: dict[str, Any]) -> str:
+    """Keep the public state, daily snapshot, and report on one quota truth.
+
+    R15's dataCoverage is the authoritative per-run provider observation. The
+    legacy core may leave state.meta.oddsQuota and state.quota untouched when
+    a day has no qualifying picks; mirroring the observation here prevents a
+    stale GREEN/remaining-credit value from surviving that no-pick path.
+    """
+    coverage = state.get("dataCoverage") if isinstance(state.get("dataCoverage"), dict) else {}
+    quota = coverage.get("quota") if isinstance(coverage.get("quota"), dict) else None
+    quota_by_key = coverage.get("quotaByKey") if isinstance(coverage.get("quotaByKey"), dict) else None
+    provider_health = coverage.get("providerHealth") if isinstance(coverage.get("providerHealth"), dict) else {}
+    meta = state.setdefault("meta", {})
+    diagnostics = report.setdefault("diagnostics", {})
+
+    if quota is not None:
+        authoritative_quota = copy.deepcopy(quota)
+        meta["oddsQuota"] = copy.deepcopy(authoritative_quota)
+        state["quota"] = {
+            "provider": "THE_ODDS_API",
+            **copy.deepcopy(authoritative_quota),
+            "updatedAt": coverage.get("updatedAt") or meta.get("updatedAt"),
+        }
+        diagnostics["quota"] = copy.deepcopy(authoritative_quota)
+    if quota_by_key is not None:
+        meta["oddsQuotaByKey"] = copy.deepcopy(quota_by_key)
+        diagnostics["quotaByKey"] = copy.deepcopy(quota_by_key)
+
+    credentials = diagnostics.get("credentialHealth")
+    if isinstance(credentials, dict):
+        # This structure contains only validity/status/count fields, never keys.
+        meta["oddsCredentialHealth"] = copy.deepcopy(credentials)
+
+    def remaining(row: Any) -> int | None:
+        if not isinstance(row, dict):
+            return None
+        raw = row.get("remaining", row.get("requestsRemaining"))
+        if raw is None or str(raw).strip() == "":
+            return None
+        value = safe_int(raw, -1)
+        return value if value >= 0 else None
+
+    credential_rows = []
+    if isinstance(credentials, dict):
+        for key in ("primary", "backup"):
+            row = credentials.get(key)
+            if isinstance(row, dict) and row.get("valid") is not False:
+                credential_rows.append(row)
+    if not credential_rows and quota_by_key:
+        credential_rows = [row for row in quota_by_key.values() if isinstance(row, dict)]
+
+    known_remaining = [remaining(row) for row in credential_rows]
+    known_remaining = [value for value in known_remaining if value is not None]
+    if any(value > 0 for value in known_remaining):
+        odds_status = "PARTIAL" if any(value == 0 for value in known_remaining) else "AVAILABLE"
+    elif credential_rows and known_remaining and len(known_remaining) == len(credential_rows) and all(value == 0 for value in known_remaining):
+        odds_status = "LIMIT"
+    else:
+        primary_remaining = remaining(quota or {})
+        odds_health = provider_health.get("THE_ODDS_API") if isinstance(provider_health.get("THE_ODDS_API"), dict) else {}
+        provider_status = str(odds_health.get("status") or "").upper()
+        if primary_remaining == 0 and not any(value > 0 for value in known_remaining):
+            odds_status = "LIMIT" if not credential_rows or (known_remaining and all(value == 0 for value in known_remaining)) else "DEGRADED"
+        elif provider_status in {"DEGRADED", "RATE_LIMITED", "ERROR"}:
+            odds_status = "DEGRADED"
+        elif provider_status == "LOW_ODDS_QUOTA":
+            odds_status = "LIMIT" if primary_remaining == 0 else "DEGRADED"
+        else:
+            odds_status = "UNKNOWN"
+
+    meta["oddsProviderStatus"] = odds_status
+    meta["oddsProviderUpdatedAt"] = coverage.get("updatedAt") or meta.get("updatedAt")
+    diagnostics["oddsProviderStatus"] = odds_status
+    api_health = meta.get("apiHealth") if isinstance(meta.get("apiHealth"), dict) else {}
+    api_health["oddsProviderStatus"] = odds_status
+    if odds_status in {"LIMIT", "DEGRADED", "UNKNOWN"} and str(api_health.get("status") or "").upper() == "GREEN":
+        api_health["status"] = "DEGRADED"
+    meta["apiHealth"] = api_health
+    return odds_status
+
+
+def self_test_public_quota_metadata() -> None:
+    """Regression: a stale legacy quota/GREEN cannot override R15 evidence."""
+    state = {
+        "meta": {
+            "updatedAt": "2026-10-23T11:54:50Z",
+            "apiHealth": {"status": "GREEN", "calls": 49, "errors": 0},
+            "oddsQuota": {"requestsRemaining": "464", "requestsUsed": "36"},
+        },
+        "quota": {"provider": "THE_ODDS_API", "requestsRemaining": "464", "requestsUsed": "36"},
+        "dataCoverage": {
+            "updatedAt": "2026-10-23T11:54:50Z",
+            "quota": {"requestsRemaining": "0", "requestsUsed": "500", "requestsLast": "0", "estimatedCreditsThisRun": 0},
+            "quotaByKey": {"PRIMARY": {"requestsRemaining": "0", "requestsUsed": "500"}},
+            "providerHealth": {"THE_ODDS_API": {"status": "LOW_ODDS_QUOTA"}},
+        },
+    }
+    report = {"diagnostics": {
+        "quota": {"requestsRemaining": "464", "requestsUsed": "36"},
+        "credentialHealth": {
+            "primary": {"valid": True, "remaining": 0, "used": 500},
+            "backup": {"valid": True, "remaining": 0, "used": 500},
+        },
+    }}
+    status = synchronize_public_quota_metadata(state, report)
+    if status != "LIMIT":
+        raise RuntimeError("SELF_TEST exhausted odds credentials must produce LIMIT")
+    if safe_int(state["meta"]["oddsQuota"].get("requestsRemaining"), -1) != 0:
+        raise RuntimeError("SELF_TEST stale meta.oddsQuota was not synchronized")
+    if safe_int(state["quota"].get("requestsRemaining"), -1) != 0:
+        raise RuntimeError("SELF_TEST stale top-level quota was not synchronized")
+    if safe_int(report["diagnostics"]["quota"].get("requestsUsed"), -1) != 500:
+        raise RuntimeError("SELF_TEST report quota was not synchronized")
+    if state["meta"]["apiHealth"].get("status") != "DEGRADED":
+        raise RuntimeError("SELF_TEST exhausted odds quota must not retain API GREEN")
+
+    backup_state = copy.deepcopy(state)
+    backup_state["meta"]["apiHealth"]["status"] = "GREEN"
+    backup_state["dataCoverage"]["quotaByKey"]["BACKUP"] = {"requestsRemaining": "12", "requestsUsed": "488"}
+    backup_report = copy.deepcopy(report)
+    backup_report["diagnostics"]["credentialHealth"]["backup"] = {"valid": True, "remaining": 12, "used": 488}
+    backup_status = synchronize_public_quota_metadata(backup_state, backup_report)
+    if backup_status != "PARTIAL":
+        raise RuntimeError("SELF_TEST live backup quota must remain visible as PARTIAL")
+    if safe_int(backup_state["meta"]["oddsQuotaByKey"]["BACKUP"].get("requestsRemaining"), -1) != 12:
+        raise RuntimeError("SELF_TEST backup quota metadata missing")
+    print("R3R26_PUBLIC_QUOTA_METADATA_REGRESSION=GREEN")
+
+
 def write_public_files(state: dict[str, Any], report: dict[str, Any]) -> None:
+    synchronize_public_quota_metadata(state, report)
     losses = audit_bank_losses(state)
     state["lossDiagnostics"] = losses
     report.setdefault("diagnostics", {})["lossDiagnostics"] = copy.deepcopy(losses)
@@ -6309,6 +6439,7 @@ def synthetic_context(now: dt.datetime) -> tuple[dict[str, Any], dict[str, Any]]
 def self_test() -> int:
     self_test_settlement_cache_time_guard()
     self_test_generation_day_rollover()
+    self_test_public_quota_metadata()
     config = load_json(CONFIG_PATH, {})
     validate_config(config)
     health_client = ProviderClient()
