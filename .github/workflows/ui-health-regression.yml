@@ -1,0 +1,23 @@
+name: UI health regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/app.js"
+      - "index.html"
+      - "scripts/test_health_ui.cjs"
+      - ".github/workflows/ui-health-regression.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  health-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check assets/app.js
+      - run: node scripts/test_health_ui.cjs
