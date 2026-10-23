@@ -241,44 +241,44 @@ jobs:
               echo "$PAGES_BUILD_RESPONSE"
               python -c 'import json,sys; d=json.loads(sys.argv[1]); assert d.get("status") in {"queued","building","built"}, d' "$PAGES_BUILD_RESPONSE"
               echo "R3R8_PAGES_BUILD_REQUESTED=GREEN"
-              python - <<'PY'
-              import json, time, urllib.request
-              from pathlib import Path
-              expected_state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
-              expected_daily = json.loads(Path("data/ai_daily_analysis.json").read_text(encoding="utf-8"))
-              expected_meta = expected_state.get("meta") or {}
-              expected_updated = expected_daily.get("updatedAt")
-              expected_day = expected_daily.get("analysisDateLocal")
-              if expected_meta.get("updatedAt") != expected_updated:
-                  raise SystemExit("LOCAL_STATE_SNAPSHOT_TIMESTAMP_MISMATCH")
-              base = "https://r1a156.github.io/ai-football-lab/"
-              def fetch_json(path, attempt):
-                  url = base + path + "?check=" + str(time.time_ns()) + "-" + str(attempt)
-                  request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "Pragma": "no-cache", "User-Agent": "AI-Football-Pages-Publish-Check/1.0"})
-                  with urllib.request.urlopen(request, timeout=15) as response:
-                      if response.status != 200:
-                          raise RuntimeError("HTTP " + str(response.status) + " for " + path)
-                      return json.load(response)
-              last = "not checked"
-              for attempt in range(10):
-                  try:
-                      live_state = fetch_json("data/state.json", attempt)
-                      live_daily = fetch_json("data/ai_daily_analysis.json", attempt)
-                      live_meta = live_state.get("meta") or {}
-                      if (live_meta.get("updatedAt") == expected_meta.get("updatedAt")
-                          and live_meta.get("analysisDateLocal") == expected_day
-                          and live_daily.get("updatedAt") == expected_updated
-                          and live_daily.get("analysisDateLocal") == expected_day):
-                          print("R3R8_PUBLIC_PAGES_STATE=GREEN")
-                          print("R3R8_PUBLIC_PAGES_UPDATED_AT=" + str(expected_updated))
-                          break
-                      last = "published state/snapshot does not yet match the pushed commit"
-                  except Exception as error:
-                      last = repr(error)
-                  time.sleep(10)
-              else:
-                  raise SystemExit("R3R8_PUBLIC_PAGES_STATE=FAILED " + last)
-              PY
+          python - <<'PY'
+          import json, time, urllib.request
+          from pathlib import Path
+          expected_state = json.loads(Path("data/state.json").read_text(encoding="utf-8"))
+          expected_daily = json.loads(Path("data/ai_daily_analysis.json").read_text(encoding="utf-8"))
+          expected_meta = expected_state.get("meta") or {}
+          expected_updated = expected_daily.get("updatedAt")
+          expected_day = expected_daily.get("analysisDateLocal")
+          if expected_meta.get("updatedAt") != expected_updated:
+              raise SystemExit("LOCAL_STATE_SNAPSHOT_TIMESTAMP_MISMATCH")
+          base = "https://r1a156.github.io/ai-football-lab/"
+          def fetch_json(path, attempt):
+              url = base + path + "?check=" + str(time.time_ns()) + "-" + str(attempt)
+              request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "Pragma": "no-cache", "User-Agent": "AI-Football-Pages-Publish-Check/1.0"})
+              with urllib.request.urlopen(request, timeout=15) as response:
+                  if response.status != 200:
+                      raise RuntimeError("HTTP " + str(response.status) + " for " + path)
+                  return json.load(response)
+          last = "not checked"
+          for attempt in range(10):
+              try:
+                  live_state = fetch_json("data/state.json", attempt)
+                  live_daily = fetch_json("data/ai_daily_analysis.json", attempt)
+                  live_meta = live_state.get("meta") or {}
+                  if (live_meta.get("updatedAt") == expected_meta.get("updatedAt")
+                      and live_meta.get("analysisDateLocal") == expected_day
+                      and live_daily.get("updatedAt") == expected_updated
+                      and live_daily.get("analysisDateLocal") == expected_day):
+                      print("R3R8_PUBLIC_PAGES_STATE=GREEN")
+                      print("R3R8_PUBLIC_PAGES_UPDATED_AT=" + str(expected_updated))
+                      break
+                  last = "published state/snapshot does not yet match the pushed commit"
+              except Exception as error:
+                  last = repr(error)
+              time.sleep(10)
+          else:
+              raise SystemExit("R3R8_PUBLIC_PAGES_STATE=FAILED " + last)
+          PY
               exit 0
             fi
             sleep $((attempt * 5))
