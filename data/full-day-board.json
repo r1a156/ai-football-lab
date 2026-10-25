@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-25T19:32:14Z",
+  "updatedAt": "2026-10-25T22:01:35Z",
   "operationalDayId": "2026-10-25-MSK-0800",
   "operationalWindowStart": "2026-10-25T05:00:00Z",
   "operationalWindowEnd": "2026-10-26T05:00:00Z",
@@ -2674,8 +2674,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "72089d103a5fe6a922c35e17efba6ffc",
@@ -2719,26 +2719,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "fe7e1d3a0c8e54ace77465741970e1dd",
-      "sport": "soccer",
-      "sportKey": "soccer_chile_campeonato",
-      "league": "Primera División - Chile",
-      "leagueRu": "Примера Дивизион - Чиле",
-      "home": "Palestino",
-      "homeRu": "Палестино",
-      "away": "Colo Colo",
-      "awayRu": "Коло Коло",
-      "commenceTime": "2026-10-25T20:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9b60d2e564e8761e9ec267bd7baf6998",
@@ -2756,8 +2737,27 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "fe7e1d3a0c8e54ace77465741970e1dd",
+      "sport": "soccer",
+      "sportKey": "soccer_chile_campeonato",
+      "league": "Primera División - Chile",
+      "leagueRu": "Примера Дивизион - Чиле",
+      "home": "Palestino",
+      "homeRu": "Палестино",
+      "away": "Colo Colo",
+      "awayRu": "Коло Коло",
+      "commenceTime": "2026-10-25T20:32:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c3b2630a9d2384e21a1c171f49f2517e",
