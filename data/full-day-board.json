@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-25T11:14:36Z",
+  "updatedAt": "2026-10-25T12:46:58Z",
   "operationalDayId": "2026-10-25-MSK-0800",
   "operationalWindowStart": "2026-10-25T05:00:00Z",
   "operationalWindowEnd": "2026-10-26T05:00:00Z",
@@ -129,7 +129,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "081acf0f093e5c83d3b272bf80e8cd4f",
@@ -141,14 +141,14 @@
       "homeRu": "Сласк Вроклав",
       "away": "Wieczysta Kraków",
       "awayRu": "Виечиста Краков",
-      "commenceTime": "2026-10-25T11:17:00Z",
+      "commenceTime": "2026-10-25T11:15:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c9b6c7048d8dc33dae618f67f462f67a",
@@ -166,8 +166,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f8f522dbdcef171bc1df354b240c90fd",
@@ -185,27 +185,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "a8714ab201fd7b3ec5c28b4c48ce101c",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_bundesliga_women",
-      "league": "Frauen-Bundesliga",
-      "leagueRu": "Фрауен-Бундеслига",
-      "home": "TSG Hoffenheim",
-      "homeRu": "Цг Хоффенхеим",
-      "away": "FSV Mainz 05",
-      "awayRu": "Фсв Маинз 05",
-      "commenceTime": "2026-10-25T12:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "49cc50062dfcc31e4491b76d20c376cc",
@@ -249,7 +230,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "64b480774e19982122cb9e06658dd623",
@@ -267,27 +248,71 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
-      "eventId": "769c9b815d9b0dd4cd6d7cc2b8c038b5",
+      "eventId": "a8714ab201fd7b3ec5c28b4c48ce101c",
       "sport": "soccer",
-      "sportKey": "soccer_belgium_first_div",
-      "league": "Belgium First Div",
-      "leagueRu": "Белгиум Фирст Див",
-      "home": "Genk",
-      "homeRu": "Генк",
-      "away": "Standard Liege",
-      "awayRu": "Стандард Лиеге",
-      "commenceTime": "2026-10-25T12:30:00Z",
+      "sportKey": "soccer_germany_bundesliga_women",
+      "league": "Frauen-Bundesliga",
+      "leagueRu": "Фрауен-Бундеслига",
+      "home": "TSG Hoffenheim",
+      "homeRu": "Цг Хоффенхеим",
+      "away": "FSV Mainz 05",
+      "awayRu": "Фсв Маинз 05",
+      "commenceTime": "2026-10-25T12:01:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "0ffd859fd9710a95340c10d2b584ea6a",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_bundesliga2",
+      "league": "Bundesliga 2 - Germany",
+      "leagueRu": "Бундеслига 2 - Германи",
+      "home": "VfL Osnabrück",
+      "homeRu": "Вфл Оснабрук",
+      "away": "Greuther Fürth",
+      "awayRu": "Греутер Фурт",
+      "commenceTime": "2026-10-25T12:29:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "BTTS_YES",
+        "pickRu": "Обе забьют — да",
+        "modelProbability": 0.641502,
+        "marketProbabilities": {
+          "HOME_WIN": 0.337596,
+          "DRAW": 0.231048,
+          "AWAY_WIN": 0.431356,
+          "OVER_2_5": 0.6291,
+          "UNDER_2_5": 0.3709,
+          "BTTS_YES": 0.641502,
+          "BTTS_NO": 0.358498
+        },
+        "expectedHomeGoals": 1.511,
+        "expectedAwayGoals": 1.732,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 14.9,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-10-25T07:36:24Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "14b43b5876894fa2800e9b8864950164",
@@ -331,7 +356,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b4595027453fc80a92c26ec524965f2c",
@@ -375,51 +400,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "0ffd859fd9710a95340c10d2b584ea6a",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_bundesliga2",
-      "league": "Bundesliga 2 - Germany",
-      "leagueRu": "Бундеслига 2 - Германи",
-      "home": "VfL Osnabrück",
-      "homeRu": "Вфл Оснабрук",
-      "away": "Greuther Fürth",
-      "awayRu": "Греутер Фурт",
-      "commenceTime": "2026-10-25T12:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "BTTS_YES",
-        "pickRu": "Обе забьют — да",
-        "modelProbability": 0.641502,
-        "marketProbabilities": {
-          "HOME_WIN": 0.337596,
-          "DRAW": 0.231048,
-          "AWAY_WIN": 0.431356,
-          "OVER_2_5": 0.6291,
-          "UNDER_2_5": 0.3709,
-          "BTTS_YES": 0.641502,
-          "BTTS_NO": 0.358498
-        },
-        "expectedHomeGoals": 1.511,
-        "expectedAwayGoals": 1.732,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 14.9,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-10-25T07:36:24Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "86e73deb8c2a7b55aa867a28e608e26d",
@@ -431,7 +412,7 @@
       "homeRu": "Цв Хавелсе",
       "away": "1. FC Saarbrücken",
       "awayRu": "1. ФК Саарбрукен",
-      "commenceTime": "2026-10-25T12:30:00Z",
+      "commenceTime": "2026-10-25T12:32:30Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -463,7 +444,26 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "769c9b815d9b0dd4cd6d7cc2b8c038b5",
+      "sport": "soccer",
+      "sportKey": "soccer_belgium_first_div",
+      "league": "Belgium First Div",
+      "leagueRu": "Белгиум Фирст Див",
+      "home": "Genk",
+      "homeRu": "Генк",
+      "away": "Standard Liege",
+      "awayRu": "Стандард Лиеге",
+      "commenceTime": "2026-10-25T12:33:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6087ba913e1c6d73d861b35f211f180e",
