@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-25T12:46:58Z",
+  "updatedAt": "2026-10-25T16:53:54Z",
   "operationalDayId": "2026-10-25-MSK-0800",
   "operationalWindowStart": "2026-10-25T05:00:00Z",
   "operationalWindowEnd": "2026-10-26T05:00:00Z",
@@ -1300,8 +1300,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6185ba7440630c4e200822ff7f3f8206",
@@ -1319,8 +1319,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6c32f1fa5dcfab814f2860487c88b7d6",
@@ -1332,14 +1332,14 @@
       "homeRu": "1. ФК Нурнберг",
       "away": "Bayer Leverkusen",
       "awayRu": "Баер Леверкусен",
-      "commenceTime": "2026-10-25T15:00:00Z",
+      "commenceTime": "2026-10-25T15:00:10Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "2013e3955186ebe5258e85eb741a7553",
@@ -1357,8 +1357,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "db2ea589f6cf6dd11d7c9a5c56ef544a",
@@ -1376,8 +1376,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "cc338030ec8bd12ae96cb998ace47cd4",
@@ -1389,7 +1389,7 @@
       "homeRu": "Албакете",
       "away": "CD Eldense",
       "awayRu": "Кд Елденсе",
-      "commenceTime": "2026-10-25T15:15:00Z",
+      "commenceTime": "2026-10-25T15:16:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -1421,7 +1421,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "3ff14c59b658ac30655b0d93e77242f6",
@@ -1439,52 +1439,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "d652efae89ab719fe68ddc2f63f79218",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "SC Preußen Münster",
-      "homeRu": "СК Преуßен Мунстер",
-      "away": "SC Fortuna Köln",
-      "awayRu": "СК Фортуна Колн",
-      "commenceTime": "2026-10-25T15:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "BTTS_YES",
-        "pickRu": "Обе забьют — да",
-        "modelProbability": 0.637048,
-        "marketProbabilities": {
-          "HOME_WIN": 0.434832,
-          "DRAW": 0.23182,
-          "AWAY_WIN": 0.333348,
-          "OVER_2_5": 0.623891,
-          "UNDER_2_5": 0.376109,
-          "BTTS_YES": 0.637048,
-          "BTTS_NO": 0.362952
-        },
-        "expectedHomeGoals": 1.728,
-        "expectedAwayGoals": 1.49,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 9,
-        "historyFreshnessDays": 8.6,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-10-25T07:36:24Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "399511b408ef714458e62100cac3fb16",
@@ -1528,7 +1484,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "89a2289a55a29ad20839cea0efc2e771",
@@ -1546,8 +1502,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "a71ffc63073ad7c4f0f15d7acb8087eb",
@@ -1565,8 +1521,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "3cd10979dc2ce2d75eb529b6ff1dfbc3",
@@ -1584,8 +1540,52 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "d652efae89ab719fe68ddc2f63f79218",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "SC Preußen Münster",
+      "homeRu": "СК Преуßен Мунстер",
+      "away": "SC Fortuna Köln",
+      "awayRu": "СК Фортуна Колн",
+      "commenceTime": "2026-10-25T15:30:01Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "BTTS_YES",
+        "pickRu": "Обе забьют — да",
+        "modelProbability": 0.637048,
+        "marketProbabilities": {
+          "HOME_WIN": 0.434832,
+          "DRAW": 0.23182,
+          "AWAY_WIN": 0.333348,
+          "OVER_2_5": 0.623891,
+          "UNDER_2_5": 0.376109,
+          "BTTS_YES": 0.637048,
+          "BTTS_NO": 0.362952
+        },
+        "expectedHomeGoals": 1.728,
+        "expectedAwayGoals": 1.49,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 9,
+        "historyFreshnessDays": 8.6,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-10-25T07:36:24Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6a5709e9c094b7f5d089026af10fb820",
@@ -1629,7 +1629,26 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "baa388c5c1d57f0f50a22c9a2cd4fe19",
+      "sport": "soccer",
+      "sportKey": "soccer_norway_eliteserien",
+      "league": "Eliteserien - Norway",
+      "leagueRu": "Елитесериен - Норваи",
+      "home": "Kristiansund BK",
+      "homeRu": "Кристиансунд Бк",
+      "away": "KFUM",
+      "awayRu": "Кфум",
+      "commenceTime": "2026-10-25T15:59:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "18c0a6c9fac5d9e02af8066376cfac72",
@@ -1647,52 +1666,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "aa24226151f43c2d37f480bbe143ecaa",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_bundesliga_women",
-      "league": "Frauen-Bundesliga",
-      "leagueRu": "Фрауен-Бундеслига",
-      "home": "Hamburger SV",
-      "homeRu": "Хамбургер Св",
-      "away": "Union Berlin",
-      "awayRu": "Унион Берлин",
-      "commenceTime": "2026-10-25T16:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "OVER_2_5",
-        "pickRu": "Тотал больше 2,5",
-        "modelProbability": 0.669877,
-        "marketProbabilities": {
-          "HOME_WIN": 0.545835,
-          "DRAW": 0.209818,
-          "AWAY_WIN": 0.244347,
-          "OVER_2_5": 0.669877,
-          "UNDER_2_5": 0.330123,
-          "BTTS_YES": 0.650472,
-          "BTTS_NO": 0.349528
-        },
-        "expectedHomeGoals": 2.098,
-        "expectedAwayGoals": 1.353,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 7.7,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-10-25T07:36:24Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "0d0099f9feea33e66d17186b7b02840e",
@@ -1736,7 +1711,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "626308a47a9c72e12211b32dd6fdaf48",
@@ -1754,8 +1729,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c4ad5f67612cebd6079bc1d7780ad61b",
@@ -1773,27 +1748,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "baa388c5c1d57f0f50a22c9a2cd4fe19",
-      "sport": "soccer",
-      "sportKey": "soccer_norway_eliteserien",
-      "league": "Eliteserien - Norway",
-      "leagueRu": "Елитесериен - Норваи",
-      "home": "Kristiansund BK",
-      "homeRu": "Кристиансунд Бк",
-      "away": "KFUM",
-      "awayRu": "Кфум",
-      "commenceTime": "2026-10-25T16:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f9a58a8a9659f308a97b8f6542ba63e9",
@@ -1811,8 +1767,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "000c8712b61f7ecec007f08d3ecad35b",
@@ -1856,7 +1812,51 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "aa24226151f43c2d37f480bbe143ecaa",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_bundesliga_women",
+      "league": "Frauen-Bundesliga",
+      "leagueRu": "Фрауен-Бундеслига",
+      "home": "Hamburger SV",
+      "homeRu": "Хамбургер Св",
+      "away": "Union Berlin",
+      "awayRu": "Унион Берлин",
+      "commenceTime": "2026-10-25T16:00:03Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "OVER_2_5",
+        "pickRu": "Тотал больше 2,5",
+        "modelProbability": 0.669877,
+        "marketProbabilities": {
+          "HOME_WIN": 0.545835,
+          "DRAW": 0.209818,
+          "AWAY_WIN": 0.244347,
+          "OVER_2_5": 0.669877,
+          "UNDER_2_5": 0.330123,
+          "BTTS_YES": 0.650472,
+          "BTTS_NO": 0.349528
+        },
+        "expectedHomeGoals": 2.098,
+        "expectedAwayGoals": 1.353,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 7.7,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-10-25T07:36:24Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "1a83b5ebabe7cb572ae6e029b3149c42",
@@ -1900,7 +1900,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "8eab078a37a63df32ffa443302a2a7ba",
@@ -1944,7 +1944,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "fcc34b753fc61a0cc0e11d7cb0a0c36b",
@@ -1988,7 +1988,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "31dcb6d13ed240fc4a5c7a696149967e",
@@ -2032,7 +2032,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "18e4425261f7dd6b245f82056d424411",
@@ -2076,7 +2076,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "d7cc66c747ebe993d5b80ffc5d968af6",
@@ -2094,8 +2094,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "e82f6b60fa41b82c8510f5b67ce61849",
@@ -2139,7 +2139,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f2bd909f25eea6b4ce42d2f52275e5c4",
@@ -2183,7 +2183,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "1b5fac1f4112d8fc65467176c5d5d0cd",
@@ -2195,14 +2195,14 @@
       "homeRu": "Легиа Варшава",
       "away": "Lech Poznań",
       "awayRu": "Леч Познан",
-      "commenceTime": "2026-10-25T16:30:00Z",
+      "commenceTime": "2026-10-25T16:32:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "42d9cb76081eef7fe999b394fea6afb5",
