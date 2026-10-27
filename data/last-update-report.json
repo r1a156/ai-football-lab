@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-10-27T14:52:45Z",
-  "finishedAt": "2026-10-27T19:52:09Z",
+  "finishedAt": "2026-10-27T23:30:27Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -279,6 +279,27 @@
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
+        "status": 401,
+        "retryAfter": 0,
+        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_england_league1",
+        "status": 401,
+        "retryAfter": 0,
+        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_italy_serie_a",
+        "status": 401,
+        "retryAfter": 0,
+        "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_italy_serie_b",
         "status": 401,
         "retryAfter": 0,
         "error": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
@@ -1104,7 +1125,7 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 2,
+    "dueRecords": 8,
     "providerFinalResults": 1,
     "settlement": {
       "analysisSettled": 0,
@@ -1120,8 +1141,8 @@
       "unresolved": 0
     },
     "overdueRelease": {
-      "analysis": 0,
-      "bestBets": 0
+      "analysis": 4,
+      "bestBets": 2
     },
     "expressSettlement": {
       "settled": 0,
@@ -1132,6 +1153,11 @@
   },
   "warnings": [
     "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+    "soccer_saudi_arabia_pro_league: SCORES:soccer_saudi_arabia_pro_league HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+    "soccer_argentina_primera_division: SCORES:soccer_argentina_primera_division HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+    "soccer_england_league1: SCORES:soccer_england_league1 HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+    "soccer_italy_serie_a: SCORES:soccer_italy_serie_a HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+    "soccer_italy_serie_b: SCORES:soccer_italy_serie_b HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
     "soccer_saudi_arabia_pro_league: SCORES:soccer_saudi_arabia_pro_league HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n"
   ],
   "errors": []
