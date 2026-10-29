@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-28T21:00:00Z",
-  "lastSuccessfulAt": "2026-10-28T21:00:00Z",
+  "updatedAt": "2026-10-29T00:49:44Z",
+  "lastSuccessfulAt": "2026-10-29T00:49:44Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -538343,6 +538343,39 @@
       "round": "Matchday 9"
     },
     {
+      "id": "thesportsdb_public_123:2599028",
+      "utcDate": "2026-10-28T16:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Finnish Veikkausliiga",
+      "competitionCode": "4636",
+      "homeTeam": {
+        "id": "",
+        "name": "AC Oulu",
+        "shortName": "AC Oulu",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "VPS",
+        "shortName": "VPS",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-29T00:57:55Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "30",
+      "venue": "Raatin Stadion",
+      "theSportsDbEventId": "2599028"
+    },
+    {
       "id": "openligadb:87619",
       "utcDate": "2026-10-28T17:00:00Z",
       "status": "FINISHED",
@@ -629153,15 +629186,36 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-28T21:00:00Z",
-      "matches": 18163
+      "updatedAt": "2026-10-29T00:49:44Z",
+      "matches": 18164
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-28T21:00:00Z",
-      "requests": 80,
-      "matchesAdded": 79,
-      "errors": []
+      "updatedAt": "2026-10-29T00:49:44Z",
+      "requests": 44,
+      "matchesAdded": 44,
+      "errors": [
+        "136449:HTTPError",
+        "136466:HTTPError",
+        "134506:HTTPError",
+        "136457:HTTPError",
+        "136250:HTTPError",
+        "145389:HTTPError",
+        "134295:HTTPError",
+        "134154:HTTPError",
+        "134147:HTTPError",
+        "134280:HTTPError",
+        "134464:HTTPError",
+        "137932:HTTPError",
+        "145171:HTTPError",
+        "145207:HTTPError",
+        "145176:HTTPError",
+        "145187:HTTPError",
+        "137889:HTTPError",
+        "137887:HTTPError",
+        "134449:HTTPError",
+        "133953:HTTPError"
+      ]
     }
   }
 }
