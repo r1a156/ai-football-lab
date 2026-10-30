@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-29T23:39:37Z",
-  "lastSuccessfulAt": "2026-10-29T23:39:37Z",
+  "updatedAt": "2026-10-30T03:00:04Z",
+  "lastSuccessfulAt": "2026-10-30T03:00:04Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -539817,6 +539817,39 @@
       "round": "Matchday 9"
     },
     {
+      "id": "thesportsdb_public_123:2599030",
+      "utcDate": "2026-10-29T17:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Finnish Veikkausliiga",
+      "competitionCode": "4636",
+      "homeTeam": {
+        "id": "",
+        "name": "KuPS",
+        "shortName": "KuPS",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Gnistan",
+        "shortName": "Gnistan",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-30T03:08:14Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "30",
+      "venue": "Väre Areena",
+      "theSportsDbEventId": "2599030"
+    },
+    {
       "id": "football_data_co_uk:2627:I1:88:2026-10-29",
       "utcDate": "2026-10-29T17:30:00Z",
       "status": "FINISHED",
@@ -539889,6 +539922,39 @@
         "B365>2.5": "1.62",
         "B365<2.5": "2.3"
       }
+    },
+    {
+      "id": "thesportsdb_public_123:2398520",
+      "utcDate": "2026-10-29T23:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie A",
+      "competitionCode": "4351",
+      "homeTeam": {
+        "id": "",
+        "name": "Vasco da Gama",
+        "shortName": "Vasco da Gama",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Flamengo",
+        "shortName": "Flamengo",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 4,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-30T03:06:12Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "33",
+      "venue": "Estádio São Januário",
+      "theSportsDbEventId": "2398520"
     },
     {
       "id": "openfootball:2026-27:en.2:144:Matchday 13",
@@ -630359,27 +630425,26 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-29T23:39:37Z",
-      "matches": 18197
+      "updatedAt": "2026-10-30T03:00:04Z",
+      "matches": 18199
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-29T23:39:37Z",
-      "requests": 46,
-      "matchesAdded": 46,
+      "updatedAt": "2026-10-30T03:00:04Z",
+      "requests": 43,
+      "matchesAdded": 43,
       "errors": [
-        "137782:HTTPError",
-        "144737:HTTPError",
-        "136449:HTTPError",
         "136466:HTTPError",
-        "134506:HTTPError",
+        "135981:HTTPError",
+        "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
         "134295:HTTPError",
+        "134154:HTTPError",
         "134147:HTTPError",
         "134280:HTTPError",
-        "134282:HTTPError",
-        "137932:HTTPError",
+        "134464:HTTPError",
+        "134285:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -630387,7 +630452,8 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "133953:HTTPError",
+        "137878:HTTPError"
       ]
     }
   }
