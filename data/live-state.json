@@ -1,15 +1,57 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-10-27T19:52:08Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-10-30T16:40:03Z",
   "refreshMinutes": 10,
-  "events": [],
+  "events": [
+    {
+      "eventId": "a547720e6b4661d6319c4f11dbdf8e1f",
+      "analysisId": "ranked-1c810d8420d40da9980a",
+      "isBestBet": true,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_france_ligue_one",
+      "league": "Ligue 1 - France",
+      "leagueRu": "Лигуе 1 - Франке",
+      "country": "Франция",
+      "countryRu": "Франция",
+      "home": "Nice",
+      "away": "Rennes",
+      "homeRu": "Нике",
+      "awayRu": "Реннес",
+      "commenceTime": "2026-10-30T18:00:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Победа Rennes",
+      "pickRu": "Победа Реннес",
+      "market": "AWAY_WIN",
+      "marketFamily": "OUTCOME",
+      "point": null,
+      "preMatchProbability": 0.468481,
+      "liveProbability": 0.468481,
+      "liveProbabilityPercent": 46.8,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "Ожидание источника",
+      "providerEventId": null,
+      "updatedAt": "2026-10-30T16:40:03Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
     "calls": 4,
-    "results": 103,
+    "results": 87,
     "oddsQuota": {
       "requestsRemaining": null,
       "requestsUsed": null,
@@ -18,11 +60,11 @@
     },
     "errors": [
       "Ключ глобального источника счёта не настроен",
-      "SofaScore 2026-10-27: SOFASCORE_PUBLIC:2026-10-27 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
+      "SofaScore 2026-10-30: SOFASCORE_PUBLIC:2026-10-30 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 100,
+      "espn": 84,
       "theSportsDB": 3,
       "footballDataOptional": 0
     }
@@ -31,7 +73,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 6
+    "unconfirmedRemoved": 0
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
