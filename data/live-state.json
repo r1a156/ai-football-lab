@@ -1,56 +1,14 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "TRACKING",
-  "updatedAt": "2026-10-30T16:40:03Z",
+  "status": "IDLE",
+  "updatedAt": "2026-10-30T21:40:10Z",
   "refreshMinutes": 10,
-  "events": [
-    {
-      "eventId": "a547720e6b4661d6319c4f11dbdf8e1f",
-      "analysisId": "ranked-1c810d8420d40da9980a",
-      "isBestBet": true,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_france_ligue_one",
-      "league": "Ligue 1 - France",
-      "leagueRu": "Лигуе 1 - Франке",
-      "country": "Франция",
-      "countryRu": "Франция",
-      "home": "Nice",
-      "away": "Rennes",
-      "homeRu": "Нике",
-      "awayRu": "Реннес",
-      "commenceTime": "2026-10-30T18:00:00Z",
-      "status": "SCHEDULED",
-      "statusRu": "Ожидается",
-      "homeScore": null,
-      "awayScore": null,
-      "score": "",
-      "clockLabel": "",
-      "minute": 0,
-      "period": null,
-      "elapsedFraction": 0.0,
-      "pick": "Победа Rennes",
-      "pickRu": "Победа Реннес",
-      "market": "AWAY_WIN",
-      "marketFamily": "OUTCOME",
-      "point": null,
-      "preMatchProbability": 0.468481,
-      "liveProbability": 0.468481,
-      "liveProbabilityPercent": 46.8,
-      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
-      "calibrationEvidence": null,
-      "provider": "Ожидание источника",
-      "providerEventId": null,
-      "updatedAt": "2026-10-30T16:40:03Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    }
-  ],
+  "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 4,
+    "calls": 5,
     "results": 87,
     "oddsQuota": {
       "requestsRemaining": null,
@@ -59,7 +17,7 @@
       "estimatedCreditsThisRun": 0
     },
     "errors": [
-      "Ключ глобального источника счёта не настроен",
+      "soccer_france_ligue_one: LIVE_SCORES:soccer_france_ligue_one failed HTTP 401: {\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
       "SofaScore 2026-10-30: SOFASCORE_PUBLIC:2026-10-30 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
@@ -73,7 +31,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 0
+    "unconfirmedRemoved": 5
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
