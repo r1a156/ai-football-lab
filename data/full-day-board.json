@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-31T17:56:24Z",
+  "updatedAt": "2026-10-31T21:25:39Z",
   "operationalDayId": "2026-10-31-MSK-0800",
   "operationalWindowStart": "2026-10-31T05:00:00Z",
   "operationalWindowEnd": "2026-11-01T05:00:00Z",
@@ -3500,8 +3500,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "a497e21a8680cd1dbe55bd0907f7d696",
@@ -3519,8 +3519,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "d8134f341b5464b458a313342d178d43",
@@ -3564,7 +3564,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "58c68450fcf69bf88e944dd7177f9104",
@@ -3582,8 +3582,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "75cf0c0e471877a0bfa95d689d0f0325",
@@ -3627,7 +3627,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "e82f25e981f2ebc731cfaf5716231af5",
@@ -3639,14 +3639,14 @@
       "homeRu": "Милан",
       "away": "Inter Milan",
       "awayRu": "Интер",
-      "commenceTime": "2026-10-31T19:45:00Z",
+      "commenceTime": "2026-10-31T19:49:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b78bebce9fd6e996942e427fd4547242",
@@ -3664,8 +3664,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "640c52a86289f35698261b41987dd71e",
@@ -3709,7 +3709,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "43ebf45469e32887fe9caff703c94ae6",
@@ -3753,7 +3753,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "314c3b27fe569849986fdd2d013d1aca",
@@ -3797,7 +3797,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "2db2b55e71574a19ff0557898d3e9933",
@@ -3841,7 +3841,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "03c05b54a0eaecd0ecb96eed5f3cbbbe",
@@ -3853,7 +3853,7 @@
       "homeRu": "Албакете",
       "away": "Sabadell FC",
       "awayRu": "Сабаделл ФК",
-      "commenceTime": "2026-10-31T20:00:00Z",
+      "commenceTime": "2026-10-31T20:01:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -3885,7 +3885,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "15b3d9fb3d1f93aac86dcce39cf0e65c",
@@ -3929,7 +3929,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "60352ce6c1b34bca7b294edae8aa388b",
@@ -3941,7 +3941,7 @@
       "homeRu": "ФК Порто",
       "away": "Estoril",
       "awayRu": "Есторил",
-      "commenceTime": "2026-10-31T20:30:00Z",
+      "commenceTime": "2026-10-31T20:32:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -3973,7 +3973,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "49591a10b7f8405dbe62ad66d4165912",
@@ -3985,14 +3985,14 @@
       "homeRu": "О'Хиггинс",
       "away": "Ñublense",
       "awayRu": "Нубленсе",
-      "commenceTime": "2026-10-31T21:00:00Z",
+      "commenceTime": "2026-10-31T20:59:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "1f9675345b83da71fa388c700aa1ee46",
@@ -4004,14 +4004,14 @@
       "homeRu": "Ла Галакси",
       "away": "Austin FC",
       "awayRu": "Аустин ФК",
-      "commenceTime": "2026-10-31T21:00:00Z",
+      "commenceTime": "2026-10-31T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "0bb39a80a74794aacf8c9be367cc46d8",
@@ -4023,14 +4023,14 @@
       "homeRu": "Сан Йосе Еартквакес",
       "away": "Real Salt Lake",
       "awayRu": "Реал Салт Лаке",
-      "commenceTime": "2026-10-31T21:00:00Z",
+      "commenceTime": "2026-10-31T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "5ab9452c52a1a3d99c1a35e98968edaf",
