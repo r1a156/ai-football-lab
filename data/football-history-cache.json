@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-10-30T12:42:08Z",
-  "lastSuccessfulAt": "2026-10-30T12:42:08Z",
+  "updatedAt": "2026-10-31T06:28:20Z",
+  "lastSuccessfulAt": "2026-10-31T06:28:20Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -540083,7 +540083,7 @@
     {
       "id": "openligadb:83671",
       "utcDate": "2026-10-30T17:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 2 Bundesliga",
       "competitionCode": "bl2",
@@ -540099,14 +540099,14 @@
         "shortName": "Eintracht Braunschweig",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 3,
+      "awayScore": 1,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-10-29T14:08:57Z",
+      "lastUpdated": "2026-10-31T06:27:11Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -540118,7 +540118,7 @@
     {
       "id": "openligadb:83674",
       "utcDate": "2026-10-30T17:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 2 Bundesliga",
       "competitionCode": "bl2",
@@ -540134,14 +540134,14 @@
         "shortName": "VfL Bochum",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 1,
+      "awayScore": 2,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-10-29T14:08:57Z",
+      "lastUpdated": "2026-10-31T06:27:11Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -540153,7 +540153,7 @@
     {
       "id": "openligadb:84856",
       "utcDate": "2026-10-30T18:00:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 3 Liga",
       "competitionCode": "bl3",
@@ -540169,14 +540169,14 @@
         "shortName": "SV Meppen",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 0,
+      "awayScore": 0,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-10-29T14:08:59Z",
+      "lastUpdated": "2026-10-31T06:27:12Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -540188,7 +540188,7 @@
     {
       "id": "openligadb:83227",
       "utcDate": "2026-10-30T19:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany Bundesliga",
       "competitionCode": "bl1",
@@ -540204,14 +540204,14 @@
         "shortName": "1. FSV Mainz 05",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 4,
+      "awayScore": 1,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-10-29T14:08:56Z",
+      "lastUpdated": "2026-10-31T06:27:10Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -540219,6 +540219,39 @@
         "groupOrderID": 8,
         "groupID": 50640
       }
+    },
+    {
+      "id": "thesportsdb_public_123:2398167",
+      "utcDate": "2026-10-30T22:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Argentinian Primera Division",
+      "competitionCode": "4406",
+      "homeTeam": {
+        "id": "",
+        "name": "Estudiantes de Río Cuarto",
+        "shortName": "Estudiantes de Río Cuarto",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Gimnasia y Esgrima de La Plata",
+        "shortName": "Gimnasia y Esgrima de La Plata",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 2,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-10-31T06:28:22Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "15",
+      "venue": "Estadio Antonio Candini",
+      "theSportsDbEventId": "2398167"
     },
     {
       "id": "openfootball:2026-27:en.2:144:Matchday 13",
@@ -630425,35 +630458,34 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-10-30T12:42:08Z",
-      "matches": 18199
+      "updatedAt": "2026-10-31T06:28:20Z",
+      "matches": 18200
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-10-30T11:22:41Z",
-      "requests": 42,
-      "matchesAdded": 42,
+      "updatedAt": "2026-10-31T06:28:20Z",
+      "requests": 61,
+      "matchesAdded": 60,
       "errors": [
-        "135981:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
-        "145389:HTTPError",
+        "134700:HTTPError",
+        "134627:HTTPError",
+        "133840:HTTPError",
+        "134290:HTTPError",
+        "135887:HTTPError",
+        "135154:HTTPError",
+        "135172:HTTPError",
+        "135980:HTTPError",
+        "133916:HTTPError",
+        "136451:HTTPError",
+        "136453:HTTPError",
         "134295:HTTPError",
         "134154:HTTPError",
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
         "134285:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError"
+        "134291:HTTPError",
+        "137889:HTTPError"
       ]
     }
   }
