@@ -1,22 +1,65 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-11-01T06:45:40Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-11-01T11:48:55Z",
   "refreshMinutes": 10,
-  "events": [],
+  "events": [
+    {
+      "eventId": "ddcc9a51a2d7368e055d1abefacdb74e",
+      "analysisId": "ranked-5dce3f5622d11d867778",
+      "isBestBet": true,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_spain_la_liga",
+      "league": "La Liga - Spain",
+      "leagueRu": "Ла Лига - Спаин",
+      "country": "Испания",
+      "countryRu": "Испания",
+      "home": "Getafe",
+      "away": "Sevilla",
+      "homeRu": "Гетафе",
+      "awayRu": "Севилла",
+      "commenceTime": "2026-11-01T13:00:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Тотал больше 1.5",
+      "pickRu": "Тотал больше 1.5",
+      "market": "TOTAL_OVER",
+      "marketFamily": "TOTAL",
+      "point": 1.5,
+      "preMatchProbability": 0.691484,
+      "liveProbability": 0.691484,
+      "liveProbabilityPercent": 69.1,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "Ожидание источника",
+      "providerEventId": null,
+      "updatedAt": "2026-11-01T11:48:55Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 7,
+    "calls": 4,
     "results": 3,
     "oddsQuota": {
-      "requestsRemaining": "488",
-      "requestsUsed": "12",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": [
+      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-11-01: SOFASCORE_PUBLIC:2026-11-01 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "ESPN 20261101: ESPN_PUBLIC:20261101 failed after retries: HTTP Error 502: Bad Gateway"
     ],
@@ -31,7 +74,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 4
+    "unconfirmedRemoved": 1
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }

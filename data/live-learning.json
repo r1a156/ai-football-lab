@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-11-01T06:45:40Z",
+  "updatedAt": "2026-11-01T11:48:55Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -5112,6 +5112,48 @@
         }
       ],
       "completed": false
+    },
+    "9507f4bcbcfd4e4953720628a2b86a17": {
+      "eventId": "9507f4bcbcfd4e4953720628a2b86a17",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал меньше 3.5",
+      "homeRu": "Комо",
+      "awayRu": "Венезиа",
+      "preMatchProbability": 0.67918,
+      "startedAt": "2026-11-01T11:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-11-01T11:48:55Z",
+          "status": "UNCONFIRMED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.2,
+          "liveProbability": 0.67918
+        }
+      ],
+      "completed": false
+    },
+    "ddcc9a51a2d7368e055d1abefacdb74e": {
+      "eventId": "ddcc9a51a2d7368e055d1abefacdb74e",
+      "sport": "soccer",
+      "marketFamily": "TOTAL",
+      "pickRu": "Тотал больше 1.5",
+      "homeRu": "Гетафе",
+      "awayRu": "Севилла",
+      "preMatchProbability": 0.691484,
+      "startedAt": "2026-11-01T13:00:00Z",
+      "snapshots": [
+        {
+          "at": "2026-11-01T11:48:55Z",
+          "status": "SCHEDULED",
+          "score": "",
+          "clockLabel": "",
+          "elapsedFraction": 0.0,
+          "liveProbability": 0.691484
+        }
+      ],
+      "completed": false
     }
   },
   "calibration": {
@@ -5141,7 +5183,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 354,
+    "snapshotCount": 356,
     "calibratedBuckets": 0
   },
   "paidScoreFallbackLedger": {
