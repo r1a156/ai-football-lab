@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-10-31T21:25:39Z",
+  "updatedAt": "2026-11-01T00:24:06Z",
   "operationalDayId": "2026-10-31-MSK-0800",
   "operationalWindowStart": "2026-10-31T05:00:00Z",
   "operationalWindowEnd": "2026-11-01T05:00:00Z",
@@ -8,7 +8,7 @@
     "realFixtures": 144,
     "historicalModelForecasts": 59,
     "withoutReliableHistoricalForecast": 85,
-    "verifiedOddsEvents": 0
+    "verifiedOddsEvents": 4
   },
   "fixtures": [
     {
@@ -4067,8 +4067,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "83dce11e1a742d6d45830321ba1bf4f5",
@@ -4086,8 +4086,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "e7c7e29c564581ebdb51705df5b9410f",
@@ -4157,7 +4157,7 @@
       "away": "Chicago Fire",
       "awayRu": "Чикаго Фире",
       "commenceTime": "2026-11-01T01:30:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -4176,7 +4176,7 @@
       "away": "Toluca",
       "awayRu": "Толука",
       "commenceTime": "2026-11-01T03:10:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -4195,7 +4195,7 @@
       "away": "Central Coast Mariners",
       "awayRu": "Централь Коаст Маринерс",
       "commenceTime": "2026-11-01T04:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -4214,7 +4214,7 @@
       "away": "Kawasaki Frontale",
       "awayRu": "Кавасаки Фронтале",
       "commenceTime": "2026-11-01T04:00:00Z",
-      "oddsAvailable": false,
+      "oddsAvailable": true,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
