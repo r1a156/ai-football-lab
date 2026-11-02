@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-02T07:44:59Z",
-  "lastSuccessfulAt": "2026-11-02T07:44:59Z",
+  "updatedAt": "2026-11-02T09:21:02Z",
+  "lastSuccessfulAt": "2026-11-02T09:21:02Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -543667,6 +543667,39 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2599031",
+      "utcDate": "2026-11-01T13:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Finnish Veikkausliiga",
+      "competitionCode": "4636",
+      "homeTeam": {
+        "id": "",
+        "name": "AC Oulu",
+        "shortName": "AC Oulu",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "KuPS",
+        "shortName": "KuPS",
+        "tla": ""
+      },
+      "homeScore": 2,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-02T09:29:10Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "31",
+      "venue": "Raatin Stadion",
+      "theSportsDbEventId": "2599031"
+    },
+    {
       "id": "tracked:c0c32575c239ac72913af247ce084ea2",
       "utcDate": "2026-11-01T13:30:00Z",
       "status": "FINISHED",
@@ -544182,6 +544215,39 @@
       "group": "",
       "lastUpdated": "2026-11-01T22:44:23Z",
       "source": "AI_FOOTBALL_TRACKED_RESULT"
+    },
+    {
+      "id": "thesportsdb_public_123:2431519",
+      "utcDate": "2026-11-01T21:30:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie B",
+      "competitionCode": "4404",
+      "homeTeam": {
+        "id": "",
+        "name": "Cuiabá",
+        "shortName": "Cuiabá",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "São Bernardo",
+        "shortName": "São Bernardo",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 2,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-02T09:27:09Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "36",
+      "venue": "Arena Pantanal",
+      "theSportsDbEventId": "2431519"
     },
     {
       "id": "openfootball:2026-27:en.1:89:Matchday 9",
@@ -631347,14 +631413,14 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-02T07:44:59Z",
-      "matches": 18229
+      "updatedAt": "2026-11-02T09:21:02Z",
+      "matches": 18231
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-01T06:48:16Z",
+      "updatedAt": "2026-11-02T09:21:02Z",
       "requests": 43,
-      "matchesAdded": 43,
+      "matchesAdded": 42,
       "errors": [
         "136466:HTTPError",
         "134506:HTTPError",
@@ -631366,7 +631432,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
+        "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
