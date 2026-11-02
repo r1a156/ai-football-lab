@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-02T09:19:58Z",
-  "finishedAt": "2026-11-02T13:51:00Z",
+  "finishedAt": "2026-11-02T15:35:49Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -803,13 +803,19 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.154
+        "elapsedSeconds": 0.188
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.112
+        "elapsedSeconds": 0.131
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.098
       }
     ],
     "quota": {
@@ -1645,8 +1651,8 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 2,
-    "providerFinalResults": 17,
+    "dueRecords": 3,
+    "providerFinalResults": 23,
     "settlement": {
       "analysisSettled": 0,
       "bestBetsSettled": 0,
