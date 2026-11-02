@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-01T06:45:46Z",
-  "finishedAt": "2026-11-01T22:44:23Z",
+  "finishedAt": "2026-11-02T01:58:05Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,7 +69,7 @@
       ]
     },
     "trackedHistory": {
-      "added": 3,
+      "added": 0,
       "matches": 18083,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
@@ -535,31 +535,13 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.23
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_france_ligue_one",
-        "status": 200,
-        "elapsedSeconds": 0.197
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_portugal_primeira_liga",
-        "status": 200,
-        "elapsedSeconds": 0.227
+        "elapsedSeconds": 0.051
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.131
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_spain_la_liga",
-        "status": 200,
-        "elapsedSeconds": 0.141
+        "elapsedSeconds": 0.05
       }
     ],
     "quota": {
@@ -1403,11 +1385,11 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 5,
-    "providerFinalResults": 39,
+    "dueRecords": 2,
+    "providerFinalResults": 18,
     "settlement": {
-      "analysisSettled": 3,
-      "bestBetsSettled": 1,
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
       "unresolved": 2
     },
     "shadowSettlement": {
@@ -1423,9 +1405,9 @@
       "bestBets": 0
     },
     "expressSettlement": {
-      "settled": 1,
+      "settled": 0,
       "won": 0,
-      "lost": 1,
+      "lost": 0,
       "push": 0
     }
   },
