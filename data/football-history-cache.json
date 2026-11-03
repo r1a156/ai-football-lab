@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-03T08:52:33Z",
-  "lastSuccessfulAt": "2026-11-03T08:52:33Z",
+  "updatedAt": "2026-11-03T12:46:23Z",
+  "lastSuccessfulAt": "2026-11-03T12:46:23Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -546804,12 +546804,12 @@
       "round": "Matchday 10"
     },
     {
-      "id": "thesportsdb_public_123:2505830",
+      "id": "tracked:f89b9247af7cc118faae54ec9f0934ee",
       "utcDate": "2026-11-02T13:00:00Z",
       "status": "FINISHED",
       "competitionId": "",
-      "competition": "Spanish La Liga 2",
-      "competitionCode": "4400",
+      "competition": "La Liga 2 - Spain",
+      "competitionCode": "soccer_spain_segunda_division",
       "homeTeam": {
         "id": "",
         "name": "Tenerife",
@@ -546818,8 +546818,8 @@
       },
       "awayTeam": {
         "id": "",
-        "name": "FC Andorra",
-        "shortName": "FC Andorra",
+        "name": "Andorra CF",
+        "shortName": "Andorra CF",
         "tla": ""
       },
       "homeScore": 2,
@@ -546829,12 +546829,8 @@
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-11-03T08:54:35Z",
-      "source": "THESPORTSDB_PUBLIC_123",
-      "season": "2026-2027",
-      "round": "12",
-      "venue": "Estadio Heliodoro Rodríguez López",
-      "theSportsDbEventId": "2505830"
+      "lastUpdated": "2026-11-03T12:45:17Z",
+      "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
       "id": "tracked:6891a7ee06d4118eba6fb1ea59026099",
@@ -632338,16 +632334,15 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-03T08:52:33Z",
+      "updatedAt": "2026-11-03T12:46:23Z",
       "matches": 18242
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-03T08:52:33Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-11-03T12:46:23Z",
+      "requests": 43,
+      "matchesAdded": 43,
       "errors": [
-        "136449:HTTPError",
         "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
@@ -632358,7 +632353,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "137932:HTTPError",
+        "134285:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -632366,7 +632361,8 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "133953:HTTPError",
+        "137878:HTTPError"
       ]
     }
   }
