@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-02T09:19:58Z",
-  "finishedAt": "2026-11-02T19:39:44Z",
+  "finishedAt": "2026-11-03T01:49:15Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 5,
-      "matches": 18093,
+      "added": 7,
+      "matches": 18100,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -803,31 +803,37 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.211
+        "elapsedSeconds": 0.315
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_finland_veikkausliiga",
+        "label": "SCORES:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.147
+        "elapsedSeconds": 0.162
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_greece_super_league",
+        "label": "SCORES:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.232
+        "elapsedSeconds": 0.267
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.132
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.122
+        "elapsedSeconds": 0.146
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.101
+        "elapsedSeconds": 0.146
       }
     ],
     "quota": {
@@ -1663,23 +1669,23 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 6,
-    "providerFinalResults": 34,
+    "dueRecords": 10,
+    "providerFinalResults": 45,
     "settlement": {
-      "analysisSettled": 5,
-      "bestBetsSettled": 1,
-      "unresolved": 13
+      "analysisSettled": 7,
+      "bestBetsSettled": 2,
+      "unresolved": 4
     },
     "shadowSettlement": {
-      "settled": 1,
-      "won": 0,
+      "settled": 2,
+      "won": 1,
       "lost": 1,
       "push": 0,
       "superseded": 0,
       "unresolved": 0
     },
     "overdueRelease": {
-      "analysis": 1,
+      "analysis": 0,
       "bestBets": 0
     },
     "expressSettlement": {
