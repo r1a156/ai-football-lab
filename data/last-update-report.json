@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-03T12:45:20Z",
-  "finishedAt": "2026-11-03T16:49:40Z",
+  "finishedAt": "2026-11-03T22:10:07Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 18242,
+      "added": 4,
+      "matches": 18246,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -458,13 +458,31 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.195
+        "elapsedSeconds": 0.146
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.208
+        "elapsedSeconds": 0.162
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_spain_copa_del_rey",
+        "status": 200,
+        "elapsedSeconds": 0.166
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.145
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_uefa_champs_league",
+        "status": 200,
+        "elapsedSeconds": 0.116
       }
     ],
     "quota": {
@@ -1047,10 +1065,10 @@
     "topSingles": 3,
     "oddsProviderStatus": "AVAILABLE",
     "lossDiagnostics": {
-      "settledFinancialEntriesAudited": 43,
+      "settledFinancialEntriesAudited": 46,
       "recordLookupFailures": 0,
       "duplicateLedgerRecordIds": 0,
-      "auditedLedgerProfit": -4552.59,
+      "auditedLedgerProfit": -5273.39,
       "historicalNegativeConservativeEv": {
         "count": 20,
         "profit": -4514.09,
@@ -1059,10 +1077,10 @@
       "mostNegativeMarketFamilies": [
         {
           "name": "TOTAL",
-          "count": 32,
-          "won": 15,
-          "lost": 13,
-          "profit": -6858.49,
+          "count": 35,
+          "won": 16,
+          "lost": 15,
+          "profit": -7579.29,
           "sampleSufficientForConclusion": true
         },
         {
@@ -1124,19 +1142,19 @@
           "sampleSufficientForConclusion": false
         },
         {
+          "name": "Тотал меньше 3.5",
+          "count": 16,
+          "won": 8,
+          "lost": 8,
+          "profit": -876.53,
+          "sampleSufficientForConclusion": false
+        },
+        {
           "name": "Победа Реннес",
           "count": 1,
           "won": 0,
           "lost": 1,
           "profit": -583.96,
-          "sampleSufficientForConclusion": false
-        },
-        {
-          "name": "Тотал меньше 4.5",
-          "count": 2,
-          "won": 1,
-          "lost": 1,
-          "profit": -250.89,
           "sampleSufficientForConclusion": false
         },
         {
@@ -1164,11 +1182,11 @@
           "sampleSufficientForConclusion": false
         },
         {
-          "name": "Тотал меньше 3.5",
-          "count": 14,
-          "won": 8,
-          "lost": 6,
-          "profit": 355.61,
+          "name": "Тотал меньше 4.5",
+          "count": 3,
+          "won": 2,
+          "lost": 1,
+          "profit": 260.45,
           "sampleSufficientForConclusion": false
         },
         {
@@ -1230,19 +1248,19 @@
           "sampleSufficientForConclusion": false
         },
         {
+          "name": "Лига чемпионов УЕФА",
+          "count": 7,
+          "won": 2,
+          "lost": 5,
+          "profit": -2219.87,
+          "sampleSufficientForConclusion": false
+        },
+        {
           "name": "Лига 2",
           "count": 2,
           "won": 0,
           "lost": 2,
           "profit": -1620.48,
-          "sampleSufficientForConclusion": false
-        },
-        {
-          "name": "Лига чемпионов УЕФА",
-          "count": 4,
-          "won": 1,
-          "lost": 3,
-          "profit": -1499.07,
           "sampleSufficientForConclusion": false
         },
         {
@@ -1296,20 +1314,20 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 2,
-    "providerFinalResults": 13,
+    "dueRecords": 3,
+    "providerFinalResults": 28,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 18
+      "analysisSettled": 4,
+      "bestBetsSettled": 3,
+      "unresolved": 11
     },
     "shadowSettlement": {
-      "settled": 0,
+      "settled": 1,
       "won": 0,
-      "lost": 0,
+      "lost": 1,
       "push": 0,
       "superseded": 0,
-      "unresolved": 0
+      "unresolved": 2
     },
     "overdueRelease": {
       "analysis": 0,
