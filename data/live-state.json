@@ -1,15 +1,57 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "IDLE",
-  "updatedAt": "2026-11-04T02:22:39Z",
+  "status": "TRACKING",
+  "updatedAt": "2026-11-04T14:20:10Z",
   "refreshMinutes": 10,
-  "events": [],
+  "events": [
+    {
+      "eventId": "29ebc4d234c1c6e86ebea07ab9174818",
+      "analysisId": "analysis-a497375caeb7b7d2803e",
+      "isBestBet": false,
+      "sport": "soccer",
+      "sportLabel": "Футбол",
+      "sportKey": "soccer_uefa_europa_league",
+      "league": "UEFA Europa League",
+      "leagueRu": "Лига Европы УЕФА",
+      "country": "Европа",
+      "countryRu": "Европа",
+      "home": "Rennes",
+      "away": "Olympiakos Piraeus",
+      "homeRu": "Реннес",
+      "awayRu": "Олимпиакос Пираеус",
+      "commenceTime": "2026-11-04T15:30:00Z",
+      "status": "SCHEDULED",
+      "statusRu": "Ожидается",
+      "homeScore": null,
+      "awayScore": null,
+      "score": "",
+      "clockLabel": "",
+      "minute": 0,
+      "period": null,
+      "elapsedFraction": 0.0,
+      "pick": "Победа Rennes",
+      "pickRu": "Победа Реннес",
+      "market": "HOME_WIN",
+      "marketFamily": "OUTCOME",
+      "point": null,
+      "preMatchProbability": 0.47165,
+      "liveProbability": 0.47165,
+      "liveProbabilityPercent": 47.2,
+      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
+      "calibrationEvidence": null,
+      "provider": "Ожидание источника",
+      "providerEventId": null,
+      "updatedAt": "2026-11-04T14:20:10Z",
+      "freshnessSeconds": 0,
+      "originalPredictionImmutable": true
+    }
+  ],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 8,
-    "results": 174,
+    "calls": 4,
+    "results": 90,
     "oddsQuota": {
       "requestsRemaining": null,
       "requestsUsed": null,
@@ -18,13 +60,12 @@
     },
     "errors": [
       "Ключ глобального источника счёта не настроен",
-      "SofaScore 2026-11-03: SOFASCORE_PUBLIC:2026-11-03 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "SofaScore 2026-11-04: SOFASCORE_PUBLIC:2026-11-04 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
     "freeScoreMesh": {
       "sofascore": 0,
-      "espn": 168,
-      "theSportsDB": 6,
+      "espn": 87,
+      "theSportsDB": 3,
       "footballDataOptional": 0
     }
   },
@@ -32,7 +73,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 7
+    "unconfirmedRemoved": 0
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
