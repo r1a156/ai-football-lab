@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-11-04T17:34:17Z",
+  "updatedAt": "2026-11-04T22:54:25Z",
   "analysisDateLocal": "2026-11-04",
   "batch": {
     "version": 1,
@@ -145,10 +145,10 @@
     "updatedAt": "2026-11-04T12:56:43Z"
   },
   "lossDiagnostics": {
-    "settledFinancialEntriesAudited": 46,
+    "settledFinancialEntriesAudited": 48,
     "recordLookupFailures": 0,
     "duplicateLedgerRecordIds": 0,
-    "auditedLedgerProfit": -5273.39,
+    "auditedLedgerProfit": -5333.23,
     "historicalNegativeConservativeEv": {
       "count": 20,
       "profit": -4514.09,
@@ -157,10 +157,10 @@
     "mostNegativeMarketFamilies": [
       {
         "name": "TOTAL",
-        "count": 35,
+        "count": 36,
         "won": 16,
-        "lost": 15,
-        "profit": -7579.29,
+        "lost": 16,
+        "profit": -8123.28,
         "sampleSufficientForConclusion": true
       },
       {
@@ -181,10 +181,10 @@
       },
       {
         "name": "OUTCOME",
-        "count": 4,
-        "won": 3,
+        "count": 5,
+        "won": 4,
         "lost": 1,
-        "profit": 2885.73,
+        "profit": 3369.88,
         "sampleSufficientForConclusion": false
       }
     ],
@@ -214,19 +214,19 @@
         "sampleSufficientForConclusion": false
       },
       {
+        "name": "Тотал меньше 3.5",
+        "count": 17,
+        "won": 8,
+        "lost": 9,
+        "profit": -1420.52,
+        "sampleSufficientForConclusion": false
+      },
+      {
         "name": "Обе команды забьют — да",
         "count": 2,
         "won": 1,
         "lost": 1,
         "profit": -977.55,
-        "sampleSufficientForConclusion": false
-      },
-      {
-        "name": "Тотал меньше 3.5",
-        "count": 16,
-        "won": 8,
-        "lost": 8,
-        "profit": -876.53,
         "sampleSufficientForConclusion": false
       },
       {
@@ -278,11 +278,11 @@
         "sampleSufficientForConclusion": false
       },
       {
-        "name": "Победа Шеффиелд Юнайтед",
+        "name": "Победа Порто",
         "count": 1,
         "won": 1,
         "lost": 0,
-        "profit": 905.14,
+        "profit": 484.15,
         "sampleSufficientForConclusion": false
       }
     ],
@@ -329,10 +329,10 @@
       },
       {
         "name": "Лига чемпионов УЕФА",
-        "count": 7,
-        "won": 2,
-        "lost": 5,
-        "profit": -2219.87,
+        "count": 9,
+        "won": 3,
+        "lost": 6,
+        "profit": -2279.71,
         "sampleSufficientForConclusion": false
       },
       {
@@ -396,11 +396,11 @@
   },
   "bank": {
     "starting": 10000,
-    "current": 5439.94,
+    "current": 5380.1,
     "stakePercent": 10,
-    "roi": -45.6,
+    "roi": -46.2,
     "maxDrawdown": 69.61,
-    "activeExposure": 1087.98,
+    "activeExposure": 0,
     "history": [
       {
         "date": "2026-07-17",
@@ -890,12 +890,32 @@
         "eventId": "a341241606cb5b1b59e425d00be64883",
         "match": "Villarreal — Paris Saint Germain",
         "profit": -616.07
+      },
+      {
+        "date": "2026-11-04",
+        "timestamp": "2026-11-04T22:54:25Z",
+        "value": 5924.09,
+        "event": "PREDICTION_WON",
+        "recordId": "ranked-969f2f84dd9f635aabf1",
+        "eventId": "ba82ee37f64a66a30d85f8b90082ec2f",
+        "match": "Porto — Napoli",
+        "profit": 484.15
+      },
+      {
+        "date": "2026-11-04",
+        "timestamp": "2026-11-04T22:54:25Z",
+        "value": 5380.1,
+        "event": "PREDICTION_LOST",
+        "recordId": "ranked-a294c5ec19e0edb78434",
+        "eventId": "e901dbcdd6e2255fb24d84032b9d437a",
+        "match": "Fenerbahce — Liverpool",
+        "profit": -543.99
       }
     ],
-    "placedAmount": 1087.98,
-    "activeBetsCount": 3,
-    "available": 4351.96,
-    "closedBalance": 5439.94,
+    "placedAmount": 0,
+    "activeBetsCount": 0,
+    "available": 5380.1,
+    "closedBalance": 5380.1,
     "mode": "ACTIVE_SINGLE_BANK",
     "policy": "TOP_THREE_SINGLE_BETS_TEN_PERCENT_EACH",
     "policyEffectiveAt": "2026-10-07T07:44:56Z",
@@ -1547,10 +1567,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "1:9",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 0.0,
       "profit": 0.0,
@@ -1942,9 +1962,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 1,
+      "awayScore": 9,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-93b7573d69e7150bd7cb",
@@ -2499,10 +2524,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "4:1",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 0.0,
       "profit": 0.0,
@@ -2882,9 +2907,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 4,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-db9a560c4aea825fd34b",
@@ -3383,10 +3413,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:2",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 0.0,
       "profit": 0.0,
@@ -3760,9 +3790,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 3,
+      "awayScore": 2,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-02894bb128ed5d691999",
@@ -4321,10 +4356,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "2:0",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -4696,9 +4731,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 2,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-fd6ae751f62b1074a60f",
@@ -5293,10 +5333,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "2:0",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -5675,9 +5715,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 2,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-c9011cfae730ddb841a0",
@@ -6268,10 +6313,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:3",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -6650,9 +6695,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 3,
+      "awayScore": 3,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-14179bc381ef9f754ff3",
@@ -7028,8 +7078,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-09f9fc6eb9d9df982565",
@@ -7962,8 +8012,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-a497375caeb7b7d2803e",
@@ -8513,10 +8563,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "0:0",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -8891,9 +8941,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 0,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-4fb024d68eb44f0ddcfd",
@@ -9423,10 +9478,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "1:2",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -9800,9 +9855,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 1,
+      "awayScore": 2,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "analysis-9bc17fa780028561b31f",
@@ -10733,8 +10793,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-8bbddd8d50111400e950",
@@ -11317,10 +11377,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "1:3",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -11702,9 +11762,14 @@
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 1,
+      "awayScore": 3,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     }
   ],
   "bestBets": [
@@ -12352,10 +12417,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "1:9",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 0.0,
       "stakePercent": 0.0,
@@ -12735,14 +12800,19 @@
       "rankLabel": "Самый надёжный прогноз",
       "stakeAssignedAt": null,
       "bankPolicy": "NO_BANK_UNLESS_GUARD_AND_POSITIVE_EV",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "premiumLabel": null,
       "batchId": "batch-bc2b424991157c6117e7",
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 1,
+      "awayScore": 9,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "ranked-969f2f84dd9f635aabf1",
@@ -13297,14 +13367,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "4:1",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 543.99,
       "stakePercent": 10.0,
-      "profit": 0.0,
+      "profit": 484.15,
       "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
       "financialMode": "SINGLE_BANK_TOP_THREE",
       "obviousMarketScore": 84.42328,
@@ -13668,14 +13738,19 @@
       "rankLabel": "Надёжность №2",
       "stakeAssignedAt": "2026-11-04T12:56:43Z",
       "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Выигрыш",
       "premiumLabel": null,
       "batchId": "batch-bc2b424991157c6117e7",
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 4,
+      "awayScore": 1,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     },
     {
       "id": "ranked-a294c5ec19e0edb78434",
@@ -14174,14 +14249,14 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "3:2",
       "publishedAt": "2026-11-04T12:56:43Z",
-      "settledAt": null,
+      "settledAt": "2026-11-04T22:54:25Z",
       "isBestBet": true,
       "stake": 543.99,
       "stakePercent": 10.0,
-      "profit": 0.0,
+      "profit": -543.99,
       "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
       "financialMode": "SINGLE_BANK_TOP_THREE",
       "obviousMarketScore": 83.2499,
@@ -14539,14 +14614,19 @@
       "rankLabel": "Надёжность №3",
       "stakeAssignedAt": "2026-11-04T12:56:43Z",
       "bankPolicy": "ONE_BANK_TOP_THREE_TEN_PERCENT_EACH",
-      "statusLabel": "Ожидается",
+      "statusLabel": "Проигрыш",
       "premiumLabel": null,
       "batchId": "batch-bc2b424991157c6117e7",
       "batchSequence": 43,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-04T17:34:17Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-04T22:54:25Z",
+      "settlementAttempts": 5,
+      "homeScore": 3,
+      "awayScore": 2,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-04T22:54:25Z"
     }
   ],
   "dailyAudit": {
@@ -14570,10 +14650,10 @@
   "shadowLearning": {
     "statistics": {
       "tracked": 46,
-      "pending": 6,
-      "settled": 29,
-      "won": 19,
-      "lost": 10,
+      "pending": 3,
+      "settled": 32,
+      "won": 20,
+      "lost": 12,
       "push": 0
     },
     "pending": [
@@ -14815,374 +14895,6 @@
         "probability": 0.512456,
         "odds": 1.87,
         "shadowRankScore": 58.4983
-      },
-      {
-        "id": "bafe846dd5c6bdba58ec",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "f43ef699c987e112e115f7035114854e",
-        "sport": "soccer",
-        "sportKey": "soccer_uefa_champs_league",
-        "league": "UEFA Champions League",
-        "home": "AEK Athens",
-        "away": "Real Madrid",
-        "commenceTime": "2026-11-04T17:45:00Z",
-        "status": "pending",
-        "trackedAt": "2026-11-04T12:56:43Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_UNDER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "UNDER",
-        "point": 3.5,
-        "pick": "Тотал меньше 3.5",
-        "pickRu": "Тотал меньше 3.5",
-        "bookmakerOdds": 2.23,
-        "modelProbability": 0.529539,
-        "conservativeProbability": 0.504539,
-        "marketProbability": 0.440205,
-        "expectedValue": 0.125121,
-        "edge": 0.064334,
-        "dataTier": "FULL",
-        "dataQuality": 84.1,
-        "quoteCount": 9,
-        "agreement": 75.1,
-        "marketStability": 76.5,
-        "anomaly": 15.1,
-        "obviousMarketScore": 76.4049,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Консенсус букмекеров не подтверждает выбранное направление тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.010833,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 368,
-            "bias": -0.0036,
-            "weight": 1.0,
-            "hitRate": 0.5571,
-            "averagePredicted": 0.5606,
-            "brierScore": 0.247588
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 223,
-            "bias": -0.0255,
-            "weight": 1.0,
-            "hitRate": 0.574,
-            "averagePredicted": 0.5994,
-            "brierScore": 0.248389
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-            "samples": 72,
-            "bias": -0.1229,
-            "weight": 0.273,
-            "hitRate": 0.4861,
-            "averagePredicted": 0.609,
-            "brierScore": 0.269415
-          },
-          {
-            "segment": "ODDS|soccer|HIGH",
-            "samples": 42,
-            "bias": -0.0582,
-            "weight": 0.05,
-            "hitRate": 0.3571,
-            "averagePredicted": 0.4153,
-            "brierScore": 0.234623
-          },
-          {
-            "segment": "DATA_TIER|soccer|FULL",
-            "samples": 154,
-            "bias": 0.0029,
-            "weight": 0.95,
-            "hitRate": 0.5584,
-            "averagePredicted": 0.5555,
-            "brierScore": 0.253184
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 138,
-            "bias": 0.0101,
-            "weight": 0.818,
-            "hitRate": 0.5725,
-            "averagePredicted": 0.5623,
-            "brierScore": 0.246692
-          },
-          {
-            "segment": "MARKET_TIER|soccer|TOTAL|FULL",
-            "samples": 95,
-            "bias": -0.0418,
-            "weight": 0.463,
-            "hitRate": 0.5579,
-            "averagePredicted": 0.5997,
-            "brierScore": 0.251238
-          }
-        ],
-        "probability": 0.529539,
-        "odds": 2.23,
-        "shadowRankScore": 77.4395
-      },
-      {
-        "id": "d13e06867d83938695b6",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "a5910ae3b314876faea7f5c03b8aeaad",
-        "sport": "soccer",
-        "sportKey": "soccer_uefa_champs_league",
-        "league": "UEFA Champions League",
-        "home": "Slavia Praha",
-        "away": "Arsenal",
-        "commenceTime": "2026-11-04T20:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-11-04T12:56:43Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_OVER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "OVER",
-        "point": 2.5,
-        "pick": "Тотал больше 2.5",
-        "pickRu": "Тотал больше 2.5",
-        "bookmakerOdds": 1.75,
-        "modelProbability": 0.555892,
-        "conservativeProbability": 0.433626,
-        "marketProbability": 0.57572,
-        "expectedValue": -0.241154,
-        "edge": -0.142093,
-        "dataTier": "MARKET",
-        "dataQuality": 34.0,
-        "quoteCount": 11,
-        "agreement": 82.2,
-        "marketStability": 63.6,
-        "anomaly": 22.9,
-        "obviousMarketScore": 61.5656,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Модель счёта не подтверждает выбранное направление тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание",
-            "Недостаточная полнота данных",
-            "Нет независимой статистической модели команд"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Основной фильтр: Нет независимой статистической модели команд",
-          "Нет полноценной истории обеих команд",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.01052,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 368,
-            "bias": -0.0036,
-            "weight": 1.0,
-            "hitRate": 0.5571,
-            "averagePredicted": 0.5606,
-            "brierScore": 0.247588
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 223,
-            "bias": -0.0255,
-            "weight": 1.0,
-            "hitRate": 0.574,
-            "averagePredicted": 0.5994,
-            "brierScore": 0.248389
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_OVER@2.5",
-            "samples": 59,
-            "bias": 0.046,
-            "weight": 0.165,
-            "hitRate": 0.6441,
-            "averagePredicted": 0.5981,
-            "brierScore": 0.237445
-          },
-          {
-            "segment": "ODDS|soccer|MID",
-            "samples": 217,
-            "bias": -0.0242,
-            "weight": 1.0,
-            "hitRate": 0.5714,
-            "averagePredicted": 0.5956,
-            "brierScore": 0.251684
-          },
-          {
-            "segment": "DATA_TIER|soccer|MARKET",
-            "samples": 54,
-            "bias": -0.0419,
-            "weight": 0.124,
-            "hitRate": 0.537,
-            "averagePredicted": 0.5789,
-            "brierScore": 0.249809
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 138,
-            "bias": 0.0101,
-            "weight": 0.818,
-            "hitRate": 0.5725,
-            "averagePredicted": 0.5623,
-            "brierScore": 0.246692
-          }
-        ],
-        "probability": 0.555892,
-        "odds": 1.75,
-        "shadowRankScore": 59.2726
-      },
-      {
-        "id": "fe16a591c18bfa706226",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "6277e639c064e641265fcb98a0e200b9",
-        "sport": "soccer",
-        "sportKey": "soccer_uefa_champs_league",
-        "league": "UEFA Champions League",
-        "home": "Viking FK",
-        "away": "Sabah FK",
-        "commenceTime": "2026-11-04T20:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-11-04T12:56:43Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_UNDER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "UNDER",
-        "point": 3.5,
-        "pick": "Тотал меньше 3.5",
-        "pickRu": "Тотал меньше 3.5",
-        "bookmakerOdds": 2.07,
-        "modelProbability": 0.499894,
-        "conservativeProbability": 0.378894,
-        "marketProbability": 0.483769,
-        "expectedValue": -0.21569,
-        "edge": -0.104875,
-        "dataTier": "MARKET",
-        "dataQuality": 34.0,
-        "quoteCount": 12,
-        "agreement": 66.2,
-        "marketStability": 68.1,
-        "anomaly": 19.8,
-        "obviousMarketScore": 55.5574,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Консенсус букмекеров не подтверждает выбранное направление тотала",
-            "Недостаточная консервативная вероятность",
-            "Недостаточная расчётная вероятность",
-            "Недостаточное преимущество над рынком",
-            "Недостаточное математическое ожидание",
-            "Недостаточная полнота данных",
-            "Нет независимой статистической модели команд"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Недостаточная консервативная вероятность",
-          "Основной фильтр: Недостаточная расчётная вероятность",
-          "Основной фильтр: Недостаточное преимущество над рынком",
-          "Основной фильтр: Недостаточное математическое ожидание",
-          "Основной фильтр: Недостаточная полнота данных",
-          "Основной фильтр: Нет независимой статистической модели команд",
-          "Нет полноценной истории обеих команд",
-          "Недостаточное качество данных",
-          "Недостаточная консервативная вероятность",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.003924,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 368,
-            "bias": -0.0036,
-            "weight": 1.0,
-            "hitRate": 0.5571,
-            "averagePredicted": 0.5606,
-            "brierScore": 0.247588
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 223,
-            "bias": -0.0255,
-            "weight": 1.0,
-            "hitRate": 0.574,
-            "averagePredicted": 0.5994,
-            "brierScore": 0.248389
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-            "samples": 72,
-            "bias": -0.1229,
-            "weight": 0.273,
-            "hitRate": 0.4861,
-            "averagePredicted": 0.609,
-            "brierScore": 0.269415
-          },
-          {
-            "segment": "ODDS|soccer|UPPER_MID",
-            "samples": 105,
-            "bias": 0.0497,
-            "weight": 0.545,
-            "hitRate": 0.5905,
-            "averagePredicted": 0.5408,
-            "brierScore": 0.250456
-          },
-          {
-            "segment": "DATA_TIER|soccer|MARKET",
-            "samples": 54,
-            "bias": -0.0419,
-            "weight": 0.124,
-            "hitRate": 0.537,
-            "averagePredicted": 0.5789,
-            "brierScore": 0.249809
-          },
-          {
-            "segment": "PROBABILITY|soccer|P50",
-            "samples": 138,
-            "bias": 0.0101,
-            "weight": 0.818,
-            "hitRate": 0.5725,
-            "averagePredicted": 0.5623,
-            "brierScore": 0.246692
-          }
-        ],
-        "probability": 0.499894,
-        "odds": 2.07,
-        "shadowRankScore": 53.0654
       },
       {
         "id": "0f4484b3461cbf123e52",

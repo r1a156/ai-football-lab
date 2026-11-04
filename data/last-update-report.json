@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-04T12:56:43Z",
-  "finishedAt": "2026-11-04T17:34:17Z",
+  "finishedAt": "2026-11-04T22:54:25Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 18270,
+      "added": 9,
+      "matches": 18279,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -926,19 +926,55 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.079
+        "elapsedSeconds": 0.182
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_belgium_first_div",
+        "status": 200,
+        "elapsedSeconds": 0.145
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_brazil_campeonato",
+        "status": 200,
+        "elapsedSeconds": 0.159
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.152
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.14
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.062
+        "elapsedSeconds": 0.309
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_copa_del_rey",
         "status": 200,
-        "elapsedSeconds": 0.052
+        "elapsedSeconds": 0.279
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_uefa_champs_league",
+        "status": 200,
+        "elapsedSeconds": 0.135
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_uefa_europa_league",
+        "status": 200,
+        "elapsedSeconds": 0.363
       }
     ],
     "quota": {
@@ -1549,10 +1585,10 @@
     "topSingles": 3,
     "oddsProviderStatus": "AVAILABLE",
     "lossDiagnostics": {
-      "settledFinancialEntriesAudited": 46,
+      "settledFinancialEntriesAudited": 48,
       "recordLookupFailures": 0,
       "duplicateLedgerRecordIds": 0,
-      "auditedLedgerProfit": -5273.39,
+      "auditedLedgerProfit": -5333.23,
       "historicalNegativeConservativeEv": {
         "count": 20,
         "profit": -4514.09,
@@ -1561,10 +1597,10 @@
       "mostNegativeMarketFamilies": [
         {
           "name": "TOTAL",
-          "count": 35,
+          "count": 36,
           "won": 16,
-          "lost": 15,
-          "profit": -7579.29,
+          "lost": 16,
+          "profit": -8123.28,
           "sampleSufficientForConclusion": true
         },
         {
@@ -1585,10 +1621,10 @@
         },
         {
           "name": "OUTCOME",
-          "count": 4,
-          "won": 3,
+          "count": 5,
+          "won": 4,
           "lost": 1,
-          "profit": 2885.73,
+          "profit": 3369.88,
           "sampleSufficientForConclusion": false
         }
       ],
@@ -1618,19 +1654,19 @@
           "sampleSufficientForConclusion": false
         },
         {
+          "name": "Тотал меньше 3.5",
+          "count": 17,
+          "won": 8,
+          "lost": 9,
+          "profit": -1420.52,
+          "sampleSufficientForConclusion": false
+        },
+        {
           "name": "Обе команды забьют — да",
           "count": 2,
           "won": 1,
           "lost": 1,
           "profit": -977.55,
-          "sampleSufficientForConclusion": false
-        },
-        {
-          "name": "Тотал меньше 3.5",
-          "count": 16,
-          "won": 8,
-          "lost": 8,
-          "profit": -876.53,
           "sampleSufficientForConclusion": false
         },
         {
@@ -1682,11 +1718,11 @@
           "sampleSufficientForConclusion": false
         },
         {
-          "name": "Победа Шеффиелд Юнайтед",
+          "name": "Победа Порто",
           "count": 1,
           "won": 1,
           "lost": 0,
-          "profit": 905.14,
+          "profit": 484.15,
           "sampleSufficientForConclusion": false
         }
       ],
@@ -1733,10 +1769,10 @@
         },
         {
           "name": "Лига чемпионов УЕФА",
-          "count": 7,
-          "won": 2,
-          "lost": 5,
-          "profit": -2219.87,
+          "count": 9,
+          "won": 3,
+          "lost": 6,
+          "profit": -2279.71,
           "sampleSufficientForConclusion": false
         },
         {
@@ -1798,20 +1834,20 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 2,
-    "providerFinalResults": 9,
+    "dueRecords": 11,
+    "providerFinalResults": 44,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 17
+      "analysisSettled": 9,
+      "bestBetsSettled": 3,
+      "unresolved": 5
     },
     "shadowSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
+      "settled": 3,
+      "won": 1,
+      "lost": 2,
       "push": 0,
       "superseded": 0,
-      "unresolved": 2
+      "unresolved": 3
     },
     "overdueRelease": {
       "analysis": 0,
