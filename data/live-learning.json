@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "updatedAt": "2026-11-04T22:54:23Z",
+  "updatedAt": "2026-11-05T03:26:34Z",
   "sessions": {
     "60a8e42f71bcd823c80134ccb982b7fd": {
       "eventId": "60a8e42f71bcd823c80134ccb982b7fd",
@@ -6238,6 +6238,14 @@
           "clockLabel": "",
           "elapsedFraction": 0.2667,
           "liveProbability": 0.494384
+        },
+        {
+          "at": "2026-11-05T03:26:34Z",
+          "status": "UNCONFIRMED",
+          "score": "1:3",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.494384
         }
       ],
       "completed": false
@@ -6346,6 +6354,48 @@
         }
       ],
       "completed": false
+    },
+    "e766824cd38eb33865f45b707c35467e": {
+      "eventId": "e766824cd38eb33865f45b707c35467e",
+      "sport": "soccer",
+      "marketFamily": "OUTCOME",
+      "pickRu": "Победа Ботафого",
+      "homeRu": "Ботафого",
+      "awayRu": "Атлетико Минеиро",
+      "preMatchProbability": 0.572691,
+      "startedAt": "2026-11-05T00:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-11-05T03:26:34Z",
+          "status": "UNCONFIRMED",
+          "score": "1:0",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.572691
+        }
+      ],
+      "completed": false
+    },
+    "6e6ddd0046e27c40f5b67c96cc16d5fd": {
+      "eventId": "6e6ddd0046e27c40f5b67c96cc16d5fd",
+      "sport": "soccer",
+      "marketFamily": "OUTCOME",
+      "pickRu": "Победа Сао Пауло",
+      "homeRu": "Сао Пауло",
+      "awayRu": "Коринтианс",
+      "preMatchProbability": 0.426088,
+      "startedAt": "2026-11-05T00:30:00Z",
+      "snapshots": [
+        {
+          "at": "2026-11-05T03:26:34Z",
+          "status": "UNCONFIRMED",
+          "score": "0:0",
+          "clockLabel": "",
+          "elapsedFraction": 1.0,
+          "liveProbability": 0.426088
+        }
+      ],
+      "completed": false
     }
   },
   "calibration": {
@@ -6375,7 +6425,7 @@
   ],
   "statistics": {
     "completedSessions": 1,
-    "snapshotCount": 427,
+    "snapshotCount": 430,
     "calibratedBuckets": 0
   },
   "paidScoreFallbackLedger": {

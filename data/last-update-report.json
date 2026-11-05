@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-04T12:56:43Z",
-  "finishedAt": "2026-11-04T22:54:25Z",
+  "finishedAt": "2026-11-05T03:26:37Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 9,
-      "matches": 18279,
+      "added": 3,
+      "matches": 18282,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -926,55 +926,25 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.182
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_belgium_first_div",
-        "status": 200,
-        "elapsedSeconds": 0.145
+        "elapsedSeconds": 0.044
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.159
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_efl_champ",
-        "status": 200,
-        "elapsedSeconds": 0.152
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_england_league1",
-        "status": 200,
-        "elapsedSeconds": 0.14
+        "elapsedSeconds": 0.049
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.309
+        "elapsedSeconds": 0.072
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_copa_del_rey",
         "status": 200,
-        "elapsedSeconds": 0.279
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_uefa_champs_league",
-        "status": 200,
-        "elapsedSeconds": 0.135
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_uefa_europa_league",
-        "status": 200,
-        "elapsedSeconds": 0.363
+        "elapsedSeconds": 0.045
       }
     ],
     "quota": {
@@ -1834,20 +1804,20 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 11,
-    "providerFinalResults": 44,
+    "dueRecords": 5,
+    "providerFinalResults": 12,
     "settlement": {
-      "analysisSettled": 9,
-      "bestBetsSettled": 3,
-      "unresolved": 5
+      "analysisSettled": 3,
+      "bestBetsSettled": 0,
+      "unresolved": 2
     },
     "shadowSettlement": {
-      "settled": 3,
-      "won": 1,
-      "lost": 2,
+      "settled": 1,
+      "won": 0,
+      "lost": 1,
       "push": 0,
       "superseded": 0,
-      "unresolved": 3
+      "unresolved": 2
     },
     "overdueRelease": {
       "analysis": 0,
