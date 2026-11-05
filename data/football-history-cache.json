@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-05T11:28:28Z",
-  "lastSuccessfulAt": "2026-11-05T11:28:28Z",
+  "updatedAt": "2026-11-05T13:07:03Z",
+  "lastSuccessfulAt": "2026-11-05T13:07:03Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -551361,6 +551361,39 @@
       }
     },
     {
+      "id": "thesportsdb_public_123:2542673",
+      "utcDate": "2026-11-03T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "English Isthmian League Premier Division",
+      "competitionCode": "4647",
+      "homeTeam": {
+        "id": "",
+        "name": "Wingate and Finchley",
+        "shortName": "Wingate and Finchley",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Burgess Hill Town",
+        "shortName": "Burgess Hill Town",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-05T13:13:09Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "11",
+      "venue": "The Maurice Rebak Stadium",
+      "theSportsDbEventId": "2542673"
+    },
+    {
       "id": "tracked:adc18acd573bba376b5a42dc2fb78e4d",
       "utcDate": "2026-11-03T20:00:00Z",
       "status": "FINISHED",
@@ -638881,35 +638914,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-05T11:28:28Z",
-      "matches": 18441
+      "updatedAt": "2026-11-05T13:07:03Z",
+      "matches": 18442
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-05T11:28:28Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-11-05T13:07:03Z",
+      "requests": 53,
+      "matchesAdded": 53,
       "errors": [
-        "136449:HTTPError",
+        "133915:HTTPError",
+        "135987:HTTPError",
+        "134627:HTTPError",
+        "136469:HTTPError",
+        "134510:HTTPError",
+        "133901:HTTPError",
+        "149900:HTTPError",
+        "144737:HTTPError",
         "136466:HTTPError",
-        "134506:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
-        "145389:HTTPError",
-        "134295:HTTPError",
-        "134154:HTTPError",
-        "134147:HTTPError",
-        "134280:HTTPError",
+        "136452:HTTPError",
+        "136454:HTTPError",
         "134464:HTTPError",
-        "137932:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
+        "134742:HTTPError",
+        "134737:HTTPError",
+        "134734:HTTPError",
         "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "137878:HTTPError",
+        "134018:HTTPError",
+        "133978:HTTPError"
       ]
     }
   }
