@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-05T13:05:59Z",
-  "finishedAt": "2026-11-05T18:56:16Z",
+  "finishedAt": "2026-11-06T00:06:57Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 18292,
+      "added": 7,
+      "matches": 18299,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -1208,25 +1208,31 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.256
+        "elapsedSeconds": 0.082
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.255
+        "elapsedSeconds": 0.074
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_copa_del_rey",
         "status": 200,
-        "elapsedSeconds": 0.095
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.224
+        "elapsedSeconds": 0.089
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_uefa_europa_league",
+        "status": 200,
+        "elapsedSeconds": 0.064
       }
     ],
     "quota": {
@@ -2106,20 +2112,20 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 2,
-    "providerFinalResults": 5,
+    "dueRecords": 9,
+    "providerFinalResults": 40,
     "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 16
+      "analysisSettled": 7,
+      "bestBetsSettled": 1,
+      "unresolved": 8
     },
     "shadowSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
+      "settled": 9,
+      "won": 4,
+      "lost": 5,
       "push": 0,
       "superseded": 0,
-      "unresolved": 6
+      "unresolved": 2
     },
     "overdueRelease": {
       "analysis": 0,
