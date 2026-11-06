@@ -1,64 +1,23 @@
 {
   "version": "1.2.0",
   "sourceMarker": "V10_R6_LIVE_MATCH_INTELLIGENCE",
-  "status": "TRACKING",
-  "updatedAt": "2026-11-06T00:06:54Z",
+  "status": "IDLE",
+  "updatedAt": "2026-11-06T06:49:57Z",
   "refreshMinutes": 10,
-  "events": [
-    {
-      "eventId": "754fd36ffe7b5a7fcd922576da8b0c8a",
-      "analysisId": "ranked-8f135853d3541b393269",
-      "isBestBet": true,
-      "sport": "soccer",
-      "sportLabel": "Футбол",
-      "sportKey": "soccer_brazil_campeonato",
-      "league": "Brazil Série A",
-      "leagueRu": "Серия A Бразилии",
-      "country": "Бразилия",
-      "countryRu": "Бразилия",
-      "home": "Cruzeiro",
-      "away": "Bahia",
-      "homeRu": "Крузеиро",
-      "awayRu": "Бахиа",
-      "commenceTime": "2026-11-06T00:30:00Z",
-      "status": "SCHEDULED",
-      "statusRu": "Ожидается",
-      "homeScore": null,
-      "awayScore": null,
-      "score": "",
-      "clockLabel": "",
-      "minute": 0,
-      "period": null,
-      "elapsedFraction": 0.0,
-      "pick": "Тотал меньше 3.5",
-      "pickRu": "Тотал меньше 3.5",
-      "market": "TOTAL_UNDER",
-      "marketFamily": "TOTAL",
-      "point": 3.5,
-      "preMatchProbability": 0.699016,
-      "liveProbability": 0.699016,
-      "liveProbabilityPercent": 69.9,
-      "liveReason": "Матч ещё не начался. Используется предматчевая вероятность.",
-      "calibrationEvidence": null,
-      "provider": "ESPN_PUBLIC_SCOREBOARD",
-      "providerEventId": "401841303",
-      "updatedAt": "2026-11-06T00:06:54Z",
-      "freshnessSeconds": 0,
-      "originalPredictionImmutable": true
-    }
-  ],
+  "events": [],
   "activeEventIds": [],
   "providerHealth": {
     "status": "GREEN",
-    "calls": 9,
+    "calls": 8,
     "results": 236,
     "oddsQuota": {
-      "requestsRemaining": "226",
-      "requestsUsed": "274",
-      "requestsLast": "0",
+      "requestsRemaining": null,
+      "requestsUsed": null,
+      "requestsLast": null,
       "estimatedCreditsThisRun": 0
     },
     "errors": [
+      "Ключ глобального источника счёта не настроен",
       "SofaScore 2026-11-05: SOFASCORE_PUBLIC:2026-11-05 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}",
       "SofaScore 2026-11-06: SOFASCORE_PUBLIC:2026-11-06 failed HTTP 403: {\"error\": {\"code\": 403, \"reason\": \"Forbidden\" }}"
     ],
@@ -73,7 +32,7 @@
     "finishedRemoved": 0,
     "cancelledRemoved": 0,
     "postponedRemoved": 0,
-    "unconfirmedRemoved": 8
+    "unconfirmedRemoved": 3
   },
   "notice": "Исходный прогноз, коэффициент и размер виртуальной ставки неизменяемы. Завершённые матчи автоматически удаляются из раздела текущих матчей."
 }
