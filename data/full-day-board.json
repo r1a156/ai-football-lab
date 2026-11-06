@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-06T14:56:56Z",
+  "updatedAt": "2026-11-06T20:49:39Z",
   "operationalDayId": "2026-11-06-MSK-0800",
   "operationalWindowStart": "2026-11-06T05:00:00Z",
   "operationalWindowEnd": "2026-11-07T05:00:00Z",
@@ -406,7 +406,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "47b7fc7d25003a9083df3789f996281e",
@@ -450,7 +450,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "d5a74e1730cf9bd8bfe0488e3d064e35",
@@ -494,7 +494,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "12e661a2aa5dc95aa7530fa0d9b1bf5c",
@@ -538,7 +538,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "1358657f64b8fdae74ac7263bf7b8725",
@@ -582,7 +582,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "658bb2b77031ef93a7ae893145b663b3",
@@ -626,7 +626,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "926c11a6b5d1773d9024296a215d0f71",
@@ -670,7 +670,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "a2cfd69166c7d4c8f255ab28fc38afb9",
@@ -688,8 +688,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "295076c39e49863cb54db085ac3cd340",
@@ -733,7 +733,45 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "97a7510ccf27d422b558ee67491d36d6",
+      "sport": "soccer",
+      "sportKey": "soccer_poland_ekstraklasa",
+      "league": "Ekstraklasa - Poland",
+      "leagueRu": "Екстракласа - Поланд",
+      "home": "Wisła Kraków",
+      "homeRu": "Висла Краков",
+      "away": "Cracovia Kraków",
+      "awayRu": "Краковиа Краков",
+      "commenceTime": "2026-11-06T19:30:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "b8fa8002fb548ec7d8cbe11b7d4b0ba6",
+      "sport": "soccer",
+      "sportKey": "soccer_spain_segunda_division",
+      "league": "La Liga 2 - Spain",
+      "leagueRu": "Ла Лига 2 - Спаин",
+      "home": "CD Castellón",
+      "homeRu": "Кд Кастеллон",
+      "away": "SD Eibar",
+      "awayRu": "Сд Еибар",
+      "commenceTime": "2026-11-06T19:30:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
     },
     {
       "eventId": "fd02f34a219698f956b133ddb2fc7bdf",
@@ -745,7 +783,7 @@
       "homeRu": "Асколи",
       "away": "Palermo",
       "awayRu": "Палермо",
-      "commenceTime": "2026-11-06T19:30:00Z",
+      "commenceTime": "2026-11-06T19:33:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -777,64 +815,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "97a7510ccf27d422b558ee67491d36d6",
-      "sport": "soccer",
-      "sportKey": "soccer_poland_ekstraklasa",
-      "league": "Ekstraklasa - Poland",
-      "leagueRu": "Екстракласа - Поланд",
-      "home": "Wisła Kraków",
-      "homeRu": "Висла Краков",
-      "away": "Cracovia Kraków",
-      "awayRu": "Краковиа Краков",
-      "commenceTime": "2026-11-06T19:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "b8fa8002fb548ec7d8cbe11b7d4b0ba6",
-      "sport": "soccer",
-      "sportKey": "soccer_spain_segunda_division",
-      "league": "La Liga 2 - Spain",
-      "leagueRu": "Ла Лига 2 - Спаин",
-      "home": "CD Castellón",
-      "homeRu": "Кд Кастеллон",
-      "away": "SD Eibar",
-      "awayRu": "Сд Еибар",
-      "commenceTime": "2026-11-06T19:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "7ad550e94d58693e8d19f1da1ae1513f",
-      "sport": "soccer",
-      "sportKey": "soccer_belgium_first_div",
-      "league": "Belgium First Div",
-      "leagueRu": "Белгиум Фирст Див",
-      "home": "Standard Liege",
-      "homeRu": "Стандард Лиеге",
-      "away": "SK Beveren",
-      "awayRu": "Ск Беверен",
-      "commenceTime": "2026-11-06T19:45:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "11047b1cde59d964057561511e731859",
@@ -878,7 +859,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "5e7d141f719835de18877ed95bedcb32",
@@ -922,7 +903,26 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "7ad550e94d58693e8d19f1da1ae1513f",
+      "sport": "soccer",
+      "sportKey": "soccer_belgium_first_div",
+      "league": "Belgium First Div",
+      "leagueRu": "Белгиум Фирст Див",
+      "home": "Standard Liege",
+      "homeRu": "Стандард Лиеге",
+      "away": "SK Beveren",
+      "awayRu": "Ск Беверен",
+      "commenceTime": "2026-11-06T19:47:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "fa069801a5c9b49143447a1a1d173fd1",
@@ -934,7 +934,7 @@
       "homeRu": "Венезиа",
       "away": "Udinese",
       "awayRu": "Удинесе",
-      "commenceTime": "2026-11-06T19:45:00Z",
+      "commenceTime": "2026-11-06T19:47:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -966,7 +966,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "af665449ac9e2c4e1f183376e85fc936",
@@ -1010,7 +1010,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "586bec023ee8ac2f0645d963bd2c9d25",
@@ -1054,7 +1054,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9dd0014685fd62d9b2890d7c33a8c9ab",
@@ -1098,7 +1098,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "d98d64a216d4db8db11c9b5017f76ca6",
@@ -1142,7 +1142,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c664e36e2d2856fcbd3b637422d7a8dc",
