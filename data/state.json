@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-11-07T18:40:47Z",
+    "updatedAt": "2026-11-07T22:21:20Z",
     "analysisDateLocal": "2026-11-07",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -86,7 +86,7 @@
     "maximumDailyExposurePercent": 30,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
     "migrationAt": "2026-08-03T18:22:26Z",
-    "analysisGeneratedAt": "2026-11-07T18:40:47Z",
+    "analysisGeneratedAt": "2026-11-07T22:21:20Z",
     "analysisTarget": 15,
     "analysisPublished": 0,
     "bestBetsTarget": 3,
@@ -132,7 +132,7 @@
     "operationalDayId": "2026-11-07-MSK-0800",
     "operationalWindowStart": "2026-11-07T05:00:00Z",
     "operationalWindowEnd": "2026-11-08T05:00:00Z",
-    "selectionWindowStart": "2026-11-07T19:25:47Z",
+    "selectionWindowStart": "2026-11-07T23:06:20Z",
     "selectionWindowEnd": "2026-11-08T05:00:00Z",
     "operationalWindowPolicy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
@@ -144,7 +144,7 @@
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-11-07T18:40:42Z",
+    "r15SettlementAt": "2026-11-07T22:21:16Z",
     "nextPortfolioStatus": "WAITING_FOR_QUALITY_SELECTION",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -175,37 +175,37 @@
         "wins": 33,
         "losses": 27,
         "hitRate": 0.55,
-        "avgPredicted": 0.505242,
-        "brier": 0.262779,
+        "avgPredicted": 0.502157,
+        "brier": 0.263015,
         "overconfidence": 0.0,
         "shrunkOverconfidence": 0.0
       },
       "marketFamilies": {
         "OUTCOME": {
-          "n": 29,
-          "wins": 18,
-          "losses": 11,
-          "hitRate": 0.62069,
-          "avgPredicted": 0.446944,
-          "brier": 0.265641,
+          "n": 31,
+          "wins": 19,
+          "losses": 12,
+          "hitRate": 0.612903,
+          "avgPredicted": 0.449713,
+          "brier": 0.264422,
           "overconfidence": 0.0,
           "shrunkOverconfidence": 0.0
         },
         "TOTAL": {
-          "n": 31,
-          "wins": 15,
-          "losses": 16,
-          "hitRate": 0.483871,
-          "avgPredicted": 0.559779,
-          "brier": 0.260101,
-          "overconfidence": 0.075908,
-          "shrunkOverconfidence": 0.04614
+          "n": 29,
+          "wins": 14,
+          "losses": 15,
+          "hitRate": 0.482759,
+          "avgPredicted": 0.558218,
+          "brier": 0.261512,
+          "overconfidence": 0.07546,
+          "shrunkOverconfidence": 0.04466
         }
       },
       "additionalUncertaintyMargin": 0.0,
       "marketFamilyHaircuts": {
         "OUTCOME": 0.0,
-        "TOTAL": 0.007842
+        "TOTAL": 0.007398
       },
       "bankrollAllowed": false,
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
@@ -242,8 +242,8 @@
       "primary": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 122,
-        "used": 378
+        "remaining": 116,
+        "used": 384
       },
       "backup": {
         "valid": true,
@@ -253,7 +253,7 @@
       }
     },
     "oddsProviderStatus": "AVAILABLE",
-    "oddsProviderUpdatedAt": "2026-11-07T18:40:47Z"
+    "oddsProviderUpdatedAt": "2026-11-07T22:21:20Z"
   },
   "dailyAnalysis": [],
   "bestBets": [],
@@ -15641,8 +15641,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-11-07T18:40:42Z",
-      "settlementAttempts": 1243,
+      "settlementLastAttemptAt": "2026-11-07T22:21:16Z",
+      "settlementAttempts": 1244,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -160807,8 +160807,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-11-07T18:40:42Z",
-      "settlementAttempts": 217,
+      "settlementLastAttemptAt": "2026-11-07T22:21:16Z",
+      "settlementAttempts": 218,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -306495,8 +306495,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T18:40:42Z",
-      "settlementAttempts": 6
+      "settlementLastAttemptAt": "2026-11-07T22:21:16Z",
+      "settlementAttempts": 7
     },
     {
       "id": "analysis-1b5ab8a778b1900a9b3b",
@@ -307997,10 +307997,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "won",
+      "score": "1:0",
       "publishedAt": "2026-11-07T06:34:12Z",
-      "settledAt": null,
+      "settledAt": "2026-11-07T22:21:16Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -308373,9 +308373,14 @@
       "batchSequence": 51,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T18:40:42Z",
-      "settlementAttempts": 6
+      "statusLabel": "Выигрыш",
+      "settlementLastAttemptAt": "2026-11-07T22:21:16Z",
+      "settlementAttempts": 7,
+      "homeScore": 1,
+      "awayScore": 0,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-07T22:21:16Z"
     },
     {
       "id": "analysis-e839170c43e8a274bd79",
@@ -308929,10 +308934,10 @@
           }
         }
       ],
-      "status": "pending",
-      "score": "",
+      "status": "lost",
+      "score": "1:3",
       "publishedAt": "2026-11-07T06:34:12Z",
-      "settledAt": null,
+      "settledAt": "2026-11-07T22:21:16Z",
       "isBestBet": false,
       "stake": 0.0,
       "profit": 0.0,
@@ -309305,9 +309310,14 @@
       "batchSequence": 51,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T18:40:42Z",
-      "settlementAttempts": 6
+      "statusLabel": "Проигрыш",
+      "settlementLastAttemptAt": "2026-11-07T22:21:16Z",
+      "settlementAttempts": 7,
+      "homeScore": 1,
+      "awayScore": 3,
+      "settlementSource": "THE_ODDS_API_SCORES",
+      "resultVisible": true,
+      "resultUpdatedAt": "2026-11-07T22:21:16Z"
     },
     {
       "id": "analysis-5508dcbea88aa5efb5ca",
@@ -406713,12 +406723,12 @@
     "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
   },
   "statistics": {
-    "analysisAccuracy": 55.0,
+    "analysisAccuracy": 54.9,
     "bestBetsAccuracy": 47.8,
     "averageOdds": 1.73,
     "currentStreak": "1 выигрышных подряд",
     "bestSegment": "HANDICAP · 61.5%",
-    "settledAnalyses": 393,
+    "settledAnalyses": 395,
     "settledBestBets": 113,
     "wonBestBets": 54,
     "lostBestBets": 59,
@@ -406726,15 +406736,15 @@
     "pendingBestBets": 0,
     "allPredictions": {
       "total": 398,
-      "settled": 393,
-      "decided": 393,
-      "won": 216,
-      "lost": 177,
+      "settled": 395,
+      "decided": 395,
+      "won": 217,
+      "lost": 178,
       "push": 0,
       "void": 0,
       "unresolved": 2,
-      "pending": 3,
-      "accuracy": 55.0,
+      "pending": 1,
+      "accuracy": 54.9,
       "profit": 0.0
     },
     "bestBets": {
@@ -406754,14 +406764,14 @@
       "7": {
         "allPredictions": {
           "total": 107,
-          "settled": 104,
-          "decided": 104,
-          "won": 56,
-          "lost": 48,
+          "settled": 106,
+          "decided": 106,
+          "won": 57,
+          "lost": 49,
           "push": 0,
           "void": 0,
           "unresolved": 0,
-          "pending": 3,
+          "pending": 1,
           "accuracy": 53.8,
           "profit": 0.0
         },
@@ -406782,15 +406792,15 @@
       "30": {
         "allPredictions": {
           "total": 305,
-          "settled": 301,
-          "decided": 301,
-          "won": 163,
-          "lost": 138,
+          "settled": 303,
+          "decided": 303,
+          "won": 164,
+          "lost": 139,
           "push": 0,
           "void": 0,
           "unresolved": 1,
-          "pending": 3,
-          "accuracy": 54.2,
+          "pending": 1,
+          "accuracy": 54.1,
           "profit": 0.0
         },
         "bestBets": {
@@ -406810,14 +406820,14 @@
       "90": {
         "allPredictions": {
           "total": 328,
-          "settled": 324,
-          "decided": 324,
-          "won": 175,
-          "lost": 149,
+          "settled": 326,
+          "decided": 326,
+          "won": 176,
+          "lost": 150,
           "push": 0,
           "void": 0,
           "unresolved": 1,
-          "pending": 3,
+          "pending": 1,
           "accuracy": 54.0,
           "profit": 0.0
         },
@@ -406838,15 +406848,15 @@
       "all": {
         "allPredictions": {
           "total": 398,
-          "settled": 393,
-          "decided": 393,
-          "won": 216,
-          "lost": 177,
+          "settled": 395,
+          "decided": 395,
+          "won": 217,
+          "lost": 178,
           "push": 0,
           "void": 0,
           "unresolved": 2,
-          "pending": 3,
-          "accuracy": 55.0,
+          "pending": 1,
+          "accuracy": 54.9,
           "profit": 0.0
         },
         "bestBets": {
@@ -406868,15 +406878,15 @@
       {
         "key": "Футбол",
         "total": 398,
-        "settled": 393,
-        "decided": 393,
-        "won": 216,
-        "lost": 177,
+        "settled": 395,
+        "decided": 395,
+        "won": 217,
+        "lost": 178,
         "push": 0,
         "void": 0,
         "unresolved": 2,
-        "pending": 3,
-        "accuracy": 55.0,
+        "pending": 1,
+        "accuracy": 54.9,
         "profit": 0.0
       }
     ],
@@ -406898,14 +406908,14 @@
       {
         "key": "OUTCOME",
         "total": 158,
-        "settled": 155,
-        "decided": 155,
-        "won": 83,
-        "lost": 72,
+        "settled": 157,
+        "decided": 157,
+        "won": 84,
+        "lost": 73,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 3,
+        "pending": 1,
         "accuracy": 53.5,
         "profit": 0.0
       },
@@ -407110,15 +407120,15 @@
       {
         "key": "Ла Лига 2 - Спаин",
         "total": 14,
-        "settled": 12,
-        "decided": 12,
+        "settled": 13,
+        "decided": 13,
         "won": 8,
-        "lost": 4,
+        "lost": 5,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 2,
-        "accuracy": 66.7,
+        "pending": 1,
+        "accuracy": 61.5,
         "profit": 0.0
       },
       {
@@ -407133,6 +407143,20 @@
         "unresolved": 0,
         "pending": 0,
         "accuracy": 27.3,
+        "profit": 0.0
+      },
+      {
+        "key": "Бундеслига - Германи",
+        "total": 9,
+        "settled": 9,
+        "decided": 9,
+        "won": 5,
+        "lost": 4,
+        "push": 0,
+        "void": 0,
+        "unresolved": 0,
+        "pending": 0,
+        "accuracy": 55.6,
         "profit": 0.0
       },
       {
@@ -407160,20 +407184,6 @@
         "void": 0,
         "unresolved": 0,
         "pending": 0,
-        "accuracy": 50.0,
-        "profit": 0.0
-      },
-      {
-        "key": "Бундеслига - Германи",
-        "total": 9,
-        "settled": 8,
-        "decided": 8,
-        "won": 4,
-        "lost": 4,
-        "push": 0,
-        "void": 0,
-        "unresolved": 0,
-        "pending": 1,
         "accuracy": 50.0,
         "profit": 0.0
       },
@@ -407238,15 +407248,15 @@
       {
         "key": "1,80–2,19",
         "total": 120,
-        "settled": 117,
-        "decided": 117,
-        "won": 66,
-        "lost": 51,
+        "settled": 119,
+        "decided": 119,
+        "won": 67,
+        "lost": 52,
         "push": 0,
         "void": 0,
         "unresolved": 0,
-        "pending": 3,
-        "accuracy": 56.4,
+        "pending": 1,
+        "accuracy": 56.3,
         "profit": 0.0
       },
       {
@@ -407289,23 +407299,23 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-11-07T18:40:42Z",
+    "updatedAt": "2026-11-07T22:21:16Z",
     "segments": {
       "SPORT|soccer": {
-        "settled": 439,
-        "wins": 242,
-        "losses": 197,
+        "settled": 441,
+        "wins": 243,
+        "losses": 198,
         "pushes": 0,
-        "predictedSum": 245.5506149999999,
-        "actualSum": 242.0,
-        "brierSum": 109.80349099534907,
-        "logLossSum": 304.6409985225872,
+        "predictedSum": 246.58396399999992,
+        "actualSum": 243.0,
+        "brierSum": 110.30093094357005,
+        "logLossSum": 306.0221664614524,
         "profit": 0.0,
-        "hitRate": 0.5513,
-        "averagePredicted": 0.5593,
-        "probabilityBias": -0.008088,
-        "brierScore": 0.250122,
-        "logLoss": 0.693943
+        "hitRate": 0.551,
+        "averagePredicted": 0.5591,
+        "probabilityBias": -0.008127,
+        "brierScore": 0.250115,
+        "logLoss": 0.693928
       },
       "MARKET|soccer|TOTAL": {
         "settled": 267,
@@ -407676,20 +407686,20 @@
         "logLoss": 0.687009
       },
       "PROBABILITY|soccer|P50": {
-        "settled": 168,
-        "wins": 97,
-        "losses": 71,
+        "settled": 170,
+        "wins": 98,
+        "losses": 72,
         "pushes": 0,
-        "predictedSum": 94.19042499999999,
-        "actualSum": 97.0,
-        "brierSum": 41.19326608126101,
-        "logLossSum": 114.83328229520907,
+        "predictedSum": 95.22377399999999,
+        "actualSum": 98.0,
+        "brierSum": 41.69070602948201,
+        "logLossSum": 116.21445023407423,
         "profit": 0.0,
-        "hitRate": 0.5774,
-        "averagePredicted": 0.5607,
-        "probabilityBias": 0.016724,
-        "brierScore": 0.245198,
-        "logLoss": 0.683531
+        "hitRate": 0.5765,
+        "averagePredicted": 0.5601,
+        "probabilityBias": 0.016331,
+        "brierScore": 0.245239,
+        "logLoss": 0.683614
       },
       "LEAGUE_MARKET|soccer|ekstraklasa poland|TOTAL": {
         "settled": 1,
@@ -408028,36 +408038,36 @@
         "logLoss": 0.917955
       },
       "MARKET|soccer|OUTCOME": {
-        "settled": 156,
-        "wins": 84,
-        "losses": 72,
+        "settled": 158,
+        "wins": 85,
+        "losses": 73,
         "pushes": 0,
-        "predictedSum": 76.40079599999999,
-        "actualSum": 84.0,
-        "brierSum": 38.846172380192,
-        "logLossSum": 107.8371513241946,
+        "predictedSum": 77.43414499999999,
+        "actualSum": 85.0,
+        "brierSum": 39.343612328413,
+        "logLossSum": 109.21831926305975,
         "profit": 0.0,
-        "hitRate": 0.5385,
-        "averagePredicted": 0.4897,
-        "probabilityBias": 0.048713,
-        "brierScore": 0.249014,
-        "logLoss": 0.691264
+        "hitRate": 0.538,
+        "averagePredicted": 0.4901,
+        "probabilityBias": 0.047885,
+        "brierScore": 0.24901,
+        "logLoss": 0.691255
       },
       "MARKET_DETAIL|soccer|HOME_WIN": {
-        "settled": 112,
-        "wins": 61,
-        "losses": 51,
+        "settled": 114,
+        "wins": 62,
+        "losses": 52,
         "pushes": 0,
-        "predictedSum": 56.24409000000001,
-        "actualSum": 61.0,
-        "brierSum": 27.719377283651998,
-        "logLossSum": 77.08877119619547,
+        "predictedSum": 57.277439,
+        "actualSum": 62.0,
+        "brierSum": 28.216817231872998,
+        "logLossSum": 78.46993913506063,
         "profit": 0.0,
-        "hitRate": 0.5446,
-        "averagePredicted": 0.5022,
-        "probabilityBias": 0.042463,
-        "brierScore": 0.247494,
-        "logLoss": 0.688293
+        "hitRate": 0.5439,
+        "averagePredicted": 0.5024,
+        "probabilityBias": 0.041426,
+        "brierScore": 0.247516,
+        "logLoss": 0.688333
       },
       "LEAGUE_MARKET|soccer|k league 1|OUTCOME": {
         "settled": 1,
@@ -409132,20 +409142,20 @@
         "logLoss": 0.499995
       },
       "ODDS|soccer|UPPER_MID": {
-        "settled": 129,
-        "wins": 72,
-        "losses": 57,
+        "settled": 131,
+        "wins": 73,
+        "losses": 58,
         "pushes": 0,
-        "predictedSum": 69.38907699999997,
-        "actualSum": 72.0,
-        "brierSum": 32.240416304223004,
-        "logLossSum": 89.40779584143114,
+        "predictedSum": 70.42242599999997,
+        "actualSum": 73.0,
+        "brierSum": 32.737856252444004,
+        "logLossSum": 90.7889637802963,
         "profit": 0.0,
-        "hitRate": 0.5581,
-        "averagePredicted": 0.5379,
-        "probabilityBias": 0.02024,
-        "brierScore": 0.249926,
-        "logLoss": 0.693084
+        "hitRate": 0.5573,
+        "averagePredicted": 0.5376,
+        "probabilityBias": 0.019676,
+        "brierScore": 0.249907,
+        "logLoss": 0.693046
       },
       "LEAGUE_MARKET_DETAIL|soccer|uefa nations league|TOTAL_UNDER@4.5": {
         "settled": 1,
@@ -409196,20 +409206,20 @@
         "logLoss": 0.656575
       },
       "SAMPLE_SOURCE|soccer|PUBLISHED": {
-        "settled": 313,
-        "wins": 170,
-        "losses": 143,
+        "settled": 315,
+        "wins": 171,
+        "losses": 144,
         "pushes": 0,
-        "predictedSum": 172.19915199999994,
-        "actualSum": 170.0,
-        "brierSum": 78.99970240838793,
-        "logLossSum": 218.69133488157942,
+        "predictedSum": 173.23250099999996,
+        "actualSum": 171.0,
+        "brierSum": 79.49714235660892,
+        "logLossSum": 220.07250282044458,
         "profit": 0.0,
-        "hitRate": 0.5431,
-        "averagePredicted": 0.5502,
-        "probabilityBias": -0.007026,
-        "brierScore": 0.252395,
-        "logLoss": 0.698694
+        "hitRate": 0.5429,
+        "averagePredicted": 0.5499,
+        "probabilityBias": -0.007087,
+        "brierScore": 0.252372,
+        "logLoss": 0.698643
       },
       "TEAM|soccer|america mineiro": {
         "settled": 2,
@@ -410636,20 +410646,20 @@
         "logLoss": 0.533141
       },
       "DATA_TIER|soccer|FULL": {
-        "settled": 184,
-        "wins": 106,
-        "losses": 78,
+        "settled": 186,
+        "wins": 107,
+        "losses": 79,
         "pushes": 0,
-        "predictedSum": 102.16421999999996,
-        "actualSum": 106.0,
-        "brierSum": 46.70755687705202,
-        "logLossSum": 128.99398080694252,
+        "predictedSum": 103.19756899999996,
+        "actualSum": 107.0,
+        "brierSum": 47.20499682527302,
+        "logLossSum": 130.37514874580768,
         "profit": 0.0,
-        "hitRate": 0.5761,
-        "averagePredicted": 0.5552,
-        "probabilityBias": 0.020847,
-        "brierScore": 0.253845,
-        "logLoss": 0.701054
+        "hitRate": 0.5753,
+        "averagePredicted": 0.5548,
+        "probabilityBias": 0.020443,
+        "brierScore": 0.25379,
+        "logLoss": 0.700942
       },
       "LEAGUE_MARKET|soccer|bundesliga 2 germany|TOTAL": {
         "settled": 6,
@@ -412460,20 +412470,20 @@
         "logLoss": 0.548322
       },
       "LEAGUE|soccer|bundesliga germany": {
-        "settled": 10,
-        "wins": 5,
+        "settled": 11,
+        "wins": 6,
         "losses": 5,
         "pushes": 0,
-        "predictedSum": 5.322188000000001,
-        "actualSum": 5.0,
-        "brierSum": 3.4229415191799997,
-        "logLossSum": 8.840613528003518,
+        "predictedSum": 5.840423,
+        "actualSum": 6.0,
+        "brierSum": 3.6550390344049997,
+        "logLossSum": 9.497939999648697,
         "profit": 0.0,
-        "hitRate": 0.5,
-        "averagePredicted": 0.5322,
-        "probabilityBias": -0.032219,
-        "brierScore": 0.342294,
-        "logLoss": 0.884061
+        "hitRate": 0.5455,
+        "averagePredicted": 0.5309,
+        "probabilityBias": 0.014507,
+        "brierScore": 0.332276,
+        "logLoss": 0.863449
       },
       "LEAGUE_MARKET|soccer|bundesliga germany|TOTAL": {
         "settled": 7,
@@ -412556,36 +412566,36 @@
         "logLoss": 0.713659
       },
       "TEAM|soccer|werder bremen": {
-        "settled": 2,
-        "wins": 1,
+        "settled": 3,
+        "wins": 2,
         "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.1155210000000002,
-        "actualSum": 1.0,
-        "brierSum": 0.48888856223300003,
-        "logLossSum": 1.363684969040527,
+        "predictedSum": 1.6337560000000002,
+        "actualSum": 2.0,
+        "brierSum": 0.720986077458,
+        "logLossSum": 2.021011440685706,
         "profit": 0.0,
-        "hitRate": 0.5,
-        "averagePredicted": 0.5578,
-        "probabilityBias": -0.057761,
-        "brierScore": 0.244444,
-        "logLoss": 0.681842
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5446,
+        "probabilityBias": 0.122081,
+        "brierScore": 0.240329,
+        "logLoss": 0.67367
       },
       "TEAM_AWAY|soccer|werder bremen": {
-        "settled": 2,
-        "wins": 1,
+        "settled": 3,
+        "wins": 2,
         "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.1155210000000002,
-        "actualSum": 1.0,
-        "brierSum": 0.48888856223300003,
-        "logLossSum": 1.363684969040527,
+        "predictedSum": 1.6337560000000002,
+        "actualSum": 2.0,
+        "brierSum": 0.720986077458,
+        "logLossSum": 2.021011440685706,
         "profit": 0.0,
-        "hitRate": 0.5,
-        "averagePredicted": 0.5578,
-        "probabilityBias": -0.057761,
-        "brierScore": 0.244444,
-        "logLoss": 0.681842
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5446,
+        "probabilityBias": 0.122081,
+        "brierScore": 0.240329,
+        "logLoss": 0.67367
       },
       "TEAM_MARKET|soccer|werder bremen|TOTAL_UNDER@3.5": {
         "settled": 1,
@@ -412748,36 +412758,36 @@
         "logLoss": 0.737669
       },
       "MARKET_TIER|soccer|OUTCOME|FULL": {
-        "settled": 74,
-        "wins": 44,
-        "losses": 30,
+        "settled": 76,
+        "wins": 45,
+        "losses": 31,
         "pushes": 0,
-        "predictedSum": 36.15732400000001,
-        "actualSum": 44.0,
-        "brierSum": 19.35253666195201,
-        "logLossSum": 53.03193471725052,
+        "predictedSum": 37.190673000000004,
+        "actualSum": 45.0,
+        "brierSum": 19.84997661017301,
+        "logLossSum": 54.41310265611569,
         "profit": 0.0,
-        "hitRate": 0.5946,
-        "averagePredicted": 0.4886,
-        "probabilityBias": 0.105982,
-        "brierScore": 0.261521,
-        "logLoss": 0.716648
+        "hitRate": 0.5921,
+        "averagePredicted": 0.4894,
+        "probabilityBias": 0.102754,
+        "brierScore": 0.261184,
+        "logLoss": 0.715962
       },
       "MARKET_DETAIL_TIER|soccer|HOME_WIN|FULL": {
-        "settled": 50,
-        "wins": 29,
-        "losses": 21,
+        "settled": 52,
+        "wins": 30,
+        "losses": 22,
         "pushes": 0,
-        "predictedSum": 25.094925000000003,
-        "actualSum": 29.0,
-        "brierSum": 12.707100377118996,
-        "logLossSum": 35.08506664045084,
+        "predictedSum": 26.128274000000005,
+        "actualSum": 30.0,
+        "brierSum": 13.204540325339996,
+        "logLossSum": 36.46623457931601,
         "profit": 0.0,
-        "hitRate": 0.58,
-        "averagePredicted": 0.5019,
-        "probabilityBias": 0.078101,
-        "brierScore": 0.254142,
-        "logLoss": 0.701701
+        "hitRate": 0.5769,
+        "averagePredicted": 0.5025,
+        "probabilityBias": 0.074456,
+        "brierScore": 0.253933,
+        "logLoss": 0.701274
       },
       "TEAM|soccer|avellino": {
         "settled": 1,
@@ -413820,20 +413830,20 @@
         "logLoss": 0.560734
       },
       "LEAGUE_MARKET|soccer|bundesliga germany|OUTCOME": {
-        "settled": 3,
-        "wins": 3,
+        "settled": 4,
+        "wins": 4,
         "losses": 0,
         "pushes": 0,
-        "predictedSum": 1.124359,
-        "actualSum": 3.0,
-        "brierSum": 1.172786722275,
-        "logLossSum": 2.9445892782543983,
+        "predictedSum": 1.642594,
+        "actualSum": 4.0,
+        "brierSum": 1.4048842375,
+        "logLossSum": 3.601915749899577,
         "profit": 0.0,
         "hitRate": 1.0,
-        "averagePredicted": 0.3748,
-        "probabilityBias": 0.625214,
-        "brierScore": 0.390929,
-        "logLoss": 0.98153
+        "averagePredicted": 0.4106,
+        "probabilityBias": 0.589352,
+        "brierScore": 0.351221,
+        "logLoss": 0.900479
       },
       "LEAGUE_MARKET_DETAIL|soccer|bundesliga germany|AWAY_WIN": {
         "settled": 3,
@@ -417932,52 +417942,52 @@
         "logLoss": 0.508319
       },
       "LEAGUE|soccer|la liga 2 spain": {
-        "settled": 13,
+        "settled": 14,
         "wins": 8,
-        "losses": 5,
+        "losses": 6,
         "pushes": 0,
-        "predictedSum": 7.145956000000002,
+        "predictedSum": 7.661070000000001,
         "actualSum": 8.0,
-        "brierSum": 3.32221729776,
-        "logLossSum": 9.152649122603925,
+        "brierSum": 3.587559730756,
+        "logLossSum": 9.876490589823915,
         "profit": 0.0,
-        "hitRate": 0.6154,
-        "averagePredicted": 0.5497,
-        "probabilityBias": 0.065696,
-        "brierScore": 0.255555,
-        "logLoss": 0.70405
+        "hitRate": 0.5714,
+        "averagePredicted": 0.5472,
+        "probabilityBias": 0.024209,
+        "brierScore": 0.256254,
+        "logLoss": 0.705464
       },
       "LEAGUE_MARKET|soccer|la liga 2 spain|OUTCOME": {
-        "settled": 8,
+        "settled": 9,
         "wins": 7,
-        "losses": 1,
+        "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.337365999999999,
+        "predictedSum": 4.852479999999999,
         "actualSum": 7.0,
-        "brierSum": 1.810567043592,
-        "logLossSum": 5.156357193232162,
+        "brierSum": 2.075909476588,
+        "logLossSum": 5.880198660452152,
         "profit": 0.0,
-        "hitRate": 0.875,
-        "averagePredicted": 0.5422,
-        "probabilityBias": 0.332829,
-        "brierScore": 0.226321,
-        "logLoss": 0.644545
+        "hitRate": 0.7778,
+        "averagePredicted": 0.5392,
+        "probabilityBias": 0.238613,
+        "brierScore": 0.230657,
+        "logLoss": 0.653355
       },
       "LEAGUE_MARKET_DETAIL|soccer|la liga 2 spain|HOME_WIN": {
-        "settled": 8,
+        "settled": 9,
         "wins": 7,
-        "losses": 1,
+        "losses": 2,
         "pushes": 0,
-        "predictedSum": 4.337365999999999,
+        "predictedSum": 4.852479999999999,
         "actualSum": 7.0,
-        "brierSum": 1.810567043592,
-        "logLossSum": 5.156357193232162,
+        "brierSum": 2.075909476588,
+        "logLossSum": 5.880198660452152,
         "profit": 0.0,
-        "hitRate": 0.875,
-        "averagePredicted": 0.5422,
-        "probabilityBias": 0.332829,
-        "brierScore": 0.226321,
-        "logLoss": 0.644545
+        "hitRate": 0.7778,
+        "averagePredicted": 0.5392,
+        "probabilityBias": 0.238613,
+        "brierScore": 0.230657,
+        "logLoss": 0.653355
       },
       "TEAM|soccer|almeria": {
         "settled": 1,
@@ -418028,20 +418038,20 @@
         "logLoss": 0.442765
       },
       "TEAM|soccer|leganes": {
-        "settled": 2,
+        "settled": 3,
         "wins": 2,
-        "losses": 0,
+        "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.2119339999999998,
+        "predictedSum": 1.727048,
         "actualSum": 2.0,
-        "brierSum": 0.3131580835400001,
-        "logLossSum": 1.0054526876797454,
+        "brierSum": 0.578500516536,
+        "logLossSum": 1.7292941548997351,
         "profit": 0.0,
-        "hitRate": 1.0,
-        "averagePredicted": 0.606,
-        "probabilityBias": 0.394033,
-        "brierScore": 0.156579,
-        "logLoss": 0.502726
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5757,
+        "probabilityBias": 0.090984,
+        "brierScore": 0.192834,
+        "logLoss": 0.576431
       },
       "TEAM_AWAY|soccer|leganes": {
         "settled": 2,
@@ -418060,20 +418070,20 @@
         "logLoss": 0.502726
       },
       "TEAM_MARKET|soccer|leganes|HOME_WIN": {
-        "settled": 2,
+        "settled": 3,
         "wins": 2,
-        "losses": 0,
+        "losses": 1,
         "pushes": 0,
-        "predictedSum": 1.2119339999999998,
+        "predictedSum": 1.727048,
         "actualSum": 2.0,
-        "brierSum": 0.3131580835400001,
-        "logLossSum": 1.0054526876797454,
+        "brierSum": 0.578500516536,
+        "logLossSum": 1.7292941548997351,
         "profit": 0.0,
-        "hitRate": 1.0,
-        "averagePredicted": 0.606,
-        "probabilityBias": 0.394033,
-        "brierScore": 0.156579,
-        "logLoss": 0.502726
+        "hitRate": 0.6667,
+        "averagePredicted": 0.5757,
+        "probabilityBias": 0.090984,
+        "brierScore": 0.192834,
+        "logLoss": 0.576431
       },
       "MATCHUP|soccer|almeria~leganes": {
         "settled": 1,
@@ -419628,52 +419638,52 @@
         "logLoss": 0.642373
       },
       "TEAM|soccer|albacete": {
-        "settled": 1,
+        "settled": 2,
         "wins": 1,
-        "losses": 0,
+        "losses": 1,
         "pushes": 0,
-        "predictedSum": 0.485751,
+        "predictedSum": 1.000865,
         "actualSum": 1.0,
-        "brierSum": 0.264452034001,
-        "logLossSum": 0.7220591320545502,
+        "brierSum": 0.529794466997,
+        "logLossSum": 1.4459005992745402,
         "profit": 0.0,
-        "hitRate": 1.0,
-        "averagePredicted": 0.4858,
-        "probabilityBias": 0.514249,
-        "brierScore": 0.264452,
-        "logLoss": 0.722059
+        "hitRate": 0.5,
+        "averagePredicted": 0.5004,
+        "probabilityBias": -0.000432,
+        "brierScore": 0.264897,
+        "logLoss": 0.72295
       },
       "TEAM_AWAY|soccer|albacete": {
-        "settled": 1,
+        "settled": 2,
         "wins": 1,
-        "losses": 0,
+        "losses": 1,
         "pushes": 0,
-        "predictedSum": 0.485751,
+        "predictedSum": 1.000865,
         "actualSum": 1.0,
-        "brierSum": 0.264452034001,
-        "logLossSum": 0.7220591320545502,
+        "brierSum": 0.529794466997,
+        "logLossSum": 1.4459005992745402,
         "profit": 0.0,
-        "hitRate": 1.0,
-        "averagePredicted": 0.4858,
-        "probabilityBias": 0.514249,
-        "brierScore": 0.264452,
-        "logLoss": 0.722059
+        "hitRate": 0.5,
+        "averagePredicted": 0.5004,
+        "probabilityBias": -0.000432,
+        "brierScore": 0.264897,
+        "logLoss": 0.72295
       },
       "TEAM_MARKET|soccer|albacete|HOME_WIN": {
-        "settled": 1,
+        "settled": 2,
         "wins": 1,
-        "losses": 0,
+        "losses": 1,
         "pushes": 0,
-        "predictedSum": 0.485751,
+        "predictedSum": 1.000865,
         "actualSum": 1.0,
-        "brierSum": 0.264452034001,
-        "logLossSum": 0.7220591320545502,
+        "brierSum": 0.529794466997,
+        "logLossSum": 1.4459005992745402,
         "profit": 0.0,
-        "hitRate": 1.0,
-        "averagePredicted": 0.4858,
-        "probabilityBias": 0.514249,
-        "brierScore": 0.264452,
-        "logLoss": 0.722059
+        "hitRate": 0.5,
+        "averagePredicted": 0.5004,
+        "probabilityBias": -0.000432,
+        "brierScore": 0.264897,
+        "logLoss": 0.72295
       },
       "MATCHUP|soccer|albacete~real valladolid": {
         "settled": 1,
@@ -423804,20 +423814,20 @@
         "logLoss": 0.767451
       },
       "TEAM|soccer|vfb stuttgart": {
-        "settled": 1,
-        "wins": 1,
+        "settled": 2,
+        "wins": 2,
         "losses": 0,
         "pushes": 0,
-        "predictedSum": 0.594826,
-        "actualSum": 1.0,
-        "brierSum": 0.16416597027600002,
-        "logLossSum": 0.5194863531793276,
+        "predictedSum": 1.113061,
+        "actualSum": 2.0,
+        "brierSum": 0.396263485501,
+        "logLossSum": 1.1768128248245064,
         "profit": 0.0,
         "hitRate": 1.0,
-        "averagePredicted": 0.5948,
-        "probabilityBias": 0.405174,
-        "brierScore": 0.164166,
-        "logLoss": 0.519486
+        "averagePredicted": 0.5565,
+        "probabilityBias": 0.443469,
+        "brierScore": 0.198132,
+        "logLoss": 0.588406
       },
       "TEAM_AWAY|soccer|vfb stuttgart": {
         "settled": 1,
@@ -445994,6 +446004,150 @@
         "probabilityBias": -0.49531,
         "brierScore": 0.245332,
         "logLoss": 0.683811
+      },
+      "LEAGUE_MARKET_DETAIL|soccer|bundesliga germany|HOME_WIN": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "TEAM_HOME|soccer|vfb stuttgart": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "TEAM_MARKET|soccer|vfb stuttgart|HOME_WIN": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "TEAM_MARKET|soccer|werder bremen|HOME_WIN": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "MATCHUP|soccer|vfb stuttgart~werder bremen": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "MATCHUP_MARKET|soccer|vfb stuttgart~werder bremen|HOME_WIN": {
+        "settled": 1,
+        "wins": 1,
+        "losses": 0,
+        "pushes": 0,
+        "predictedSum": 0.518235,
+        "actualSum": 1.0,
+        "brierSum": 0.232097515225,
+        "logLossSum": 0.6573264716451789,
+        "profit": 0.0,
+        "hitRate": 1.0,
+        "averagePredicted": 0.5182,
+        "probabilityBias": 0.481765,
+        "brierScore": 0.232098,
+        "logLoss": 0.657326
+      },
+      "TEAM_HOME|soccer|leganes": {
+        "settled": 1,
+        "wins": 0,
+        "losses": 1,
+        "pushes": 0,
+        "predictedSum": 0.515114,
+        "actualSum": 0.0,
+        "brierSum": 0.26534243299599997,
+        "logLossSum": 0.7238414672199899,
+        "profit": 0.0,
+        "hitRate": 0.0,
+        "averagePredicted": 0.5151,
+        "probabilityBias": -0.515114,
+        "brierScore": 0.265342,
+        "logLoss": 0.723841
+      },
+      "MATCHUP|soccer|albacete~leganes": {
+        "settled": 1,
+        "wins": 0,
+        "losses": 1,
+        "pushes": 0,
+        "predictedSum": 0.515114,
+        "actualSum": 0.0,
+        "brierSum": 0.26534243299599997,
+        "logLossSum": 0.7238414672199899,
+        "profit": 0.0,
+        "hitRate": 0.0,
+        "averagePredicted": 0.5151,
+        "probabilityBias": -0.515114,
+        "brierScore": 0.265342,
+        "logLoss": 0.723841
+      },
+      "MATCHUP_MARKET|soccer|albacete~leganes|HOME_WIN": {
+        "settled": 1,
+        "wins": 0,
+        "losses": 1,
+        "pushes": 0,
+        "predictedSum": 0.515114,
+        "actualSum": 0.0,
+        "brierSum": 0.26534243299599997,
+        "logLossSum": 0.7238414672199899,
+        "profit": 0.0,
+        "hitRate": 0.0,
+        "averagePredicted": 0.5151,
+        "probabilityBias": -0.515114,
+        "brierScore": 0.265342,
+        "logLoss": 0.723841
       }
     },
     "calibrationBins": {
@@ -446005,11 +446159,11 @@
         "actualRate": 0.5616
       },
       "50-59": {
-        "count": 188,
-        "predictedSum": 105.63100900000003,
-        "actualSum": 109.0,
-        "averagePredicted": 0.5619,
-        "actualRate": 0.5798
+        "count": 190,
+        "predictedSum": 106.66435800000004,
+        "actualSum": 110.0,
+        "averagePredicted": 0.5614,
+        "actualRate": 0.5789
       },
       "40-49": {
         "count": 72,
@@ -446040,16 +446194,16 @@
         "actualRate": 0.5
       }
     },
-    "totalSettledAnalyses": 393,
+    "totalSettledAnalyses": 395,
     "totalSettledBestBets": 113,
     "modelNotes": [],
     "modelReadiness": {
       "stage": "Стабильная калибровка",
-      "settledSamples": 393,
+      "settledSamples": 395,
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-11-07T18:40:46Z"
+      "updatedAt": "2026-11-07T22:21:19Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -446066,7 +446220,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-07T18:40:47Z",
+    "updatedAt": "2026-11-07T22:21:20Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "batchHistory": [
@@ -446233,11 +446387,11 @@
     "requestsUsed": "110",
     "requestsLast": "0",
     "estimatedCreditsThisRun": 0,
-    "updatedAt": "2026-11-07T18:40:47Z"
+    "updatedAt": "2026-11-07T22:21:20Z"
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-11-07T18:40:42Z",
+    "updatedAt": "2026-11-07T22:21:16Z",
     "analysisHistory": {
       "input": 398,
       "output": 398,
@@ -455145,10 +455299,10 @@
     }
   ],
   "dataCoverage": {
-    "discoveredEvents": 44,
-    "competitionsDiscovered": 29,
+    "discoveredEvents": 16,
+    "competitionsDiscovered": 9,
     "competitionsWithOdds": 0,
-    "oddsEvents": 3,
+    "oddsEvents": 0,
     "historyMatchedEvents": 0,
     "qualifiedEvents": 0,
     "publishedEvents": 0,
@@ -455167,7 +455321,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-11-07T18:42:10Z",
+        "lastSuccessAt": "2026-11-07T22:22:37Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-10-31T21:25:38Z",
         "lastStatus": 401,
@@ -455189,7 +455343,7 @@
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 14154,
+    "historyMatches": 14147,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -455202,9 +455356,9 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 10072,
-      "duplicates": 9904,
-      "historyMatches": 18516,
+      "ingested": 2103,
+      "duplicates": 2011,
+      "historyMatches": 18436,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -455212,7 +455366,7 @@
       "status": "GREEN",
       "requests": 44,
       "matchesAdded": 44,
-      "historyMatches": 18516,
+      "historyMatches": 18436,
       "errors": [
         "136449:HTTPError",
         "136466:HTTPError",
@@ -455239,7 +455393,7 @@
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-07T18:40:47Z"
+    "updatedAt": "2026-11-07T22:21:20Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -455290,7 +455444,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-07T18:40:47Z"
+    "updatedAt": "2026-11-07T22:21:20Z"
   },
   "legacyBridgeHistory": [
     {
@@ -455364,7 +455518,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-07T18:40:47Z",
+    "updatedAt": "2026-11-07T22:21:20Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "operationalDayRolloverHistory": [
@@ -463385,7 +463539,7 @@
         "financialMode": "SHADOW_LEARNING_ONLY"
       }
     ],
-    "updatedAt": "2026-11-07T18:40:47Z",
+    "updatedAt": "2026-11-07T22:21:20Z",
     "statistics": {
       "tracked": 59,
       "pending": 2,
@@ -467762,8 +467916,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c9e285d98525711130aa5801e9634657",
@@ -467781,8 +467935,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "88fead70e852197758d9b67fdce0e93f",
@@ -467826,26 +467980,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "74e7d3a1b6bda41a9f78140e94db9416",
-      "sport": "soccer",
-      "sportKey": "soccer_chile_campeonato",
-      "league": "Primera División - Chile",
-      "leagueRu": "Примера Дивизион - Чиле",
-      "home": "Everton de Viña del Mar",
-      "homeRu": "Евертон де Вина дел Мар",
-      "away": "Deportes Concepción",
-      "awayRu": "Депортес Конкепкион",
-      "commenceTime": "2026-11-07T20:30:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "ba0a2d492dfcc89ab465eddd7a9e98c2",
@@ -467863,8 +467998,27 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "74e7d3a1b6bda41a9f78140e94db9416",
+      "sport": "soccer",
+      "sportKey": "soccer_chile_campeonato",
+      "league": "Primera División - Chile",
+      "leagueRu": "Примера Дивизион - Чиле",
+      "home": "Everton de Viña del Mar",
+      "homeRu": "Евертон де Вина дел Мар",
+      "away": "Deportes Concepción",
+      "awayRu": "Депортес Конкепкион",
+      "commenceTime": "2026-11-07T20:32:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f5ca1b83c89f16c83a63977c741ed93d",
@@ -467876,14 +468030,14 @@
       "homeRu": "Нев Ёрк Ред Буллс",
       "away": "Atlanta United FC",
       "awayRu": "Атланта Юнайтед ФК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "1cecab6721bb9ac477e36301c2c5412b",
@@ -467895,14 +468049,14 @@
       "homeRu": "ФК Монтреал",
       "away": "Vancouver Whitecaps FC",
       "awayRu": "Ванкоувер Вхитекапс ФК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "4e4cd20d205e8bd0cd8ba54391b62257",
@@ -467914,14 +468068,14 @@
       "homeRu": "Интер Миами ФК",
       "away": "Charlotte FC",
       "awayRu": "Чарлотте ФК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "666fea65b8706a9b975d3dad9ffea2b7",
@@ -467933,14 +468087,14 @@
       "homeRu": "Чикаго Фире",
       "away": "Columbus Crew SC",
       "awayRu": "Колумбус Крев СК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b26aa1979396e60e599b7ef1cdaa606a",
@@ -467952,14 +468106,14 @@
       "homeRu": "Д.К. Юнайтед",
       "away": "New York City FC",
       "awayRu": "Нев Ёрк Сити ФК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "e373abc8622b9853aa4fbd3d01c33d8e",
@@ -467971,14 +468125,14 @@
       "homeRu": "ФК Кинкиннати",
       "away": "Nashville SC",
       "awayRu": "Нашвилле СК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "2999abe7822c923b29c9fd21905c1723",
@@ -467990,14 +468144,14 @@
       "homeRu": "Орландо Сити СК",
       "away": "New England Revolution",
       "awayRu": "Нев Енгланд Револутион",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c0c73d9305b8e399fb6cf9a234a7b9e4",
@@ -468009,14 +468163,14 @@
       "homeRu": "Филаделфиа Унион",
       "away": "Toronto FC",
       "awayRu": "Торонто ФК",
-      "commenceTime": "2026-11-07T21:00:00Z",
+      "commenceTime": "2026-11-07T21:10:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9dcf8fb969f03209c256131c17ff87f1",
