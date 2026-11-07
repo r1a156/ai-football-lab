@@ -2,7 +2,7 @@
   "meta": {
     "version": "10.0.0",
     "mode": "real",
-    "updatedAt": "2026-11-07T12:53:30Z",
+    "updatedAt": "2026-11-07T13:55:00Z",
     "analysisDateLocal": "2026-11-07",
     "status": "WAITING_FOR_QUALITY_SELECTION",
     "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
@@ -66,8 +66,8 @@
     ],
     "oddsEvents": 10,
     "oddsQuota": {
-      "requestsRemaining": "138",
-      "requestsUsed": "362",
+      "requestsRemaining": "390",
+      "requestsUsed": "110",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
@@ -86,7 +86,7 @@
     "maximumDailyExposurePercent": 30,
     "stakePolicy": "PER_PREDICTION_PERCENT_OF_BANK",
     "migrationAt": "2026-08-03T18:22:26Z",
-    "analysisGeneratedAt": "2026-11-07T12:53:30Z",
+    "analysisGeneratedAt": "2026-11-07T13:55:00Z",
     "analysisTarget": 15,
     "analysisPublished": 0,
     "bestBetsTarget": 3,
@@ -132,7 +132,7 @@
     "operationalDayId": "2026-11-07-MSK-0800",
     "operationalWindowStart": "2026-11-07T05:00:00Z",
     "operationalWindowEnd": "2026-11-08T05:00:00Z",
-    "selectionWindowStart": "2026-11-07T13:38:30Z",
+    "selectionWindowStart": "2026-11-07T14:40:00Z",
     "selectionWindowEnd": "2026-11-08T05:00:00Z",
     "operationalWindowPolicy": "MOSCOW_DAY_IDENTITY_WITH_ROLLING_PREMATCH_HORIZON",
     "marketPolicy": "R14_FOOTBALL_STANDARD_MARKETS_ONLY",
@@ -144,7 +144,7 @@
       "bestBets": 0
     },
     "footballOnly": true,
-    "r15SettlementAt": "2026-11-07T12:53:28Z",
+    "r15SettlementAt": "2026-11-07T13:54:57Z",
     "nextPortfolioStatus": "WAITING_FOR_QUALITY_SELECTION",
     "firstActiveOperationalDate": "2026-10-05",
     "firstActiveWindowStart": "2026-10-05T05:00:00Z",
@@ -230,20 +230,20 @@
       "verifiedOddsEvents": 0
     },
     "oddsQuotaByKey": {
-      "PRIMARY": {
-        "requestsRemaining": "138",
-        "requestsUsed": "362",
+      "BACKUP": {
+        "requestsRemaining": "390",
+        "requestsUsed": "110",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
     },
     "oddsCredentialHealth": {
-      "selected": "PRIMARY",
+      "selected": "BACKUP",
       "primary": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 138,
-        "used": 362
+        "remaining": 136,
+        "used": 364
       },
       "backup": {
         "valid": true,
@@ -253,7 +253,7 @@
       }
     },
     "oddsProviderStatus": "AVAILABLE",
-    "oddsProviderUpdatedAt": "2026-11-07T12:53:30Z"
+    "oddsProviderUpdatedAt": "2026-11-07T13:55:00Z"
   },
   "dailyAnalysis": [],
   "bestBets": [],
@@ -15641,8 +15641,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 1241,
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 1242,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -160807,8 +160807,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Результат не подтверждён",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 215,
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 216,
       "settlementSource": "BATCH_TIMEOUT_NO_CONFIRMED_FINAL",
       "batchReleaseReason": "RESULT_NOT_CONFIRMED_AFTER_CONSERVATIVE_WINDOW"
     },
@@ -299756,8 +299756,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-42e654d8e3129adef91f",
@@ -300768,8 +300768,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-6722bb513343c5451e3e",
@@ -301701,8 +301701,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-aebecea7616d35d9c072",
@@ -302679,8 +302679,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-70637f8254c952b3619b",
@@ -303657,8 +303657,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-960e7949eff84db05d6d",
@@ -304592,8 +304592,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-32026703d11f37f0b990",
@@ -305525,8 +305525,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-5a25df778abb3a6744cb",
@@ -306460,8 +306460,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-1b5ab8a778b1900a9b3b",
@@ -307400,8 +307400,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-f5325848579dcc12fff3",
@@ -308334,8 +308334,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-e839170c43e8a274bd79",
@@ -309266,8 +309266,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-5508dcbea88aa5efb5ca",
@@ -310284,8 +310284,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-25faa25cbc904122fc57",
@@ -311246,8 +311246,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-e33c2ee019ebc614aee5",
@@ -312206,8 +312206,8 @@
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
       "statusLabel": "Ожидается",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "analysis-52a4c12a16f204287a35",
@@ -313194,8 +313194,8 @@
         "probabilityPercent": 68.4,
         "edgePercent": 5.69
       },
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     }
   ],
   "history": [
@@ -402233,8 +402233,8 @@
       "batchSequence": 52,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "ranked-5acd6a12c058dfc45c31",
@@ -403238,8 +403238,8 @@
       "batchSequence": 52,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "ranked-1ddfe393c8a79360fcdc",
@@ -404219,8 +404219,8 @@
       "batchSequence": 53,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 4
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 5
     },
     {
       "id": "ranked-af6621828bb73e32b163",
@@ -405141,8 +405141,8 @@
       "batchSequence": 53,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 3
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 4
     },
     {
       "id": "ranked-9e905c0e7185f612ccfb",
@@ -406076,8 +406076,8 @@
       "batchSequence": 53,
       "batchStatus": "ACTIVE",
       "localizationPolicy": "OFFICIAL_DICTIONARY_THEN_FULL_UNICODE_TRANSLITERATION_NO_MIXED_SCRIPT",
-      "settlementLastAttemptAt": "2026-11-07T12:53:28Z",
-      "settlementAttempts": 2
+      "settlementLastAttemptAt": "2026-11-07T13:54:57Z",
+      "settlementAttempts": 3
     }
   ],
   "bank": {
@@ -407204,7 +407204,7 @@
   },
   "learning": {
     "version": 2,
-    "updatedAt": "2026-11-07T12:53:28Z",
+    "updatedAt": "2026-11-07T13:54:57Z",
     "segments": {
       "SPORT|soccer": {
         "settled": 423,
@@ -444668,7 +444668,7 @@
       "minimumSamples": 40,
       "fullWeightSamples": 160,
       "maximumProbabilityAdjustment": 0.04,
-      "updatedAt": "2026-11-07T12:53:30Z"
+      "updatedAt": "2026-11-07T13:54:59Z"
     },
     "integrityRepair": {
       "appliedAt": "2026-07-31T17:06:14Z",
@@ -444685,7 +444685,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-07T12:53:30Z",
+    "updatedAt": "2026-11-07T13:55:00Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "batchHistory": [
@@ -444848,15 +444848,15 @@
   ],
   "quota": {
     "provider": "THE_ODDS_API",
-    "requestsRemaining": "138",
-    "requestsUsed": "362",
+    "requestsRemaining": "390",
+    "requestsUsed": "110",
     "requestsLast": "0",
     "estimatedCreditsThisRun": 0,
-    "updatedAt": "2026-11-07T12:53:30Z"
+    "updatedAt": "2026-11-07T13:55:00Z"
   },
   "historyMaintenance": {
     "version": 1,
-    "updatedAt": "2026-11-07T12:53:28Z",
+    "updatedAt": "2026-11-07T13:54:57Z",
     "analysisHistory": {
       "input": 398,
       "output": 398,
@@ -453764,10 +453764,10 @@
     }
   ],
   "dataCoverage": {
-    "discoveredEvents": 155,
+    "discoveredEvents": 144,
     "competitionsDiscovered": 35,
     "competitionsWithOdds": 0,
-    "oddsEvents": 21,
+    "oddsEvents": 15,
     "historyMatchedEvents": 0,
     "qualifiedEvents": 0,
     "publishedEvents": 0,
@@ -453786,7 +453786,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-11-07T12:54:36Z",
+        "lastSuccessAt": "2026-11-07T13:56:19Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-10-31T21:25:38Z",
         "lastStatus": 401,
@@ -453795,15 +453795,15 @@
       }
     },
     "quota": {
-      "requestsRemaining": "138",
-      "requestsUsed": "362",
+      "requestsRemaining": "390",
+      "requestsUsed": "110",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
-      "PRIMARY": {
-        "requestsRemaining": "138",
-        "requestsUsed": "362",
+      "BACKUP": {
+        "requestsRemaining": "390",
+        "requestsUsed": "110",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
@@ -453821,19 +453821,18 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 0,
-      "duplicates": 0,
+      "ingested": 2103,
+      "duplicates": 2103,
       "historyMatches": 18510,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 44,
-      "matchesAdded": 44,
+      "requests": 43,
+      "matchesAdded": 43,
       "historyMatches": 18510,
       "errors": [
-        "136449:HTTPError",
         "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
@@ -453852,13 +453851,14 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "133953:HTTPError",
+        "137878:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-07T12:53:30Z"
+    "updatedAt": "2026-11-07T13:55:00Z"
   },
   "expressBank": {
     "starting": 10000,
@@ -453909,7 +453909,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-07T12:53:30Z"
+    "updatedAt": "2026-11-07T13:55:00Z"
   },
   "legacyBridgeHistory": [
     {
@@ -453983,7 +453983,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-07T12:53:30Z",
+    "updatedAt": "2026-11-07T13:55:00Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "operationalDayRolloverHistory": [
@@ -461972,7 +461972,7 @@
         "financialMode": "SHADOW_LEARNING_ONLY"
       }
     ],
-    "updatedAt": "2026-11-07T12:53:30Z",
+    "updatedAt": "2026-11-07T13:55:00Z",
     "statistics": {
       "tracked": 59,
       "pending": 6,
@@ -462580,197 +462580,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "fe9b87b96fad0af5f71481edab9d0dee",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_bundesliga_women",
-      "league": "Frauen-Bundesliga",
-      "leagueRu": "Фрауен-Бундеслига",
-      "home": "Bayer Leverkusen",
-      "homeRu": "Баер Леверкусен",
-      "away": "Hamburger SV",
-      "awayRu": "Хамбургер Св",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "cab8ed0a929ac42fad94592d56e67b56",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "Rot-Weiss Essen",
-      "homeRu": "Рот-Вайсс Эссен",
-      "away": "Alemannia Aachen",
-      "awayRu": "Алеманниа Аачен",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "HOME_WIN",
-        "pickRu": "Победа хозяев",
-        "modelProbability": 0.570081,
-        "marketProbabilities": {
-          "HOME_WIN": 0.570081,
-          "DRAW": 0.239838,
-          "AWAY_WIN": 0.190081,
-          "OVER_2_5": 0.47062,
-          "UNDER_2_5": 0.52938,
-          "BTTS_YES": 0.471995,
-          "BTTS_NO": 0.528005
-        },
-        "expectedHomeGoals": 1.693,
-        "expectedAwayGoals": 0.864,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 5.6,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-11-07T06:34:12Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "609bbc1f3884d39fde7368dbd48be5a5",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "FC Ingolstadt 04",
-      "homeRu": "ФК Инголстадт 04",
-      "away": "Fortuna Düsseldorf",
-      "awayRu": "Фортуна Дусселдорф",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "BTTS_YES",
-        "pickRu": "Обе забьют — да",
-        "modelProbability": 0.566946,
-        "marketProbabilities": {
-          "HOME_WIN": 0.315034,
-          "DRAW": 0.249231,
-          "AWAY_WIN": 0.435735,
-          "OVER_2_5": 0.535312,
-          "UNDER_2_5": 0.464688,
-          "BTTS_YES": 0.566946,
-          "BTTS_NO": 0.433054
-        },
-        "expectedHomeGoals": 1.276,
-        "expectedAwayGoals": 1.544,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 20.8,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-11-07T06:34:12Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "14ab93e0fa769bebec9148258248b6b2",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "Hansa Rostock",
-      "homeRu": "Ханса Росток",
-      "away": "SG Sonnenhof Großaspach",
-      "awayRu": "Сг Сонненхоф Гроßаспач",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "OVER_2_5",
-        "pickRu": "Тотал больше 2,5",
-        "modelProbability": 0.721811,
-        "marketProbabilities": {
-          "HOME_WIN": 0.356227,
-          "DRAW": 0.213831,
-          "AWAY_WIN": 0.429942,
-          "OVER_2_5": 0.721811,
-          "UNDER_2_5": 0.278189,
-          "BTTS_YES": 0.714604,
-          "BTTS_NO": 0.285396
-        },
-        "expectedHomeGoals": 1.779,
-        "expectedAwayGoals": 1.964,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 20.8,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-11-07T06:34:12Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
-    },
-    {
-      "eventId": "439baec88e48b46dbaffc5799e7d65eb",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "Waldhof Mannheim",
-      "homeRu": "Валдхоф Маннхеим",
-      "away": "SC Fortuna Köln",
-      "awayRu": "СК Фортуна Колн",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "2a3f135533421528de36581e06bb489f",
-      "sport": "soccer",
-      "sportKey": "soccer_germany_liga3",
-      "league": "3. Liga - Germany",
-      "leagueRu": "3. Лига - Германи",
-      "home": "Wehen Wiesbaden",
-      "homeRu": "Вехен Виесбаден",
-      "away": "TSV Havelse",
-      "awayRu": "Цв Хавелсе",
-      "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "de935794b7d93f3607ac9ad54d18f4c7",
@@ -462814,7 +462625,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b68207565e75753877ade56fe96f5cb8",
@@ -462832,8 +462643,90 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "2a3f135533421528de36581e06bb489f",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "Wehen Wiesbaden",
+      "homeRu": "Вехен Виесбаден",
+      "away": "TSV Havelse",
+      "awayRu": "Цв Хавелсе",
+      "commenceTime": "2026-11-07T13:00:02Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "14ab93e0fa769bebec9148258248b6b2",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "Hansa Rostock",
+      "homeRu": "Ханса Росток",
+      "away": "SG Sonnenhof Großaspach",
+      "awayRu": "Сг Сонненхоф Гроßаспач",
+      "commenceTime": "2026-11-07T13:00:04Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "OVER_2_5",
+        "pickRu": "Тотал больше 2,5",
+        "modelProbability": 0.721811,
+        "marketProbabilities": {
+          "HOME_WIN": 0.356227,
+          "DRAW": 0.213831,
+          "AWAY_WIN": 0.429942,
+          "OVER_2_5": 0.721811,
+          "UNDER_2_5": 0.278189,
+          "BTTS_YES": 0.714604,
+          "BTTS_NO": 0.285396
+        },
+        "expectedHomeGoals": 1.779,
+        "expectedAwayGoals": 1.964,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 20.8,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-11-07T06:34:12Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "439baec88e48b46dbaffc5799e7d65eb",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "Waldhof Mannheim",
+      "homeRu": "Валдхоф Маннхеим",
+      "away": "SC Fortuna Köln",
+      "awayRu": "СК Фортуна Колн",
+      "commenceTime": "2026-11-07T13:00:56Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "605767f0e7114a23442d92831c12c767",
@@ -462845,7 +462738,7 @@
       "homeRu": "Самсунспор",
       "away": "Torku Konyaspor",
       "awayRu": "Торку Коняспор",
-      "commenceTime": "2026-11-07T13:00:00Z",
+      "commenceTime": "2026-11-07T13:01:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
@@ -462877,7 +462770,114 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "fe9b87b96fad0af5f71481edab9d0dee",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_bundesliga_women",
+      "league": "Frauen-Bundesliga",
+      "leagueRu": "Фрауен-Бундеслига",
+      "home": "Bayer Leverkusen",
+      "homeRu": "Баер Леверкусен",
+      "away": "Hamburger SV",
+      "awayRu": "Хамбургер Св",
+      "commenceTime": "2026-11-07T13:02:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "609bbc1f3884d39fde7368dbd48be5a5",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "FC Ingolstadt 04",
+      "homeRu": "ФК Инголстадт 04",
+      "away": "Fortuna Düsseldorf",
+      "awayRu": "Фортуна Дусселдорф",
+      "commenceTime": "2026-11-07T13:03:01Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "BTTS_YES",
+        "pickRu": "Обе забьют — да",
+        "modelProbability": 0.566946,
+        "marketProbabilities": {
+          "HOME_WIN": 0.315034,
+          "DRAW": 0.249231,
+          "AWAY_WIN": 0.435735,
+          "OVER_2_5": 0.535312,
+          "UNDER_2_5": 0.464688,
+          "BTTS_YES": 0.566946,
+          "BTTS_NO": 0.433054
+        },
+        "expectedHomeGoals": 1.276,
+        "expectedAwayGoals": 1.544,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 20.8,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-11-07T06:34:12Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "cab8ed0a929ac42fad94592d56e67b56",
+      "sport": "soccer",
+      "sportKey": "soccer_germany_liga3",
+      "league": "3. Liga - Germany",
+      "leagueRu": "3. Лига - Германи",
+      "home": "Rot-Weiss Essen",
+      "homeRu": "Рот-Вайсс Эссен",
+      "away": "Alemannia Aachen",
+      "awayRu": "Алеманниа Аачен",
+      "commenceTime": "2026-11-07T13:03:03Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "HOME_WIN",
+        "pickRu": "Победа хозяев",
+        "modelProbability": 0.570081,
+        "marketProbabilities": {
+          "HOME_WIN": 0.570081,
+          "DRAW": 0.239838,
+          "AWAY_WIN": 0.190081,
+          "OVER_2_5": 0.47062,
+          "UNDER_2_5": 0.52938,
+          "BTTS_YES": 0.471995,
+          "BTTS_NO": 0.528005
+        },
+        "expectedHomeGoals": 1.693,
+        "expectedAwayGoals": 0.864,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 5.6,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-11-07T06:34:12Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "5c8042e0122ba7201d1dd9707b99ec5b",
@@ -462889,14 +462889,14 @@
       "homeRu": "Сласк Вроклав",
       "away": "Piast Gliwice",
       "awayRu": "Пиаст Гливике",
-      "commenceTime": "2026-11-07T13:45:00Z",
+      "commenceTime": "2026-11-07T13:47:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "52b256088d29b4abb82e0c63ea9852fe",
