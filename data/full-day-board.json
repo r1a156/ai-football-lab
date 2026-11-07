@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-07T06:34:12Z",
+  "updatedAt": "2026-11-07T11:41:52Z",
   "operationalDayId": "2026-11-07-MSK-0800",
   "operationalWindowStart": "2026-11-07T05:00:00Z",
   "operationalWindowEnd": "2026-11-08T05:00:00Z",
@@ -8,7 +8,7 @@
     "realFixtures": 175,
     "historicalModelForecasts": 65,
     "withoutReliableHistoricalForecast": 110,
-    "verifiedOddsEvents": 72
+    "verifiedOddsEvents": 50
   },
   "fixtures": [
     {
@@ -224,7 +224,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c79331517239c241cd4a044cacf9c9eb",
@@ -242,8 +242,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "096cf2912fb4b4f06943913e030e9d62",
@@ -287,7 +287,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "d212cc4c7707bbc11eea293ee861be61",
@@ -299,14 +299,14 @@
       "homeRu": "Корона Киелке",
       "away": "Radomiak Radom",
       "awayRu": "Радомиак Радом",
-      "commenceTime": "2026-11-07T11:15:00Z",
+      "commenceTime": "2026-11-07T11:17:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9957e59c3f91aa76310383308e1d87bf",
@@ -854,7 +854,7 @@
       "away": "Celta Fortuna",
       "awayRu": "Келта Фортуна",
       "commenceTime": "2026-11-07T13:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -1024,7 +1024,7 @@
       "away": "Arezzo",
       "awayRu": "Ареззо",
       "commenceTime": "2026-11-07T14:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1068,7 +1068,7 @@
       "away": "US Catanzaro 1929",
       "awayRu": "Ус Катанзаро 1929",
       "commenceTime": "2026-11-07T14:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -1087,7 +1087,7 @@
       "away": "Empoli",
       "awayRu": "Емполи",
       "commenceTime": "2026-11-07T14:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1131,7 +1131,7 @@
       "away": "Südtirol",
       "awayRu": "Судтирол",
       "commenceTime": "2026-11-07T14:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1327,7 +1327,7 @@
       "away": "Augsburg",
       "awayRu": "Аугсбург",
       "commenceTime": "2026-11-07T14:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1371,7 +1371,7 @@
       "away": "Bayern Munich",
       "awayRu": "Бавария",
       "commenceTime": "2026-11-07T14:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -1390,7 +1390,7 @@
       "away": "Elversberg",
       "awayRu": "Елверсберг",
       "commenceTime": "2026-11-07T14:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -1434,7 +1434,7 @@
       "away": "Eintracht Frankfurt",
       "awayRu": "Еинтрачт Франкфурт",
       "commenceTime": "2026-11-07T14:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -2871,7 +2871,7 @@
       "away": "Oviedo",
       "awayRu": "Овиедо",
       "commenceTime": "2026-11-07T15:15:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -3104,7 +3104,7 @@
       "away": "Hellas Verona",
       "awayRu": "Хеллас Верона",
       "commenceTime": "2026-11-07T16:15:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -3407,7 +3407,7 @@
       "away": "Werder Bremen",
       "awayRu": "Вердер Бремен",
       "commenceTime": "2026-11-07T17:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -3508,7 +3508,7 @@
       "away": "AD Ceuta FC",
       "awayRu": "Ад Кеута ФК",
       "commenceTime": "2026-11-07T17:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -3527,7 +3527,7 @@
       "away": "Albacete",
       "awayRu": "Албакете",
       "commenceTime": "2026-11-07T17:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -3659,7 +3659,7 @@
       "away": "Estudiantes",
       "awayRu": "Эстудиантес",
       "commenceTime": "2026-11-07T18:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -3678,7 +3678,7 @@
       "away": "Independiente Rivadavia",
       "awayRu": "Индепендиенте Ривадавиа",
       "commenceTime": "2026-11-07T18:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -3823,7 +3823,7 @@
       "away": "Avellino",
       "awayRu": "Авеллино",
       "commenceTime": "2026-11-07T18:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -4239,7 +4239,7 @@
       "away": "Tenerife",
       "awayRu": "Тенерифе",
       "commenceTime": "2026-11-07T20:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -4371,7 +4371,7 @@
       "away": "Atlético Huracán",
       "awayRu": "Атлетико Хуракан",
       "commenceTime": "2026-11-07T20:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -4390,7 +4390,7 @@
       "away": "Defensa y Justicia",
       "awayRu": "Дефенса и Йустикиа",
       "commenceTime": "2026-11-07T20:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
@@ -4409,7 +4409,7 @@
       "away": "Estudiantes de Río Cuarto",
       "awayRu": "Эстудиантес Рио-Куарто",
       "commenceTime": "2026-11-07T20:30:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": {
@@ -4877,7 +4877,7 @@
       "away": "Newells Old Boys",
       "awayRu": "Невеллс Олд Боис",
       "commenceTime": "2026-11-08T01:00:00Z",
-      "oddsAvailable": true,
+      "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
