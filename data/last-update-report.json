@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-08T08:01:33Z",
-  "finishedAt": "2026-11-08T13:19:13Z",
+  "finishedAt": "2026-11-08T15:05:35Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 0,
-      "matches": 18350,
+      "added": 2,
+      "matches": 18352,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -1222,19 +1222,31 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.103
+        "elapsedSeconds": 0.186
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.091
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.172
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.11
+        "elapsedSeconds": 0.101
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.104
+        "elapsedSeconds": 0.09
       }
     ],
     "quota": {
@@ -2145,12 +2157,12 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 3,
-    "providerFinalResults": 19,
+    "dueRecords": 5,
+    "providerFinalResults": 30,
     "settlement": {
-      "analysisSettled": 0,
+      "analysisSettled": 2,
       "bestBetsSettled": 0,
-      "unresolved": 21
+      "unresolved": 19
     },
     "shadowSettlement": {
       "settled": 0,
