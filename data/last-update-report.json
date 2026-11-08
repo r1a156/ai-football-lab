@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-08T08:01:33Z",
-  "finishedAt": "2026-11-08T15:05:35Z",
+  "finishedAt": "2026-11-08T19:42:19Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,8 +69,8 @@
       ]
     },
     "trackedHistory": {
-      "added": 2,
-      "matches": 18352,
+      "added": 9,
+      "matches": 18361,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -1222,31 +1222,49 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.186
+        "elapsedSeconds": 0.113
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.113
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.091
+        "elapsedSeconds": 0.108
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.172
+        "elapsedSeconds": 0.154
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_portugal_primeira_liga",
+        "status": 200,
+        "elapsedSeconds": 0.103
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.101
+        "elapsedSeconds": 0.173
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "SCORES:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.118
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.09
+        "elapsedSeconds": 0.107
       }
     ],
     "quota": {
@@ -2157,17 +2175,17 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 5,
-    "providerFinalResults": 30,
+    "dueRecords": 11,
+    "providerFinalResults": 61,
     "settlement": {
-      "analysisSettled": 2,
-      "bestBetsSettled": 0,
-      "unresolved": 19
+      "analysisSettled": 9,
+      "bestBetsSettled": 2,
+      "unresolved": 8
     },
     "shadowSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
+      "settled": 3,
+      "won": 1,
+      "lost": 2,
       "push": 0,
       "superseded": 0,
       "unresolved": 0
