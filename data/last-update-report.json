@@ -1,10 +1,10 @@
 {
-  "status": "GREEN",
+  "status": "DEGRADED",
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "mode": "settle",
-  "startedAt": "2026-11-08T08:01:33Z",
-  "finishedAt": "2026-11-09T02:43:30Z",
+  "mode": "recovery-day",
+  "startedAt": "2026-11-09T10:33:25Z",
+  "finishedAt": "2026-11-09T10:42:51Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -17,9 +17,9 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "ingested": 0,
-        "duplicates": 0,
-        "historyMatches": 18523,
+        "ingested": 2103,
+        "duplicates": 2103,
+        "historyMatches": 18538,
         "coverageStart": "2019-06-01T00:00:00Z",
         "coverageEnd": "2027-05-30T00:00:00Z"
       },
@@ -34,20 +34,20 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 0,
-      "duplicates": 0,
-      "historyMatches": 18523,
+      "ingested": 2103,
+      "duplicates": 2103,
+      "historyMatches": 18538,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 43,
-      "historyMatches": 18524,
+      "requests": 42,
+      "matchesAdded": 41,
+      "historyMatches": 18538,
       "errors": [
         "135981:HTTPError",
-        "136452:HTTPError",
+        "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
         "134295:HTTPError",
@@ -56,7 +56,7 @@
         "134280:HTTPError",
         "134464:HTTPError",
         "134285:HTTPError",
-        "134282:HTTPError",
+        "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
@@ -75,90 +75,62 @@
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "fixtureCoverage": {
-      "realFixtures": 121,
-      "historicalModelForecasts": 47,
-      "withoutReliableHistoricalForecast": 74,
-      "verifiedOddsEvents": 36
+      "realFixtures": 5,
+      "historicalModelForecasts": 2,
+      "withoutReliableHistoricalForecast": 3,
+      "verifiedOddsEvents": 5
     },
     "discovery": {
-      "operationalDayId": "2026-11-08-MSK-0800",
-      "operationalDateLocal": "2026-11-08",
-      "operationalWindowStart": "2026-11-08T05:00:00Z",
-      "operationalWindowEnd": "2026-11-09T05:00:00Z",
-      "queryWindowStart": "2026-11-08T08:46:33Z",
-      "queryWindowEnd": "2026-11-09T05:00:00Z",
-      "searchWindowMaximumEnd": "2026-11-11T08:46:33Z",
-      "windowStartLocal": "2026-11-08T08:00:00+03:00",
-      "windowEndLocal": "2026-11-09T08:00:00+03:00",
+      "operationalDayId": "2026-11-09-MSK-0800",
+      "operationalDateLocal": "2026-11-09",
+      "operationalWindowStart": "2026-11-09T05:00:00Z",
+      "operationalWindowEnd": "2026-11-10T05:00:00Z",
+      "queryWindowStart": "2026-11-09T11:18:25Z",
+      "queryWindowEnd": "2026-11-10T05:00:00Z",
+      "searchWindowMaximumEnd": "2026-11-12T11:18:25Z",
+      "windowStartLocal": "2026-11-09T08:00:00+03:00",
+      "windowEndLocal": "2026-11-10T08:00:00+03:00",
       "durationHours": 24,
       "searchHorizonHours": 72,
       "policy": "ROLLING_PREMATCH_HORIZON_72H_BREADTH_FIRST",
-      "calendarWindowStart": "2026-11-08T05:00:00Z",
-      "selectionWindowStart": "2026-11-08T08:46:33Z",
-      "selectionWindowEnd": "2026-11-09T05:00:00Z",
-      "activeFootballCompetitions": 45,
-      "events": 121,
+      "calendarWindowStart": "2026-11-09T05:00:00Z",
+      "selectionWindowStart": "2026-11-09T11:18:25Z",
+      "selectionWindowEnd": "2026-11-10T05:00:00Z",
+      "activeFootballCompetitions": 33,
+      "events": 5,
       "targetEvents": 120,
-      "targetReached": true,
+      "targetReached": false,
       "stagesUsed": 1,
       "progressiveStages": [
         {
           "stage": 0,
           "name": "CURRENT_OPERATIONAL_REMAINDER",
-          "start": "2026-11-08T05:00:00Z",
-          "end": "2026-11-09T05:00:00Z",
-          "newEvents": 121,
-          "cumulativeEvents": 121,
+          "start": "2026-11-09T05:00:00Z",
+          "end": "2026-11-10T05:00:00Z",
+          "newEvents": 5,
+          "cumulativeEvents": 5,
           "providerErrors": 0
         }
       ],
-      "sportKeysWithEvents": 32,
+      "sportKeysWithEvents": 4,
       "eventsBySportKey": {
-        "soccer_australia_aleague": 1,
-        "soccer_japan_j_league": 2,
-        "soccer_china_superleague": 8,
-        "soccer_korea_kleague1": 2,
-        "soccer_turkey_super_league": 4,
-        "soccer_denmark_superliga": 4,
-        "soccer_netherlands_eredivisie": 5,
-        "soccer_italy_serie_a": 5,
-        "soccer_fa_cup": 4,
-        "soccer_belgium_first_div": 4,
-        "soccer_germany_bundesliga2": 3,
-        "soccer_germany_liga3": 3,
-        "soccer_finland_veikkausliiga": 3,
-        "soccer_germany_bundesliga_women": 2,
-        "soccer_spain_la_liga": 5,
-        "soccer_spain_segunda_division": 4,
-        "soccer_sweden_allsvenskan": 5,
-        "soccer_switzerland_superleague": 3,
-        "soccer_austria_bundesliga": 3,
-        "soccer_norway_eliteserien": 6,
-        "soccer_poland_ekstraklasa": 3,
-        "soccer_epl": 5,
-        "soccer_france_ligue_one": 6,
-        "soccer_italy_serie_b": 3,
-        "soccer_germany_bundesliga": 3,
-        "soccer_greece_super_league": 5,
-        "soccer_spl": 2,
-        "soccer_chile_campeonato": 6,
-        "soccer_portugal_primeira_liga": 6,
-        "soccer_brazil_serie_b": 3,
-        "soccer_argentina_primera_division": 1,
-        "soccer_mexico_ligamx": 2
+        "soccer_germany_bundesliga_women": 1,
+        "soccer_norway_eliteserien": 1,
+        "soccer_fa_cup": 1,
+        "soccer_spain_segunda_division": 2
       },
       "errors": [],
-      "allDiscoveredEvents": 121,
-      "currentOperationalEvents": 108,
-      "excludedFutureOperationalEvents": 13,
+      "allDiscoveredEvents": 5,
+      "currentOperationalEvents": 5,
+      "excludedFutureOperationalEvents": 0,
       "publicationWindowPolicy": "CURRENT_MOSCOW_OPERATIONAL_24H_ONLY"
     },
     "quotaPlan": {
       "freeMonthlyMode": true,
-      "quotaRemainingBeforeOdds": 390,
+      "quotaRemainingBeforeOdds": 376,
       "quotaHardReserve": 0,
-      "daysLeftInQuotaPeriod": 23,
-      "dailyFairShare": 16,
+      "daysLeftInQuotaPeriod": 22,
+      "dailyFairShare": 17,
       "dailyConfiguredBudget": 18,
       "dailyAvailableBeforeFeatured": 18,
       "portfolioAvailableBeforeFeatured": 18,
@@ -171,83 +143,53 @@
         "ADVANCED_RECOVERY_RESERVED_BEFORE_COMPETITION_BURST"
       ],
       "minimumCompetitionsForPortfolio": 3,
-      "maximumCompetitionsForPortfolio": 8,
+      "maximumCompetitionsForPortfolio": 4,
       "featuredCostPerCompetition": 2,
-      "competitionsWithEvents": 28,
-      "competitionsSelected": 7,
-      "competitionsDeferredByQuota": 21,
-      "estimatedFeaturedCost": 14,
-      "projectedEventsWithOdds": 36,
-      "projectedHistoryCoveredEvents": 36,
+      "competitionsWithEvents": 4,
+      "competitionsSelected": 4,
+      "competitionsDeferredByQuota": 0,
+      "estimatedFeaturedCost": 8,
+      "projectedEventsWithOdds": 5,
+      "projectedHistoryCoveredEvents": 3,
       "expectedQualificationRate": 0.18,
-      "expectedQualifiedFromInitialPool": 6,
+      "expectedQualifiedFromInitialPool": 0,
       "candidateCompletionTarget": 84,
       "targetHistoryCoveredEvents": 15,
       "rankedCompetitionKeys": [
-        "soccer_france_ligue_one",
-        "soccer_portugal_primeira_liga",
-        "soccer_netherlands_eredivisie",
-        "soccer_italy_serie_a",
-        "soccer_spain_la_liga",
-        "soccer_epl",
         "soccer_spain_segunda_division",
-        "soccer_greece_super_league",
-        "soccer_germany_bundesliga2",
-        "soccer_germany_liga3",
-        "soccer_finland_veikkausliiga",
-        "soccer_italy_serie_b",
-        "soccer_germany_bundesliga",
-        "soccer_turkey_super_league",
-        "soccer_fa_cup",
-        "soccer_belgium_first_div",
         "soccer_germany_bundesliga_women",
-        "soccer_spl",
-        "soccer_austria_bundesliga",
-        "soccer_brazil_serie_b",
-        "soccer_argentina_primera_division",
-        "soccer_denmark_superliga",
-        "soccer_sweden_allsvenskan",
-        "soccer_chile_campeonato",
         "soccer_norway_eliteserien",
-        "soccer_switzerland_superleague",
-        "soccer_poland_ekstraklasa",
-        "soccer_mexico_ligamx"
+        "soccer_fa_cup"
       ],
       "initialCompetitionKeys": [
-        "soccer_france_ligue_one",
-        "soccer_portugal_primeira_liga",
-        "soccer_netherlands_eredivisie",
-        "soccer_italy_serie_a",
-        "soccer_spain_la_liga",
-        "soccer_epl",
-        "soccer_spain_segunda_division"
+        "soccer_spain_segunda_division",
+        "soccer_germany_bundesliga_women",
+        "soccer_norway_eliteserien",
+        "soccer_fa_cup"
       ],
       "completionCompetitionKeys": [],
       "completionRounds": [],
-      "allEventsHistoricallyInspected": 108,
+      "allEventsHistoricallyInspected": 5,
       "competitionKeysSelected": [
-        "soccer_france_ligue_one",
-        "soccer_portugal_primeira_liga",
-        "soccer_netherlands_eredivisie",
-        "soccer_italy_serie_a",
-        "soccer_spain_la_liga",
-        "soccer_epl",
-        "soccer_spain_segunda_division"
+        "soccer_spain_segunda_division",
+        "soccer_germany_bundesliga_women",
+        "soccer_norway_eliteserien",
+        "soccer_fa_cup"
       ],
       "portfolioCompletionBurstActual": false,
-      "featuredEventsCollected": 47,
+      "featuredEventsCollected": 5,
       "advancedRecoveryReservedBeforeFeatured": 4,
       "advancedRecoveryRequested": 0,
       "advancedRecoveryReturned": 0,
       "advancedRecoveryUsefulResponses": 0,
       "advancedRecoveryRecoveredEvents": 0,
-      "topThreeEligibleAfterAdvanced": 33,
+      "topThreeEligibleAfterAdvanced": 5,
       "premiumQualifiedAfterAdvanced": 0,
-      "qualifiedAfterAdvanced": 33,
+      "qualifiedAfterAdvanced": 5,
       "noKeyFixtureOddsEnabled": true,
-      "noKeyFixtureOddsStatus": "GREEN",
-      "noKeyFixtureOddsEvents": 27,
-      "noKeyFixtureOddsEventsWithThreeBookmakers": 27,
+      "noKeyFixtureOddsStatus": "NO_MATCHED_EVENTS",
+      "noKeyFixtureOddsEvents": 0,
+      "noKeyFixtureOddsEventsWithThreeBookmakers": 0,
       "noKeyFixtureOddsSourceUpdatedAt": "2026-11-06T11:14:29Z",
       "noKeyFixtureOddsUsedCache": false,
       "noKeyFixtureOddsError": null,
@@ -261,7 +203,7 @@
       "quotaExhaustedAtStart": false,
       "quotaExhaustedAfterAcquisition": false,
       "automaticResumeOnQuotaRecovery": true,
-      "quotaLifecycleStatus": "PORTFOLIO_READY_WITH_NO_KEY_FIXTURE_ODDS",
+      "quotaLifecycleStatus": "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE",
       "secondaryKeyFallback": {
         "enabled": true,
         "activated": false,
@@ -270,985 +212,315 @@
         "featuredEventsCollected": 0,
         "quota": null
       },
-      "advancedCompletionMode": false,
+      "advancedCompletionMode": true,
       "advancedRecoveryRequestedEvents": 0,
       "advancedRecoveryReceivedEvents": 0,
       "advancedRecoveryAttemptedPairs": 0,
       "advancedRecoveryUnsupportedMarkets": {}
     },
-    "featuredOddsEvents": 47,
+    "featuredOddsEvents": 5,
     "advancedOddsEvents": 0,
     "analysis": {
-      "oddsEvents": 47,
-      "eventsWithHistory": 36,
-      "eventsWithMarkets": 36,
+      "oddsEvents": 5,
+      "eventsWithHistory": 3,
+      "eventsWithMarkets": 5,
       "eventsQualified": 0,
-      "eventsTopThreeEligible": 33,
+      "eventsTopThreeEligible": 5,
       "premiumQualifiedEvents": 0,
-      "marketCandidates": 130,
-      "rejectedByQuality": 3,
-      "rejectedWithoutMarkets": 11,
+      "marketCandidates": 17,
+      "rejectedByQuality": 0,
+      "rejectedWithoutMarkets": 0,
       "rejectionReasons": {
-        "Премиум: Недостаточная консервативная вероятность": 27,
-        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 27,
-        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 27,
-        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 27,
-        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 25,
-        "Нет пригодных рынков или котировок": 11,
-        "Премиум: Недостаточное качество данных": 8,
-        "Направление тотала противоречит модели матча": 7,
-        "Премиум: Основной фильтр: Недостаточная полнота данных": 7,
-        "Премиум: Основной фильтр: Линия недостаточно стабильна": 5,
-        "Премиум: Недостаточно букмекеров": 1,
-        "Премиум: Основной фильтр: Модели недостаточно согласованы": 1,
-        "Премиум: Основной фильтр: Недостаточно независимых букмекеров для лучшей четвёрки": 1
+        "Премиум: Недостаточная консервативная вероятность": 5,
+        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 5,
+        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 5,
+        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 5,
+        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 5,
+        "Премиум: Недостаточное качество данных": 3,
+        "Премиум: Основной фильтр: Недостаточная полнота данных": 3,
+        "Премиум: Нет полноценной истории обеих команд": 2,
+        "Премиум: Основной фильтр: Нет независимой статистической модели команд": 2
       },
-      "rejectedEvents": [
-        {
-          "eventId": "8a92794bd5f89b8b91b2d8fefdac7b85",
-          "sportKey": "soccer_belgium_first_div",
-          "league": "Belgium First Div",
-          "leagueRu": "Белгиум Фирст Див",
-          "home": "Club Brugge",
-          "homeRu": "Клуб Бругге",
-          "away": "Anderlecht",
-          "awayRu": "Андерлечт",
-          "commenceTime": "2026-11-08T12:30:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "6692a3ca274d09ffbfabd943320d62f5",
-          "sportKey": "soccer_turkey_super_league",
-          "league": "Turkey Super League",
-          "leagueRu": "Туркеи Супер Лига",
-          "home": "Çorum FK",
-          "homeRu": "Корум ФК",
-          "away": "Fenerbahce",
-          "awayRu": "Фенербахче",
-          "commenceTime": "2026-11-08T13:00:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "c56ba830ee1ac3cd75ec31423529dd91",
-          "sportKey": "soccer_italy_serie_b",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Virtus Entella",
-          "homeRu": "Виртус Ентелла",
-          "away": "Modena",
-          "awayRu": "Модена",
-          "commenceTime": "2026-11-08T14:00:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "677618d6faa4a93da9795e1c0482993c",
-          "sportKey": "soccer_greece_super_league",
-          "league": "Super League - Greece",
-          "leagueRu": "Супер Лига - Грееке",
-          "home": "Asteras Tripolis",
-          "homeRu": "Астерас Триполис",
-          "away": "Kalamata FC",
-          "awayRu": "Каламата ФК",
-          "commenceTime": "2026-11-08T15:00:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "d118b96272c80f8b437f269d8a4c2f5e",
-          "sportKey": "soccer_spl",
-          "league": "Premiership - Scotland",
-          "leagueRu": "Премиершип - Скотланд",
-          "home": "Hearts",
-          "homeRu": "Хеарц",
-          "away": "Falkirk F.C.",
-          "awayRu": "Фалкирк Ф.К.",
-          "commenceTime": "2026-11-08T15:00:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "dc222b364fd01d7dfe92d95975b26c79",
-          "sportKey": "soccer_greece_super_league",
-          "league": "Super League - Greece",
-          "leagueRu": "Супер Лига - Грееке",
-          "home": "Iraklis FC",
-          "homeRu": "Ираклис ФК",
-          "away": "Panathinaikos",
-          "awayRu": "Панатинаикос",
-          "commenceTime": "2026-11-08T15:30:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "a85eafd97e49ac329956fa1022be891d",
-          "sportKey": "soccer_turkey_super_league",
-          "league": "Turkey Super League",
-          "leagueRu": "Туркеи Супер Лига",
-          "home": "Alanyaspor",
-          "homeRu": "Аланяспор",
-          "away": "Trabzonspor",
-          "awayRu": "Трабзонспор",
-          "commenceTime": "2026-11-08T15:30:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "c22d673775e6a4dc0810cc88b0ed75ec",
-          "sportKey": "soccer_netherlands_eredivisie",
-          "league": "Dutch Eredivisie",
-          "leagueRu": "Дутч Ередивисие",
-          "home": "AZ Alkmaar",
-          "homeRu": "Аз Алкмаар",
-          "away": "Groningen",
-          "awayRu": "Гронинген",
-          "commenceTime": "2026-11-08T15:45:00Z",
-          "dataTier": "FULL",
-          "dataQuality": 86.0,
-          "quoteCount": 12,
-          "candidateCount": 3,
-          "bestCandidate": "Тотал меньше 3.5",
-          "bestProbability": 0.504827,
-          "bestOdds": 1.81,
-          "bestScore": 76.3727,
-          "shadowCandidate": {
-            "market": "TOTAL_UNDER",
-            "marketKey": "totals",
-            "marketFamily": "TOTAL",
-            "selectionCode": "UNDER",
-            "point": 3.5,
-            "pick": "Тотал меньше 3.5",
-            "pickRu": "Тотал меньше 3.5",
-            "bookmakerOdds": 1.81,
-            "modelProbability": 0.537225,
-            "conservativeProbability": 0.504827,
-            "marketProbability": 0.529483,
-            "expectedValue": -0.086264,
-            "edge": -0.024656,
-            "dataTier": "FULL",
-            "dataQuality": 86.0,
-            "quoteCount": 12,
-            "agreement": 94.5,
-            "marketStability": 83.0,
-            "anomaly": 11.2,
-            "obviousMarketScore": 76.3727,
-            "qualification": {
-              "qualified": false,
-              "failures": [
-                "Ожидаемая сумма голов слишком высока для ставки на меньше",
-                "Недостаточная консервативная вероятность",
-                "Недостаточная расчётная вероятность",
-                "Недостаточное преимущество над рынком",
-                "Недостаточное математическое ожидание"
-              ]
-            },
-            "strategyFailures": [
-              "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-              "Основной фильтр: Недостаточная консервативная вероятность",
-              "Основной фильтр: Недостаточная расчётная вероятность",
-              "Основной фильтр: Недостаточное преимущество над рынком",
-              "Основной фильтр: Недостаточное математическое ожидание",
-              "Недостаточная консервативная вероятность",
-              "История и модель голов противоречат направлению тотала"
-            ],
-            "goalDirectionConflict": true,
-            "learningAdjustment": -0.005598,
-            "learningEvidence": [
-              {
-                "segment": "SPORT|soccer",
-                "samples": 443,
-                "bias": -0.0081,
-                "weight": 1.0,
-                "hitRate": 0.5508,
-                "averagePredicted": 0.5589,
-                "brierScore": 0.250041
-              },
-              {
-                "segment": "MARKET|soccer|TOTAL",
-                "samples": 269,
-                "bias": -0.0427,
-                "weight": 1.0,
-                "hitRate": 0.5539,
-                "averagePredicted": 0.5966,
-                "brierScore": 0.251167
-              },
-              {
-                "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-                "samples": 95,
-                "bias": -0.1444,
-                "weight": 0.463,
-                "hitRate": 0.4632,
-                "averagePredicted": 0.6075,
-                "brierScore": 0.274775
-              },
-              {
-                "segment": "ODDS|soccer|UPPER_MID",
-                "samples": 132,
-                "bias": 0.0231,
-                "weight": 0.769,
-                "hitRate": 0.5606,
-                "averagePredicted": 0.5375,
-                "brierScore": 0.249693
-              },
-              {
-                "segment": "DATA_TIER|soccer|FULL",
-                "samples": 186,
-                "bias": 0.0204,
-                "weight": 1.0,
-                "hitRate": 0.5753,
-                "averagePredicted": 0.5548,
-                "brierScore": 0.25379
-              },
-              {
-                "segment": "PROBABILITY|soccer|P50",
-                "samples": 171,
-                "bias": 0.019,
-                "weight": 1.0,
-                "hitRate": 0.5789,
-                "averagePredicted": 0.56,
-                "brierScore": 0.245101
-              },
-              {
-                "segment": "MARKET_TIER|soccer|TOTAL|FULL",
-                "samples": 110,
-                "bias": -0.0364,
-                "weight": 0.587,
-                "hitRate": 0.5636,
-                "averagePredicted": 0.6001,
-                "brierScore": 0.248682
-              },
-              {
-                "segment": "MARKET_DETAIL_TIER|soccer|TOTAL_UNDER@3.5|FULL",
-                "samples": 41,
-                "bias": -0.1181,
-                "weight": 0.05,
-                "hitRate": 0.4878,
-                "averagePredicted": 0.6059,
-                "brierScore": 0.262015
-              }
-            ]
-          },
-          "failures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "547e4e8cf5577a50926272e0e1a7e677",
-          "sportKey": "soccer_netherlands_eredivisie",
-          "league": "Dutch Eredivisie",
-          "leagueRu": "Дутч Ередивисие",
-          "home": "SC Cambuur",
-          "homeRu": "СК Камбуур",
-          "away": "PSV Eindhoven",
-          "awayRu": "ПСВ",
-          "commenceTime": "2026-11-08T15:45:00Z",
-          "dataTier": "HYBRID",
-          "dataQuality": 83.1,
-          "quoteCount": 9,
-          "candidateCount": 2,
-          "bestCandidate": "Тотал меньше 3.5",
-          "bestProbability": 0.427728,
-          "bestOdds": 2.24,
-          "bestScore": 67.0139,
-          "shadowCandidate": {
-            "market": "TOTAL_UNDER",
-            "marketKey": "totals",
-            "marketFamily": "TOTAL",
-            "selectionCode": "UNDER",
-            "point": 3.5,
-            "pick": "Тотал меньше 3.5",
-            "pickRu": "Тотал меньше 3.5",
-            "bookmakerOdds": 2.24,
-            "modelProbability": 0.490126,
-            "conservativeProbability": 0.427728,
-            "marketProbability": 0.439607,
-            "expectedValue": -0.04189,
-            "edge": -0.01188,
-            "dataTier": "HYBRID",
-            "dataQuality": 83.1,
-            "quoteCount": 9,
-            "agreement": 78.0,
-            "marketStability": 74.5,
-            "anomaly": 16.0,
-            "obviousMarketScore": 67.0139,
-            "qualification": {
-              "qualified": false,
-              "failures": [
-                "Консенсус букмекеров не подтверждает выбранное направление тотала",
-                "Последние матчи команд противоречат выбранному направлению тотала",
-                "Ожидаемая сумма голов слишком высока для ставки на меньше",
-                "Недостаточная консервативная вероятность",
-                "Недостаточная расчётная вероятность",
-                "Недостаточное преимущество над рынком",
-                "Недостаточное математическое ожидание"
-              ]
-            },
-            "strategyFailures": [
-              "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-              "Основной фильтр: Последние матчи команд противоречат выбранному направлению тотала",
-              "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-              "Основной фильтр: Недостаточная консервативная вероятность",
-              "Основной фильтр: Недостаточная расчётная вероятность",
-              "Основной фильтр: Недостаточное преимущество над рынком",
-              "Основной фильтр: Недостаточное математическое ожидание",
-              "Недостаточная консервативная вероятность",
-              "История и модель голов противоречат направлению тотала"
-            ],
-            "goalDirectionConflict": true,
-            "learningAdjustment": -0.020497,
-            "learningEvidence": [
-              {
-                "segment": "SPORT|soccer",
-                "samples": 443,
-                "bias": -0.0081,
-                "weight": 1.0,
-                "hitRate": 0.5508,
-                "averagePredicted": 0.5589,
-                "brierScore": 0.250041
-              },
-              {
-                "segment": "MARKET|soccer|TOTAL",
-                "samples": 269,
-                "bias": -0.0427,
-                "weight": 1.0,
-                "hitRate": 0.5539,
-                "averagePredicted": 0.5966,
-                "brierScore": 0.251167
-              },
-              {
-                "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-                "samples": 95,
-                "bias": -0.1444,
-                "weight": 0.463,
-                "hitRate": 0.4632,
-                "averagePredicted": 0.6075,
-                "brierScore": 0.274775
-              },
-              {
-                "segment": "ODDS|soccer|HIGH",
-                "samples": 54,
-                "bias": -0.0156,
-                "weight": 0.124,
-                "hitRate": 0.4074,
-                "averagePredicted": 0.423,
-                "brierScore": 0.246327
-              },
-              {
-                "segment": "DATA_TIER|soccer|HYBRID",
-                "samples": 159,
-                "bias": -0.0355,
-                "weight": 0.992,
-                "hitRate": 0.5157,
-                "averagePredicted": 0.5512,
-                "brierScore": 0.24999
-              },
-              {
-                "segment": "PROBABILITY|soccer|P50",
-                "samples": 171,
-                "bias": 0.019,
-                "weight": 1.0,
-                "hitRate": 0.5789,
-                "averagePredicted": 0.56,
-                "brierScore": 0.245101
-              },
-              {
-                "segment": "MARKET_TIER|soccer|TOTAL|HYBRID",
-                "samples": 95,
-                "bias": -0.0474,
-                "weight": 0.463,
-                "hitRate": 0.5579,
-                "averagePredicted": 0.6053,
-                "brierScore": 0.255684
-              }
-            ]
-          },
-          "failures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "320cba0343e467f93a65a97da656413d",
-          "sportKey": "soccer_spl",
-          "league": "Premiership - Scotland",
-          "leagueRu": "Премиершип - Скотланд",
-          "home": "Celtic",
-          "homeRu": "Селтик",
-          "away": "Kilmarnock",
-          "awayRu": "Килмарнок",
-          "commenceTime": "2026-11-08T16:00:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "f892f9aa0772c3febcde6fb5477bb6ea",
-          "sportKey": "soccer_italy_serie_b",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Carrarese",
-          "homeRu": "Карраресе",
-          "away": "Sampdoria",
-          "awayRu": "Сампдориа",
-          "commenceTime": "2026-11-08T16:15:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "c1b9696d88719cb8832d794b986cdd68",
-          "sportKey": "soccer_germany_bundesliga",
-          "league": "Bundesliga - Germany",
-          "leagueRu": "Бундеслига - Германи",
-          "home": "SC Freiburg",
-          "homeRu": "СК Фреибург",
-          "away": "Union Berlin",
-          "awayRu": "Унион Берлин",
-          "commenceTime": "2026-11-08T16:30:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "81ad04996f63fb60b494d243b13ac586",
-          "sportKey": "soccer_spain_la_liga",
-          "league": "La Liga - Spain",
-          "leagueRu": "Ла Лига - Спаин",
-          "home": "Villarreal",
-          "homeRu": "Вилларреал",
-          "away": "Getafe",
-          "awayRu": "Гетафе",
-          "commenceTime": "2026-11-08T17:30:00Z",
-          "dataTier": "FULL",
-          "dataQuality": 86.0,
-          "quoteCount": 15,
-          "candidateCount": 2,
-          "bestCandidate": "Тотал меньше 2.5",
-          "bestProbability": 0.473003,
-          "bestOdds": 2.08,
-          "bestScore": 73.30277,
-          "shadowCandidate": {
-            "market": "TOTAL_UNDER",
-            "marketKey": "totals",
-            "marketFamily": "TOTAL",
-            "selectionCode": "UNDER",
-            "point": 2.5,
-            "pick": "Тотал меньше 2.5",
-            "pickRu": "Тотал меньше 2.5",
-            "bookmakerOdds": 2.08,
-            "modelProbability": 0.505401,
-            "conservativeProbability": 0.473003,
-            "marketProbability": 0.470339,
-            "expectedValue": -0.016153,
-            "edge": 0.002665,
-            "dataTier": "FULL",
-            "dataQuality": 86.0,
-            "quoteCount": 15,
-            "agreement": 89.8,
-            "marketStability": 80.1,
-            "anomaly": 12.6,
-            "obviousMarketScore": 73.30277,
-            "qualification": {
-              "qualified": false,
-              "failures": [
-                "Модель счёта не подтверждает выбранное направление тотала",
-                "Консенсус букмекеров не подтверждает выбранное направление тотала",
-                "Последние матчи команд противоречат выбранному направлению тотала",
-                "Ожидаемая сумма голов слишком высока для ставки на меньше",
-                "Недостаточная консервативная вероятность",
-                "Недостаточная расчётная вероятность",
-                "Недостаточное преимущество над рынком",
-                "Недостаточное математическое ожидание"
-              ]
-            },
-            "strategyFailures": [
-              "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
-              "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-              "Основной фильтр: Последние матчи команд противоречат выбранному направлению тотала",
-              "Основной фильтр: Ожидаемая сумма голов слишком высока для ставки на меньше",
-              "Основной фильтр: Недостаточная консервативная вероятность",
-              "Основной фильтр: Недостаточная расчётная вероятность",
-              "Основной фильтр: Недостаточное преимущество над рынком",
-              "Основной фильтр: Недостаточное математическое ожидание",
-              "Недостаточная консервативная вероятность",
-              "История и модель голов противоречат направлению тотала"
-            ],
-            "goalDirectionConflict": true,
-            "learningAdjustment": -0.002329,
-            "learningEvidence": [
-              {
-                "segment": "SPORT|soccer",
-                "samples": 443,
-                "bias": -0.0081,
-                "weight": 1.0,
-                "hitRate": 0.5508,
-                "averagePredicted": 0.5589,
-                "brierScore": 0.250041
-              },
-              {
-                "segment": "MARKET|soccer|TOTAL",
-                "samples": 269,
-                "bias": -0.0427,
-                "weight": 1.0,
-                "hitRate": 0.5539,
-                "averagePredicted": 0.5966,
-                "brierScore": 0.251167
-              },
-              {
-                "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@2.5",
-                "samples": 55,
-                "bias": -0.0033,
-                "weight": 0.132,
-                "hitRate": 0.5818,
-                "averagePredicted": 0.5851,
-                "brierScore": 0.240494
-              },
-              {
-                "segment": "ODDS|soccer|UPPER_MID",
-                "samples": 132,
-                "bias": 0.0231,
-                "weight": 0.769,
-                "hitRate": 0.5606,
-                "averagePredicted": 0.5375,
-                "brierScore": 0.249693
-              },
-              {
-                "segment": "DATA_TIER|soccer|FULL",
-                "samples": 186,
-                "bias": 0.0204,
-                "weight": 1.0,
-                "hitRate": 0.5753,
-                "averagePredicted": 0.5548,
-                "brierScore": 0.25379
-              },
-              {
-                "segment": "PROBABILITY|soccer|P50",
-                "samples": 171,
-                "bias": 0.019,
-                "weight": 1.0,
-                "hitRate": 0.5789,
-                "averagePredicted": 0.56,
-                "brierScore": 0.245101
-              },
-              {
-                "segment": "MARKET_TIER|soccer|TOTAL|FULL",
-                "samples": 110,
-                "bias": -0.0364,
-                "weight": 0.587,
-                "hitRate": 0.5636,
-                "averagePredicted": 0.6001,
-                "brierScore": 0.248682
-              }
-            ]
-          },
-          "failures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "fd4b1507292f89721d6d024b337a6375",
-          "sportKey": "soccer_italy_serie_b",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Vicenza",
-          "homeRu": "Викенза",
-          "away": "Cremonese",
-          "awayRu": "Кремонесе",
-          "commenceTime": "2026-11-08T18:30:00Z",
-          "failures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        }
-      ],
+      "rejectedEvents": [],
       "dataTiers": {
-        "FULL": 20,
-        "HYBRID": 16
+        "FULL": 2,
+        "MARKET": 2,
+        "HYBRID": 1
       },
       "marketFamilies": {
-        "OUTCOME": 19,
-        "TOTAL": 14
+        "TOTAL": 3,
+        "OUTCOME": 2
       },
       "qualifiedEventIds": [],
       "premiumEventIds": [],
-      "published": 15,
+      "published": 5,
       "required": 15,
-      "shortage": 0,
-      "partialPublication": false,
-      "status": "GREEN",
+      "shortage": 10,
+      "partialPublication": true,
+      "status": "GREEN_PARTIAL_PRODUCTION",
       "marketFamilyCap": 8,
       "premiumPublished": 0,
       "selectionObjective": "BEST_AVAILABLE_TOP_THREE_ALWAYS_WITH_SEPARATE_STRICT_PREMIUM_LABEL",
       "hardRejectionReasons": {},
-      "marketRejectionReasons": {
-        "Нет пригодных рынков или котировок": 11,
-        "Направление тотала противоречит модели матча": 3
-      },
-      "nearMissCandidates": [
-        {
-          "eventId": "c22d673775e6a4dc0810cc88b0ed75ec",
-          "league": "Dutch Eredivisie",
-          "leagueRu": "Дутч Ередивисие",
-          "home": "AZ Alkmaar",
-          "homeRu": "Аз Алкмаар",
-          "away": "Groningen",
-          "awayRu": "Гронинген",
-          "bestCandidate": "Тотал меньше 3.5",
-          "bestProbability": 0.504827,
-          "bestOdds": 1.81,
-          "dataQuality": 86.0,
-          "quoteCount": 12,
-          "probabilityGap": 0.0552,
-          "qualityGap": 0.0,
-          "bookmakerGap": 0,
-          "hardFailures": [],
-          "marketFailures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "81ad04996f63fb60b494d243b13ac586",
-          "league": "La Liga - Spain",
-          "leagueRu": "Ла Лига - Спаин",
-          "home": "Villarreal",
-          "homeRu": "Вилларреал",
-          "away": "Getafe",
-          "awayRu": "Гетафе",
-          "bestCandidate": "Тотал меньше 2.5",
-          "bestProbability": 0.473003,
-          "bestOdds": 2.08,
-          "dataQuality": 86.0,
-          "quoteCount": 15,
-          "probabilityGap": 0.087,
-          "qualityGap": 0.0,
-          "bookmakerGap": 0,
-          "hardFailures": [],
-          "marketFailures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "547e4e8cf5577a50926272e0e1a7e677",
-          "league": "Dutch Eredivisie",
-          "leagueRu": "Дутч Ередивисие",
-          "home": "SC Cambuur",
-          "homeRu": "СК Камбуур",
-          "away": "PSV Eindhoven",
-          "awayRu": "ПСВ",
-          "bestCandidate": "Тотал меньше 3.5",
-          "bestProbability": 0.427728,
-          "bestOdds": 2.24,
-          "dataQuality": 83.1,
-          "quoteCount": 9,
-          "probabilityGap": 0.1323,
-          "qualityGap": 0.0,
-          "bookmakerGap": 0,
-          "hardFailures": [],
-          "marketFailures": [
-            "Направление тотала противоречит модели матча"
-          ]
-        },
-        {
-          "eventId": "8a92794bd5f89b8b91b2d8fefdac7b85",
-          "league": "Belgium First Div",
-          "leagueRu": "Белгиум Фирст Див",
-          "home": "Club Brugge",
-          "homeRu": "Клуб Бругге",
-          "away": "Anderlecht",
-          "awayRu": "Андерлечт",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "6692a3ca274d09ffbfabd943320d62f5",
-          "league": "Turkey Super League",
-          "leagueRu": "Туркеи Супер Лига",
-          "home": "Çorum FK",
-          "homeRu": "Корум ФК",
-          "away": "Fenerbahce",
-          "awayRu": "Фенербахче",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "c56ba830ee1ac3cd75ec31423529dd91",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Virtus Entella",
-          "homeRu": "Виртус Ентелла",
-          "away": "Modena",
-          "awayRu": "Модена",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "677618d6faa4a93da9795e1c0482993c",
-          "league": "Super League - Greece",
-          "leagueRu": "Супер Лига - Грееке",
-          "home": "Asteras Tripolis",
-          "homeRu": "Астерас Триполис",
-          "away": "Kalamata FC",
-          "awayRu": "Каламата ФК",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "d118b96272c80f8b437f269d8a4c2f5e",
-          "league": "Premiership - Scotland",
-          "leagueRu": "Премиершип - Скотланд",
-          "home": "Hearts",
-          "homeRu": "Хеарц",
-          "away": "Falkirk F.C.",
-          "awayRu": "Фалкирк Ф.К.",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "dc222b364fd01d7dfe92d95975b26c79",
-          "league": "Super League - Greece",
-          "leagueRu": "Супер Лига - Грееке",
-          "home": "Iraklis FC",
-          "homeRu": "Ираклис ФК",
-          "away": "Panathinaikos",
-          "awayRu": "Панатинаикос",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "a85eafd97e49ac329956fa1022be891d",
-          "league": "Turkey Super League",
-          "leagueRu": "Туркеи Супер Лига",
-          "home": "Alanyaspor",
-          "homeRu": "Аланяспор",
-          "away": "Trabzonspor",
-          "awayRu": "Трабзонспор",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "320cba0343e467f93a65a97da656413d",
-          "league": "Premiership - Scotland",
-          "leagueRu": "Премиершип - Скотланд",
-          "home": "Celtic",
-          "homeRu": "Селтик",
-          "away": "Kilmarnock",
-          "awayRu": "Килмарнок",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "f892f9aa0772c3febcde6fb5477bb6ea",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Carrarese",
-          "homeRu": "Карраресе",
-          "away": "Sampdoria",
-          "awayRu": "Сампдориа",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "c1b9696d88719cb8832d794b986cdd68",
-          "league": "Bundesliga - Germany",
-          "leagueRu": "Бундеслига - Германи",
-          "home": "SC Freiburg",
-          "homeRu": "СК Фреибург",
-          "away": "Union Berlin",
-          "awayRu": "Унион Берлин",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        },
-        {
-          "eventId": "fd4b1507292f89721d6d024b337a6375",
-          "league": "Serie B - Italy",
-          "leagueRu": "Серие Б - Итали",
-          "home": "Vicenza",
-          "homeRu": "Викенза",
-          "away": "Cremonese",
-          "awayRu": "Кремонесе",
-          "bestCandidate": null,
-          "bestProbability": 0.0,
-          "bestOdds": null,
-          "dataQuality": 0.0,
-          "quoteCount": 0,
-          "probabilityGap": 0.56,
-          "qualityGap": 58.0,
-          "bookmakerGap": 3,
-          "hardFailures": [],
-          "marketFailures": [
-            "Нет пригодных рынков или котировок"
-          ]
-        }
-      ],
-      "advancedRecoveryEventIds": [
-        "8a92794bd5f89b8b91b2d8fefdac7b85",
-        "6692a3ca274d09ffbfabd943320d62f5",
-        "c56ba830ee1ac3cd75ec31423529dd91",
-        "677618d6faa4a93da9795e1c0482993c",
-        "d118b96272c80f8b437f269d8a4c2f5e",
-        "dc222b364fd01d7dfe92d95975b26c79",
-        "a85eafd97e49ac329956fa1022be891d",
-        "c22d673775e6a4dc0810cc88b0ed75ec",
-        "547e4e8cf5577a50926272e0e1a7e677",
-        "320cba0343e467f93a65a97da656413d",
-        "f892f9aa0772c3febcde6fb5477bb6ea",
-        "c1b9696d88719cb8832d794b986cdd68",
-        "81ad04996f63fb60b494d243b13ac586",
-        "fd4b1507292f89721d6d024b337a6375"
-      ]
+      "marketRejectionReasons": {},
+      "nearMissCandidates": [],
+      "advancedRecoveryEventIds": []
     },
     "shadowLearning": {
-      "pending": 3,
-      "settled": 59,
-      "addedPool": 3,
+      "pending": 0,
+      "settled": 62,
+      "addedPool": 0,
       "statistics": {
         "tracked": 62,
-        "pending": 3,
-        "settled": 59,
-        "won": 27,
-        "lost": 21,
+        "pending": 0,
+        "settled": 62,
+        "won": 28,
+        "lost": 23,
         "push": 0
       }
     },
     "apiCalls": [
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_argentina_primera_division",
+        "label": "ODDS_SPORTS",
         "status": 200,
-        "elapsedSeconds": 0.21
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_saudi_arabia_pro_league",
+        "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.11
+        "elapsedSeconds": 0.149
       },
       {
         "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_spain_segunda_division",
+        "label": "EVENTS:soccer_australia_aleague",
+        "status": 200,
+        "elapsedSeconds": 0.103
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_austria_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
         "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_brazil_serie_b",
+        "status": 200,
+        "elapsedSeconds": 0.124
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_libertadores",
+        "status": 200,
+        "elapsedSeconds": 0.166
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_conmebol_copa_sudamericana",
+        "status": 200,
+        "elapsedSeconds": 0.121
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_efl_champ",
+        "status": 200,
+        "elapsedSeconds": 0.183
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_efl_cup",
+        "status": 200,
+        "elapsedSeconds": 0.128
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league1",
+        "status": 200,
+        "elapsedSeconds": 0.117
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_england_league2",
+        "status": 200,
+        "elapsedSeconds": 0.132
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_epl",
+        "status": 200,
+        "elapsedSeconds": 0.1
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_fa_cup",
+        "status": 200,
+        "elapsedSeconds": 0.166
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_france_ligue_one",
+        "status": 200,
+        "elapsedSeconds": 0.142
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga",
+        "status": 200,
+        "elapsedSeconds": 0.133
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_bundesliga_women",
+        "status": 200,
+        "elapsedSeconds": 0.139
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_dfb_pokal",
+        "status": 200,
+        "elapsedSeconds": 0.128
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_germany_liga3",
+        "status": 200,
+        "elapsedSeconds": 0.163
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_greece_super_league",
+        "status": 200,
+        "elapsedSeconds": 0.15
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_italy_serie_a",
+        "status": 200,
+        "elapsedSeconds": 0.094
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_mexico_ligamx",
+        "status": 200,
+        "elapsedSeconds": 0.16
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_netherlands_eredivisie",
+        "status": 200,
+        "elapsedSeconds": 0.182
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.161
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_copa_del_rey",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_la_liga",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.107
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_spl",
+        "status": 200,
+        "elapsedSeconds": 0.093
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_sweden_allsvenskan",
+        "status": 200,
+        "elapsedSeconds": 0.101
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league",
+        "status": 200,
+        "elapsedSeconds": 0.092
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_champs_league_women",
+        "status": 200,
+        "elapsedSeconds": 0.102
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_europa_league",
+        "status": 200,
+        "elapsedSeconds": 0.161
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_uefa_nations_league",
+        "status": 200,
+        "elapsedSeconds": 0.105
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "EVENTS:soccer_usa_mls",
+        "status": 200,
+        "elapsedSeconds": 0.139
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_FEATURED:soccer_spain_segunda_division",
+        "status": 200,
+        "elapsedSeconds": 0.146
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_FEATURED:soccer_germany_bundesliga_women",
+        "status": 200,
+        "elapsedSeconds": 0.149
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_FEATURED:soccer_norway_eliteserien",
+        "status": 200,
+        "elapsedSeconds": 0.106
+      },
+      {
+        "provider": "THE_ODDS_API",
+        "label": "ODDS_FEATURED:soccer_fa_cup",
+        "status": 200,
+        "elapsedSeconds": 0.141
       }
     ],
     "quota": {
-      "requestsRemaining": "376",
-      "requestsUsed": "124",
+      "requestsRemaining": "368",
+      "requestsUsed": "132",
       "requestsLast": "2",
-      "estimatedCreditsThisRun": 14
+      "estimatedCreditsThisRun": 8
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "376",
-        "requestsUsed": "124",
+        "requestsRemaining": "368",
+        "requestsUsed": "132",
         "requestsLast": "2",
-        "estimatedCreditsThisRun": 14
+        "estimatedCreditsThisRun": 8
       }
     },
     "credentialHealth": {
@@ -1256,23 +528,23 @@
       "primary": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 108,
-        "used": 392
+        "remaining": 54,
+        "used": 446
       },
       "backup": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 390,
-        "used": 110
+        "remaining": 376,
+        "used": 124
       }
     },
     "fonbet": {
       "status": "UNAVAILABLE",
       "mode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
       "confirmedEvents": 0,
-      "sourceUpdatedAt": "2026-11-08T08:11:15Z"
+      "sourceUpdatedAt": "2026-11-09T10:42:51Z"
     },
-    "dailyAnalysis": 15,
+    "dailyAnalysis": 5,
     "bankedTopThree": 0,
     "premiumBets": 0,
     "premiumEventIds": [],
@@ -1825,64 +1097,59 @@
       "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
     },
     "russianNames": {
-      "resolved": 30,
-      "teams": 30,
+      "resolved": 10,
+      "teams": 10,
       "theSportsDbResolved": 630
     },
     "fonbetGate": {
       "status": "UNAVAILABLE",
       "confirmed": 0,
-      "unknown": 15,
-      "total": 15
+      "unknown": 5,
+      "total": 5
     },
     "dailyCloudflare Workers AIAudit": {
-      "status": "FAILED_FALLBACK",
-      "logicalRuns": 1,
-      "technicalAttempts": 3,
-      "schemaValid": false,
-      "modelRequested": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-      "error": "HTTP_503:{\"error\":\"Workers AI unavailable or free quota exhausted; use deterministic fallback\"}",
-      "fallback": "DETERMINISTIC_PORTFOLIO"
+      "status": "SKIPPED",
+      "reason": "REQUIRES_15_RECORDS_GOT_5"
     },
     "calibrationGuard": {
       "mode": "CALIBRATED",
       "rollingWindow": 60,
       "overall": {
         "n": 60,
-        "wins": 33,
-        "losses": 27,
-        "hitRate": 0.55,
-        "avgPredicted": 0.502157,
-        "brier": 0.263015,
-        "overconfidence": 0.0,
-        "shrunkOverconfidence": 0.0
+        "wins": 31,
+        "losses": 29,
+        "hitRate": 0.516667,
+        "avgPredicted": 0.520448,
+        "brier": 0.260023,
+        "overconfidence": 0.003782,
+        "shrunkOverconfidence": 0.002836
       },
       "marketFamilies": {
         "OUTCOME": {
-          "n": 31,
-          "wins": 19,
-          "losses": 12,
-          "hitRate": 0.612903,
-          "avgPredicted": 0.449713,
-          "brier": 0.264422,
+          "n": 29,
+          "wins": 16,
+          "losses": 13,
+          "hitRate": 0.551724,
+          "avgPredicted": 0.469036,
+          "brier": 0.25904,
           "overconfidence": 0.0,
           "shrunkOverconfidence": 0.0
         },
         "TOTAL": {
-          "n": 29,
-          "wins": 14,
-          "losses": 15,
-          "hitRate": 0.482759,
-          "avgPredicted": 0.558218,
-          "brier": 0.261512,
-          "overconfidence": 0.07546,
-          "shrunkOverconfidence": 0.04466
+          "n": 31,
+          "wins": 15,
+          "losses": 16,
+          "hitRate": 0.483871,
+          "avgPredicted": 0.568544,
+          "brier": 0.260943,
+          "overconfidence": 0.084673,
+          "shrunkOverconfidence": 0.051468
         }
       },
       "additionalUncertaintyMargin": 0.0,
       "marketFamilyHaircuts": {
         "OUTCOME": 0.0,
-        "TOTAL": 0.007398
+        "TOTAL": 0.00944
       },
       "bankrollAllowed": false,
       "policy": "AUTO_TIGHTEN_ONLY_NEVER_RAISE_PROBABILITY_OR_LOOSEN_BASE_THRESHOLDS"
@@ -2144,31 +1411,6 @@
       ],
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
-    },
-    "dueRecords": 4,
-    "providerFinalResults": 20,
-    "settlement": {
-      "analysisSettled": 0,
-      "bestBetsSettled": 0,
-      "unresolved": 4
-    },
-    "shadowSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
-      "push": 0,
-      "superseded": 0,
-      "unresolved": 0
-    },
-    "overdueRelease": {
-      "analysis": 0,
-      "bestBets": 0
-    },
-    "expressSettlement": {
-      "settled": 0,
-      "won": 0,
-      "lost": 0,
-      "push": 0
     }
   },
   "warnings": [],
