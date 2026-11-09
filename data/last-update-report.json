@@ -4,7 +4,7 @@
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "settle",
   "startedAt": "2026-11-08T08:01:33Z",
-  "finishedAt": "2026-11-08T23:11:48Z",
+  "finishedAt": "2026-11-09T02:43:30Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -69,7 +69,7 @@
       ]
     },
     "trackedHistory": {
-      "added": 3,
+      "added": 0,
       "matches": 18364,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
@@ -1222,31 +1222,19 @@
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.081
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_france_ligue_one",
-        "status": 200,
-        "elapsedSeconds": 0.144
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "SCORES:soccer_portugal_primeira_liga",
-        "status": 200,
-        "elapsedSeconds": 0.192
+        "elapsedSeconds": 0.21
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_saudi_arabia_pro_league",
         "status": 200,
-        "elapsedSeconds": 0.141
+        "elapsedSeconds": 0.11
       },
       {
         "provider": "THE_ODDS_API",
         "label": "SCORES:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.101
       }
     ],
     "quota": {
@@ -2157,11 +2145,11 @@
       "method": "ACTUAL_SETTLED_BANK_LEDGER_AND_FROZEN_PREMATCH_RECORDS",
       "policy": "DIAGNOSTIC_ONLY_NO_RETROACTIVE_REBALANCING_NO_AUTOMATIC_PROBABILITY_INCREASE"
     },
-    "dueRecords": 7,
-    "providerFinalResults": 36,
+    "dueRecords": 4,
+    "providerFinalResults": 20,
     "settlement": {
-      "analysisSettled": 3,
-      "bestBetsSettled": 1,
+      "analysisSettled": 0,
+      "bestBetsSettled": 0,
       "unresolved": 4
     },
     "shadowSettlement": {
@@ -2173,7 +2161,7 @@
       "unresolved": 0
     },
     "overdueRelease": {
-      "analysis": 1,
+      "analysis": 0,
       "bestBets": 0
     },
     "expressSettlement": {
