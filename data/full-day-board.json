@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-09T16:01:08Z",
+  "updatedAt": "2026-11-09T21:06:29Z",
   "operationalDayId": "2026-11-09-MSK-0800",
   "operationalWindowStart": "2026-11-09T05:00:00Z",
   "operationalWindowEnd": "2026-11-10T05:00:00Z",
@@ -90,8 +90,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "7bfc2afc162934f011a8425159e340da",
@@ -135,7 +135,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f52b83a74c511828f6155889d751d191",
@@ -153,8 +153,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     }
   ],
   "policy": "VERIFIED_SCHEDULE_HISTORY_PREVIEW_NO_ODDS_NO_BANK"

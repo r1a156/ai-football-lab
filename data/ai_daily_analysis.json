@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-11-09T16:01:08Z",
+  "updatedAt": "2026-11-09T21:06:29Z",
   "analysisDateLocal": "2026-11-09",
   "batch": {
     "id": "",
@@ -12,12 +12,12 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-09T16:01:08Z",
+    "updatedAt": "2026-11-09T21:06:29Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 5,
-    "competitionsDiscovered": 4,
+    "discoveredEvents": 0,
+    "competitionsDiscovered": 2,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -38,7 +38,7 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-11-09T16:02:16Z",
+        "lastSuccessAt": "2026-11-09T21:08:46Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-10-31T21:25:38Z",
         "lastStatus": 401,
@@ -47,20 +47,20 @@
       }
     },
     "quota": {
-      "requestsRemaining": "34",
-      "requestsUsed": "466",
+      "requestsRemaining": "358",
+      "requestsUsed": "142",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
-      "PRIMARY": {
-        "requestsRemaining": "34",
-        "requestsUsed": "466",
+      "BACKUP": {
+        "requestsRemaining": "358",
+        "requestsUsed": "142",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 14187,
+    "historyMatches": 14316,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -73,22 +73,25 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 0,
-      "duplicates": 0,
-      "historyMatches": 18539,
+      "ingested": 18881,
+      "duplicates": 18585,
+      "historyMatches": 18663,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 43,
-      "matchesAdded": 42,
-      "historyMatches": 18539,
+      "requests": 58,
+      "matchesAdded": 57,
+      "historyMatches": 18665,
       "errors": [
-        "136466:HTTPError",
-        "135981:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
+        "135154:HTTPError",
+        "135172:HTTPError",
+        "135980:HTTPError",
+        "133916:HTTPError",
+        "136451:HTTPError",
+        "136517:HTTPError",
+        "136462:HTTPError",
         "145389:HTTPError",
         "134295:HTTPError",
         "134154:HTTPError",
@@ -96,21 +99,18 @@
         "134280:HTTPError",
         "134464:HTTPError",
         "134285:HTTPError",
-        "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
         "137889:HTTPError",
-        "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError"
+        "134018:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-09T16:01:08Z"
+    "updatedAt": "2026-11-09T21:06:29Z"
   },
   "lossDiagnostics": {
     "settledFinancialEntriesAudited": 50,
@@ -916,7 +916,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-09T16:01:08Z",
+    "updatedAt": "2026-11-09T21:06:29Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -925,7 +925,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-09T16:01:08Z"
+    "updatedAt": "2026-11-09T21:06:29Z"
   },
   "shadowLearning": {
     "statistics": {
