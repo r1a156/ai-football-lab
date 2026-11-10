@@ -3,8 +3,8 @@
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
   "mode": "generate",
-  "startedAt": "2026-11-10T13:26:25Z",
-  "finishedAt": "2026-11-10T13:35:51Z",
+  "startedAt": "2026-11-10T13:38:49Z",
+  "finishedAt": "2026-11-10T13:48:13Z",
   "diagnostics": {
     "history": {
       "status": "FREE_DATA_MESH",
@@ -78,23 +78,23 @@
       "realFixtures": 11,
       "historicalModelForecasts": 2,
       "withoutReliableHistoricalForecast": 9,
-      "verifiedOddsEvents": 6
+      "verifiedOddsEvents": 11
     },
     "discovery": {
       "operationalDayId": "2026-11-10-MSK-0800",
       "operationalDateLocal": "2026-11-10",
       "operationalWindowStart": "2026-11-10T05:00:00Z",
       "operationalWindowEnd": "2026-11-11T05:00:00Z",
-      "queryWindowStart": "2026-11-10T14:11:25Z",
+      "queryWindowStart": "2026-11-10T14:23:49Z",
       "queryWindowEnd": "2026-11-11T05:00:00Z",
-      "searchWindowMaximumEnd": "2026-11-13T14:11:25Z",
+      "searchWindowMaximumEnd": "2026-11-13T14:23:49Z",
       "windowStartLocal": "2026-11-10T08:00:00+03:00",
       "windowEndLocal": "2026-11-11T08:00:00+03:00",
       "durationHours": 24,
       "searchHorizonHours": 72,
       "policy": "ROLLING_PREMATCH_HORIZON_72H_BREADTH_FIRST",
       "calendarWindowStart": "2026-11-10T05:00:00Z",
-      "selectionWindowStart": "2026-11-10T14:11:25Z",
+      "selectionWindowStart": "2026-11-10T14:23:49Z",
       "selectionWindowEnd": "2026-11-11T05:00:00Z",
       "activeFootballCompetitions": 42,
       "events": 11,
@@ -125,16 +125,16 @@
     },
     "quotaPlan": {
       "freeMonthlyMode": true,
-      "quotaRemainingBeforeOdds": 12,
+      "quotaRemainingBeforeOdds": 5,
       "quotaHardReserve": 0,
       "daysLeftInQuotaPeriod": 21,
       "dailyFairShare": 1,
       "dailyConfiguredBudget": 18,
-      "dailyAvailableBeforeFeatured": 3,
-      "portfolioAvailableBeforeFeatured": 3,
+      "dailyAvailableBeforeFeatured": 0,
+      "portfolioAvailableBeforeFeatured": 0,
       "advancedRecoveryReserveCredits": 0,
       "advancedRecoveryReserveRatio": 0.2,
-      "featuredSpendableAfterReserve": 3,
+      "featuredSpendableAfterReserve": 0,
       "portfolioCompletionBurstEnabled": false,
       "portfolioCompletionBurstActivated": false,
       "portfolioCompletionBurstReasons": [
@@ -145,10 +145,10 @@
       "featuredCostPerCompetition": 2,
       "competitionsWithEvents": 2,
       "competitionsSelected": 2,
-      "competitionsDeferredByQuota": 1,
-      "estimatedFeaturedCost": 2,
-      "projectedEventsWithOdds": 5,
-      "projectedHistoryCoveredEvents": 3,
+      "competitionsDeferredByQuota": 2,
+      "estimatedFeaturedCost": 0,
+      "projectedEventsWithOdds": 0,
+      "projectedHistoryCoveredEvents": 0,
       "expectedQualificationRate": 0.18,
       "expectedQualifiedFromInitialPool": 0,
       "candidateCompletionTarget": 84,
@@ -157,9 +157,7 @@
         "soccer_uefa_champs_league_women",
         "soccer_spain_copa_del_rey"
       ],
-      "initialCompetitionKeys": [
-        "soccer_uefa_champs_league_women"
-      ],
+      "initialCompetitionKeys": [],
       "completionCompetitionKeys": [],
       "completionRounds": [],
       "allEventsHistoricallyInspected": 11,
@@ -168,15 +166,15 @@
         "soccer_spain_copa_del_rey"
       ],
       "portfolioCompletionBurstActual": false,
-      "featuredEventsCollected": 6,
+      "featuredEventsCollected": 11,
       "advancedRecoveryReservedBeforeFeatured": 0,
-      "advancedRecoveryRequested": 1,
-      "advancedRecoveryReturned": 1,
+      "advancedRecoveryRequested": 0,
+      "advancedRecoveryReturned": 0,
       "advancedRecoveryUsefulResponses": 0,
       "advancedRecoveryRecoveredEvents": 0,
-      "topThreeEligibleAfterAdvanced": 5,
+      "topThreeEligibleAfterAdvanced": 9,
       "premiumQualifiedAfterAdvanced": 0,
-      "qualifiedAfterAdvanced": 5,
+      "qualifiedAfterAdvanced": 9,
       "noKeyFixtureOddsEnabled": true,
       "noKeyFixtureOddsStatus": "STALE",
       "noKeyFixtureOddsEvents": 0,
@@ -194,73 +192,77 @@
       "quotaExhaustedAtStart": false,
       "quotaExhaustedAfterAcquisition": false,
       "automaticResumeOnQuotaRecovery": true,
-      "quotaLifecycleStatus": "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE",
+      "quotaLifecycleStatus": "INSUFFICIENT_CREDITS_FOR_FEATURED_ODDS",
       "secondaryKeyFallback": {
         "enabled": true,
         "activated": true,
         "reason": "PRIMARY_PORTFOLIO_INCOMPLETE",
         "competitionKeysSelected": [
+          "soccer_uefa_champs_league_women",
           "soccer_spain_copa_del_rey"
         ],
-        "featuredEventsCollected": 6,
+        "featuredEventsCollected": 11,
         "quota": {
-          "requestsRemaining": "346",
-          "requestsUsed": "154",
-          "requestsLast": "0",
-          "estimatedCreditsThisRun": 4
+          "requestsRemaining": "340",
+          "requestsUsed": "160",
+          "requestsLast": "1",
+          "estimatedCreditsThisRun": 6
         },
         "quotaPlan": {
           "freeMonthlyMode": true,
-          "quotaRemainingBeforeOdds": 350,
+          "quotaRemainingBeforeOdds": 346,
           "quotaHardReserve": 0,
           "daysLeftInQuotaPeriod": 21,
           "dailyFairShare": 16,
           "dailyConfiguredBudget": 18,
-          "dailyAvailableBeforeFeatured": 10,
-          "portfolioAvailableBeforeFeatured": 10,
-          "advancedRecoveryReserveCredits": 3,
+          "dailyAvailableBeforeFeatured": 6,
+          "portfolioAvailableBeforeFeatured": 6,
+          "advancedRecoveryReserveCredits": 2,
           "advancedRecoveryReserveRatio": 0.2,
-          "featuredSpendableAfterReserve": 7,
+          "featuredSpendableAfterReserve": 4,
           "portfolioCompletionBurstEnabled": false,
           "portfolioCompletionBurstActivated": false,
           "portfolioCompletionBurstReasons": [
             "ADVANCED_RECOVERY_RESERVED_BEFORE_COMPETITION_BURST"
           ],
-          "minimumCompetitionsForPortfolio": 1,
-          "maximumCompetitionsForPortfolio": 1,
+          "minimumCompetitionsForPortfolio": 2,
+          "maximumCompetitionsForPortfolio": 2,
           "featuredCostPerCompetition": 2,
-          "competitionsWithEvents": 1,
-          "competitionsSelected": 1,
+          "competitionsWithEvents": 2,
+          "competitionsSelected": 2,
           "competitionsDeferredByQuota": 0,
-          "estimatedFeaturedCost": 2,
-          "projectedEventsWithOdds": 6,
-          "projectedHistoryCoveredEvents": 0,
+          "estimatedFeaturedCost": 4,
+          "projectedEventsWithOdds": 11,
+          "projectedHistoryCoveredEvents": 3,
           "expectedQualificationRate": 0.18,
           "expectedQualifiedFromInitialPool": 1,
           "candidateCompletionTarget": 84,
           "targetHistoryCoveredEvents": 15,
           "rankedCompetitionKeys": [
+            "soccer_uefa_champs_league_women",
             "soccer_spain_copa_del_rey"
           ],
           "initialCompetitionKeys": [
+            "soccer_uefa_champs_league_women",
             "soccer_spain_copa_del_rey"
           ],
           "completionCompetitionKeys": [],
           "completionRounds": [],
-          "allEventsHistoricallyInspected": 6,
+          "allEventsHistoricallyInspected": 11,
           "competitionKeysSelected": [
+            "soccer_uefa_champs_league_women",
             "soccer_spain_copa_del_rey"
           ],
           "portfolioCompletionBurstActual": false,
-          "featuredEventsCollected": 6,
-          "advancedRecoveryReservedBeforeFeatured": 3,
-          "advancedRecoveryRequested": 3,
+          "featuredEventsCollected": 11,
+          "advancedRecoveryReservedBeforeFeatured": 2,
+          "advancedRecoveryRequested": 2,
           "advancedRecoveryReturned": 2,
           "advancedRecoveryUsefulResponses": 0,
           "advancedRecoveryRecoveredEvents": 0,
-          "topThreeEligibleAfterAdvanced": 5,
+          "topThreeEligibleAfterAdvanced": 9,
           "premiumQualifiedAfterAdvanced": 0,
-          "qualifiedAfterAdvanced": 5,
+          "qualifiedAfterAdvanced": 9,
           "noKeyFixtureOddsEnabled": true,
           "noKeyFixtureOddsStatus": "STALE",
           "noKeyFixtureOddsEvents": 0,
@@ -283,16 +285,16 @@
       },
       "primaryKeyPlan": {
         "freeMonthlyMode": true,
-        "quotaRemainingBeforeOdds": 12,
+        "quotaRemainingBeforeOdds": 5,
         "quotaHardReserve": 0,
         "daysLeftInQuotaPeriod": 21,
         "dailyFairShare": 1,
         "dailyConfiguredBudget": 18,
-        "dailyAvailableBeforeFeatured": 3,
-        "portfolioAvailableBeforeFeatured": 3,
+        "dailyAvailableBeforeFeatured": 0,
+        "portfolioAvailableBeforeFeatured": 0,
         "advancedRecoveryReserveCredits": 0,
         "advancedRecoveryReserveRatio": 0.2,
-        "featuredSpendableAfterReserve": 3,
+        "featuredSpendableAfterReserve": 0,
         "portfolioCompletionBurstEnabled": false,
         "portfolioCompletionBurstActivated": false,
         "portfolioCompletionBurstReasons": [
@@ -302,11 +304,11 @@
         "maximumCompetitionsForPortfolio": 2,
         "featuredCostPerCompetition": 2,
         "competitionsWithEvents": 2,
-        "competitionsSelected": 1,
-        "competitionsDeferredByQuota": 1,
-        "estimatedFeaturedCost": 2,
-        "projectedEventsWithOdds": 5,
-        "projectedHistoryCoveredEvents": 3,
+        "competitionsSelected": 0,
+        "competitionsDeferredByQuota": 2,
+        "estimatedFeaturedCost": 0,
+        "projectedEventsWithOdds": 0,
+        "projectedHistoryCoveredEvents": 0,
         "expectedQualificationRate": 0.18,
         "expectedQualifiedFromInitialPool": 0,
         "candidateCompletionTarget": 84,
@@ -315,25 +317,21 @@
           "soccer_uefa_champs_league_women",
           "soccer_spain_copa_del_rey"
         ],
-        "initialCompetitionKeys": [
-          "soccer_uefa_champs_league_women"
-        ],
+        "initialCompetitionKeys": [],
         "completionCompetitionKeys": [],
         "completionRounds": [],
         "allEventsHistoricallyInspected": 11,
-        "competitionKeysSelected": [
-          "soccer_uefa_champs_league_women"
-        ],
+        "competitionKeysSelected": [],
         "portfolioCompletionBurstActual": false,
-        "featuredEventsCollected": 5,
+        "featuredEventsCollected": 0,
         "advancedRecoveryReservedBeforeFeatured": 0,
-        "advancedRecoveryRequested": 1,
-        "advancedRecoveryReturned": 1,
+        "advancedRecoveryRequested": 0,
+        "advancedRecoveryReturned": 0,
         "advancedRecoveryUsefulResponses": 0,
         "advancedRecoveryRecoveredEvents": 0,
-        "topThreeEligibleAfterAdvanced": 4,
+        "topThreeEligibleAfterAdvanced": 0,
         "premiumQualifiedAfterAdvanced": 0,
-        "qualifiedAfterAdvanced": 4,
+        "qualifiedAfterAdvanced": 0,
         "noKeyFixtureOddsEnabled": true,
         "noKeyFixtureOddsStatus": "STALE",
         "noKeyFixtureOddsEvents": 0,
@@ -351,38 +349,38 @@
         "quotaExhaustedAtStart": false,
         "quotaExhaustedAfterAcquisition": false,
         "automaticResumeOnQuotaRecovery": true,
-        "quotaLifecycleStatus": "QUOTA_AVAILABLE_PORTFOLIO_INCOMPLETE"
+        "quotaLifecycleStatus": "INSUFFICIENT_CREDITS_FOR_FEATURED_ODDS"
       },
       "advancedCompletionMode": true,
-      "advancedRecoveryRequestedEvents": 4,
-      "advancedRecoveryReceivedEvents": 3,
-      "advancedRecoveryAttemptedPairs": 5,
+      "advancedRecoveryRequestedEvents": 2,
+      "advancedRecoveryReceivedEvents": 2,
+      "advancedRecoveryAttemptedPairs": 3,
       "advancedRecoveryUnsupportedMarkets": {}
     },
-    "featuredOddsEvents": 6,
+    "featuredOddsEvents": 11,
     "advancedOddsEvents": 2,
     "analysis": {
-      "oddsEvents": 6,
-      "eventsWithHistory": 0,
-      "eventsWithMarkets": 6,
+      "oddsEvents": 11,
+      "eventsWithHistory": 3,
+      "eventsWithMarkets": 11,
       "eventsQualified": 0,
-      "eventsTopThreeEligible": 5,
+      "eventsTopThreeEligible": 9,
       "premiumQualifiedEvents": 0,
-      "marketCandidates": 15,
-      "rejectedByQuality": 1,
+      "marketCandidates": 31,
+      "rejectedByQuality": 2,
       "rejectedWithoutMarkets": 0,
       "rejectionReasons": {
-        "Премиум: Недостаточная консервативная вероятность": 5,
-        "Премиум: Недостаточное качество данных": 5,
-        "Премиум: Нет полноценной истории обеих команд": 5,
-        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 5,
-        "Премиум: Основной фильтр: Недостаточная полнота данных": 5,
-        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 5,
-        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 5,
-        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 5,
-        "Премиум: Основной фильтр: Нет независимой статистической модели команд": 5,
-        "Направление тотала противоречит модели матча": 2,
-        "Премиум: Основной фильтр: Линия недостаточно стабильна": 1,
+        "Премиум: Недостаточная консервативная вероятность": 9,
+        "Премиум: Основной фильтр: Недостаточная консервативная вероятность": 9,
+        "Премиум: Основной фильтр: Недостаточная расчётная вероятность": 9,
+        "Премиум: Основной фильтр: Недостаточное математическое ожидание": 9,
+        "Премиум: Основной фильтр: Недостаточное преимущество над рынком": 9,
+        "Премиум: Недостаточное качество данных": 7,
+        "Премиум: Основной фильтр: Недостаточная полнота данных": 7,
+        "Премиум: Нет полноценной истории обеих команд": 6,
+        "Премиум: Основной фильтр: Нет независимой статистической модели команд": 6,
+        "Направление тотала противоречит модели матча": 5,
+        "Премиум: Основной фильтр: Линия недостаточно стабильна": 2,
         "Премиум: Основной фильтр: Модели недостаточно согласованы": 1
       },
       "rejectedEvents": [
@@ -514,20 +512,153 @@
           "failures": [
             "Направление тотала противоречит модели матча"
           ]
+        },
+        {
+          "eventId": "3b7829885e4225fbf20a21fe5400e120",
+          "sportKey": "soccer_uefa_champs_league_women",
+          "league": "UEFA Champions League Women",
+          "leagueRu": "Уефа Чампионс Лига Женщины",
+          "home": "AS Roma",
+          "homeRu": "Ас Рома",
+          "away": "Servette FC",
+          "awayRu": "Серветте ФК",
+          "commenceTime": "2026-11-10T20:00:00Z",
+          "dataTier": "MARKET",
+          "dataQuality": 34.0,
+          "quoteCount": 6,
+          "candidateCount": 3,
+          "bestCandidate": "Тотал больше 3.5",
+          "bestProbability": 0.377649,
+          "bestOdds": 1.81,
+          "bestScore": 54.3579,
+          "shadowCandidate": {
+            "market": "TOTAL_OVER",
+            "marketKey": "totals",
+            "marketFamily": "TOTAL",
+            "selectionCode": "OVER",
+            "point": 3.5,
+            "pick": "Тотал больше 3.5",
+            "pickRu": "Тотал больше 3.5",
+            "bookmakerOdds": 1.81,
+            "modelProbability": 0.508827,
+            "conservativeProbability": 0.377649,
+            "marketProbability": 0.537381,
+            "expectedValue": -0.316456,
+            "edge": -0.159733,
+            "dataTier": "MARKET",
+            "dataQuality": 34.0,
+            "quoteCount": 6,
+            "agreement": 58.2,
+            "marketStability": 62.1,
+            "anomaly": 24.5,
+            "obviousMarketScore": 54.3579,
+            "qualification": {
+              "qualified": false,
+              "failures": [
+                "Модель счёта не подтверждает выбранное направление тотала",
+                "Ожидаемая сумма голов недостаточна для ставки на больше",
+                "Недостаточная консервативная вероятность",
+                "Недостаточная расчётная вероятность",
+                "Недостаточное преимущество над рынком",
+                "Недостаточное математическое ожидание",
+                "Недостаточная полнота данных",
+                "Модели недостаточно согласованы",
+                "Нет независимой статистической модели команд"
+              ]
+            },
+            "strategyFailures": [
+              "Основной фильтр: Модель счёта не подтверждает выбранное направление тотала",
+              "Основной фильтр: Ожидаемая сумма голов недостаточна для ставки на больше",
+              "Основной фильтр: Недостаточная консервативная вероятность",
+              "Основной фильтр: Недостаточная расчётная вероятность",
+              "Основной фильтр: Недостаточное преимущество над рынком",
+              "Основной фильтр: Недостаточное математическое ожидание",
+              "Основной фильтр: Недостаточная полнота данных",
+              "Основной фильтр: Модели недостаточно согласованы",
+              "Основной фильтр: Нет независимой статистической модели команд",
+              "Нет полноценной истории обеих команд",
+              "Недостаточное качество данных",
+              "Недостаточная консервативная вероятность",
+              "История и модель голов противоречат направлению тотала"
+            ],
+            "goalDirectionConflict": true,
+            "learningAdjustment": -0.005124,
+            "learningEvidence": [
+              {
+                "segment": "SPORT|soccer",
+                "samples": 466,
+                "bias": -0.0119,
+                "weight": 1.0,
+                "hitRate": 0.5472,
+                "averagePredicted": 0.5591,
+                "brierScore": 0.250968
+              },
+              {
+                "segment": "MARKET|soccer|TOTAL",
+                "samples": 282,
+                "bias": -0.047,
+                "weight": 1.0,
+                "hitRate": 0.5496,
+                "averagePredicted": 0.5966,
+                "brierScore": 0.252234
+              },
+              {
+                "segment": "ODDS|soccer|UPPER_MID",
+                "samples": 143,
+                "bias": 0.0232,
+                "weight": 0.86,
+                "hitRate": 0.5594,
+                "averagePredicted": 0.5363,
+                "brierScore": 0.252002
+              },
+              {
+                "segment": "DATA_TIER|soccer|MARKET",
+                "samples": 66,
+                "bias": -0.0229,
+                "weight": 0.223,
+                "hitRate": 0.5455,
+                "averagePredicted": 0.5684,
+                "brierScore": 0.247339
+              },
+              {
+                "segment": "PROBABILITY|soccer|P50",
+                "samples": 182,
+                "bias": 0.0179,
+                "weight": 1.0,
+                "hitRate": 0.5769,
+                "averagePredicted": 0.559,
+                "brierScore": 0.244847
+              },
+              {
+                "segment": "MARKET_TIER|soccer|TOTAL|MARKET",
+                "samples": 43,
+                "bias": -0.0587,
+                "weight": 0.05,
+                "hitRate": 0.5116,
+                "averagePredicted": 0.5703,
+                "brierScore": 0.2534
+              }
+            ]
+          },
+          "failures": [
+            "Направление тотала противоречит модели матча"
+          ]
         }
       ],
       "dataTiers": {
-        "MARKET": 6
+        "MARKET": 8,
+        "FULL": 2,
+        "HYBRID": 1
       },
       "marketFamilies": {
-        "TOTAL": 3,
-        "OUTCOME": 2
+        "TOTAL": 6,
+        "OUTCOME": 3
       },
       "qualifiedEventIds": [],
       "premiumEventIds": [],
-      "published": 3,
+      "published": 6,
       "required": 15,
-      "shortage": 12,
+      "shortage": 9,
       "partialPublication": true,
       "status": "GREEN_PARTIAL_PRODUCTION",
       "marketFamilyCap": 8,
@@ -535,7 +666,7 @@
       "selectionObjective": "BEST_AVAILABLE_TOP_THREE_ALWAYS_WITH_SEPARATE_STRICT_PREMIUM_LABEL",
       "hardRejectionReasons": {},
       "marketRejectionReasons": {
-        "Направление тотала противоречит модели матча": 1
+        "Направление тотала противоречит модели матча": 2
       },
       "nearMissCandidates": [
         {
@@ -558,16 +689,38 @@
           "marketFailures": [
             "Направление тотала противоречит модели матча"
           ]
+        },
+        {
+          "eventId": "3b7829885e4225fbf20a21fe5400e120",
+          "league": "UEFA Champions League Women",
+          "leagueRu": "Уефа Чампионс Лига Женщины",
+          "home": "AS Roma",
+          "homeRu": "Ас Рома",
+          "away": "Servette FC",
+          "awayRu": "Серветте ФК",
+          "bestCandidate": "Тотал больше 3.5",
+          "bestProbability": 0.377649,
+          "bestOdds": 1.81,
+          "dataQuality": 34.0,
+          "quoteCount": 6,
+          "probabilityGap": 0.1824,
+          "qualityGap": 24.0,
+          "bookmakerGap": 0,
+          "hardFailures": [],
+          "marketFailures": [
+            "Направление тотала противоречит модели матча"
+          ]
         }
       ],
       "advancedRecoveryEventIds": [
-        "9197843871cd15337bb9d55934cf1432"
+        "9197843871cd15337bb9d55934cf1432",
+        "3b7829885e4225fbf20a21fe5400e120"
       ]
     },
     "shadowLearning": {
       "pending": 2,
       "settled": 62,
-      "addedPool": 1,
+      "addedPool": 2,
       "statistics": {
         "tracked": 64,
         "pending": 2,
@@ -582,181 +735,181 @@
         "provider": "THE_ODDS_API",
         "label": "ODDS_SPORTS",
         "status": 200,
-        "elapsedSeconds": 0.298
+        "elapsedSeconds": 0.186
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_argentina_primera_division",
         "status": 200,
-        "elapsedSeconds": 0.153
+        "elapsedSeconds": 0.134
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_australia_aleague",
         "status": 200,
-        "elapsedSeconds": 0.134
+        "elapsedSeconds": 0.208
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_austria_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.145
+        "elapsedSeconds": 0.201
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_belgium_first_div",
         "status": 200,
-        "elapsedSeconds": 0.151
+        "elapsedSeconds": 0.236
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.13
+        "elapsedSeconds": 0.222
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_brazil_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.128
+        "elapsedSeconds": 0.142
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_chile_campeonato",
         "status": 200,
-        "elapsedSeconds": 0.285
+        "elapsedSeconds": 0.15
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_libertadores",
         "status": 200,
-        "elapsedSeconds": 0.13
+        "elapsedSeconds": 0.121
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_conmebol_copa_sudamericana",
         "status": 200,
-        "elapsedSeconds": 0.161
+        "elapsedSeconds": 0.14
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_denmark_superliga",
         "status": 200,
-        "elapsedSeconds": 0.252
+        "elapsedSeconds": 0.186
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_efl_champ",
         "status": 200,
-        "elapsedSeconds": 0.126
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_efl_cup",
         "status": 200,
-        "elapsedSeconds": 0.157
+        "elapsedSeconds": 0.144
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league1",
         "status": 200,
-        "elapsedSeconds": 0.142
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_england_league2",
         "status": 200,
-        "elapsedSeconds": 0.139
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_epl",
         "status": 200,
-        "elapsedSeconds": 0.172
+        "elapsedSeconds": 0.136
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_one",
         "status": 200,
-        "elapsedSeconds": 0.138
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_france_ligue_two",
         "status": 200,
-        "elapsedSeconds": 0.127
+        "elapsedSeconds": 0.184
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga",
         "status": 200,
-        "elapsedSeconds": 0.145
+        "elapsedSeconds": 0.178
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_bundesliga2",
         "status": 200,
-        "elapsedSeconds": 0.129
+        "elapsedSeconds": 0.134
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_dfb_pokal",
         "status": 200,
-        "elapsedSeconds": 0.127
+        "elapsedSeconds": 0.114
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_germany_liga3",
         "status": 200,
-        "elapsedSeconds": 0.118
+        "elapsedSeconds": 0.172
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_greece_super_league",
         "status": 200,
-        "elapsedSeconds": 0.123
+        "elapsedSeconds": 0.124
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_a",
         "status": 200,
-        "elapsedSeconds": 0.116
+        "elapsedSeconds": 0.158
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_italy_serie_b",
         "status": 200,
-        "elapsedSeconds": 0.127
+        "elapsedSeconds": 0.126
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_mexico_ligamx",
         "status": 200,
-        "elapsedSeconds": 0.162
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_netherlands_eredivisie",
         "status": 200,
-        "elapsedSeconds": 0.12
+        "elapsedSeconds": 0.138
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_poland_ekstraklasa",
         "status": 200,
-        "elapsedSeconds": 0.157
+        "elapsedSeconds": 0.13
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_portugal_primeira_liga",
         "status": 200,
-        "elapsedSeconds": 0.153
+        "elapsedSeconds": 0.144
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_copa_del_rey",
         "status": 200,
-        "elapsedSeconds": 0.128
+        "elapsedSeconds": 0.135
       },
       {
         "provider": "THE_ODDS_API",
@@ -768,133 +921,121 @@
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spain_segunda_division",
         "status": 200,
-        "elapsedSeconds": 0.133
+        "elapsedSeconds": 0.13
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_spl",
         "status": 200,
-        "elapsedSeconds": 0.125
+        "elapsedSeconds": 0.126
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_allsvenskan",
         "status": 200,
-        "elapsedSeconds": 0.133
+        "elapsedSeconds": 0.111
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_sweden_superettan",
         "status": 200,
-        "elapsedSeconds": 0.141
+        "elapsedSeconds": 0.188
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_switzerland_superleague",
         "status": 200,
-        "elapsedSeconds": 0.109
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_turkey_super_league",
         "status": 200,
-        "elapsedSeconds": 0.133
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league",
         "status": 200,
-        "elapsedSeconds": 0.131
+        "elapsedSeconds": 0.115
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_champs_league_women",
         "status": 200,
-        "elapsedSeconds": 0.128
+        "elapsedSeconds": 0.126
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_conference_league",
         "status": 200,
-        "elapsedSeconds": 0.127
+        "elapsedSeconds": 0.184
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_europa_league",
         "status": 200,
-        "elapsedSeconds": 0.129
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_uefa_nations_league",
         "status": 200,
-        "elapsedSeconds": 0.121
+        "elapsedSeconds": 0.122
       },
       {
         "provider": "THE_ODDS_API",
         "label": "EVENTS:soccer_usa_mls",
         "status": 200,
-        "elapsedSeconds": 0.246
+        "elapsedSeconds": 0.188
       },
       {
         "provider": "THE_ODDS_API",
         "label": "ODDS_FEATURED:soccer_uefa_champs_league_women",
         "status": 200,
-        "elapsedSeconds": 0.353
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "ADVANCED_RECOVERY:double_chance:3b7829885e4225fbf20a21fe5400e120",
-        "status": 200,
-        "elapsedSeconds": 0.166
+        "elapsedSeconds": 0.284,
+        "quotaIdentity": "BACKUP"
       },
       {
         "provider": "THE_ODDS_API",
         "label": "ODDS_FEATURED:soccer_spain_copa_del_rey",
         "status": 200,
-        "elapsedSeconds": 0.342,
+        "elapsedSeconds": 0.225,
         "quotaIdentity": "BACKUP"
       },
       {
         "provider": "THE_ODDS_API",
         "label": "ADVANCED_RECOVERY:double_chance:9197843871cd15337bb9d55934cf1432",
         "status": 200,
-        "elapsedSeconds": 0.152,
+        "elapsedSeconds": 0.202,
         "quotaIdentity": "BACKUP"
       },
       {
         "provider": "THE_ODDS_API",
         "label": "ADVANCED_RECOVERY:btts:9197843871cd15337bb9d55934cf1432",
         "status": 200,
-        "elapsedSeconds": 0.263,
-        "quotaIdentity": "BACKUP"
-      },
-      {
-        "provider": "THE_ODDS_API",
-        "label": "ADVANCED_RECOVERY:team_totals:9197843871cd15337bb9d55934cf1432",
-        "status": 200,
-        "elapsedSeconds": 0.126,
+        "elapsedSeconds": 0.22,
         "quotaIdentity": "BACKUP"
       }
     ],
     "quota": {
-      "requestsRemaining": "9",
-      "requestsUsed": "491",
-      "requestsLast": "1",
-      "estimatedCreditsThisRun": 3
+      "requestsRemaining": "5",
+      "requestsUsed": "495",
+      "requestsLast": "0",
+      "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "PRIMARY": {
-        "requestsRemaining": "9",
-        "requestsUsed": "491",
-        "requestsLast": "1",
-        "estimatedCreditsThisRun": 3
+        "requestsRemaining": "5",
+        "requestsUsed": "495",
+        "requestsLast": "0",
+        "estimatedCreditsThisRun": 0
       },
       "BACKUP": {
-        "requestsRemaining": "346",
-        "requestsUsed": "154",
-        "requestsLast": "0",
-        "estimatedCreditsThisRun": 4
+        "requestsRemaining": "340",
+        "requestsUsed": "160",
+        "requestsLast": "1",
+        "estimatedCreditsThisRun": 6
       }
     },
     "credentialHealth": {
@@ -902,14 +1043,14 @@
       "primary": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 12,
-        "used": 488
+        "remaining": 5,
+        "used": 495
       },
       "backup": {
         "valid": true,
         "httpStatus": 200,
-        "remaining": 350,
-        "used": 150
+        "remaining": 346,
+        "used": 154
       }
     },
     "fonbet": {
@@ -918,7 +1059,7 @@
       "confirmedEvents": 0,
       "sourceUpdatedAt": "2026-11-10T13:35:50Z"
     },
-    "dailyAnalysis": 3,
+    "dailyAnalysis": 6,
     "bankedTopThree": 0,
     "premiumBets": 0,
     "premiumEventIds": [],
@@ -1471,19 +1612,19 @@
       "policyMigration": "PROSPECTIVE_ONLY_NO_HISTORICAL_REWRITE"
     },
     "russianNames": {
-      "resolved": 6,
-      "teams": 6,
+      "resolved": 12,
+      "teams": 12,
       "theSportsDbResolved": 630
     },
     "fonbetGate": {
       "status": "UNAVAILABLE",
       "confirmed": 0,
-      "unknown": 3,
-      "total": 3
+      "unknown": 6,
+      "total": 6
     },
     "dailyCloudflare Workers AIAudit": {
       "status": "SKIPPED",
-      "reason": "REQUIRES_15_RECORDS_GOT_3"
+      "reason": "REQUIRES_15_RECORDS_GOT_6"
     },
     "calibrationGuard": {
       "mode": "CALIBRATED",
@@ -1783,9 +1924,7 @@
   },
   "warnings": [
     "ADVANCED_RECOVERY_QUOTA_EXHAUSTED",
-    "9197843871cd15337bb9d55934cf1432:team_totals:EMPTY_ADVANCED_MARKET",
-    "ADVANCED_RECOVERY_QUOTA_EXHAUSTED",
-    "9197843871cd15337bb9d55934cf1432:team_totals:EMPTY_ADVANCED_MARKET"
+    "ADVANCED_RECOVERY_QUOTA_EXHAUSTED"
   ],
   "errors": []
 }
