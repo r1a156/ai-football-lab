@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-10T14:47:16Z",
+  "updatedAt": "2026-11-10T19:00:39Z",
   "operationalDayId": "2026-11-10-MSK-0800",
   "operationalWindowStart": "2026-11-10T05:00:00Z",
   "operationalWindowEnd": "2026-11-11T05:00:00Z",
   "coverage": {
-    "realFixtures": 28,
-    "historicalModelForecasts": 9,
-    "withoutReliableHistoricalForecast": 19,
+    "realFixtures": 32,
+    "historicalModelForecasts": 10,
+    "withoutReliableHistoricalForecast": 22,
     "verifiedOddsEvents": 0
   },
   "fixtures": [
@@ -27,8 +27,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "603765f32acd9adad5599d186ba379be",
@@ -72,7 +72,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9197843871cd15337bb9d55934cf1432",
@@ -90,8 +90,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "898db1fbf4d87a3fb67f2d9994e68d93",
@@ -109,8 +109,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "92c4ab5c733ce03586c70f195c70134b",
@@ -128,8 +128,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "27c6f71787284c574e9c29b2004069c7",
@@ -147,8 +147,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "ee7020f06956568ccdb256611a27a6bd",
@@ -166,8 +166,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "3d20399e053c2333f06d0867c17f8e11",
@@ -211,7 +211,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b65b9c662ba50d27984f34b45f2bcf72",
@@ -229,8 +229,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "15f6b2aba5e8a0e8540f70227a7afee0",
@@ -274,7 +274,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "fecc8650885bc1c37fcbfef7a0832935",
@@ -318,7 +318,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "438810670b2bde72007fee748054621f",
@@ -336,8 +336,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c0fffe91c5913b11e46c0c07ed0f533d",
@@ -355,8 +355,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "6cba093c0d403a3d55a7dce4cd5b2720",
@@ -400,7 +400,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "70b737f259ab4aeb2b94444208a895db",
@@ -418,8 +418,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "50c1e41bf112cdc6fe965575afc5e0eb",
@@ -501,7 +501,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "c5a75c8ef3f92a4adb99aa6be7da42c6",
@@ -519,8 +519,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "0f5d6b961117422237ee1effdc2137a9",
@@ -538,8 +538,46 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "671b63e2d2f06feda6688cc47117b2e6",
+      "sport": "soccer",
+      "sportKey": "soccer_england_efl_trophy",
+      "league": "EFL Trophy",
+      "leagueRu": "Ефл Трофи",
+      "home": "Grimsby Town",
+      "homeRu": "Гримсби Таун",
+      "away": "Nottingham Forest U21",
+      "awayRu": "Ноттингхам Форест У21",
+      "commenceTime": "2026-11-10T19:00:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "5a94d46eac68a16f372906f9735115fd",
+      "sport": "soccer",
+      "sportKey": "soccer_england_efl_trophy",
+      "league": "EFL Trophy",
+      "leagueRu": "Ефл Трофи",
+      "home": "Huddersfield Town",
+      "homeRu": "Худдерсфиелд Таун",
+      "away": "Liverpool U21",
+      "awayRu": "Ливерпоол У21",
+      "commenceTime": "2026-11-10T19:00:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "8eeb30a58ec3db26c60b5ba49dcc13f6",
@@ -649,6 +687,50 @@
       "historyDiagnostic": "FORECAST_AVAILABLE"
     },
     {
+      "eventId": "88f9614c2d2f7bf2e89a9a0d8e23e72f",
+      "sport": "soccer",
+      "sportKey": "soccer_england_efl_trophy",
+      "league": "EFL Trophy",
+      "leagueRu": "Ефл Трофи",
+      "home": "Crawley Town",
+      "homeRu": "Кравлеи Таун",
+      "away": "Brentford U21",
+      "awayRu": "Брентфорд У21",
+      "commenceTime": "2026-11-10T19:30:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "BTTS_YES",
+        "pickRu": "Обе забьют — да",
+        "modelProbability": 0.556716,
+        "marketProbabilities": {
+          "HOME_WIN": 0.36126,
+          "DRAW": 0.255763,
+          "AWAY_WIN": 0.382976,
+          "OVER_2_5": 0.516765,
+          "UNDER_2_5": 0.483235,
+          "BTTS_YES": 0.556716,
+          "BTTS_NO": 0.443284
+        },
+        "expectedHomeGoals": 1.348,
+        "expectedAwayGoals": 1.395,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 10.2,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-11-10T19:00:39Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "FORECAST_AVAILABLE"
+    },
+    {
       "eventId": "ab7ed491cd410f176410c5cbba0571c8",
       "sport": "soccer",
       "sportKey": "soccer_england_efl_trophy",
@@ -658,6 +740,25 @@
       "homeRu": "Колчестер Юнайтед",
       "away": "Ipswich Town",
       "awayRu": "Ипсвич Таун",
+      "commenceTime": "2026-11-10T19:45:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
+      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+    },
+    {
+      "eventId": "185477f364492318d768ddf6143cb99b",
+      "sport": "soccer",
+      "sportKey": "soccer_england_efl_trophy",
+      "league": "EFL Trophy",
+      "leagueRu": "Ефл Трофи",
+      "home": "Colchester United",
+      "homeRu": "Колчестер Юнайтед",
+      "away": "Ipswich Town U21",
+      "awayRu": "Ипсвич Таун У21",
       "commenceTime": "2026-11-10T19:45:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
