@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-11-11T15:04:27Z",
+  "updatedAt": "2026-11-11T21:58:43Z",
   "analysisDateLocal": "2026-11-11",
   "batch": {
     "id": "",
@@ -12,12 +12,12 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-11T15:04:27Z",
+    "updatedAt": "2026-11-11T21:58:43Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 6,
-    "competitionsDiscovered": 3,
+    "discoveredEvents": 1,
+    "competitionsDiscovered": 2,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -38,29 +38,29 @@
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-11-11T15:05:43Z",
+        "lastSuccessAt": "2026-11-11T22:00:20Z",
         "consecutiveFailures": 0,
-        "lastFailureAt": "2026-10-31T21:25:38Z",
-        "lastStatus": 401,
-        "lastError": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
+        "lastFailureAt": "2026-11-11T22:00:14Z",
+        "lastStatus": 502,
+        "lastError": "Internal Server Error",
         "retryAfterSeconds": 0
       }
     },
     "quota": {
-      "requestsRemaining": "276",
-      "requestsUsed": "224",
+      "requestsRemaining": "266",
+      "requestsUsed": "234",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "276",
-        "requestsUsed": "224",
+        "requestsRemaining": "266",
+        "requestsUsed": "234",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 14333,
+    "historyMatches": 14336,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -73,9 +73,9 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 2103,
-      "duplicates": 2103,
-      "historyMatches": 18682,
+      "ingested": 10072,
+      "duplicates": 9899,
+      "historyMatches": 18685,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
@@ -83,7 +83,7 @@
       "status": "GREEN",
       "requests": 44,
       "matchesAdded": 44,
-      "historyMatches": 18682,
+      "historyMatches": 18685,
       "errors": [
         "136449:HTTPError",
         "136466:HTTPError",
@@ -110,7 +110,7 @@
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-11T15:04:27Z"
+    "updatedAt": "2026-11-11T21:58:43Z"
   },
   "lossDiagnostics": {
     "settledFinancialEntriesAudited": 50,
@@ -916,7 +916,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-11T15:04:27Z",
+    "updatedAt": "2026-11-11T21:58:43Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -925,148 +925,18 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-11T15:04:27Z"
+    "updatedAt": "2026-11-11T21:58:43Z"
   },
   "shadowLearning": {
     "statistics": {
       "tracked": 65,
-      "pending": 1,
-      "settled": 64,
+      "pending": 0,
+      "settled": 65,
       "won": 28,
-      "lost": 25,
+      "lost": 26,
       "push": 0
     },
-    "pending": [
-      {
-        "id": "ed10140cf7c4e7b2f523",
-        "recordType": "SHADOW_CANDIDATE",
-        "learningSampleSource": "SHADOW_REJECTED",
-        "eventId": "9293d78b9ee8f1ad0a05e826c311d759",
-        "sport": "soccer",
-        "sportKey": "soccer_uefa_champs_league_women",
-        "league": "UEFA Champions League Women",
-        "home": "Juventus",
-        "away": "Lyon",
-        "commenceTime": "2026-11-11T20:00:00Z",
-        "status": "pending",
-        "trackedAt": "2026-11-11T05:59:22Z",
-        "failures": [
-          "Направление тотала противоречит модели матча"
-        ],
-        "market": "TOTAL_UNDER",
-        "marketKey": "totals",
-        "marketFamily": "TOTAL",
-        "selectionCode": "UNDER",
-        "point": 3.5,
-        "pick": "Тотал меньше 3.5",
-        "pickRu": "Тотал меньше 3.5",
-        "bookmakerOdds": 2.17,
-        "modelProbability": 0.6715,
-        "conservativeProbability": 0.612559,
-        "marketProbability": 0.433192,
-        "expectedValue": 0.329253,
-        "edge": 0.179367,
-        "dataTier": "FULL",
-        "dataQuality": 86.0,
-        "quoteCount": 3,
-        "agreement": 41.7,
-        "marketStability": 71.6,
-        "anomaly": 13.0,
-        "obviousMarketScore": 85.2039,
-        "qualification": {
-          "qualified": false,
-          "failures": [
-            "Консенсус букмекеров не подтверждает выбранное направление тотала",
-            "Модели недостаточно согласованы"
-          ]
-        },
-        "strategyFailures": [
-          "Основной фильтр: Консенсус букмекеров не подтверждает выбранное направление тотала",
-          "Основной фильтр: Модели недостаточно согласованы",
-          "Модели слишком сильно расходятся",
-          "История и модель голов противоречат направлению тотала"
-        ],
-        "goalDirectionConflict": true,
-        "learningAdjustment": -0.016539,
-        "learningEvidence": [
-          {
-            "segment": "SPORT|soccer",
-            "samples": 473,
-            "bias": -0.0112,
-            "weight": 1.0,
-            "hitRate": 0.5476,
-            "averagePredicted": 0.5588,
-            "brierScore": 0.250735
-          },
-          {
-            "segment": "MARKET|soccer|TOTAL",
-            "samples": 288,
-            "bias": -0.047,
-            "weight": 1.0,
-            "hitRate": 0.5486,
-            "averagePredicted": 0.5956,
-            "brierScore": 0.251742
-          },
-          {
-            "segment": "MARKET_DETAIL|soccer|TOTAL_UNDER@3.5",
-            "samples": 105,
-            "bias": -0.1369,
-            "weight": 0.545,
-            "hitRate": 0.4667,
-            "averagePredicted": 0.6036,
-            "brierScore": 0.272093
-          },
-          {
-            "segment": "ODDS|soccer|UPPER_MID",
-            "samples": 146,
-            "bias": 0.0194,
-            "weight": 0.884,
-            "hitRate": 0.5548,
-            "averagePredicted": 0.5354,
-            "brierScore": 0.252221
-          },
-          {
-            "segment": "DATA_TIER|soccer|FULL",
-            "samples": 202,
-            "bias": 0.0193,
-            "weight": 1.0,
-            "hitRate": 0.5743,
-            "averagePredicted": 0.555,
-            "brierScore": 0.254776
-          },
-          {
-            "segment": "PROBABILITY|soccer|P60",
-            "samples": 140,
-            "bias": -0.1012,
-            "weight": 0.835,
-            "hitRate": 0.5286,
-            "averagePredicted": 0.6297,
-            "brierScore": 0.261647
-          },
-          {
-            "segment": "MARKET_TIER|soccer|TOTAL|FULL",
-            "samples": 120,
-            "bias": -0.0413,
-            "weight": 0.669,
-            "hitRate": 0.5583,
-            "averagePredicted": 0.5996,
-            "brierScore": 0.250663
-          },
-          {
-            "segment": "MARKET_DETAIL_TIER|soccer|TOTAL_UNDER@3.5|FULL",
-            "samples": 46,
-            "bias": -0.1264,
-            "weight": 0.058,
-            "hitRate": 0.4783,
-            "averagePredicted": 0.6047,
-            "brierScore": 0.261992
-          }
-        ],
-        "probability": 0.6715,
-        "odds": 2.17,
-        "shadowRankScore": 85.7699
-      }
-    ]
+    "pending": []
   },
   "nextPortfolio": {}
 }
