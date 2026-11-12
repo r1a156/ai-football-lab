@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-12T14:07:36Z",
-  "lastSuccessfulAt": "2026-11-12T14:07:36Z",
+  "updatedAt": "2026-11-12T15:05:36Z",
+  "lastSuccessfulAt": "2026-11-12T15:05:36Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -562790,6 +562790,39 @@
       "theSportsDbEventId": "2543847"
     },
     {
+      "id": "thesportsdb_public_123:2530196",
+      "utcDate": "2026-11-10T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "English National League North",
+      "competitionCode": "4681",
+      "homeTeam": {
+        "id": "",
+        "name": "Scarborough Athletic",
+        "shortName": "Scarborough Athletic",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Marine",
+        "shortName": "Marine",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 3,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-12T15:11:38Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "12",
+      "venue": "Flamingo Land Stadium",
+      "theSportsDbEventId": "2530196"
+    },
+    {
       "id": "tracked:1a8bd83d08fab7c8e9b40284c43a3f3e",
       "utcDate": "2026-11-10T20:00:00Z",
       "status": "FINISHED",
@@ -647240,35 +647273,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-12T14:07:36Z",
-      "matches": 18686
+      "updatedAt": "2026-11-12T15:05:36Z",
+      "matches": 18687
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-12T14:07:36Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-11-12T15:05:36Z",
+      "requests": 60,
+      "matchesAdded": 59,
       "errors": [
-        "136449:HTTPError",
-        "136466:HTTPError",
+        "135987:HTTPError",
+        "134627:HTTPError",
+        "136458:HTTPError",
+        "136461:HTTPError",
+        "136453:HTTPError",
+        "135988:HTTPError",
+        "136460:HTTPError",
+        "135983:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
-        "145389:HTTPError",
-        "134295:HTTPError",
-        "134154:HTTPError",
-        "134147:HTTPError",
-        "134280:HTTPError",
-        "134464:HTTPError",
+        "134737:HTTPError",
+        "134734:HTTPError",
+        "136831:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "145212:HTTPError",
         "137932:HTTPError",
         "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError"
+        "145207:HTTPError"
       ]
     }
   }
