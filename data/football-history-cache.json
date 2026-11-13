@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-13T13:02:32Z",
-  "lastSuccessfulAt": "2026-11-13T13:02:32Z",
+  "updatedAt": "2026-11-13T13:15:11Z",
+  "lastSuccessfulAt": "2026-11-13T13:15:11Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -563179,6 +563179,39 @@
       "theSportsDbEventId": "2442828"
     },
     {
+      "id": "thesportsdb_public_123:2442824",
+      "utcDate": "2026-11-12T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Italy",
+        "shortName": "Italy",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "France",
+        "shortName": "France",
+        "tla": ""
+      },
+      "homeScore": 3,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-13T13:15:13Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "5",
+      "venue": "Stadio Olimpico",
+      "theSportsDbEventId": "2442824"
+    },
+    {
       "id": "tracked:8f0eea6f49be834102d357833c5f6026",
       "utcDate": "2026-11-12T22:00:00Z",
       "status": "FINISHED",
@@ -648141,19 +648174,17 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-13T13:02:32Z",
-      "matches": 18713
+      "updatedAt": "2026-11-13T13:15:11Z",
+      "matches": 18714
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-13T13:02:32Z",
-      "requests": 44,
-      "matchesAdded": 43,
+      "updatedAt": "2026-11-13T13:15:11Z",
+      "requests": 45,
+      "matchesAdded": 45,
       "errors": [
-        "137782:HTTPError",
         "144737:HTTPError",
-        "136460:HTTPError",
-        "135983:HTTPError",
+        "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
@@ -648161,15 +648192,17 @@
         "134295:HTTPError",
         "134154:HTTPError",
         "134147:HTTPError",
-        "134291:HTTPError",
-        "145212:HTTPError",
+        "134280:HTTPError",
+        "134464:HTTPError",
         "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
         "137889:HTTPError",
-        "137887:HTTPError"
+        "137887:HTTPError",
+        "134449:HTTPError",
+        "133953:HTTPError"
       ]
     }
   }
