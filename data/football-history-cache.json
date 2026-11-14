@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-14T07:40:05Z",
-  "lastSuccessfulAt": "2026-11-14T07:40:05Z",
+  "updatedAt": "2026-11-14T08:08:04Z",
+  "lastSuccessfulAt": "2026-11-14T08:08:04Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -563448,6 +563448,39 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2475308",
+      "utcDate": "2026-11-13T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Luxembourg",
+        "shortName": "Luxembourg",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Estonia",
+        "shortName": "Estonia",
+        "tla": ""
+      },
+      "homeScore": 0,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-14T08:14:14Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "5",
+      "venue": "Stade de Luxembourg",
+      "theSportsDbEventId": "2475308"
+    },
+    {
       "id": "tracked:5d5adde3cf66e796f4b8508da055bae4",
       "utcDate": "2026-11-13T20:00:00Z",
       "status": "FINISHED",
@@ -647928,35 +647961,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-14T07:40:05Z",
-      "matches": 18708
+      "updatedAt": "2026-11-14T08:08:04Z",
+      "matches": 18709
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-13T15:19:28Z",
+      "updatedAt": "2026-11-14T08:08:04Z",
       "requests": 44,
-      "matchesAdded": 44,
+      "matchesAdded": 43,
       "errors": [
-        "136449:HTTPError",
-        "136466:HTTPError",
+        "133901:HTTPError",
+        "149900:HTTPError",
+        "136453:HTTPError",
+        "135988:HTTPError",
+        "136460:HTTPError",
+        "135983:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
         "134295:HTTPError",
-        "134154:HTTPError",
-        "134147:HTTPError",
-        "134280:HTTPError",
-        "134464:HTTPError",
+        "136831:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "145212:HTTPError",
         "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError"
+        "145187:HTTPError"
       ]
     }
   }
