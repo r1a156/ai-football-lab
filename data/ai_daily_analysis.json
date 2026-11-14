@@ -1,7 +1,7 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-11-14T12:05:28Z",
+  "updatedAt": "2026-11-14T12:18:38Z",
   "analysisDateLocal": "2026-11-14",
   "batch": {
     "id": "",
@@ -12,7 +12,7 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-14T12:05:28Z",
+    "updatedAt": "2026-11-14T12:18:38Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
@@ -26,7 +26,7 @@
     "providerHealth": {
       "FREE_DATA_MESH": {
         "status": "GREEN",
-        "updatedAt": "2026-11-14T12:04:31Z",
+        "updatedAt": "2026-11-14T12:17:40Z",
         "sources": {
           "FOOTBALL_DATA_CO_UK": "PARTIAL",
           "OPENFOOTBALL": "PARTIAL",
@@ -34,11 +34,11 @@
           "STATSBOMB_OPEN_DATA": "GREEN",
           "CLUBELO": "RED"
         },
-        "historyMatches": 18709
+        "historyMatches": 18711
       },
       "THE_ODDS_API": {
         "status": "GREEN",
-        "lastSuccessAt": "2026-11-14T12:06:32Z",
+        "lastSuccessAt": "2026-11-14T12:19:45Z",
         "consecutiveFailures": 0,
         "lastFailureAt": "2026-11-11T22:00:14Z",
         "lastStatus": 502,
@@ -47,15 +47,15 @@
       }
     },
     "quota": {
-      "requestsRemaining": "91",
-      "requestsUsed": "409",
+      "requestsRemaining": "83",
+      "requestsUsed": "417",
       "requestsLast": "0",
       "estimatedCreditsThisRun": 0
     },
     "quotaByKey": {
       "BACKUP": {
-        "requestsRemaining": "91",
-        "requestsUsed": "409",
+        "requestsRemaining": "83",
+        "requestsUsed": "417",
         "requestsLast": "0",
         "estimatedCreditsThisRun": 0
       }
@@ -75,16 +75,18 @@
       },
       "ingested": 0,
       "duplicates": 0,
-      "historyMatches": 18709,
+      "historyMatches": 18711,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 42,
-      "matchesAdded": 42,
+      "requests": 44,
+      "matchesAdded": 44,
       "historyMatches": 18711,
       "errors": [
+        "136449:HTTPError",
+        "136466:HTTPError",
         "134506:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
@@ -94,7 +96,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
+        "137932:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -102,15 +104,13 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError"
+        "133953:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-14T12:05:28Z"
+    "updatedAt": "2026-11-14T12:18:38Z"
   },
   "lossDiagnostics": {
     "settledFinancialEntriesAudited": 50,
@@ -368,7 +368,7 @@
     "stakePercent": 10,
     "roi": -56.96,
     "maxDrawdown": 75.11,
-    "activeExposure": 0.0,
+    "activeExposure": 0,
     "history": [
       {
         "date": "2026-07-17",
@@ -900,8 +900,8 @@
         "profit": -538.01
       }
     ],
-    "placedAmount": 0.0,
-    "activeBetsCount": 3,
+    "placedAmount": 0,
+    "activeBetsCount": 0,
     "available": 4304.08,
     "closedBalance": 4304.08,
     "mode": "ACTIVE_SINGLE_BANK",
@@ -916,7 +916,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-14T12:05:28Z",
+    "updatedAt": "2026-11-14T12:18:38Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -925,7 +925,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-14T12:05:28Z"
+    "updatedAt": "2026-11-14T12:18:38Z"
   },
   "shadowLearning": {
     "statistics": {
