@@ -1,25 +1,183 @@
 {
   "version": 2,
   "sourceMarker": "V10_R15F_R3R24_FIXTURE_FRESHNESS_CHAIN",
-  "updatedAt": "2026-11-15T04:24:01Z",
+  "updatedAt": "2026-11-15T12:12:17Z",
   "sourceUpdatedAt": "2026-11-13T14:16:25Z",
   "sourceUrl": "https://football-data.co.uk/fixtures.csv",
   "metadataUrl": "https://www.football-data.co.uk/matches.php",
-  "status": "NO_MATCHED_EVENTS",
+  "status": "GREEN",
   "contentSha256": "670ae340b7aa74c1721271226c4cc01abb3e385d1cf40b48689597d3812eeec2",
-  "contentObservedAt": "2026-11-15T04:24:01Z",
+  "contentObservedAt": "2026-11-15T12:12:17Z",
   "contentChangedAt": "2026-11-13T14:28:48Z",
   "freshnessEvidence": "HTTP_LAST_MODIFIED",
   "freshnessConfidence": "HIGH",
-  "events": [],
+  "events": [
+    {
+      "id": "b8308c8150f5ad55e242d7671adaffbd",
+      "sport_key": "soccer_spain_segunda_division",
+      "sport_title": "La Liga 2 - Spain",
+      "commence_time": "2026-11-15T15:15:00Z",
+      "home_team": "Granada CF",
+      "away_team": "Las Palmas",
+      "sport_type": "soccer",
+      "country": "Испания",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-13T14:16:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Granada CF",
+                  "price": 1.76
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Las Palmas",
+                  "price": 4.5
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.85,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 1.95,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-13T14:16:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Granada CF",
+                  "price": 1.73
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Las Palmas",
+                  "price": 4.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-13T14:16:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Granada CF",
+                  "price": 1.75
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.6
+                },
+                {
+                  "name": "Las Palmas",
+                  "price": 4.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-13T14:16:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Granada CF",
+                  "price": 1.78
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.6
+                },
+                {
+                  "name": "Las Palmas",
+                  "price": 3.9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-13T14:16:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-13T14:16:25Z",
+              "outcomes": [
+                {
+                  "name": "Granada CF",
+                  "price": 1.73
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Las Palmas",
+                  "price": 4.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-13T14:16:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "SP2",
+      "_r15FixtureSourceUpdatedAt": "2026-11-13T14:16:25Z"
+    }
+  ],
   "diagnostics": {
     "enabled": true,
-    "status": "NO_MATCHED_EVENTS",
+    "status": "GREEN",
     "url": "https://football-data.co.uk/fixtures.csv",
     "metadataUrl": "https://www.football-data.co.uk/matches.php",
     "cachePath": "/home/runner/work/ai-football-lab/ai-football-lab/data/football-data-fixtures-odds.json",
-    "events": 0,
-    "eventsWithThreeBookmakers": 0,
+    "events": 1,
+    "eventsWithThreeBookmakers": 1,
     "sourceUpdatedAt": "2026-11-13T14:16:25Z",
     "usedCache": false,
     "error": null,
@@ -27,10 +185,10 @@
     "freshnessEvidence": "HTTP_LAST_MODIFIED",
     "freshnessConfidence": "HIGH",
     "contentSha256": "670ae340b7aa74c1721271226c4cc01abb3e385d1cf40b48689597d3812eeec2",
-    "contentObservedAt": "2026-11-15T04:24:01Z",
+    "contentObservedAt": "2026-11-15T12:12:17Z",
     "contentChangedAt": "2026-11-13T14:28:48Z",
     "rows": 51,
-    "matchedRows": 0,
+    "matchedRows": 1,
     "stale": false,
     "invalidHeaders": false,
     "asianMarketsImported": 0
