@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-15T12:53:06Z",
+  "updatedAt": "2026-11-15T13:05:23Z",
   "operationalDayId": "2026-11-15-MSK-0800",
   "operationalWindowStart": "2026-11-15T05:00:00Z",
   "operationalWindowEnd": "2026-11-16T05:00:00Z",
@@ -11,25 +11,6 @@
     "verifiedOddsEvents": 0
   },
   "fixtures": [
-    {
-      "eventId": "beaf15ccf8dfd0642bef49ffef12920d",
-      "sport": "soccer",
-      "sportKey": "soccer_france_coupe_de_france",
-      "league": "Coupe de France",
-      "leagueRu": "Коупе де Франке",
-      "home": "CS Sedan",
-      "homeRu": "Кс Седан",
-      "away": "Bourges FC",
-      "awayRu": "Боургес ФК",
-      "commenceTime": "2026-11-15T13:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": null,
-      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
     {
       "eventId": "1f58bbd27f8533f60268c71d1f33f985",
       "sport": "soccer",
@@ -72,7 +53,26 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "beaf15ccf8dfd0642bef49ffef12920d",
+      "sport": "soccer",
+      "sportKey": "soccer_france_coupe_de_france",
+      "league": "Coupe de France",
+      "leagueRu": "Коупе де Франке",
+      "home": "CS Sedan",
+      "homeRu": "Кс Седан",
+      "away": "Bourges FC",
+      "awayRu": "Боургес ФК",
+      "commenceTime": "2026-11-15T13:02:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": null,
+      "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f241b0cec31506c2eb749ff9be97667c",
@@ -84,14 +84,14 @@
       "homeRu": "Тенерифе",
       "away": "AD Ceuta FC",
       "awayRu": "Ад Кеута ФК",
-      "commenceTime": "2026-11-15T13:00:00Z",
+      "commenceTime": "2026-11-15T13:03:00Z",
       "oddsAvailable": false,
       "publicationMode": "FIXTURE_INFORMATION_ONLY",
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "b7cfb27aa03dff485eb71023cbe7f06f",
