@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-16T20:58:38Z",
-  "lastSuccessfulAt": "2026-11-16T20:58:38Z",
+  "updatedAt": "2026-11-17T03:44:12Z",
+  "lastSuccessfulAt": "2026-11-17T03:44:12Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -565552,6 +565552,105 @@
       "source": "AI_FOOTBALL_TRACKED_RESULT"
     },
     {
+      "id": "thesportsdb_public_123:2442852",
+      "utcDate": "2026-11-16T17:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Estonia",
+        "shortName": "Estonia",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Bulgaria",
+        "shortName": "Bulgaria",
+        "tla": ""
+      },
+      "homeScore": 2,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-17T03:48:19Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "A. Le Coq Arena",
+      "theSportsDbEventId": "2442852"
+    },
+    {
+      "id": "thesportsdb_public_123:2475311",
+      "utcDate": "2026-11-16T17:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Iceland",
+        "shortName": "Iceland",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Luxembourg",
+        "shortName": "Luxembourg",
+        "tla": ""
+      },
+      "homeScore": 3,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-17T03:48:19Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "Laugardalsvöllur",
+      "theSportsDbEventId": "2475311"
+    },
+    {
+      "id": "thesportsdb_public_123:2475312",
+      "utcDate": "2026-11-16T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Switzerland",
+        "shortName": "Switzerland",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Scotland",
+        "shortName": "Scotland",
+        "tla": ""
+      },
+      "homeScore": 4,
+      "awayScore": 0,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-17T03:48:20Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "Kybunpark",
+      "theSportsDbEventId": "2475312"
+    },
+    {
       "id": "openfootball:2026-27:fr.1:90:Matchday 11",
       "utcDate": "2026-11-20T00:00:00Z",
       "status": "SCHEDULED",
@@ -650003,14 +650102,14 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-16T20:58:38Z",
-      "matches": 18769
+      "updatedAt": "2026-11-17T03:44:12Z",
+      "matches": 18772
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-16T20:58:38Z",
+      "updatedAt": "2026-11-17T03:44:12Z",
       "requests": 43,
-      "matchesAdded": 41,
+      "matchesAdded": 42,
       "errors": [
         "136466:HTTPError",
         "135981:HTTPError",
@@ -650023,6 +650122,7 @@
         "134280:HTTPError",
         "134464:HTTPError",
         "134285:HTTPError",
+        "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
@@ -650030,8 +650130,7 @@
         "137887:HTTPError",
         "134449:HTTPError",
         "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError"
+        "137878:HTTPError"
       ]
     }
   }
