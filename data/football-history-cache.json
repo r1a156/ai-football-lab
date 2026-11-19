@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-19T14:22:18Z",
-  "lastSuccessfulAt": "2026-11-19T14:22:18Z",
+  "updatedAt": "2026-11-19T14:33:04Z",
+  "lastSuccessfulAt": "2026-11-19T14:33:04Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -565618,6 +565618,39 @@
       "theSportsDbEventId": "2442851"
     },
     {
+      "id": "thesportsdb_public_123:2442850",
+      "utcDate": "2026-11-16T15:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Kazakhstan",
+        "shortName": "Kazakhstan",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Slovakia",
+        "shortName": "Slovakia",
+        "tla": ""
+      },
+      "homeScore": 2,
+      "awayScore": 2,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-19T14:35:44Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "Astana Arena",
+      "theSportsDbEventId": "2442850"
+    },
+    {
       "id": "thesportsdb_public_123:2442852",
       "utcDate": "2026-11-16T17:00:00Z",
       "status": "FINISHED",
@@ -566016,6 +566049,39 @@
       "round": "6",
       "venue": "PGE Narodowy",
       "theSportsDbEventId": "2442862"
+    },
+    {
+      "id": "thesportsdb_public_123:2442859",
+      "utcDate": "2026-11-17T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Hungary",
+        "shortName": "Hungary",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Northern Ireland",
+        "shortName": "Northern Ireland",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-19T14:33:26Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "Puskás Aréna",
+      "theSportsDbEventId": "2442859"
     },
     {
       "id": "thesportsdb_public_123:2398533",
@@ -650537,35 +650603,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-19T14:22:18Z",
-      "matches": 18785
+      "updatedAt": "2026-11-19T14:33:04Z",
+      "matches": 18787
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-19T14:22:18Z",
-      "requests": 57,
-      "matchesAdded": 56,
+      "updatedAt": "2026-11-19T14:33:04Z",
+      "requests": 60,
+      "matchesAdded": 59,
       "errors": [
+        "135170:HTTPError",
         "133915:HTTPError",
-        "135987:HTTPError",
-        "134627:HTTPError",
+        "133840:HTTPError",
+        "134290:HTTPError",
         "135887:HTTPError",
-        "137782:HTTPError",
-        "136449:HTTPError",
-        "136466:HTTPError",
-        "136452:HTTPError",
-        "136468:HTTPError",
-        "136458:HTTPError",
+        "135154:HTTPError",
+        "135172:HTTPError",
+        "135980:HTTPError",
+        "133916:HTTPError",
+        "136451:HTTPError",
+        "136454:HTTPError",
         "136461:HTTPError",
         "136453:HTTPError",
-        "134280:HTTPError",
-        "134464:HTTPError",
+        "134506:HTTPError",
+        "136250:HTTPError",
         "134285:HTTPError",
-        "134282:HTTPError",
-        "134294:HTTPError",
-        "134291:HTTPError",
-        "134018:HTTPError",
-        "140517:HTTPError"
+        "145207:HTTPError",
+        "145176:HTTPError",
+        "145187:HTTPError",
+        "137887:HTTPError"
       ]
     }
   }
