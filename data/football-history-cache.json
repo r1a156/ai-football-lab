@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-19T09:29:10Z",
-  "lastSuccessfulAt": "2026-11-19T09:29:10Z",
+  "updatedAt": "2026-11-19T14:22:18Z",
+  "lastSuccessfulAt": "2026-11-19T14:22:18Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -565985,6 +565985,39 @@
       "theSportsDbEventId": "2442858"
     },
     {
+      "id": "thesportsdb_public_123:2442862",
+      "utcDate": "2026-11-17T19:45:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "UEFA Nations League",
+      "competitionCode": "4490",
+      "homeTeam": {
+        "id": "",
+        "name": "Poland",
+        "shortName": "Poland",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Sweden",
+        "shortName": "Sweden",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-19T14:24:24Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "6",
+      "venue": "PGE Narodowy",
+      "theSportsDbEventId": "2442862"
+    },
+    {
       "id": "thesportsdb_public_123:2398533",
       "utcDate": "2026-11-18T23:30:00Z",
       "status": "FINISHED",
@@ -650504,35 +650537,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-19T09:29:10Z",
-      "matches": 18784
+      "updatedAt": "2026-11-19T14:22:18Z",
+      "matches": 18785
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-19T09:29:10Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-11-19T14:22:18Z",
+      "requests": 57,
+      "matchesAdded": 56,
       "errors": [
+        "133915:HTTPError",
+        "135987:HTTPError",
+        "134627:HTTPError",
+        "135887:HTTPError",
+        "137782:HTTPError",
         "136449:HTTPError",
         "136466:HTTPError",
-        "134506:HTTPError",
-        "136457:HTTPError",
-        "136250:HTTPError",
-        "145389:HTTPError",
-        "134295:HTTPError",
-        "134154:HTTPError",
-        "134147:HTTPError",
+        "136452:HTTPError",
+        "136468:HTTPError",
+        "136458:HTTPError",
+        "136461:HTTPError",
+        "136453:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "137932:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "137889:HTTPError",
-        "137887:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError"
+        "134285:HTTPError",
+        "134282:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "134018:HTTPError",
+        "140517:HTTPError"
       ]
     }
   }
