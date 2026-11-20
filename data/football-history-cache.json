@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-20T13:59:42Z",
-  "lastSuccessfulAt": "2026-11-20T13:59:42Z",
+  "updatedAt": "2026-11-20T14:11:01Z",
+  "lastSuccessfulAt": "2026-11-20T14:11:01Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -566150,6 +566150,39 @@
       "theSportsDbEventId": "2398539"
     },
     {
+      "id": "thesportsdb_public_123:2398540",
+      "utcDate": "2026-11-19T22:30:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "Brazilian Serie A",
+      "competitionCode": "4351",
+      "homeTeam": {
+        "id": "",
+        "name": "Vitória",
+        "shortName": "Vitória",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Bragantino",
+        "shortName": "Bragantino",
+        "tla": ""
+      },
+      "homeScore": 2,
+      "awayScore": 1,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-20T14:15:09Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026",
+      "round": "35",
+      "venue": "Estádio Manoel Barradas",
+      "theSportsDbEventId": "2398540"
+    },
+    {
       "id": "openfootball:2026-27:fr.1:90:Matchday 11",
       "utcDate": "2026-11-20T00:00:00Z",
       "status": "SCHEDULED",
@@ -650636,35 +650669,35 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-20T13:59:42Z",
-      "matches": 18788
+      "updatedAt": "2026-11-20T14:11:01Z",
+      "matches": 18789
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-20T13:59:42Z",
-      "requests": 59,
-      "matchesAdded": 59,
+      "updatedAt": "2026-11-20T14:11:01Z",
+      "requests": 50,
+      "matchesAdded": 49,
       "errors": [
-        "133914:HTTPError",
-        "133904:HTTPError",
-        "136450:HTTPError",
-        "136456:HTTPError",
-        "134700:HTTPError",
-        "133733:HTTPError",
-        "135987:HTTPError",
-        "133840:HTTPError",
-        "144737:HTTPError",
         "136454:HTTPError",
+        "136468:HTTPError",
+        "136458:HTTPError",
+        "136461:HTTPError",
+        "136453:HTTPError",
         "135988:HTTPError",
-        "134154:HTTPError",
-        "134280:HTTPError",
-        "145212:HTTPError",
-        "137932:HTTPError",
-        "145171:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "134449:HTTPError",
-        "137878:HTTPError"
+        "136460:HTTPError",
+        "134285:HTTPError",
+        "134282:HTTPError",
+        "134742:HTTPError",
+        "136186:HTTPError",
+        "134737:HTTPError",
+        "134734:HTTPError",
+        "136831:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "137878:HTTPError",
+        "134018:HTTPError",
+        "140517:HTTPError",
+        "133978:HTTPError"
       ]
     }
   }
