@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-22T08:03:51Z",
-  "lastSuccessfulAt": "2026-11-22T08:03:51Z",
+  "updatedAt": "2026-11-22T13:18:17Z",
+  "lastSuccessfulAt": "2026-11-22T13:18:17Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -568092,6 +568092,39 @@
       }
     },
     {
+      "id": "thesportsdb_public_123:2542751",
+      "utcDate": "2026-11-21T15:00:00Z",
+      "status": "FINISHED",
+      "competitionId": "",
+      "competition": "English Isthmian League Premier Division",
+      "competitionCode": "4647",
+      "homeTeam": {
+        "id": "",
+        "name": "Wingate and Finchley",
+        "shortName": "Wingate and Finchley",
+        "tla": ""
+      },
+      "awayTeam": {
+        "id": "",
+        "name": "Brentwood Town",
+        "shortName": "Brentwood Town",
+        "tla": ""
+      },
+      "homeScore": 1,
+      "awayScore": 2,
+      "halfHome": null,
+      "halfAway": null,
+      "matchday": null,
+      "stage": "",
+      "group": "",
+      "lastUpdated": "2026-11-22T13:24:25Z",
+      "source": "THESPORTSDB_PUBLIC_123",
+      "season": "2026-2027",
+      "round": "19",
+      "venue": "The Maurice Rebak Stadium",
+      "theSportsDbEventId": "2542751"
+    },
+    {
       "id": "openligadb:84878",
       "utcDate": "2026-11-21T15:30:00Z",
       "status": "FINISHED",
@@ -569297,14 +569330,14 @@
         "shortName": "FC Ingolstadt 04",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 1,
+      "awayScore": 0,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-09-29T06:59:16Z",
+      "lastUpdated": "2026-11-22T13:15:19Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -569332,14 +569365,14 @@
         "shortName": "Dynamo Dresden",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 1,
+      "awayScore": 2,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-08-03T19:33:55Z",
+      "lastUpdated": "2026-11-22T13:15:18Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -569367,14 +569400,14 @@
         "shortName": "VfL Osnabrück",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 0,
+      "awayScore": 0,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-08-03T19:33:55Z",
+      "lastUpdated": "2026-11-22T13:15:18Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -569402,14 +569435,14 @@
         "shortName": "Hertha BSC",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 0,
+      "awayScore": 1,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-08-03T19:33:55Z",
+      "lastUpdated": "2026-11-22T13:15:18Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -650801,18 +650834,17 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-22T08:03:51Z",
-      "matches": 18793
+      "updatedAt": "2026-11-22T13:18:17Z",
+      "matches": 18794
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-22T06:36:06Z",
-      "requests": 44,
-      "matchesAdded": 44,
+      "updatedAt": "2026-11-22T13:18:17Z",
+      "requests": 43,
+      "matchesAdded": 43,
       "errors": [
-        "136449:HTTPError",
         "136466:HTTPError",
-        "134506:HTTPError",
+        "135981:HTTPError",
         "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
@@ -650821,7 +650853,7 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "137932:HTTPError",
+        "134285:HTTPError",
         "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
@@ -650829,7 +650861,8 @@
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError"
+        "133953:HTTPError",
+        "137878:HTTPError"
       ]
     }
   }
