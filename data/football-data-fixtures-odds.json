@@ -1,37 +1,1451 @@
 {
   "version": 2,
   "sourceMarker": "V10_R15F_R3R24_FIXTURE_FRESHNESS_CHAIN",
-  "updatedAt": "2026-11-24T05:56:39Z",
-  "sourceUpdatedAt": "2026-11-20T10:23:08Z",
+  "updatedAt": "2026-11-24T15:47:41Z",
+  "sourceUpdatedAt": "2026-11-24T09:32:25Z",
   "sourceUrl": "https://football-data.co.uk/fixtures.csv",
   "metadataUrl": "https://www.football-data.co.uk/matches.php",
-  "status": "STALE",
-  "contentSha256": "8f87dcde773831e7f0bc4470036d990ee4adf7208ae437473e76fa972eda3e0e",
-  "contentObservedAt": "2026-11-24T05:56:39Z",
-  "contentChangedAt": "2026-11-20T13:58:40Z",
+  "status": "GREEN",
+  "contentSha256": "09b5cca1b8029ed7f1e89bba82c3c609c27d397a7cc62fb60aea62b81c39a2b1",
+  "contentObservedAt": "2026-11-24T15:47:41Z",
+  "contentChangedAt": "2026-11-24T15:47:41Z",
   "freshnessEvidence": "HTTP_LAST_MODIFIED",
   "freshnessConfidence": "HIGH",
-  "events": [],
+  "events": [
+    {
+      "id": "8a83b64c5a2da01e0be02f81c52c24c1",
+      "sport_key": "soccer_italy_serie_b",
+      "sport_title": "Serie B - Italy",
+      "commence_time": "2026-11-24T19:00:00Z",
+      "home_team": "Benevento",
+      "away_team": "Empoli",
+      "sport_type": "soccer",
+      "country": "Италия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Benevento",
+                  "price": 1.49
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.0
+                },
+                {
+                  "name": "Empoli",
+                  "price": 6.25
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.7,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.1,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Benevento",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.0
+                },
+                {
+                  "name": "Empoli",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Benevento",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.0
+                },
+                {
+                  "name": "Empoli",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Benevento",
+                  "price": 1.55
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Empoli",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Benevento",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Empoli",
+                  "price": 5.5
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "I2",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "1266361213aa65b3a2f950e194f93351",
+      "sport_key": "soccer_italy_serie_b",
+      "sport_title": "Serie B - Italy",
+      "commence_time": "2026-11-24T19:00:00Z",
+      "home_team": "Cesena FC",
+      "away_team": "Ascoli",
+      "sport_type": "soccer",
+      "country": "Италия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Cesena FC",
+                  "price": 2.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.2
+                },
+                {
+                  "name": "Ascoli",
+                  "price": 2.65
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.9,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 1.9,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Cesena FC",
+                  "price": 2.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.2
+                },
+                {
+                  "name": "Ascoli",
+                  "price": 2.6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Cesena FC",
+                  "price": 2.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.3
+                },
+                {
+                  "name": "Ascoli",
+                  "price": 2.55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Cesena FC",
+                  "price": 2.65
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.25
+                },
+                {
+                  "name": "Ascoli",
+                  "price": 2.6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Cesena FC",
+                  "price": 2.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.1
+                },
+                {
+                  "name": "Ascoli",
+                  "price": 2.6
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "I2",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "83a913029df6521a5822f1a77e619b78",
+      "sport_key": "soccer_italy_serie_b",
+      "sport_title": "Serie B - Italy",
+      "commence_time": "2026-11-24T19:00:00Z",
+      "home_team": "Palermo",
+      "away_team": "Südtirol",
+      "sport_type": "soccer",
+      "country": "Италия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Palermo",
+                  "price": 1.42
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.5
+                },
+                {
+                  "name": "Südtirol",
+                  "price": 6.25
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.65,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.2,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Palermo",
+                  "price": 1.44
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Südtirol",
+                  "price": 6.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Palermo",
+                  "price": 1.45
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.2
+                },
+                {
+                  "name": "Südtirol",
+                  "price": 6.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Palermo",
+                  "price": 1.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.33
+                },
+                {
+                  "name": "Südtirol",
+                  "price": 6.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Palermo",
+                  "price": 1.44
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.33
+                },
+                {
+                  "name": "Südtirol",
+                  "price": 6.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "I2",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "155d48f7d5af716b832e611847eecfe8",
+      "sport_key": "soccer_italy_serie_b",
+      "sport_title": "Serie B - Italy",
+      "commence_time": "2026-11-24T19:00:00Z",
+      "home_team": "Vicenza",
+      "away_team": "Carrarese",
+      "sport_type": "soccer",
+      "country": "Италия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Vicenza",
+                  "price": 3.25
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.2
+                },
+                {
+                  "name": "Carrarese",
+                  "price": 2.2
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 2.0,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 1.8,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Vicenza",
+                  "price": 3.1
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.0
+                },
+                {
+                  "name": "Carrarese",
+                  "price": 2.25
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Vicenza",
+                  "price": 3.0
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.25
+                },
+                {
+                  "name": "Carrarese",
+                  "price": 2.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Vicenza",
+                  "price": 3.25
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.0
+                },
+                {
+                  "name": "Carrarese",
+                  "price": 2.3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Vicenza",
+                  "price": 3.1
+                },
+                {
+                  "name": "Draw",
+                  "price": 2.9
+                },
+                {
+                  "name": "Carrarese",
+                  "price": 2.3
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "I2",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "92c74d2f4a4275568feff8072ed15e73",
+      "sport_key": "soccer_efl_champ",
+      "sport_title": "Championship",
+      "commence_time": "2026-11-24T19:45:00Z",
+      "home_team": "Bristol City",
+      "away_team": "Wrexham AFC",
+      "sport_type": "soccer",
+      "country": "Англия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Bristol City",
+                  "price": 2.38
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.2
+                },
+                {
+                  "name": "Wrexham AFC",
+                  "price": 3.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 2.2,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 1.67,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Bristol City",
+                  "price": 2.38
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.1
+                },
+                {
+                  "name": "Wrexham AFC",
+                  "price": 2.88
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Bristol City",
+                  "price": 2.38
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.13
+                },
+                {
+                  "name": "Wrexham AFC",
+                  "price": 2.88
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Bristol City",
+                  "price": 2.4
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.3
+                },
+                {
+                  "name": "Wrexham AFC",
+                  "price": 2.9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Bristol City",
+                  "price": 2.4
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.25
+                },
+                {
+                  "name": "Wrexham AFC",
+                  "price": 2.9
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "E1",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "031162fd89aa3c1fd39e523b3c82d35a",
+      "sport_key": "soccer_efl_champ",
+      "sport_title": "Championship",
+      "commence_time": "2026-11-24T19:45:00Z",
+      "home_team": "Sheffield United",
+      "away_team": "Southampton",
+      "sport_type": "soccer",
+      "country": "Англия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Sheffield United",
+                  "price": 2.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.4
+                },
+                {
+                  "name": "Southampton",
+                  "price": 2.6
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.73,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.1,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Sheffield United",
+                  "price": 2.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.4
+                },
+                {
+                  "name": "Southampton",
+                  "price": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Sheffield United",
+                  "price": 2.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Southampton",
+                  "price": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Sheffield United",
+                  "price": 2.55
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Southampton",
+                  "price": 2.6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Sheffield United",
+                  "price": 2.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.5
+                },
+                {
+                  "name": "Southampton",
+                  "price": 2.63
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "E1",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "17fe7f97afa7602f6ee038dbdc5b7c19",
+      "sport_key": "soccer_england_league2",
+      "sport_title": "League 2",
+      "commence_time": "2026-11-24T19:45:00Z",
+      "home_team": "Crawley Town",
+      "away_team": "Barnet",
+      "sport_type": "soccer",
+      "country": "Англия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Crawley Town",
+                  "price": 3.75
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.75
+                },
+                {
+                  "name": "Barnet",
+                  "price": 1.85
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.57,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.35,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Crawley Town",
+                  "price": 3.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.75
+                },
+                {
+                  "name": "Barnet",
+                  "price": 1.83
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Crawley Town",
+                  "price": 3.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.75
+                },
+                {
+                  "name": "Barnet",
+                  "price": 1.83
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Crawley Town",
+                  "price": 3.5
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.6
+                },
+                {
+                  "name": "Barnet",
+                  "price": 1.8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Crawley Town",
+                  "price": 3.8
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.8
+                },
+                {
+                  "name": "Barnet",
+                  "price": 1.83
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "E3",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "c09beaa3cf7fd1f0ad0717cc2446a008",
+      "sport_key": "soccer_spl",
+      "sport_title": "Premiership - Scotland",
+      "commence_time": "2026-11-24T19:45:00Z",
+      "home_team": "Hibernian",
+      "away_team": "Dundee FC",
+      "sport_type": "soccer",
+      "country": "Шотландия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Hibernian",
+                  "price": 1.62
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.1
+                },
+                {
+                  "name": "Dundee FC",
+                  "price": 4.75
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.67,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.2,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Hibernian",
+                  "price": 1.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.0
+                },
+                {
+                  "name": "Dundee FC",
+                  "price": 4.6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Hibernian",
+                  "price": 1.6
+                },
+                {
+                  "name": "Draw",
+                  "price": 3.9
+                },
+                {
+                  "name": "Dundee FC",
+                  "price": 4.8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Hibernian",
+                  "price": 1.62
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.1
+                },
+                {
+                  "name": "Dundee FC",
+                  "price": 4.75
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Hibernian",
+                  "price": 1.62
+                },
+                {
+                  "name": "Draw",
+                  "price": 4.0
+                },
+                {
+                  "name": "Dundee FC",
+                  "price": 4.75
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "SC0",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    },
+    {
+      "id": "6096027801dd71f0e41795f1e5380261",
+      "sport_key": "soccer_spl",
+      "sport_title": "Premiership - Scotland",
+      "commence_time": "2026-11-24T20:00:00Z",
+      "home_team": "Rangers",
+      "away_team": "Aberdeen",
+      "sport_type": "soccer",
+      "country": "Шотландия",
+      "bookmakers": [
+        {
+          "key": "football_data_bet365",
+          "title": "Bet365 via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Rangers",
+                  "price": 1.25
+                },
+                {
+                  "name": "Draw",
+                  "price": 6.0
+                },
+                {
+                  "name": "Aberdeen",
+                  "price": 11.0
+                }
+              ]
+            },
+            {
+              "key": "totals",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Over",
+                  "price": 1.44,
+                  "point": 2.5
+                },
+                {
+                  "name": "Under",
+                  "price": 2.75,
+                  "point": 2.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betfred",
+          "title": "Betfred via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Rangers",
+                  "price": 1.22
+                },
+                {
+                  "name": "Draw",
+                  "price": 6.0
+                },
+                {
+                  "name": "Aberdeen",
+                  "price": 9.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_betvictor",
+          "title": "BetVictor via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Rangers",
+                  "price": 1.2
+                },
+                {
+                  "name": "Draw",
+                  "price": 6.0
+                },
+                {
+                  "name": "Aberdeen",
+                  "price": 11.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_bwin",
+          "title": "Bwin via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Rangers",
+                  "price": 1.24
+                },
+                {
+                  "name": "Draw",
+                  "price": 6.25
+                },
+                {
+                  "name": "Aberdeen",
+                  "price": 10.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "football_data_paddypower",
+          "title": "Paddy Power via Football-Data",
+          "last_update": "2026-11-24T09:32:25Z",
+          "markets": [
+            {
+              "key": "h2h",
+              "last_update": "2026-11-24T09:32:25Z",
+              "outcomes": [
+                {
+                  "name": "Rangers",
+                  "price": 1.2
+                },
+                {
+                  "name": "Draw",
+                  "price": 6.5
+                },
+                {
+                  "name": "Aberdeen",
+                  "price": 12.0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "last_update": "2026-11-24T09:32:25Z",
+      "_r15NoKeyFixtureOdds": true,
+      "_r15FixtureDivision": "SC0",
+      "_r15FixtureSourceUpdatedAt": "2026-11-24T09:32:25Z"
+    }
+  ],
   "diagnostics": {
     "enabled": true,
-    "status": "STALE",
+    "status": "GREEN",
     "url": "https://football-data.co.uk/fixtures.csv",
     "metadataUrl": "https://www.football-data.co.uk/matches.php",
     "cachePath": "/home/runner/work/ai-football-lab/ai-football-lab/data/football-data-fixtures-odds.json",
-    "events": 0,
-    "eventsWithThreeBookmakers": 0,
-    "sourceUpdatedAt": "2026-11-20T10:23:08Z",
+    "events": 9,
+    "eventsWithThreeBookmakers": 9,
+    "sourceUpdatedAt": "2026-11-24T09:32:25Z",
     "usedCache": false,
     "error": null,
     "metadataError": null,
     "freshnessEvidence": "HTTP_LAST_MODIFIED",
     "freshnessConfidence": "HIGH",
-    "contentSha256": "8f87dcde773831e7f0bc4470036d990ee4adf7208ae437473e76fa972eda3e0e",
-    "contentObservedAt": "2026-11-24T05:56:39Z",
-    "contentChangedAt": "2026-11-20T13:58:40Z",
-    "rows": 0,
-    "matchedRows": 0,
-    "stale": true,
+    "contentSha256": "09b5cca1b8029ed7f1e89bba82c3c609c27d397a7cc62fb60aea62b81c39a2b1",
+    "contentObservedAt": "2026-11-24T15:47:41Z",
+    "contentChangedAt": "2026-11-24T15:47:41Z",
+    "rows": 43,
+    "matchedRows": 9,
+    "stale": false,
     "invalidHeaders": false,
     "asianMarketsImported": 0
   }
