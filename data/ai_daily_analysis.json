@@ -1,8 +1,8 @@
 {
   "version": "10.0.0",
   "sourceMarker": "V10_R15F_R3_FINAL_COGNITIVE_PORTFOLIO",
-  "updatedAt": "2026-11-23T21:59:56Z",
-  "analysisDateLocal": "2026-11-23",
+  "updatedAt": "2026-11-24T05:56:39Z",
+  "analysisDateLocal": "2026-11-24",
   "batch": {
     "id": "",
     "status": "WAITING_FOR_NEXT_SELECTION",
@@ -12,12 +12,12 @@
     "bestBetsCount": 0,
     "pendingAnalysisCount": 0,
     "pendingBestBetsCount": 0,
-    "updatedAt": "2026-11-23T21:59:56Z",
+    "updatedAt": "2026-11-24T05:56:39Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "dataCoverage": {
-    "discoveredEvents": 4,
-    "competitionsDiscovered": 5,
+    "discoveredEvents": 37,
+    "competitionsDiscovered": 9,
     "competitionsWithOdds": 0,
     "oddsEvents": 0,
     "historyMatchedEvents": 0,
@@ -38,9 +38,9 @@
       },
       "THE_ODDS_API": {
         "status": "LOW_ODDS_QUOTA",
-        "lastSuccessAt": "2026-11-23T22:02:46Z",
+        "lastSuccessAt": "2026-11-24T05:58:41Z",
         "consecutiveFailures": 0,
-        "lastFailureAt": "2026-11-23T21:59:54Z",
+        "lastFailureAt": "2026-11-24T05:56:37Z",
         "lastStatus": 401,
         "lastError": "{\"message\":\"Usage quota has been reached. See usage plans at https://the-odds-api.com\",\"error_code\":\"OUT_OF_USAGE_CREDITS\",\"details_url\":\"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits\"}\n",
         "retryAfterSeconds": 0
@@ -60,7 +60,7 @@
         "estimatedCreditsThisRun": 0
       }
     },
-    "historyMatches": 14614,
+    "historyMatches": 14616,
     "historyCoverageStart": "2019-06-01T00:00:00Z",
     "historyCoverageEnd": "2027-05-30T00:00:00Z",
     "historyComplete": false,
@@ -73,37 +73,44 @@
         "STATSBOMB_OPEN_DATA": "GREEN",
         "CLUBELO": "RED"
       },
-      "ingested": 19072,
-      "duplicates": 18920,
-      "historyMatches": 18951,
+      "ingested": 2103,
+      "duplicates": 2103,
+      "historyMatches": 18953,
       "coverageStart": "2019-06-01T00:00:00Z",
       "coverageEnd": "2027-05-30T00:00:00Z"
     },
     "theSportsDbCurrentHistory": {
       "status": "GREEN",
-      "requests": 67,
-      "matchesAdded": 67,
-      "historyMatches": 18953,
+      "requests": 43,
+      "matchesAdded": 42,
+      "historyMatches": 18955,
       "errors": [
-        "135987:HTTPError",
-        "133840:HTTPError",
-        "135154:HTTPError",
+        "136469:HTTPError",
+        "136468:HTTPError",
         "136458:HTTPError",
-        "134742:HTTPError",
-        "145207:HTTPError",
-        "145176:HTTPError",
-        "145187:HTTPError",
-        "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError",
-        "140517:HTTPError"
+        "136461:HTTPError",
+        "136453:HTTPError",
+        "135988:HTTPError",
+        "136460:HTTPError",
+        "135983:HTTPError",
+        "134506:HTTPError",
+        "136457:HTTPError",
+        "136186:HTTPError",
+        "134737:HTTPError",
+        "134734:HTTPError",
+        "136831:HTTPError",
+        "134294:HTTPError",
+        "134291:HTTPError",
+        "145212:HTTPError",
+        "137932:HTTPError",
+        "145171:HTTPError",
+        "133978:HTTPError"
       ]
     },
     "fonbetMode": "OBSERVATIONAL_SOURCE_INCOMPLETE",
     "fonbetConfirmedEvents": 0,
     "status": "INSUFFICIENT_QUALITY_EVENTS",
-    "updatedAt": "2026-11-23T21:59:56Z"
+    "updatedAt": "2026-11-24T05:56:39Z"
   },
   "lossDiagnostics": {
     "settledFinancialEntriesAudited": 50,
@@ -909,7 +916,7 @@
     "status": "NO_CURRENT_PUBLICATION",
     "schemaValid": true,
     "publishedCount": 0,
-    "updatedAt": "2026-11-23T21:59:56Z",
+    "updatedAt": "2026-11-24T05:56:39Z",
     "reason": "NO_QUALIFIED_EVENTS_IN_CURRENT_OPERATIONAL_DAY"
   },
   "systemNarrative": {
@@ -918,7 +925,7 @@
     "lead": "Официальных прогнозов сейчас нет.",
     "body": "Система продолжает prematch-поиск и опубликует только матчи, прошедшие полный контроль качества.",
     "generatedBy": "DETERMINISTIC_SYSTEM",
-    "updatedAt": "2026-11-23T21:59:56Z"
+    "updatedAt": "2026-11-24T05:56:39Z"
   },
   "shadowLearning": {
     "statistics": {
