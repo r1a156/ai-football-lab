@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sourceMarker": "V10_R15_PERSISTENT_FOOTBALL_HISTORY",
-  "updatedAt": "2026-11-27T16:37:02Z",
-  "lastSuccessfulAt": "2026-11-27T16:37:02Z",
+  "updatedAt": "2026-11-27T22:50:34Z",
+  "lastSuccessfulAt": "2026-11-27T22:50:34Z",
   "backfillCursorDate": null,
   "coverageStart": "2019-06-01T00:00:00Z",
   "coverageEnd": "2027-05-30T00:00:00Z",
@@ -577589,7 +577589,7 @@
     {
       "id": "openligadb:83707",
       "utcDate": "2026-11-27T17:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 2 Bundesliga",
       "competitionCode": "bl2",
@@ -577605,14 +577605,14 @@
         "shortName": "1. FC Nürnberg",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 3,
+      "awayScore": 1,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-11-16T15:33:18Z",
+      "lastUpdated": "2026-11-27T22:48:35Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -577624,7 +577624,7 @@
     {
       "id": "openligadb:83709",
       "utcDate": "2026-11-27T17:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 2 Bundesliga",
       "competitionCode": "bl2",
@@ -577640,14 +577640,14 @@
         "shortName": "SV Darmstadt 98",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 2,
+      "awayScore": 0,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-11-16T15:33:18Z",
+      "lastUpdated": "2026-11-27T22:48:35Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -577659,7 +577659,7 @@
     {
       "id": "openligadb:84888",
       "utcDate": "2026-11-27T18:00:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany 3 Liga",
       "competitionCode": "bl3",
@@ -577675,14 +577675,14 @@
         "shortName": "TSV Havelse",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 2,
+      "awayScore": 0,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-09-29T06:59:16Z",
+      "lastUpdated": "2026-11-27T22:48:36Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -577694,7 +577694,7 @@
     {
       "id": "openligadb:83253",
       "utcDate": "2026-11-27T19:30:00Z",
-      "status": "SCHEDULED",
+      "status": "FINISHED",
       "competitionId": "",
       "competition": "Germany Bundesliga",
       "competitionCode": "bl1",
@@ -577710,14 +577710,14 @@
         "shortName": "Borussia Mönchengladbach",
         "tla": ""
       },
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 3,
+      "awayScore": 3,
       "halfHome": null,
       "halfAway": null,
       "matchday": null,
       "stage": "",
       "group": "",
-      "lastUpdated": "2026-11-16T15:33:17Z",
+      "lastUpdated": "2026-11-27T22:48:34Z",
       "source": "OPENLIGADB",
       "season": "2026",
       "openLigaGroup": {
@@ -658271,17 +658271,19 @@
   "sourceHealth": {
     "FREE_DATA_MESH": {
       "status": "GREEN",
-      "updatedAt": "2026-11-27T16:37:02Z",
+      "updatedAt": "2026-11-27T22:50:34Z",
       "matches": 18995
     },
     "THESPORTSDB_PUBLIC_123": {
       "status": "GREEN",
-      "updatedAt": "2026-11-27T16:37:02Z",
-      "requests": 42,
-      "matchesAdded": 42,
+      "updatedAt": "2026-11-27T22:50:34Z",
+      "requests": 44,
+      "matchesAdded": 44,
       "errors": [
-        "135981:HTTPError",
-        "136452:HTTPError",
+        "136449:HTTPError",
+        "136466:HTTPError",
+        "134506:HTTPError",
+        "136457:HTTPError",
         "136250:HTTPError",
         "145389:HTTPError",
         "134295:HTTPError",
@@ -658289,17 +658291,15 @@
         "134147:HTTPError",
         "134280:HTTPError",
         "134464:HTTPError",
-        "134285:HTTPError",
-        "134282:HTTPError",
+        "137932:HTTPError",
+        "145171:HTTPError",
         "145207:HTTPError",
         "145176:HTTPError",
         "145187:HTTPError",
         "137889:HTTPError",
         "137887:HTTPError",
         "134449:HTTPError",
-        "133953:HTTPError",
-        "137878:HTTPError",
-        "134018:HTTPError"
+        "133953:HTTPError"
       ]
     }
   }
