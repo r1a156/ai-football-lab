@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-11-28T13:30:58Z",
+  "updatedAt": "2026-11-28T14:07:29Z",
   "operationalDayId": "2026-11-28-MSK-0800",
   "operationalWindowStart": "2026-11-28T05:00:00Z",
   "operationalWindowEnd": "2026-11-29T05:00:00Z",
@@ -464,8 +464,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "350eff77f896b422f8d4ad41658faa42",
@@ -483,52 +483,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
-    },
-    {
-      "eventId": "af3432ca724da03d38f0ff4e62045e4c",
-      "sport": "soccer",
-      "sportKey": "soccer_italy_serie_a",
-      "league": "Serie A - Italy",
-      "leagueRu": "Серие А - Итали",
-      "home": "Frosinone",
-      "homeRu": "Фросиноне",
-      "away": "Parma",
-      "awayRu": "Парма",
-      "commenceTime": "2026-11-28T14:00:00Z",
-      "oddsAvailable": false,
-      "publicationMode": "FIXTURE_INFORMATION_ONLY",
-      "stake": 0.0,
-      "forecast": {
-        "market": "OVER_2_5",
-        "pickRu": "Тотал больше 2,5",
-        "modelProbability": 0.637569,
-        "marketProbabilities": {
-          "HOME_WIN": 0.564219,
-          "DRAW": 0.211584,
-          "AWAY_WIN": 0.224197,
-          "OVER_2_5": 0.637569,
-          "UNDER_2_5": 0.362431,
-          "BTTS_YES": 0.617014,
-          "BTTS_NO": 0.382986
-        },
-        "expectedHomeGoals": 2.055,
-        "expectedAwayGoals": 1.23,
-        "historyHomeMatches": 10,
-        "historyAwayMatches": 10,
-        "historyFreshnessDays": 6.8,
-        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
-        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
-        "verifiedBookmakerOdds": null,
-        "conservativeExpectedValue": null,
-        "stake": 0.0,
-        "financialEligible": false,
-        "computedAt": "2026-11-28T13:30:58Z"
-      },
-      "analysisStatus": "HISTORY_MODEL_PREMATCH",
-      "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "8d75d4c8f342e83c75febead12de7eaa",
@@ -572,7 +528,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "9beee8f80a22730b4f399165f8efe447",
@@ -616,7 +572,7 @@
       },
       "analysisStatus": "HISTORY_MODEL_PREMATCH",
       "reasonRu": null,
-      "historyDiagnostic": "FORECAST_AVAILABLE"
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "12cb6fab4268f2b1297b47835df4f7ee",
@@ -634,8 +590,8 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "f4a6c242e7f891e70220bec9c295753d",
@@ -653,8 +609,52 @@
       "stake": 0.0,
       "forecast": null,
       "analysisStatus": "INSUFFICIENT_VERIFIED_HISTORY_OR_ALREADY_STARTED",
-      "reasonRu": "Недостаточно подтверждённой истории или надёжного сопоставления команд для расчёта вероятности",
-      "historyDiagnostic": "HISTORY_OR_TEAM_MATCH_UNVERIFIED"
+      "reasonRu": "Матч уже начался: предматчевый прогноз не рассчитывается",
+      "historyDiagnostic": "ALREADY_STARTED"
+    },
+    {
+      "eventId": "af3432ca724da03d38f0ff4e62045e4c",
+      "sport": "soccer",
+      "sportKey": "soccer_italy_serie_a",
+      "league": "Serie A - Italy",
+      "leagueRu": "Серие А - Итали",
+      "home": "Frosinone",
+      "homeRu": "Фросиноне",
+      "away": "Parma",
+      "awayRu": "Парма",
+      "commenceTime": "2026-11-28T14:02:00Z",
+      "oddsAvailable": false,
+      "publicationMode": "FIXTURE_INFORMATION_ONLY",
+      "stake": 0.0,
+      "forecast": {
+        "market": "OVER_2_5",
+        "pickRu": "Тотал больше 2,5",
+        "modelProbability": 0.637569,
+        "marketProbabilities": {
+          "HOME_WIN": 0.564219,
+          "DRAW": 0.211584,
+          "AWAY_WIN": 0.224197,
+          "OVER_2_5": 0.637569,
+          "UNDER_2_5": 0.362431,
+          "BTTS_YES": 0.617014,
+          "BTTS_NO": 0.382986
+        },
+        "expectedHomeGoals": 2.055,
+        "expectedAwayGoals": 1.23,
+        "historyHomeMatches": 10,
+        "historyAwayMatches": 10,
+        "historyFreshnessDays": 6.8,
+        "source": "FINISHED_TEAM_MATCH_HISTORY_ONLY",
+        "mode": "STATISTICAL_PREVIEW_NO_VERIFIED_ODDS",
+        "verifiedBookmakerOdds": null,
+        "conservativeExpectedValue": null,
+        "stake": 0.0,
+        "financialEligible": false,
+        "computedAt": "2026-11-28T13:30:58Z"
+      },
+      "analysisStatus": "HISTORY_MODEL_PREMATCH",
+      "reasonRu": null,
+      "historyDiagnostic": "ALREADY_STARTED"
     },
     {
       "eventId": "cf10c995c498d24f208080f831bfaba7",
